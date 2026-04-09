@@ -1,8 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { generateText } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { prisma } from "@/lib/prisma";
 import { BUSINESS_INFO, PRODUCTS, SERVICES } from "@/data/business";
+
+const chatSchema = z.object({
+  message: z.string().min(1),
+  visitorId: z.string().optional(),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z.string(),
+      })
+    )
+    .optional()
+    .default([]),
+});
 
 const SYSTEM_PROMPT = `You are a friendly, knowledgeable customer service assistant for Muskingum Materials, a family-owned sand, soil, and gravel company in Zanesville, Ohio.
 
@@ -41,21 +56,14 @@ GUIDELINES:
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { message, visitorId, history = [] } = body;
-
-    if (!message || typeof message !== "string") {
-      return NextResponse.json(
-        { error: "Message is required" },
-        { status: 400 }
-      );
-    }
+    const data = chatSchema.parse(body);
 
     const messages = [
-      ...history.map((m: { role: string; content: string }) => ({
+      ...data.history.map((m) => ({
         role: m.role as "user" | "assistant",
         content: m.content,
       })),
-      { role: "user" as const, content: message },
+      { role: "user" as const, content: data.message },
     ];
 
     let reply: string;
@@ -69,17 +77,17 @@ export async function POST(request: NextRequest) {
       });
       reply = result.text;
     } else {
-      reply = getStaticResponse(message);
+      reply = getStaticResponse(data.message);
     }
 
     // Store conversation in database (best-effort)
     try {
       const conversation = await prisma.chatConversation.upsert({
-        where: { id: visitorId || "anonymous" },
+        where: { id: data.visitorId || "anonymous" },
         update: { updatedAt: new Date() },
         create: {
-          id: visitorId || `anon-${Date.now()}`,
-          visitorId: visitorId || "anonymous",
+          id: data.visitorId || `anon-${Date.now()}`,
+          visitorId: data.visitorId || "anonymous",
         },
       });
 
@@ -88,7 +96,7 @@ export async function POST(request: NextRequest) {
           {
             conversationId: conversation.id,
             role: "user",
-            content: message,
+            content: data.message,
           },
           {
             conversationId: conversation.id,
@@ -103,7 +111,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ reply });
   } catch (error) {
-    console.error("Chat API error:", error);
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Invalid request data", details: error.errors },
+        { status: 400 }
+      );
+    }
     return NextResponse.json(
       {
         reply:
