@@ -3,6 +3,7 @@ import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { BUSINESS_INFO } from "@/data/business";
 import { sanityClient } from "@/lib/sanity/client";
 import { productsQuery, siteSettingsQuery } from "@/lib/sanity/queries";
 
@@ -49,10 +50,21 @@ interface SiteSettings {
 }
 
 export default async function ProductsPage() {
-  const [products, siteSettings] = await Promise.all([
-    sanityClient.fetch<Product[]>(productsQuery, {}, { next: { tags: ['products'] } }),
-    sanityClient.fetch<SiteSettings>(siteSettingsQuery, {}, { next: { tags: ['site-settings'] } }),
-  ]);
+  let products: Product[] = [];
+  let siteSettings: SiteSettings | null = null;
+
+  try {
+    [products, siteSettings] = await Promise.all([
+      sanityClient.fetch<Product[]>(productsQuery, {}, { next: { tags: ['products'] } }),
+      sanityClient.fetch<SiteSettings>(siteSettingsQuery, {}, { next: { tags: ['site-settings'] } }),
+    ]);
+  } catch (error) {
+    // If Sanity fetch fails, continue with empty/null defaults
+    // Error will be logged server-side
+  }
+
+  // Fallback to static data if Sanity settings unavailable
+  const phone = siteSettings?.phone || BUSINESS_INFO.phone;
 
   const grouped = {
     gravel: products.filter((p) => p.category === "gravel"),
@@ -173,10 +185,10 @@ export default async function ProductsPage() {
                 Call us today to place your order or get a custom quote for your
                 project. We offer volume discounts for large orders.
               </p>
-              <a href={`tel:${siteSettings.phone.replace(/\D/g, "")}`}>
+              <a href={`tel:${phone.replace(/\D/g, "")}`}>
                 <Button className="gap-2">
                   <Phone className="h-4 w-4" />
-                  Call {siteSettings.phone}
+                  Call {phone}
                 </Button>
               </a>
             </div>

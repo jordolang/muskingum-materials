@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BUSINESS_INFO } from "@/data/business";
 import {
   Accordion,
   AccordionContent,
@@ -40,10 +41,21 @@ interface SiteSettings {
 }
 
 export default async function FAQPage() {
-  const [faqs, siteSettings] = await Promise.all([
-    sanityClient.fetch<FAQ[]>(faqQuery, {}, { next: { tags: ['faq'] } }),
-    sanityClient.fetch<SiteSettings>(siteSettingsQuery, {}, { next: { tags: ['site-settings'] } }),
-  ]);
+  let faqs: FAQ[] = [];
+  let siteSettings: SiteSettings | null = null;
+
+  try {
+    [faqs, siteSettings] = await Promise.all([
+      sanityClient.fetch<FAQ[]>(faqQuery, {}, { next: { tags: ['faq'] } }),
+      sanityClient.fetch<SiteSettings>(siteSettingsQuery, {}, { next: { tags: ['site-settings'] } }),
+    ]);
+  } catch (error) {
+    // If Sanity fetch fails, continue with empty/null defaults
+    // Error will be logged server-side
+  }
+
+  // Fallback to static data if Sanity settings unavailable
+  const phone = siteSettings?.phone || BUSINESS_INFO.phone;
 
   // Group FAQs by category
   const groupedFAQs = faqs.reduce(
@@ -94,10 +106,10 @@ export default async function FAQPage() {
             We&apos;re happy to help! Reach out to us directly.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href={`tel:${siteSettings.phone.replace(/\D/g, "")}`}>
+            <a href={`tel:${phone.replace(/\D/g, "")}`}>
               <Button className="gap-2">
                 <Phone className="h-4 w-4" />
-                Call {siteSettings.phone}
+                Call {phone}
               </Button>
             </a>
             <Link href="/contact">

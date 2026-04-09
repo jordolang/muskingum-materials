@@ -40,10 +40,21 @@ interface SiteSettings {
 }
 
 export default async function ServicesPage() {
-  const [services, siteSettings] = await Promise.all([
-    sanityClient.fetch<Service[]>(servicesQuery, {}, { next: { tags: ['services'] } }),
-    sanityClient.fetch<SiteSettings>(siteSettingsQuery, {}, { next: { tags: ['site-settings'] } }),
-  ]);
+  let services: Service[] = [];
+  let siteSettings: SiteSettings | null = null;
+
+  try {
+    [services, siteSettings] = await Promise.all([
+      sanityClient.fetch<Service[]>(servicesQuery, {}, { next: { tags: ['services'] } }),
+      sanityClient.fetch<SiteSettings>(siteSettingsQuery, {}, { next: { tags: ['site-settings'] } }),
+    ]);
+  } catch (error) {
+    // If Sanity fetch fails, continue with empty/null defaults
+    // Error will be logged server-side
+  }
+
+  // Fallback to static data if Sanity settings unavailable
+  const phone = siteSettings?.phone || BUSINESS_INFO.phone;
   return (
     <div className="py-12">
       <div className="container">
@@ -117,10 +128,10 @@ export default async function ServicesPage() {
             Need Materials for Your Project?
           </h2>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href={`tel:${siteSettings.phone.replace(/\D/g, "")}`}>
+            <a href={`tel:${phone.replace(/\D/g, "")}`}>
               <Button size="lg" className="gap-2">
                 <Phone className="h-4 w-4" />
-                Call {siteSettings.phone}
+                Call {phone}
               </Button>
             </a>
             <Link href="/contact">
