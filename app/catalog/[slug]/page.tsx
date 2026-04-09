@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { getProductBySlug, getProducts } from "@/lib/products";
 import { BUSINESS_INFO } from "@/data/business";
 import { StockBadge, type StockStatus } from "@/components/catalog/StockBadge";
+import { RestockNotifyButton } from "@/components/catalog/RestockNotifyButton";
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -149,12 +150,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
             {/* Out of Stock Notification */}
             {product.stockStatus.toLowerCase() === 'out_of_stock' && (
-              <div className="mt-4">
-                <Button variant="outline" className="gap-2">
-                  <Bell className="h-4 w-4" />
-                  Notify Me When Back in Stock
-                </Button>
-              </div>
+              <RestockNotifyButton
+                productId={product.id}
+                productName={product.name}
+              />
             )}
           </div>
         </div>
