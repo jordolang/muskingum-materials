@@ -3,6 +3,7 @@ import { Phone, Mail, MapPin, Clock, Facebook, ExternalLink } from "lucide-react
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ContactForm } from "@/components/contact/contact-form";
 import { BUSINESS_INFO } from "@/data/business";
+import { generateLocalBusinessSchema, toJsonLd } from "@/lib/seo/structured-data";
 
 export const metadata: Metadata = {
   title: "Contact Us",
@@ -11,8 +12,15 @@ export const metadata: Metadata = {
 };
 
 export default function ContactPage() {
+  const localBusinessSchema = generateLocalBusinessSchema();
+
   return (
-    <div className="py-12">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(localBusinessSchema) }}
+      />
+      <div className="py-12">
       <div className="container">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold font-heading mb-3">Contact Us</h1>
@@ -152,5 +160,6 @@ export default function ContactPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
