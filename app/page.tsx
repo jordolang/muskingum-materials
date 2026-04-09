@@ -13,13 +13,59 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { BUSINESS_INFO, PRODUCTS, SERVICES, PRODUCT_IMAGES } from "@/data/business";
+import { BUSINESS_INFO, PRODUCT_IMAGES } from "@/data/business";
 import { ReviewsCarousel } from "@/components/home/reviews-carousel";
 import { HomepageFAQ } from "@/components/home/homepage-faq";
+import { sanityClient } from "@/lib/sanity/client";
+import { productsQuery, servicesQuery, testimonialsQuery } from "@/lib/sanity/queries";
 
-const FEATURED_PRODUCTS = PRODUCTS.filter((p) => p.price > 0).slice(0, 6);
+export const revalidate = 60;
 
-export default function HomePage() {
+interface HomeProduct {
+  _id: string;
+  name: string;
+  description: string;
+  pricePerTon: number;
+  unit: string;
+  featured?: boolean;
+  available?: boolean;
+}
+
+interface HomeService {
+  _id: string;
+  title: string;
+  description: string;
+  icon?: string;
+  features: string[];
+}
+
+interface HomeTestimonial {
+  _id: string;
+  name: string;
+  company?: string;
+  rating: number;
+  text: string;
+}
+
+export default async function HomePage() {
+  let products: HomeProduct[] = [];
+  let services: HomeService[] = [];
+  let testimonials: HomeTestimonial[] = [];
+
+  try {
+    [products, services, testimonials] = await Promise.all([
+      sanityClient.fetch(productsQuery, {}, { next: { tags: ['products'] } }),
+      sanityClient.fetch(servicesQuery, {}, { next: { tags: ['services'] } }),
+      sanityClient.fetch(testimonialsQuery, {}, { next: { tags: ['testimonials'] } }),
+    ]);
+  } catch (error) {
+    console.error("Failed to fetch data from Sanity:", error);
+  }
+
+  const featuredProducts = products
+    .filter((p) => p.featured && p.available && p.pricePerTon > 0)
+    .slice(0, 6);
+
   return (
     <>
       {/* Hero */}
@@ -100,8 +146,8 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {FEATURED_PRODUCTS.map((product) => (
-              <Card key={product.name} className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 bg-card">
+            {featuredProducts.map((product) => (
+              <Card key={product._id} className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 bg-card">
                 <div className="relative h-48 w-full">
                   <Image
                     src={PRODUCT_IMAGES[product.name] || "/images/photos/piles.jpg"}
@@ -110,7 +156,7 @@ export default function HomePage() {
                     className="object-cover"
                   />
                   <div className="absolute top-3 right-3 bg-amber-600 text-white px-3 py-1.5 rounded-lg shadow-md">
-                    <span className="text-lg font-bold">${product.price.toFixed(2)}</span>
+                    <span className="text-lg font-bold">${product.pricePerTon.toFixed(2)}</span>
                     <span className="text-xs opacity-90">/{product.unit}</span>
                   </div>
                 </div>
@@ -146,8 +192,8 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {SERVICES.map((service) => (
-              <Card key={service.title} className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-card">
+            {services.map((service) => (
+              <Card key={service._id} className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-card">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
@@ -251,7 +297,7 @@ export default function HomePage() {
               contractors across Southeast Ohio.
             </p>
           </div>
-          <ReviewsCarousel />
+          <ReviewsCarousel testimonials={testimonials} />
         </div>
       </section>
 

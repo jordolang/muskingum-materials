@@ -4,7 +4,11 @@ import Link from "next/link";
 import { CheckCircle, Phone, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { SERVICES, BUSINESS_INFO } from "@/data/business";
+import { BUSINESS_INFO } from "@/data/business";
+import { sanityClient } from "@/lib/sanity/client";
+import { servicesQuery, siteSettingsQuery } from "@/lib/sanity/queries";
+
+export const revalidate = 7200; // Revalidate every 2 hours (ISR)
 
 export const metadata: Metadata = {
   title: "Services",
@@ -12,7 +16,44 @@ export const metadata: Metadata = {
     "Material sales, delivery, large project pricing, and on-site loading. Muskingum Materials serves Southeast Ohio.",
 };
 
-export default function ServicesPage() {
+interface Service {
+  _id: string;
+  title: string;
+  slug: { current: string };
+  description: string;
+  icon?: string;
+  image?: string;
+  features: string[];
+  sortOrder?: number;
+}
+
+interface SiteSettings {
+  title: string;
+  description: string;
+  phone: string;
+  altPhone?: string;
+  email: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+}
+
+export default async function ServicesPage() {
+  let services: Service[] = [];
+  let siteSettings: SiteSettings | null = null;
+
+  try {
+    [services, siteSettings] = await Promise.all([
+      sanityClient.fetch<Service[]>(servicesQuery, {}, { next: { tags: ['services'] } }),
+      sanityClient.fetch<SiteSettings>(siteSettingsQuery, {}, { next: { tags: ['site-settings'] } }),
+    ]);
+  } catch (error) {
+    console.error("Failed to fetch services/settings from Sanity:", error);
+  }
+
+  // Fallback to static data if Sanity settings unavailable
+  const phone = siteSettings?.phone || BUSINESS_INFO.phone;
   return (
     <div className="py-12">
       <div className="container">
@@ -25,9 +66,9 @@ export default function ServicesPage() {
         </div>
 
         <div className="space-y-12">
-          {SERVICES.map((service, i) => (
+          {services.map((service, i) => (
             <div
-              key={service.title}
+              key={service._id}
               className={`grid grid-cols-1 lg:grid-cols-2 gap-8 items-center ${
                 i % 2 === 1 ? "lg:direction-rtl" : ""
               }`}
@@ -86,10 +127,10 @@ export default function ServicesPage() {
             Need Materials for Your Project?
           </h2>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href={`tel:${BUSINESS_INFO.phone.replace(/\D/g, "")}`}>
+            <a href={`tel:${phone.replace(/\D/g, "")}`}>
               <Button size="lg" className="gap-2">
                 <Phone className="h-4 w-4" />
-                Call {BUSINESS_INFO.phone}
+                Call {phone}
               </Button>
             </a>
             <Link href="/contact">
