@@ -21,6 +21,7 @@ const checkoutSchema = z.object({
   subtotal: z.number(),
   tax: z.number(),
   processingFee: z.number(),
+  deliveryFee: z.number().optional(),
   total: z.number(),
 });
 
@@ -60,6 +61,7 @@ export async function POST(request: NextRequest) {
           subtotal: data.subtotal,
           tax: data.tax,
           processingFee: data.processingFee,
+          deliveryFee: data.deliveryFee || null,
           total: data.total,
           pickupOrDeliver: data.fulfillment,
           deliveryAddress: data.deliveryAddress || null,
@@ -115,6 +117,21 @@ export async function POST(request: NextRequest) {
           },
           quantity: 1,
         });
+
+        // Add delivery fee line if applicable
+        if (data.deliveryFee && data.deliveryFee > 0) {
+          lineItems.push({
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: "Delivery Fee",
+                description: "Delivery to specified address",
+              },
+              unit_amount: Math.round(data.deliveryFee * 100),
+            },
+            quantity: 1,
+          });
+        }
 
         const session = await stripeClient.checkout.sessions.create({
           payment_method_types: ["card"],
@@ -181,6 +198,7 @@ ${itemsList}
 Subtotal: $${data.subtotal.toFixed(2)}
 Tax (7.25%): $${data.tax.toFixed(2)}
 Processing Fee (4.5%): $${data.processingFee.toFixed(2)}
+${data.deliveryFee ? `Delivery Fee: $${data.deliveryFee.toFixed(2)}` : ""}
 Total: $${data.total.toFixed(2)}
 
 Payment: Pending — Stripe not configured, customer will pay on pickup/delivery.
