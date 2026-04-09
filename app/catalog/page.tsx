@@ -5,6 +5,7 @@ import { Phone, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StockBadge, type StockStatus } from "@/components/catalog/StockBadge";
 import { getProducts } from "@/lib/products";
 import { BUSINESS_INFO } from "@/data/business";
 
@@ -13,6 +14,10 @@ export const metadata: Metadata = {
   description:
     "Browse our complete catalog of gravel, sand, soil, and stone products. Detailed guides, pricing, and specifications for every material we carry.",
 };
+
+function convertStockStatus(status: string): StockStatus {
+  return status.toLowerCase() as StockStatus;
+}
 
 export default async function CatalogPage() {
   const products = await getProducts();
@@ -92,9 +97,12 @@ export default async function CatalogPage() {
                         <p className="text-sm text-muted-foreground mb-3">
                           {product.shortDescription}
                         </p>
-                        <div className="flex items-center gap-1 text-xs text-primary font-medium">
-                          View Details
-                          <ArrowRight className="h-3 w-3" />
+                        <div className="flex items-center justify-between">
+                          <StockBadge status={convertStockStatus(product.stockStatus)} />
+                          <div className="flex items-center gap-1 text-xs text-primary font-medium">
+                            View Details
+                            <ArrowRight className="h-3 w-3" />
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
