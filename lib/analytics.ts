@@ -1,8 +1,8 @@
 // Type definitions for Google Analytics gtag
 declare global {
   interface Window {
-    dataLayer: Record<string, unknown>[];
-    gtag: (...args: unknown[]) => void;
+    dataLayer?: Record<string, unknown>[];
+    gtag?: (...args: unknown[]) => void;
   }
 }
 
@@ -34,6 +34,20 @@ interface EcommerceParams {
 interface LeadParams {
   currency?: string;
   value?: number;
+}
+
+/**
+ * Generate a normalized analytics item ID from a product/item name.
+ * Strips diacritics, lowercases, and replaces non-word characters with hyphens.
+ */
+export function getAnalyticsItemId(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^\w]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 // Generic event tracking
