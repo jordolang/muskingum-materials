@@ -9,6 +9,7 @@ import {
   MapPin,
   FileText,
   LogOut,
+  Bookmark,
 } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { href: "/account", label: "Dashboard", icon: LayoutDashboard },
   { href: "/account/orders", label: "My Orders", icon: ShoppingBag },
+  { href: "/account/saved-orders", label: "Saved Orders", icon: Bookmark },
   { href: "/account/profile", label: "Profile", icon: User },
   { href: "/account/addresses", label: "Addresses", icon: MapPin },
   { href: "/account/invoices", label: "Invoices", icon: FileText },
