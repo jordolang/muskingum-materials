@@ -27,7 +27,7 @@ const checkoutSchema = z.object({
 function generateOrderNumber(): string {
   const now = new Date();
   const datePart = now.toISOString().slice(2, 10).replace(/-/g, "");
-  const randomPart = crypto.randomUUID().replace(/-/g, "").substring(0, 4).toUpperCase();
+  const randomPart = crypto.randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase();
   return `MM-${datePart}-${randomPart}`;
 }
 
