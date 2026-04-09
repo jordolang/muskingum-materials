@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
+import { ReorderButton } from "@/components/account/reorder-button";
 
 export default async function OrdersPage() {
   const session = await auth();
@@ -17,6 +18,7 @@ export default async function OrdersPage() {
     status: string;
     paymentStatus: string;
     pickupOrDeliver: string;
+    deliveryAddress: string | null;
     createdAt: Date;
   }> = [];
 
@@ -97,6 +99,13 @@ export default async function OrdersPage() {
                             {order.pickupOrDeliver}
                           </p>
                         </div>
+                        <ReorderButton
+                          orderData={{
+                            items,
+                            pickupOrDeliver: order.pickupOrDeliver,
+                            deliveryAddress: order.deliveryAddress,
+                          }}
+                        />
                         <ArrowRight className="h-5 w-5 text-muted-foreground" />
                       </div>
                     </div>
