@@ -78,9 +78,12 @@ export async function validateCheckoutPrices(
       throw new Error(`Product "${item.name}" not found in catalog`);
     }
 
-    // Skip validation for products with "call" pricing
+    // Reject "call" pricing items — they have no catalog price and require
+    // a quote, so client-supplied prices cannot be validated.
     if (catalogProduct.unit === "call") {
-      continue;
+      throw new Error(
+        `Product "${item.name}" requires a custom quote (call for pricing) and cannot be purchased online`
+      );
     }
 
     // Validate price matches catalog
