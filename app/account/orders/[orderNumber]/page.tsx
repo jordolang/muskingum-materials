@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { prisma } from "@/lib/prisma";
 import { BUSINESS_INFO } from "@/data/business";
+import { SaveTemplateButton } from "@/components/order/save-template-button";
 
 export default async function OrderDetailPage({
   params,
@@ -72,6 +73,11 @@ export default async function OrderDetailPage({
           </p>
         </div>
         <div className="flex gap-2">
+          <SaveTemplateButton
+            items={items}
+            pickupOrDeliver={order.pickupOrDeliver}
+            deliveryAddress={order.deliveryAddress}
+          />
           <Button variant="outline" size="sm" className="gap-1" onClick={() => {}}>
             <Printer className="h-4 w-4" />
             Print

@@ -16,6 +16,7 @@ import {
   Loader2,
   CreditCard,
   CheckCircle,
+  Bookmark,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +66,7 @@ export function OrderForm() {
   const [step, setStep] = useState<"products" | "checkout" | "complete">("products");
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
 
   // Parse reorder params for default values
   const reorderData = useMemo(() => {
@@ -217,6 +219,44 @@ export function OrderForm() {
       );
     } finally {
       setIsProcessing(false);
+    }
+  }
+
+  async function handleSaveAsTemplate() {
+    if (cart.length === 0) return;
+
+    const templateName = window.prompt("Enter a name for this template:");
+    if (!templateName || templateName.trim() === "") {
+      return;
+    }
+
+    setIsSavingTemplate(true);
+
+    try {
+      const response = await fetch("/api/account/saved-orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: templateName.trim(),
+          items: cart.map((item) => ({
+            name: item.name,
+            quantity: item.quantity,
+            unit: item.unit,
+          })),
+          pickupOrDeliver: fulfillment || "pickup",
+          deliveryAddress: fulfillment === "delivery" ? watch("deliveryAddress") || null : null,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save template");
+      }
+
+      alert(`Template "${templateName}" saved successfully!`);
+    } catch (error) {
+      alert("Failed to save template. Please try again.");
+    } finally {
+      setIsSavingTemplate(false);
     }
   }
 
@@ -394,6 +434,24 @@ export function OrderForm() {
                 >
                   <CreditCard className="h-4 w-4" />
                   Proceed to Checkout
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full mt-2 gap-2"
+                  onClick={handleSaveAsTemplate}
+                  disabled={isSavingTemplate}
+                >
+                  {isSavingTemplate ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Bookmark className="h-4 w-4" />
+                      Save as Template
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>
