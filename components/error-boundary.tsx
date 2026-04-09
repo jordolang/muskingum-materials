@@ -21,6 +21,8 @@ interface ErrorBoundaryState {
  * Must be a class component as required by React's error boundary API
  */
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  static displayName = "ErrorBoundary";
+
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = {
@@ -111,5 +113,3 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     return children;
   }
 }
-
-ErrorBoundary.displayName = "ErrorBoundary";
