@@ -76,6 +76,20 @@ export const product = defineType({
       initialValue: true,
     }),
     defineField({
+      name: "stockStatus",
+      title: "Stock Status",
+      type: "string",
+      options: {
+        list: [
+          { title: "In Stock", value: "in_stock" },
+          { title: "Low Stock", value: "low_stock" },
+          { title: "Out of Stock", value: "out_of_stock" },
+          { title: "Seasonal", value: "seasonal" },
+        ],
+      },
+      initialValue: "in_stock",
+    }),
+    defineField({
       name: "specifications",
       title: "Specifications",
       type: "array",
