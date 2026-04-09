@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { PRODUCTS, BUSINESS_INFO } from "@/data/business";
 import { checkoutFormSchema, type CheckoutFormData } from "@/lib/schemas";
+import { useToast } from "@/lib/use-toast";
 
 const ORDERABLE_PRODUCTS = PRODUCTS.filter((p) => p.price > 0);
 
@@ -52,6 +53,7 @@ export function OrderForm() {
   const [step, setStep] = useState<"products" | "checkout" | "complete">("products");
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
+  const { toast } = useToast();
 
   const {
     register,
@@ -150,11 +152,14 @@ export function OrderForm() {
         throw new Error(result.error || "Checkout failed");
       }
     } catch (error) {
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong. Please call (740) 319-0183 to place your order."
-      );
+      toast({
+        variant: "destructive",
+        title: "Checkout failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong. Please call (740) 319-0183 to place your order.",
+      });
     } finally {
       setIsProcessing(false);
     }
