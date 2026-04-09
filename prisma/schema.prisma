@@ -152,3 +152,92 @@ model NewsletterSubscriber {
 
   @@index([email])
 }
+
+model Product {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  name             String
+  category         String
+  description      String   @db.Text
+  shortDescription String?  @db.Text
+  imageUrl         String?
+  imageAlt         String?
+
+  // Pricing - Muskingum local pricing
+  price            Float?
+  unit             String   @default("ton")
+
+  // Market pricing ranges (from industry data)
+  marketPriceLowPerTon   Float?
+  marketPriceHighPerTon  Float?
+  marketPriceLowPerYard  Float?
+  marketPriceHighPerYard Float?
+
+  // Physical properties
+  sizeDescription  String?
+  colorDescription String?
+  densityLow       Float?   @default(1.4)
+  densityHigh      Float?   @default(1.5)
+
+  // Detailed content
+  bestFor          String[] @default([])
+  notFor           String[] @default([])
+  commonUses       String[] @default([])
+  pros             String[] @default([])
+  cons             String[] @default([])
+  altNames         String[] @default([])
+
+  // SEO
+  metaTitle        String?
+  metaDescription  String?  @db.Text
+
+  // Ordering
+  sortOrder        Int      @default(0)
+  featured         Boolean  @default(false)
+  active           Boolean  @default(true)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  comparisons      ProductComparison[] @relation("ComparisonProductA")
+  comparedBy       ProductComparison[] @relation("ComparisonProductB")
+
+  @@index([category])
+  @@index([slug])
+  @@index([active])
+}
+
+model ProductComparison {
+  id         String  @id @default(cuid())
+  productAId String
+  productBId String
+  productA   Product @relation("ComparisonProductA", fields: [productAId], references: [id], onDelete: Cascade)
+  productB   Product @relation("ComparisonProductB", fields: [productBId], references: [id], onDelete: Cascade)
+  summary    String? @db.Text
+
+  createdAt  DateTime @default(now())
+
+  @@unique([productAId, productBId])
+  @@index([productAId])
+  @@index([productBId])
+}
+
+model CostGuide {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  title            String
+  subtitle         String?
+  description      String   @db.Text
+  content          Json
+  icon             String?
+  sortOrder        Int      @default(0)
+  active           Boolean  @default(true)
+
+  metaTitle        String?
+  metaDescription  String?  @db.Text
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([slug])
+}

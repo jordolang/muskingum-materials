@@ -10,10 +10,11 @@ import { BUSINESS_INFO } from "@/data/business";
 const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/products", label: "Products & Pricing" },
+  { href: "/catalog", label: "Material Guide" },
+  { href: "/calculators", label: "Calculators" },
+  { href: "/costs", label: "Costs" },
   { href: "/order", label: "Order Online" },
   { href: "/services", label: "Services" },
-  { href: "/gallery", label: "Gallery" },
-  { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
 
