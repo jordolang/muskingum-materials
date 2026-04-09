@@ -70,6 +70,11 @@ const NAV_ITEMS: NavItem[] = [
         label: "Coverage Chart",
         description: "Coverage at different depths",
       },
+      {
+        href: "/planner",
+        label: "Gravel Planner",
+        description: "Draw on satellite map for exact estimates",
+      },
     ],
   },
   { href: "/order", label: "Order Online" },

@@ -13,6 +13,7 @@
     "db:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^1.2.0",
     "@clerk/nextjs": "^6.12.0",
     "@clerk/themes": "^2.2.0",
     "@hookform/resolvers": "^4.1.0",
@@ -37,7 +38,6 @@
     "@sanity/vision": "^3.75.0",
     "@stripe/stripe-js": "^5.5.0",
     "ai": "^4.3.0",
-    "@ai-sdk/anthropic": "^1.2.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "framer-motion": "^12.4.0",
@@ -59,6 +59,7 @@
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@types/google.maps": "^3.58.1",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
