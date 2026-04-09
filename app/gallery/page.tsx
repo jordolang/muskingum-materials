@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { LazyVideo } from "@/components/gallery/lazy-video";
 
 export const metadata: Metadata = {
   title: "Gallery",
@@ -58,17 +59,7 @@ export default function GalleryPage() {
               { src: "/images/videos/feeder.mp4", title: "Material Feeder" },
               { src: "/images/videos/water.mp4", title: "Site Overview" },
             ].map((video) => (
-              <div key={video.src} className="rounded-lg overflow-hidden">
-                <video
-                  controls
-                  preload="metadata"
-                  className="w-full aspect-video object-cover"
-                  poster=""
-                >
-                  <source src={video.src} type="video/mp4" />
-                </video>
-                <p className="text-sm font-medium mt-2">{video.title}</p>
-              </div>
+              <LazyVideo key={video.src} src={video.src} title={video.title} />
             ))}
           </div>
         </div>
