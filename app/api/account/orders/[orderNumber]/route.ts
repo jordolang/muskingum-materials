@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { orderStatusUpdateSchema } from "@/lib/schemas";
 import { sendOrderStatusEmail, type OrderEmailData, type OrderStatus } from "@/lib/email/order-notifications";
@@ -42,6 +42,18 @@ export async function PUT(
     const session = await auth();
     if (!session?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Verify user has admin role
+    const client = await clerkClient();
+    const user = await client.users.getUser(session.userId);
+    const isAdmin = user.publicMetadata?.role === 'admin';
+
+    if (!isAdmin) {
+      return NextResponse.json(
+        { error: "Forbidden: Admin access required to update order status" },
+        { status: 403 }
+      );
     }
 
     const { orderNumber } = await params;
