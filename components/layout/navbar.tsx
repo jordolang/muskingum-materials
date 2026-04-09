@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, lazy, Suspense } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { Menu, X, Phone, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BUSINESS_INFO } from "@/data/business";
@@ -17,38 +18,40 @@ const NAV_LINKS = [
   { href: "/contact", label: "Contact" },
 ];
 
-const ClerkAccountButton = lazy(() =>
-  import("@/components/layout/clerk-account-button").then((mod) => ({
-    default: mod.ClerkAccountButton,
-  }))
+const ClerkAccountButton = dynamic(
+  () =>
+    import("@/components/layout/clerk-account-button").then(
+      (mod) => mod.ClerkAccountButton
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <Link href="/sign-in">
+        <Button variant="ghost" size="sm" className="gap-2">
+          <User className="h-4 w-4" />
+          <span className="hidden lg:inline text-xs">Sign In</span>
+        </Button>
+      </Link>
+    ),
+  }
 );
 
-function AccountButtonFallback() {
-  return (
-    <Link href="/sign-in">
-      <Button variant="ghost" size="sm" className="gap-2">
-        <User className="h-4 w-4" />
-        <span className="hidden lg:inline text-xs">Sign In</span>
-      </Button>
-    </Link>
-  );
-}
-
-function MobileAccountFallback() {
-  return (
-    <Link href="/sign-in">
-      <Button variant="outline" size="sm" className="w-full gap-2">
-        <User className="h-4 w-4" />
-        Sign In
-      </Button>
-    </Link>
-  );
-}
-
-const ClerkMobileAccount = lazy(() =>
-  import("@/components/layout/clerk-account-button").then((mod) => ({
-    default: mod.ClerkMobileAccount,
-  }))
+const ClerkMobileAccount = dynamic(
+  () =>
+    import("@/components/layout/clerk-account-button").then(
+      (mod) => mod.ClerkMobileAccount
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <Link href="/sign-in">
+        <Button variant="outline" size="sm" className="w-full gap-2">
+          <User className="h-4 w-4" />
+          Sign In
+        </Button>
+      </Link>
+    ),
+  }
 );
 
 export function Navbar() {
@@ -81,9 +84,7 @@ export function Navbar() {
         </nav>
 
         <div className="hidden md:flex items-center gap-2">
-          <Suspense fallback={<AccountButtonFallback />}>
-            <ClerkAccountButton />
-          </Suspense>
+          <ClerkAccountButton />
           <a href={`tel:${BUSINESS_INFO.phone.replace(/\D/g, "")}`}>
             <Button variant="outline" size="sm" className="gap-2">
               <Phone className="h-4 w-4" />
@@ -118,9 +119,7 @@ export function Navbar() {
               </Link>
             ))}
             <div className="flex flex-col gap-2 pt-3 border-t">
-              <Suspense fallback={<MobileAccountFallback />}>
-                <ClerkMobileAccount onNavigate={() => setMobileOpen(false)} />
-              </Suspense>
+              <ClerkMobileAccount onNavigate={() => setMobileOpen(false)} />
               <a href={`tel:${BUSINESS_INFO.phone.replace(/\D/g, "")}`}>
                 <Button variant="outline" size="sm" className="w-full gap-2">
                   <Phone className="h-4 w-4" />
