@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,12 +9,9 @@ import {
 } from "@/components/ui/accordion";
 import { BUSINESS_INFO } from "@/data/business";
 import { generateFAQPageSchema, toJsonLd } from "@/lib/seo/structured-data";
+import { generateFAQMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "FAQ",
-  description:
-    "Frequently asked questions about Muskingum Materials products, pricing, delivery, and more.",
-};
+export const metadata = generateFAQMetadata();
 
 const FAQS = [
   {
