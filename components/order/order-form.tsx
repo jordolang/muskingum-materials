@@ -23,6 +23,7 @@ export const checkoutSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Valid email is required"),
   phone: z.string().min(10, "Phone number is required"),
+  smsOptIn: z.boolean().optional(),
   fulfillment: z.enum(["pickup", "delivery"]),
   deliveryAddress: z.string().optional(),
   deliveryNotes: z.string().optional(),
