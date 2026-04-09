@@ -2,15 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-
-const addressSchema = z.object({
-  label: z.string().min(1),
-  street: z.string().min(3),
-  city: z.string().min(2),
-  state: z.string().min(2),
-  zip: z.string().min(5),
-  isDefault: z.boolean().optional(),
-});
+import { addressSchema } from "@/lib/schemas";
 
 export async function POST(request: NextRequest) {
   try {
