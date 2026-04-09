@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { PRODUCTS, BUSINESS_INFO } from "@/data/business";
 import { checkoutFormSchema, type CheckoutFormData } from "@/lib/schemas";
-import { trackAddToCart } from "@/lib/analytics";
+import { trackAddToCart, trackBeginCheckout } from "@/lib/analytics";
 
 const ORDERABLE_PRODUCTS = PRODUCTS.filter((p) => p.price > 0);
 
@@ -118,6 +118,23 @@ export function OrderForm() {
 
   function removeFromCart(name: string) {
     setCart((prev) => prev.filter((item) => item.name !== name));
+  }
+
+  function proceedToCheckout() {
+    // Track begin checkout event
+    trackBeginCheckout({
+      value: totals.total,
+      items: cart.map((item) => ({
+        itemId: item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        itemName: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        category: "Bulk Materials",
+      })),
+    });
+
+    // Proceed to checkout step
+    setStep("checkout");
   }
 
   const totals = useMemo(() => {
@@ -340,7 +357,7 @@ export function OrderForm() {
                 <Button
                   className="w-full mt-4 gap-2 font-semibold"
                   size="lg"
-                  onClick={() => setStep("checkout")}
+                  onClick={proceedToCheckout}
                 >
                   <CreditCard className="h-4 w-4" />
                   Proceed to Checkout
