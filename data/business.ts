@@ -155,7 +155,7 @@ export const PRODUCTS = [
   },
 ] as const;
 
-export const PRODUCT_IMAGES: Record<string, string> = {
+export const PRODUCT_IMAGES: Partial<Record<(typeof PRODUCTS)[number]["name"], string>> = {
   "Bank Run": "/images/products/bank-run.jpg",
   "Fill Dirt": "/images/products/fill-dirt.jpg",
   "Fill Sand": "/images/products/fill-sand.jpg",
