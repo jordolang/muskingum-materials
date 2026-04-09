@@ -85,6 +85,7 @@ model QuoteRequest {
 model Order {
   id              String      @id @default(cuid())
   orderNumber     String      @unique
+  userId          String?
   name            String
   email           String
   phone           String?
@@ -101,13 +102,45 @@ model Order {
   paymentStatus   String      @default("unpaid")
   stripeSessionId String?
   stripePaymentId String?
+  invoiceUrl      String?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
   @@index([orderNumber])
+  @@index([userId])
   @@index([email])
   @@index([status])
   @@index([stripeSessionId])
+}
+
+model UserProfile {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  name        String?
+  email       String?
+  phone       String?
+  company     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  addresses   Address[]
+
+  @@index([userId])
+}
+
+model Address {
+  id            String       @id @default(cuid())
+  userProfileId String
+  userProfile   UserProfile  @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+  label         String       @default("Default")
+  street        String
+  city          String
+  state         String
+  zip           String
+  isDefault     Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([userProfileId])
 }
 
 model NewsletterSubscriber {

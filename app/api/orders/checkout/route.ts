@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
 const checkoutSchema = z.object({
@@ -36,12 +37,22 @@ export async function POST(request: NextRequest) {
     const data = checkoutSchema.parse(body);
     const orderNumber = generateOrderNumber();
 
+    // Get authenticated user if available
+    let userId: string | null = null;
+    try {
+      const session = await auth();
+      userId = session?.userId ?? null;
+    } catch {
+      // Not authenticated - that's fine for guest checkout
+    }
+
     // Create order in database
     let order;
     try {
       order = await prisma.order.create({
         data: {
           orderNumber,
+          userId,
           name: data.name,
           email: data.email,
           phone: data.phone,

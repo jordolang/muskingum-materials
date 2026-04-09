@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, Phone } from "lucide-react";
+import { Menu, X, Phone, User } from "lucide-react";
+import { useUser, SignedIn, SignedOut } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { BUSINESS_INFO } from "@/data/business";
 
@@ -16,6 +17,35 @@ const NAV_LINKS = [
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
+
+function AccountButton() {
+  const { user } = useUser();
+
+  return (
+    <>
+      <SignedIn>
+        <Link href="/account">
+          <Button variant="ghost" size="sm" className="gap-2">
+            {user?.imageUrl ? (
+              <img src={user.imageUrl} alt="" className="h-5 w-5 rounded-full" />
+            ) : (
+              <User className="h-4 w-4" />
+            )}
+            <span className="hidden lg:inline text-xs">Account</span>
+          </Button>
+        </Link>
+      </SignedIn>
+      <SignedOut>
+        <Link href="/sign-in">
+          <Button variant="ghost" size="sm" className="gap-2">
+            <User className="h-4 w-4" />
+            <span className="hidden lg:inline text-xs">Sign In</span>
+          </Button>
+        </Link>
+      </SignedOut>
+    </>
+  );
+}
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -46,7 +76,8 @@ export function Navbar() {
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-2">
+          <AccountButton />
           <a href={`tel:${BUSINESS_INFO.phone.replace(/\D/g, "")}`}>
             <Button variant="outline" size="sm" className="gap-2">
               <Phone className="h-4 w-4" />
@@ -81,6 +112,22 @@ export function Navbar() {
               </Link>
             ))}
             <div className="flex flex-col gap-2 pt-3 border-t">
+              <SignedIn>
+                <Link href="/account" onClick={() => setMobileOpen(false)}>
+                  <Button variant="outline" size="sm" className="w-full gap-2">
+                    <User className="h-4 w-4" />
+                    My Account
+                  </Button>
+                </Link>
+              </SignedIn>
+              <SignedOut>
+                <Link href="/sign-in" onClick={() => setMobileOpen(false)}>
+                  <Button variant="outline" size="sm" className="w-full gap-2">
+                    <User className="h-4 w-4" />
+                    Sign In
+                  </Button>
+                </Link>
+              </SignedOut>
               <a href={`tel:${BUSINESS_INFO.phone.replace(/\D/g, "")}`}>
                 <Button variant="outline" size="sm" className="w-full gap-2">
                   <Phone className="h-4 w-4" />
