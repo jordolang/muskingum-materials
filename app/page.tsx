@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { BUSINESS_INFO, PRODUCTS, SERVICES } from "@/data/business";
 import { ReviewsCarousel } from "@/components/home/reviews-carousel";
 import { HomepageFAQ } from "@/components/home/homepage-faq";
+import { generateLocalBusinessSchema, toJsonLd } from "@/lib/seo/structured-data";
 
 const FEATURED_PRODUCTS = PRODUCTS.filter((p) => p.price > 0).slice(0, 6);
 
@@ -33,8 +34,16 @@ const PRODUCT_IMAGES: Record<string, string> = {
 };
 
 export default function HomePage() {
+  const localBusinessSchema = generateLocalBusinessSchema();
+
   return (
     <>
+      {/* Structured Data - LocalBusiness Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(localBusinessSchema) }}
+      />
+
       {/* Hero */}
       <section className="relative min-h-[600px] flex items-center">
         <div className="absolute inset-0 z-0">
