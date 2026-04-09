@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { PRODUCTS, BUSINESS_INFO } from "@/data/business";
 import { checkoutFormSchema, type CheckoutFormData } from "@/lib/schemas";
+import { trackAddToCart } from "@/lib/analytics";
 
 const ORDERABLE_PRODUCTS = PRODUCTS.filter((p) => p.price > 0);
 
@@ -79,6 +80,15 @@ export function OrderForm() {
         ...prev,
         { name: product.name, price: product.price, unit: product.unit, quantity: 1 },
       ];
+    });
+
+    // Track add to cart event
+    trackAddToCart({
+      itemId: product.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      itemName: product.name,
+      price: product.price,
+      quantity: 1,
+      category: "Bulk Materials",
     });
   }
 
