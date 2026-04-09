@@ -72,7 +72,7 @@ export default function GalleryPage() {
         {/* Photo Grid */}
         <h2 className="text-2xl font-bold font-heading mb-6">Photos</h2>
         <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
-          {GALLERY_IMAGES.map((image) => (
+          {GALLERY_IMAGES.map((image, index) => (
             <div
               key={image.src}
               className="relative break-inside-avoid rounded-lg overflow-hidden group"
@@ -83,6 +83,8 @@ export default function GalleryPage() {
                 width={600}
                 height={400}
                 className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-300"
+                priority={index < 3}
+                loading={index >= 3 ? "lazy" : undefined}
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-end">
                 <div className="p-3 text-white opacity-0 group-hover:opacity-100 transition-opacity">
