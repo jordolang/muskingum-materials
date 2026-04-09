@@ -7,6 +7,10 @@ export const metadata: Metadata = {
     "See our equipment, materials, and facility. Muskingum Materials in Zanesville, OH.",
 };
 
+// Neutral gray blur placeholder for images
+const BLUR_DATA_URL =
+  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZmlsdGVyIGlkPSJiIj48ZmVHYXVzc2lhbkJsdXIgc3RkRGV2aWF0aW9uPSIxMiIgLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2U3ZTVlNCIgZmlsdGVyPSJ1cmwoI2IpIiAvPjwvc3ZnPg==";
+
 const GALLERY_IMAGES = [
   { src: "/images/photos/aerial.jpg", alt: "Aerial view of Muskingum Materials", category: "Facility" },
   { src: "/images/photos/equipment.jpg", alt: "Heavy equipment at work", category: "Equipment" },
@@ -85,6 +89,8 @@ export default function GalleryPage() {
                 className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-300"
                 priority={index < 3}
                 loading={index >= 3 ? "lazy" : undefined}
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-end">
                 <div className="p-3 text-white opacity-0 group-hover:opacity-100 transition-opacity">
