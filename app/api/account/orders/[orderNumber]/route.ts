@@ -115,7 +115,8 @@ export async function PUT(
 
       await sendOrderStatusEmail(emailData);
     } catch (emailError) {
-      // Log email error but don't fail the request
+      // Log email error but don't fail the request - order was updated successfully
+      console.error(`Failed to send status update email for order ${orderNumber}:`, emailError);
     }
 
     return NextResponse.json({ order: updatedOrder });
