@@ -5,6 +5,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ChatWidget } from "@/components/chat/chat-widget";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
 const fontSans = Inter({
@@ -62,6 +63,7 @@ export default function RootLayout({
           </div>
           <ChatWidget />
           <GoogleAnalytics />
+          <Toaster />
         </body>
       </html>
     </ClerkProvider>
