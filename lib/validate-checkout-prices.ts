@@ -43,11 +43,13 @@ interface Product {
  * Fetches products from Sanity with fallback to hardcoded data.
  *
  * @param data - Checkout data with items and claimed prices
+ * @param contractorDiscountPercent - Optional contractor discount percentage (0-100)
  * @returns Validated and recalculated prices
  * @throws Error if prices don't match catalog or calculations are incorrect
  */
 export async function validateCheckoutPrices(
-  data: CheckoutData
+  data: CheckoutData,
+  contractorDiscountPercent?: number
 ): Promise<ValidatedPrices> {
   // Fetch products from Sanity, fallback to hardcoded PRODUCTS
   let products: Product[];
@@ -98,7 +100,7 @@ export async function validateCheckoutPrices(
     const priceCalculation = calculatePrice(
       catalogProduct,
       item.quantity,
-      undefined // No contractor discount for now
+      contractorDiscountPercent
     );
     const expectedPrice = priceCalculation.finalPrice;
     const tolerance = 0.01; // Allow 1 cent tolerance for rounding

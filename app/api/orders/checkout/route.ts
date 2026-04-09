@@ -17,10 +17,32 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = checkoutSchema.parse(body);
 
+    // Get authenticated user if available
+    let userId: string | null = null;
+    let contractorDiscount: number | undefined;
+    try {
+      const session = await auth();
+      userId = session?.userId ?? null;
+
+      // Fetch contractor status and discount if authenticated
+      if (userId) {
+        const profile = await prisma.userProfile.findUnique({
+          where: { userId },
+          select: { isContractor: true, contractorDiscount: true },
+        });
+
+        if (profile?.isContractor && profile.contractorDiscount) {
+          contractorDiscount = profile.contractorDiscount;
+        }
+      }
+    } catch {
+      // Not authenticated - that's fine for guest checkout
+    }
+
     // Validate prices against product catalog
     let validatedPrices;
     try {
-      validatedPrices = await validateCheckoutPrices(data);
+      validatedPrices = await validateCheckoutPrices(data, contractorDiscount);
     } catch (validationError) {
       const errorMessage = validationError instanceof Error
         ? validationError.message
@@ -32,15 +54,6 @@ export async function POST(request: NextRequest) {
     }
 
     const orderNumber = generateOrderNumber();
-
-    // Get authenticated user if available
-    let userId: string | null = null;
-    try {
-      const session = await auth();
-      userId = session?.userId ?? null;
-    } catch {
-      // Not authenticated - that's fine for guest checkout
-    }
 
     // Create order in database
     let order;
