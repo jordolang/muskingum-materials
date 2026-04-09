@@ -49,13 +49,29 @@ export default async function CatalogPage({
 
         {products.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-muted-foreground text-lg">
-              No products found matching your criteria.
-            </p>
+            <Card className="max-w-md mx-auto">
+              <CardContent className="p-8">
+                <h3 className="text-xl font-semibold mb-2">
+                  No Products Found
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  No products match your current search or filter criteria.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Try clearing your filters or adjusting your search to see more results.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {products.map((product) => (
+          <>
+            <div className="mb-4">
+              <p className="text-sm text-muted-foreground">
+                Showing {products.length} {products.length === 1 ? 'product' : 'products'}
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {products.map((product) => (
               <Link key={product.slug} href={`/catalog/${product.slug}`}>
                 <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer group">
                   {product.imageUrl && (
@@ -106,7 +122,8 @@ export default async function CatalogPage({
                 </Card>
               </Link>
             ))}
-          </div>
+            </div>
+          </>
         )}
 
         <div className="bg-muted/50 rounded-lg p-8 mt-8">
