@@ -5,12 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PRODUCTS, BUSINESS_INFO } from "@/data/business";
 import { generateProductSchema, toJsonLd } from "@/lib/seo/structured-data";
+import { generateProductsMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Products & Pricing",
-  description:
-    "View our complete list of sand, gravel, soil, and stone products with current pricing. Serving Southeast Ohio from Zanesville.",
-};
+export const metadata: Metadata = generateProductsMetadata();
 
 const CATEGORIES = [
   { value: "all", label: "All Products" },
