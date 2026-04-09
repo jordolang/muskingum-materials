@@ -203,6 +203,10 @@ model Product {
   featured  Boolean @default(false)
   active    Boolean @default(true)
 
+  // Inventory & Availability
+  stockStatus     StockStatus @default(IN_STOCK)
+  seasonalMessage String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
