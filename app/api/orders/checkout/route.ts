@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
           pickupOrDeliver: data.fulfillment,
           deliveryAddress: data.deliveryAddress || null,
           deliveryNotes: data.deliveryNotes || null,
+          smsOptIn: data.smsOptIn || false,
           status: "pending",
           paymentStatus: "unpaid",
         },
