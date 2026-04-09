@@ -64,8 +64,12 @@ export async function POST(request: NextRequest) {
           paymentStatus: "unpaid",
         },
       });
-    } catch {
-      // Database might not be configured
+    } catch (error) {
+      console.error("Order creation error:", error);
+      return NextResponse.json(
+        { error: "Failed to create order. Please try again or call (740) 319-0183." },
+        { status: 500 }
+      );
     }
 
     // Try Stripe Checkout Session
@@ -134,8 +138,9 @@ export async function POST(request: NextRequest) {
               where: { id: order.id },
               data: { stripeSessionId: session.id },
             });
-          } catch {
-            // Ignore update failure
+          } catch (error) {
+            console.error("Order update error (Stripe session ID):", error);
+            // Continue anyway - Stripe session was created successfully
           }
         }
 
