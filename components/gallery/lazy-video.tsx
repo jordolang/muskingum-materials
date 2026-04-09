@@ -18,8 +18,9 @@ export function LazyVideo({ src, title }: LazyVideoProps) {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && !isLoaded) {
+          if (entry.isIntersecting) {
             setIsLoaded(true);
+            observer.disconnect();
           }
         });
       },
@@ -33,7 +34,7 @@ export function LazyVideo({ src, title }: LazyVideoProps) {
     return () => {
       observer.disconnect();
     };
-  }, [isLoaded]);
+  }, []);
 
   return (
     <div className="rounded-lg overflow-hidden">
@@ -43,6 +44,7 @@ export function LazyVideo({ src, title }: LazyVideoProps) {
         preload="none"
         className="w-full aspect-video object-cover"
         poster=""
+        aria-label={title}
       >
         {isLoaded && <source src={src} type="video/mp4" />}
       </video>
