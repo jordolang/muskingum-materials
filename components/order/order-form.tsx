@@ -39,6 +39,7 @@ import {
 } from "./project-estimator";
 import { FulfillmentSection } from "./fulfillment-section";
 import { ContactSection } from "./contact-section";
+import { trackAddToCart, getAnalyticsItemId } from "@/lib/analytics";
 
 export interface OrderableProduct {
   id: string;
@@ -121,12 +122,33 @@ export function OrderForm({ products }: OrderFormProps) {
       .items.some((item) => item.name === match.name);
     if (!alreadyInCart) {
       addToCart({ name: match.name, price: match.price, unit: match.unit });
+      trackAddToCart({
+        itemId: getAnalyticsItemId(match.name),
+        itemName: match.name,
+        price: match.price,
+        quantity: 1,
+        category: "Bulk Materials",
+      });
       toast({
         title: "Added to your order",
         description: `${match.name} is ready to customize below.`,
       });
     }
   }, [productParam, addToCart, toast, products]);
+
+  const handleAddToCart = useCallback(
+    (product: { name: string; price: number; unit: string }) => {
+      addToCart(product);
+      trackAddToCart({
+        itemId: getAnalyticsItemId(product.name),
+        itemName: product.name,
+        price: product.price,
+        quantity: 1,
+        category: "Bulk Materials",
+      });
+    },
+    [addToCart]
+  );
 
   const handleSiteDataChange = useCallback((data: ProjectSiteData) => {
     setSiteData(data);
@@ -363,7 +385,7 @@ export function OrderForm({ products }: OrderFormProps) {
             <ProductCatalog
               products={products}
               cart={cart}
-              onAddToCart={addToCart}
+              onAddToCart={handleAddToCart}
               onUpdateQuantity={updateQuantity}
               onSetQuantity={setQuantity}
             />
