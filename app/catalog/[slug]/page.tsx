@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getProductBySlug, getProducts } from "@/lib/products";
 import { BUSINESS_INFO } from "@/data/business";
+import { StockBadge, type StockStatus } from "@/components/catalog/StockBadge";
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -38,6 +39,10 @@ export async function generateMetadata({
     title: product.metaTitle ?? product.name,
     description: product.metaDescription ?? product.shortDescription ?? product.description,
   };
+}
+
+function convertStockStatus(status: string): StockStatus {
+  return status.toLowerCase() as StockStatus;
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
@@ -86,6 +91,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               <Badge variant="secondary" className="capitalize">
                 {product.category}
               </Badge>
+              <StockBadge status={convertStockStatus(product.stockStatus)} />
               {product.altNames.length > 0 && (
                 <span className="text-xs text-muted-foreground">
                   Also known as: {product.altNames.join(", ")}
