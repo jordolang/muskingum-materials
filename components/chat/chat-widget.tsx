@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useChatStore } from "@/lib/store";
+import { trackChatOpened } from "@/lib/analytics";
 
 export function ChatWidget() {
   const { isOpen, messages, toggleChat, addMessage, visitorId } = useChatStore();
@@ -16,6 +17,7 @@ export function ChatWidget() {
   const [contactSubmitted, setContactSubmitted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const prevIsOpenRef = useRef(false);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -38,6 +40,13 @@ export function ChatWidget() {
       });
     }
   }, [isOpen, messages.length, addMessage]);
+
+  useEffect(() => {
+    if (isOpen && !prevIsOpenRef.current) {
+      trackChatOpened({ visitorId });
+    }
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen, visitorId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
