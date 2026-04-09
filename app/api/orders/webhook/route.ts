@@ -57,20 +57,21 @@ export async function POST(request: NextRequest) {
         break;
       }
 
-      // Handle order completion (e.g., after fulfillment/delivery)
-      // This can be triggered by a custom event or external system
-      case "order.completed": {
-        const data = event.data.object as { orderNumber?: string };
-        const orderNumber = data.orderNumber;
+      default: {
+        // Handle custom events
+        if (event.type === "order.completed") {
+          const data = event.data.object as { orderNumber?: string };
+          const orderNumber = data.orderNumber;
 
-        if (orderNumber) {
-          await prisma.order.update({
-            where: { orderNumber },
-            data: {
-              status: "completed",
-              completedAt: new Date(),
-            },
-          });
+          if (orderNumber) {
+            await prisma.order.update({
+              where: { orderNumber },
+              data: {
+                status: "completed",
+                completedAt: new Date(),
+              },
+            });
+          }
         }
         break;
       }

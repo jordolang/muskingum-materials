@@ -62,6 +62,8 @@ export default async function ReviewsPage() {
           name: review.name,
           rating: review.rating,
           text: review.text,
+          image: undefined,
+          company: undefined,
         }));
 
   return (
