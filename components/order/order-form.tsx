@@ -167,10 +167,18 @@ export function OrderForm() {
       const result = await response.json();
 
       if (result.url) {
+        // Store analytics data for success page tracking
+        if (result.analytics) {
+          sessionStorage.setItem("orderAnalytics", JSON.stringify(result.analytics));
+        }
         // Redirect to Stripe Checkout
         window.location.href = result.url;
       } else if (result.orderNumber) {
         // Fallback if Stripe not configured
+        // Store analytics data for tracking
+        if (result.analytics) {
+          sessionStorage.setItem("orderAnalytics", JSON.stringify(result.analytics));
+        }
         setOrderNumber(result.orderNumber);
         setStep("complete");
       } else {

@@ -123,7 +123,21 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        return NextResponse.json({ url: session.url });
+        return NextResponse.json({
+          url: session.url,
+          analytics: {
+            orderNumber,
+            subtotal: data.subtotal,
+            tax: data.tax,
+            total: data.total,
+            items: data.items.map((item) => ({
+              id: item.name.toLowerCase().replace(/\s+/g, "-"),
+              name: item.name,
+              price: item.price,
+              quantity: item.quantity,
+            })),
+          },
+        });
       } catch (stripeError) {
         console.error("Stripe error:", stripeError);
         // Fall through to non-Stripe flow
@@ -172,7 +186,21 @@ Payment: Pending — Stripe not configured, customer will pay on pickup/delivery
       }
     }
 
-    return NextResponse.json({ orderNumber });
+    return NextResponse.json({
+      orderNumber,
+      analytics: {
+        orderNumber,
+        subtotal: data.subtotal,
+        tax: data.tax,
+        total: data.total,
+        items: data.items.map((item) => ({
+          id: item.name.toLowerCase().replace(/\s+/g, "-"),
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+        })),
+      },
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
