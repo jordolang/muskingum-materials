@@ -1,0 +1,204 @@
+export const BUSINESS_INFO = {
+  name: "Muskingum Materials",
+  tagline: "Southeast Ohio's Resource for Sand, Soil, and Gravel",
+  address: "1133 Ellis Dam Rd",
+  city: "Zanesville",
+  state: "OH",
+  zip: "43701",
+  phone: "(740) 319-0183",
+  altPhone: "(740) 453-3063",
+  email: "sales@muskingummaterials.com",
+  website: "https://muskingummaterials.com",
+  hours: "Monday through Friday 7:30 AM – 4:00 PM",
+  hoursParsed: {
+    monday: "7:30 AM – 4:00 PM",
+    tuesday: "7:30 AM – 4:00 PM",
+    wednesday: "7:30 AM – 4:00 PM",
+    thursday: "7:30 AM – 4:00 PM",
+    friday: "7:30 AM – 4:00 PM",
+    saturday: "Closed",
+    sunday: "Closed",
+  },
+  description:
+    "Muskingum Materials is a family-owned company in Zanesville, Ohio providing fair pricing on sand, soil, and gravel products. We offer large-quantity pricing for large projects, on-site state-approved scales, state of the art equipment, and trucking up to 20 tons per load.",
+  features: [
+    "Family-owned company",
+    "Fair pricing",
+    "Large-quantity pricing for large projects",
+    "On-site scales (state approved)",
+    "State of the Art equipment",
+    "Trucking, up to 20 tons per load",
+    "Delivery available",
+  ],
+  paymentMethods: ["Visa", "Mastercard", "Discover", "Apple Pay", "Cash", "Check"],
+  taxRate: 0.0725,
+  creditProcessingFee: 0.045,
+  social: {
+    facebook: "https://www.facebook.com/profile.php?id=61566390498498",
+  },
+  googleMapsEmbedUrl:
+    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3072.5!2d-82.03!3d39.94!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMznCsDU2JzI0LjAiTiA4MsKwMDEnNDguMCJX!5e0!3m2!1sen!2sus!4v1",
+  coordinates: {
+    lat: 39.94,
+    lng: -82.03,
+  },
+} as const;
+
+export const PRODUCTS = [
+  {
+    name: "Bank Run",
+    price: 2.0,
+    unit: "ton",
+    category: "soil",
+    description: "Natural mix of sand, gravel, and soil. Ideal for fill and base material.",
+  },
+  {
+    name: "Fill Dirt",
+    price: 2.0,
+    unit: "ton",
+    category: "soil",
+    description: "Clean fill dirt perfect for grading, backfill, and landscaping projects.",
+  },
+  {
+    name: "Fill Sand",
+    price: 4.0,
+    unit: "ton",
+    category: "sand",
+    description: "Quality fill sand for construction and backfill applications.",
+  },
+  {
+    name: "Topsoil (Unprocessed)",
+    price: 8.0,
+    unit: "ton",
+    category: "soil",
+    description: "Natural unprocessed topsoil for landscaping and gardening.",
+  },
+  {
+    name: "#8 Fractured Gravel (Washed)",
+    price: 28.0,
+    unit: "ton",
+    category: "gravel",
+    description: "Washed fractured gravel, 3/8\" to 1/2\" size. Great for driveways and walkways.",
+  },
+  {
+    name: "#9 Gravel (Washed)",
+    price: 8.0,
+    unit: "ton",
+    category: "gravel",
+    description: "Fine washed gravel ideal for pipe bedding and drainage applications.",
+  },
+  {
+    name: "#8 Gravel (Washed)",
+    price: 15.0,
+    unit: "ton",
+    category: "gravel",
+    description: "Washed 3/8\" gravel perfect for concrete mix and decorative applications.",
+  },
+  {
+    name: "#57 Gravel (Washed)",
+    price: 15.0,
+    unit: "ton",
+    category: "gravel",
+    description: "Washed 3/4\" to 1\" gravel. Popular for driveways, drainage, and landscaping.",
+  },
+  {
+    name: "304 Crushed Gravel",
+    price: 20.0,
+    unit: "ton",
+    category: "gravel",
+    description: "Crushed limestone aggregate perfect for driveways and base material. Compacts well.",
+  },
+  {
+    name: "Oversized Gravel (Washed)",
+    price: 28.0,
+    unit: "ton",
+    category: "gravel",
+    description: "Large washed gravel for drainage, erosion control, and decorative use.",
+  },
+  {
+    name: "#57 Limestone",
+    price: 38.0,
+    unit: "load",
+    category: "stone",
+    description: "Premium limestone aggregate for driveways, construction, and landscaping.",
+  },
+  {
+    name: "Sand (Washed)",
+    price: 0,
+    unit: "call",
+    category: "sand",
+    description: "Clean washed sand for construction, masonry, and landscaping. Call for current pricing.",
+  },
+  {
+    name: "#4 Gravel",
+    price: 0,
+    unit: "call",
+    category: "gravel",
+    description: "1.5\" to 2.5\" gravel for drainage and base applications. Call for pricing.",
+  },
+  {
+    name: "Screenings",
+    price: 0,
+    unit: "call",
+    category: "stone",
+    description: "Fine crushed stone dust ideal for paver base and leveling. Call for pricing.",
+  },
+  {
+    name: "Landscape Rock",
+    price: 0,
+    unit: "call",
+    category: "stone",
+    description: "Decorative landscape rock for gardens and outdoor features. Call for pricing.",
+  },
+] as const;
+
+export const SERVICES = [
+  {
+    title: "Material Sales",
+    description:
+      "Wide selection of sand, gravel, soil, and stone products at competitive prices. On-site state-approved scales ensure accurate measurements.",
+    icon: "mountain",
+    features: [
+      "15+ product varieties",
+      "State-approved scales",
+      "Competitive pricing",
+      "Volume discounts available",
+    ],
+  },
+  {
+    title: "Delivery Services",
+    description:
+      "We deliver materials directly to your job site with our fleet of trucks, handling loads up to 20 tons per trip.",
+    icon: "truck",
+    features: [
+      "Up to 20 tons per load",
+      "Serving Southeast Ohio",
+      "Timely delivery",
+      "Call for delivery rates",
+    ],
+  },
+  {
+    title: "Large Project Pricing",
+    description:
+      "Special pricing for large-quantity orders. Whether you're a contractor or homeowner with a big project, we offer volume discounts.",
+    icon: "calculator",
+    features: [
+      "Volume discounts",
+      "Contractor pricing",
+      "Project consultation",
+      "Custom orders",
+    ],
+  },
+  {
+    title: "On-Site Loading",
+    description:
+      "State of the art equipment for fast, efficient loading. Drive in, get loaded, and get back to your project quickly.",
+    icon: "loader",
+    features: [
+      "Fast loading times",
+      "Modern equipment",
+      "Accurate weights",
+      "Easy access",
+    ],
+  },
+] as const;
