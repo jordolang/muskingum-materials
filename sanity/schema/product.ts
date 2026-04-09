@@ -90,6 +90,12 @@ export const product = defineType({
       initialValue: "in_stock",
     }),
     defineField({
+      name: "seasonalMessage",
+      title: "Seasonal Message",
+      type: "text",
+      rows: 2,
+    }),
+    defineField({
       name: "specifications",
       title: "Specifications",
       type: "array",
