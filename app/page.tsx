@@ -9,10 +9,13 @@ import {
   Shield,
   Star,
   MapPin,
+  Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BUSINESS_INFO, PRODUCTS, SERVICES } from "@/data/business";
+import { ReviewsCarousel } from "@/components/home/reviews-carousel";
+import { HomepageFAQ } from "@/components/home/homepage-faq";
 
 const FEATURED_PRODUCTS = PRODUCTS.filter((p) => p.price > 0).slice(0, 6);
 
@@ -191,16 +194,40 @@ export default function HomePage() {
             <h2 className="text-3xl font-bold font-heading mb-3">
               See Our Operation
             </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Take a closer look at our facility, equipment, and the quality materials we produce.
+            </p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {["equipment", "piles", "stone-hand", "feeder"].map((img) => (
-              <div key={img} className="relative aspect-square rounded-lg overflow-hidden">
+            {[
+              { img: "equipment", label: "Heavy Equipment", desc: "State of the art machinery" },
+              { img: "piles", label: "Material Stockpiles", desc: "Variety of aggregates" },
+              { img: "stone-hand", label: "Product Quality", desc: "Hand-inspected gravel" },
+              { img: "feeder", label: "Processing", desc: "Sorting & washing systems" },
+            ].map((item) => (
+              <div key={item.img} className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer">
                 <Image
-                  src={`/images/photos/${img}.jpg`}
-                  alt={img.replace("-", " ")}
+                  src={`/images/photos/${item.img}.jpg`}
+                  alt={item.label}
                   fill
-                  className="object-cover hover:scale-105 transition-transform duration-300"
+                  className="object-cover transition-transform duration-500 group-hover:scale-110"
                 />
+                {/* Permanent gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-transparent" />
+                {/* Label - always visible */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 transform transition-all duration-300">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Camera className="h-3.5 w-3.5 text-amber-400" />
+                    <span className="text-white font-bold text-sm tracking-wide">
+                      {item.label}
+                    </span>
+                  </div>
+                  <p className="text-white/70 text-xs translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                    {item.desc}
+                  </p>
+                </div>
+                {/* Hover border glow */}
+                <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-amber-400/50 transition-colors duration-300" />
               </div>
             ))}
           </div>
@@ -212,6 +239,47 @@ export default function HomePage() {
               </Button>
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Reviews */}
+      <section className="py-16 bg-stone-900 relative overflow-hidden">
+        {/* Ambient background texture */}
+        <div className="absolute inset-0 opacity-5">
+          <Image
+            src="/images/photos/piles-close-up.jpg"
+            alt=""
+            fill
+            className="object-cover"
+            aria-hidden
+          />
+        </div>
+        <div className="container relative z-10">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold font-heading text-white mb-3">
+              What Our Customers Say
+            </h2>
+            <p className="text-stone-400 max-w-2xl mx-auto">
+              Don&apos;t just take our word for it — hear from homeowners and
+              contractors across Southeast Ohio.
+            </p>
+          </div>
+          <ReviewsCarousel />
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-16 bg-muted/30">
+        <div className="container">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold font-heading mb-3">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Quick answers to the most common questions about our products, pricing, and services.
+            </p>
+          </div>
+          <HomepageFAQ />
         </div>
       </section>
 

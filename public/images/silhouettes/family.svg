@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Shadow/glow -->
+  <ellipse cx="100" cy="188" rx="55" ry="8" fill="#F59E0B" opacity="0.15"/>
+  <!-- Tall person (left) -->
+  <circle cx="55" cy="38" r="18" fill="#292524" opacity="0.85"/>
+  <path d="M30 190 L30 110 Q30 78 55 78 Q80 78 80 110 L80 190 Z" fill="#292524" opacity="0.85"/>
+  <!-- Medium person (right) -->
+  <circle cx="120" cy="48" r="16" fill="#292524" opacity="0.75"/>
+  <path d="M98 190 L98 120 Q98 90 120 90 Q142 90 142 120 L142 190 Z" fill="#292524" opacity="0.75"/>
+  <!-- Small person (child, center) -->
+  <circle cx="90" cy="72" r="11" fill="#292524" opacity="0.65"/>
+  <path d="M76 190 L76 135 Q76 110 90 110 Q104 110 104 135 L104 190 Z" fill="#292524" opacity="0.65"/>
+</svg>

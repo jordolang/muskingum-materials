@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 200" fill="none">
+  <!-- Shadow/glow -->
+  <ellipse cx="90" cy="188" rx="50" ry="8" fill="#F59E0B" opacity="0.15"/>
+  <!-- Person 1 (left) -->
+  <circle cx="60" cy="38" r="18" fill="#292524" opacity="0.85"/>
+  <path d="M35 190 L35 110 Q35 78 60 78 Q85 78 85 110 L85 190 Z" fill="#292524" opacity="0.85"/>
+  <!-- Person 2 (right) -->
+  <circle cx="115" cy="42" r="16" fill="#292524" opacity="0.75"/>
+  <path d="M93 190 L93 115 Q93 85 115 85 Q137 85 137 115 L137 190 Z" fill="#292524" opacity="0.75"/>
+</svg>
