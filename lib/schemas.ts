@@ -17,6 +17,7 @@ export const checkoutFormSchema = z.object({
   fulfillment: z.enum(["pickup", "delivery"]),
   deliveryAddress: z.string().optional(),
   deliveryNotes: z.string().optional(),
+  smsOptIn: z.boolean().optional(),
 });
 
 // Checkout schema (API-side with order details)
