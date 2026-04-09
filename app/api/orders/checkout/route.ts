@@ -4,6 +4,8 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { checkoutSchema, type CheckoutData } from "@/lib/schemas";
 import { validateCheckoutPrices } from "@/lib/validate-checkout-prices";
+import { logger } from "@/lib/logger";
+import { addBreadcrumb, startTransaction } from "@/lib/monitoring";
 
 function generateOrderNumber(): string {
   const now = new Date();
@@ -13,18 +15,46 @@ function generateOrderNumber(): string {
 }
 
 export async function POST(request: NextRequest) {
+  return startTransaction('checkout', 'http.request', () => {
+    return handleCheckout(request);
+  });
+}
+
+async function handleCheckout(request: NextRequest) {
   try {
     const body = await request.json();
     const data = checkoutSchema.parse(body);
+
+    logger.info('Checkout started', {
+      itemCount: data.items.length,
+      fulfillment: data.fulfillment,
+      email: data.email,
+    });
+
+    addBreadcrumb('Checkout request received', 'checkout', {
+      itemCount: data.items.length,
+      fulfillment: data.fulfillment,
+    });
 
     // Validate prices against product catalog
     let validatedPrices;
     try {
       validatedPrices = await validateCheckoutPrices(data);
+
+      addBreadcrumb('Price validation successful', 'checkout', {
+        subtotal: validatedPrices.subtotal,
+        total: validatedPrices.total,
+      });
     } catch (validationError) {
       const errorMessage = validationError instanceof Error
         ? validationError.message
         : "Price validation failed";
+
+      logger.warn('Price validation failed', {
+        error: errorMessage,
+        itemCount: data.items.length,
+      });
+
       return NextResponse.json(
         { error: errorMessage },
         { status: 400 }
@@ -64,8 +94,27 @@ export async function POST(request: NextRequest) {
           paymentStatus: "unpaid",
         },
       });
+
+      logger.info('Order created successfully', {
+        orderNumber,
+        userId,
+        total: validatedPrices.total,
+        fulfillment: data.fulfillment,
+        itemCount: data.items.length,
+      });
+
+      addBreadcrumb('Order created in database', 'database', {
+        orderNumber,
+        orderId: order.id,
+      });
     } catch (error) {
-      console.error("Order creation error:", error);
+      logger.error('Order creation failed', error, {
+        orderNumber,
+        userId,
+        email: data.email,
+        total: validatedPrices.total,
+      });
+
       return NextResponse.json(
         { error: "Failed to create order. Please try again or call (740) 319-0183." },
         { status: 500 }
@@ -131,6 +180,17 @@ export async function POST(request: NextRequest) {
           },
         });
 
+        logger.info('Stripe checkout session created', {
+          orderNumber,
+          sessionId: session.id,
+          total: validatedPrices.total,
+        });
+
+        addBreadcrumb('Stripe session created', 'payment', {
+          orderNumber,
+          sessionId: session.id,
+        });
+
         // Update order with Stripe session ID
         if (order) {
           try {
@@ -138,20 +198,38 @@ export async function POST(request: NextRequest) {
               where: { id: order.id },
               data: { stripeSessionId: session.id },
             });
+
+            addBreadcrumb('Order updated with Stripe session ID', 'database', {
+              orderId: order.id,
+              sessionId: session.id,
+            });
           } catch (error) {
-            console.error("Order update error (Stripe session ID):", error);
+            logger.error('Failed to update order with Stripe session ID', error, {
+              orderId: order.id,
+              orderNumber,
+              sessionId: session.id,
+            });
             // Continue anyway - Stripe session was created successfully
           }
         }
 
         return NextResponse.json({ url: session.url });
       } catch (stripeError) {
-        console.error("Stripe error:", stripeError);
+        logger.error('Stripe checkout session creation failed', stripeError, {
+          orderNumber,
+          total: validatedPrices.total,
+          email: data.email,
+        });
         // Fall through to non-Stripe flow
       }
     }
 
     // Non-Stripe fallback: just save the order
+    logger.info('Using non-Stripe checkout flow', {
+      orderNumber,
+      reason: process.env.STRIPE_SECRET_KEY ? 'stripe_error' : 'stripe_not_configured',
+    });
+
     // Send email notification
     if (process.env.POSTMARK_API_TOKEN) {
       try {
@@ -188,20 +266,46 @@ Payment: Pending — Stripe not configured, customer will pay on pickup/delivery
           `.trim(),
           ReplyTo: data.email,
         });
+
+        logger.info('Order notification email sent', {
+          orderNumber,
+          recipient: 'sales@muskingummaterials.com',
+        });
+
+        addBreadcrumb('Email notification sent', 'email', {
+          orderNumber,
+        });
       } catch (emailError) {
-        console.error("Email error:", emailError);
+        logger.error('Failed to send order notification email', emailError, {
+          orderNumber,
+          email: data.email,
+        });
       }
     }
+
+    logger.info('Checkout completed successfully', {
+      orderNumber,
+      total: validatedPrices.total,
+      paymentMethod: 'pay_on_pickup',
+    });
 
     return NextResponse.json({ orderNumber });
   } catch (error) {
     if (error instanceof z.ZodError) {
+      logger.warn('Invalid checkout data received', {
+        errors: error.errors,
+      });
+
       return NextResponse.json(
         { error: "Invalid order data", details: error.errors },
         { status: 400 }
       );
     }
-    console.error("Checkout error:", error);
+
+    logger.error('Checkout failed with unexpected error', error, {
+      email: (error as any)?.email,
+    });
+
     return NextResponse.json(
       { error: "Checkout failed. Please call (740) 319-0183." },
       { status: 500 }
