@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import {
   ShoppingCart,
   Plus,
@@ -59,22 +60,70 @@ const checkoutSchema = z.object({
 type CheckoutData = z.infer<typeof checkoutSchema>;
 
 export function OrderForm() {
+  const searchParams = useSearchParams();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [step, setStep] = useState<"products" | "checkout" | "complete">("products");
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
 
+  // Parse reorder params for default values
+  const reorderData = useMemo(() => {
+    const isReorder = searchParams.get("reorder") === "true";
+    if (!isReorder) return null;
+
+    try {
+      const itemsParam = searchParams.get("items");
+      const items = itemsParam ? JSON.parse(itemsParam) : [];
+      const pickupOrDeliver = searchParams.get("pickupOrDeliver") || "pickup";
+      const deliveryAddress = searchParams.get("deliveryAddress") || "";
+
+      return {
+        items: items as Array<{ name: string; quantity: number; unit: string; price?: number }>,
+        fulfillment: (pickupOrDeliver as "pickup" | "delivery"),
+        deliveryAddress,
+      };
+    } catch {
+      return null;
+    }
+  }, [searchParams]);
+
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<CheckoutData>({
     resolver: zodResolver(checkoutSchema),
-    defaultValues: { fulfillment: "pickup" },
+    defaultValues: {
+      fulfillment: reorderData?.fulfillment || "pickup",
+      deliveryAddress: reorderData?.deliveryAddress || "",
+    },
   });
 
   const fulfillment = watch("fulfillment");
+
+  // Pre-fill cart from reorder data
+  useEffect(() => {
+    if (reorderData?.items && reorderData.items.length > 0) {
+      const cartItems: CartItem[] = reorderData.items
+        .map((item) => {
+          // Find matching product to get price
+          const product = ORDERABLE_PRODUCTS.find((p) => p.name === item.name);
+          if (!product) return null;
+
+          return {
+            name: item.name,
+            price: item.price || product.price,
+            unit: item.unit || product.unit,
+            quantity: item.quantity,
+          };
+        })
+        .filter((item): item is CartItem => item !== null);
+
+      setCart(cartItems);
+    }
+  }, [reorderData]);
 
   function addToCart(product: (typeof ORDERABLE_PRODUCTS)[number]) {
     setCart((prev) => {
