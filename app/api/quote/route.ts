@@ -20,8 +20,9 @@ export async function POST(request: NextRequest) {
           notes: data.notes || null,
         },
       });
-    } catch {
-      // Database not configured yet
+    } catch (error) {
+      console.error("Quote database error:", error);
+      return NextResponse.json({ error: "Failed to save quote request" }, { status: 500 });
     }
 
     // Send email notification
