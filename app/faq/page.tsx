@@ -41,8 +41,8 @@ interface SiteSettings {
 
 export default async function FAQPage() {
   const [faqs, siteSettings] = await Promise.all([
-    sanityClient.fetch<FAQ[]>(faqQuery),
-    sanityClient.fetch<SiteSettings>(siteSettingsQuery),
+    sanityClient.fetch<FAQ[]>(faqQuery, {}, { next: { tags: ['faq'] } }),
+    sanityClient.fetch<SiteSettings>(siteSettingsQuery, {}, { next: { tags: ['site-settings'] } }),
   ]);
 
   // Group FAQs by category

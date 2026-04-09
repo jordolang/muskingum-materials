@@ -41,8 +41,8 @@ interface SiteSettings {
 
 export default async function ServicesPage() {
   const [services, siteSettings] = await Promise.all([
-    sanityClient.fetch<Service[]>(servicesQuery),
-    sanityClient.fetch<SiteSettings>(siteSettingsQuery),
+    sanityClient.fetch<Service[]>(servicesQuery, {}, { next: { tags: ['services'] } }),
+    sanityClient.fetch<SiteSettings>(siteSettingsQuery, {}, { next: { tags: ['site-settings'] } }),
   ]);
   return (
     <div className="py-12">

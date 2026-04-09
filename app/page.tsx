@@ -28,9 +28,9 @@ export default async function HomePage() {
 
   try {
     [products, services, testimonials] = await Promise.all([
-      sanityClient.fetch(productsQuery),
-      sanityClient.fetch(servicesQuery),
-      sanityClient.fetch(testimonialsQuery),
+      sanityClient.fetch(productsQuery, {}, { next: { tags: ['products'] } }),
+      sanityClient.fetch(servicesQuery, {}, { next: { tags: ['services'] } }),
+      sanityClient.fetch(testimonialsQuery, {}, { next: { tags: ['testimonials'] } }),
     ]);
   } catch (error) {
     // If Sanity fetch fails, continue with empty arrays

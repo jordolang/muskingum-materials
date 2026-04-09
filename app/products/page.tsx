@@ -50,8 +50,8 @@ interface SiteSettings {
 
 export default async function ProductsPage() {
   const [products, siteSettings] = await Promise.all([
-    sanityClient.fetch<Product[]>(productsQuery),
-    sanityClient.fetch<SiteSettings>(siteSettingsQuery),
+    sanityClient.fetch<Product[]>(productsQuery, {}, { next: { tags: ['products'] } }),
+    sanityClient.fetch<SiteSettings>(siteSettingsQuery, {}, { next: { tags: ['site-settings'] } }),
   ]);
 
   const grouped = {

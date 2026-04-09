@@ -61,7 +61,7 @@ const STATIC_GALLERY_IMAGES = [
 export default async function GalleryPage() {
   let galleryImages: GalleryImage[] = [];
   try {
-    galleryImages = await sanityClient.fetch<GalleryImage[]>(galleryQuery);
+    galleryImages = await sanityClient.fetch<GalleryImage[]>(galleryQuery, {}, { next: { tags: ['gallery'] } });
   } catch {
     // Sanity fetch failed; fall through to static fallback
   }
