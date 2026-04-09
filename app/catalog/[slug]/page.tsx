@@ -105,6 +105,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
               {product.description}
             </p>
 
+            {/* Seasonal Message */}
+            {product.stockStatus.toLowerCase() === 'seasonal' && product.seasonalMessage && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-amber-900">{product.seasonalMessage}</p>
+              </div>
+            )}
+
             {/* Pricing */}
             <div className="flex flex-wrap gap-3">
               {product.price != null && product.price > 0 && (
