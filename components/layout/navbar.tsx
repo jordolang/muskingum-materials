@@ -1,22 +1,202 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, Phone, User } from "lucide-react";
+import { Menu, X, Phone, User, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BUSINESS_INFO } from "@/data/business";
 
-const NAV_LINKS = [
+interface NavItem {
+  href: string;
+  label: string;
+  children?: { href: string; label: string; description?: string }[];
+}
+
+const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Home" },
-  { href: "/products", label: "Products & Pricing" },
-  { href: "/catalog", label: "Material Guide" },
-  { href: "/calculators", label: "Calculators" },
-  { href: "/costs", label: "Costs" },
+  {
+    href: "/catalog",
+    label: "Materials",
+    children: [
+      {
+        href: "/catalog",
+        label: "Material Guide",
+        description: "Browse all products with detailed specs",
+      },
+      {
+        href: "/products",
+        label: "Products & Pricing",
+        description: "Current Muskingum Materials pricing",
+      },
+      {
+        href: "/costs",
+        label: "Cost Guides",
+        description: "Understand pricing by project type",
+      },
+      {
+        href: "/costs/delivery-cost",
+        label: "Delivery Costs",
+        description: "Delivery pricing and truck capacities",
+      },
+      {
+        href: "/costs/driveway-cost",
+        label: "Driveway Costs",
+        description: "Full driveway cost breakdown",
+      },
+    ],
+  },
+  {
+    href: "/calculators",
+    label: "Calculators",
+    children: [
+      {
+        href: "/calculators",
+        label: "All Calculators",
+        description: "View all gravel calculators",
+      },
+      {
+        href: "/calculators/gravel-calculator",
+        label: "Gravel Calculator",
+        description: "Calculate tons, yards, and cost",
+      },
+      {
+        href: "/calculators/tons-to-yards",
+        label: "Tons ↔ Yards Converter",
+        description: "Convert between tons and cubic yards",
+      },
+      {
+        href: "/calculators/coverage-chart",
+        label: "Coverage Chart",
+        description: "Coverage at different depths",
+      },
+    ],
+  },
   { href: "/order", label: "Order Online" },
   { href: "/services", label: "Services" },
   { href: "/contact", label: "Contact" },
 ];
+
+function DesktopDropdown({ item }: { item: NavItem }) {
+  const [open, setOpen] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleEnter() {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setOpen(true);
+  }
+
+  function handleLeave() {
+    timeoutRef.current = setTimeout(() => setOpen(false), 150);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  if (!item.children) {
+    return (
+      <Link
+        href={item.href}
+        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+      >
+        {item.label}
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      className="relative"
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+    >
+      <button
+        className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+        onClick={() => setOpen((prev) => !prev)}
+      >
+        {item.label}
+        <ChevronDown
+          className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute top-full left-0 pt-2 z-50">
+          <div className="w-72 rounded-lg border bg-background shadow-lg p-2">
+            {item.children.map((child) => (
+              <Link
+                key={child.href}
+                href={child.href}
+                className="block rounded-md px-3 py-2.5 hover:bg-muted transition-colors"
+                onClick={() => setOpen(false)}
+              >
+                <div className="text-sm font-medium">{child.label}</div>
+                {child.description && (
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {child.description}
+                  </div>
+                )}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileNavItem({
+  item,
+  onClose,
+}: {
+  item: NavItem;
+  onClose: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (!item.children) {
+    return (
+      <Link
+        href={item.href}
+        className="text-sm font-medium py-2 text-muted-foreground hover:text-primary"
+        onClick={onClose}
+      >
+        {item.label}
+      </Link>
+    );
+  }
+
+  return (
+    <div>
+      <button
+        className="flex items-center justify-between w-full text-sm font-medium py-2 text-muted-foreground hover:text-primary"
+        onClick={() => setExpanded((prev) => !prev)}
+      >
+        {item.label}
+        <ChevronDown
+          className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`}
+        />
+      </button>
+      {expanded && (
+        <div className="pl-4 pb-2 space-y-1">
+          {item.children.map((child) => (
+            <Link
+              key={child.href}
+              href={child.href}
+              className="block py-1.5 text-sm text-muted-foreground hover:text-primary"
+              onClick={onClose}
+            >
+              {child.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -36,14 +216,8 @@ export function Navbar() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-6">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-            >
-              {link.label}
-            </Link>
+          {NAV_ITEMS.map((item) => (
+            <DesktopDropdown key={item.label} item={item} />
           ))}
         </nav>
 
@@ -70,25 +244,29 @@ export function Navbar() {
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
         >
-          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          {mobileOpen ? (
+            <X className="h-6 w-6" />
+          ) : (
+            <Menu className="h-6 w-6" />
+          )}
         </button>
       </div>
 
       {mobileOpen && (
         <div className="md:hidden border-t bg-background">
-          <nav className="container py-4 flex flex-col gap-3">
-            {NAV_LINKS.map((link) => (
+          <nav className="container py-4 flex flex-col gap-1">
+            {NAV_ITEMS.map((item) => (
+              <MobileNavItem
+                key={item.label}
+                item={item}
+                onClose={() => setMobileOpen(false)}
+              />
+            ))}
+            <div className="flex flex-col gap-2 pt-3 border-t mt-2">
               <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm font-medium py-2 text-muted-foreground hover:text-primary"
+                href="/account"
                 onClick={() => setMobileOpen(false)}
               >
-                {link.label}
-              </Link>
-            ))}
-            <div className="flex flex-col gap-2 pt-3 border-t">
-              <Link href="/account" onClick={() => setMobileOpen(false)}>
                 <Button variant="outline" size="sm" className="w-full gap-2">
                   <User className="h-4 w-4" />
                   My Account
@@ -101,7 +279,9 @@ export function Navbar() {
                 </Button>
               </a>
               <Link href="/contact" onClick={() => setMobileOpen(false)}>
-                <Button size="sm" className="w-full">Get a Quote</Button>
+                <Button size="sm" className="w-full">
+                  Get a Quote
+                </Button>
               </Link>
             </div>
           </nav>
