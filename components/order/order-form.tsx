@@ -3,7 +3,6 @@
 import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import Image from "next/image";
 import {
   ShoppingCart,
@@ -23,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { PRODUCTS, BUSINESS_INFO } from "@/data/business";
+import { checkoutFormSchema, type CheckoutFormData } from "@/lib/schemas";
 
 const ORDERABLE_PRODUCTS = PRODUCTS.filter((p) => p.price > 0);
 
@@ -47,17 +47,6 @@ interface CartItem {
   quantity: number;
 }
 
-const checkoutSchema = z.object({
-  name: z.string().min(2, "Name is required"),
-  email: z.string().email("Valid email is required"),
-  phone: z.string().min(10, "Phone number is required"),
-  fulfillment: z.enum(["pickup", "delivery"]),
-  deliveryAddress: z.string().optional(),
-  deliveryNotes: z.string().optional(),
-});
-
-type CheckoutData = z.infer<typeof checkoutSchema>;
-
 export function OrderForm() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [step, setStep] = useState<"products" | "checkout" | "complete">("products");
@@ -69,8 +58,8 @@ export function OrderForm() {
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<CheckoutData>({
-    resolver: zodResolver(checkoutSchema),
+  } = useForm<CheckoutFormData>({
+    resolver: zodResolver(checkoutFormSchema),
     defaultValues: { fulfillment: "pickup" },
   });
 
@@ -130,7 +119,7 @@ export function OrderForm() {
     return { subtotal, tax, processingFee, total, totalTons };
   }, [cart]);
 
-  async function onCheckout(data: CheckoutData) {
+  async function onCheckout(data: CheckoutFormData) {
     if (cart.length === 0) return;
     setIsProcessing(true);
 
