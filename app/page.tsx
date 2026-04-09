@@ -13,24 +13,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { BUSINESS_INFO, PRODUCTS, SERVICES } from "@/data/business";
+import { BUSINESS_INFO, PRODUCTS, SERVICES, PRODUCT_IMAGES } from "@/data/business";
 import { ReviewsCarousel } from "@/components/home/reviews-carousel";
 import { HomepageFAQ } from "@/components/home/homepage-faq";
 
 const FEATURED_PRODUCTS = PRODUCTS.filter((p) => p.price > 0).slice(0, 6);
-
-const PRODUCT_IMAGES: Record<string, string> = {
-  "Bank Run": "/images/products/bank-run.jpg",
-  "Fill Dirt": "/images/products/fill-dirt.jpg",
-  "Fill Sand": "/images/products/fill-sand.jpg",
-  "Topsoil (Unprocessed)": "/images/products/topsoil.jpg",
-  "#8 Fractured Gravel (Washed)": "/images/products/fractured-gravel.jpg",
-  "#9 Gravel (Washed)": "/images/products/fine-gravel.jpg",
-  "#8 Gravel (Washed)": "/images/photos/stone-close-up.jpg",
-  "#57 Gravel (Washed)": "/images/photos/piles-close-up.jpg",
-  "304 Crushed Gravel": "/images/photos/piles-7.jpg",
-  "Oversized Gravel (Washed)": "/images/photos/stone-hand.jpg",
-};
 
 export default function HomePage() {
   return (
