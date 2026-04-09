@@ -19,7 +19,7 @@ interface CartItem {
   quantity: number;
 }
 
-const checkoutSchema = z.object({
+export const checkoutSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Valid email is required"),
   phone: z.string().min(10, "Phone number is required"),
@@ -28,7 +28,7 @@ const checkoutSchema = z.object({
   deliveryNotes: z.string().optional(),
 });
 
-type CheckoutData = z.infer<typeof checkoutSchema>;
+export type CheckoutData = z.infer<typeof checkoutSchema>;
 
 export function OrderForm() {
   const [cart, setCart] = useState<CartItem[]>([]);

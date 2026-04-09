@@ -8,21 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { BUSINESS_INFO } from "@/data/business";
+import type { CheckoutData } from "./order-form";
 
 interface CartItem {
   name: string;
   price: number;
   unit: string;
   quantity: number;
-}
-
-interface CheckoutData {
-  name: string;
-  email: string;
-  phone: string;
-  fulfillment: "pickup" | "delivery";
-  deliveryAddress?: string;
-  deliveryNotes?: string;
 }
 
 interface Totals {
