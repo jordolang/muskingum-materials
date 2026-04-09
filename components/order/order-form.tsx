@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -15,6 +15,7 @@ import {
   Loader2,
   CreditCard,
   CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,23 +59,124 @@ const checkoutSchema = z.object({
 
 type CheckoutData = z.infer<typeof checkoutSchema>;
 
+interface DeliveryFeeResult {
+  success: boolean;
+  address: string;
+  withinZone: boolean;
+  distance: number;
+  fee: number;
+  breakdown?: {
+    baseFee: number;
+    distanceFee: number;
+  };
+  settings?: {
+    zoneRadiusMiles: number;
+    baseFee: number;
+    perMileRate: number;
+  };
+}
+
+// Extend window for Google Maps
+declare global {
+  interface Window {
+    initOrderFormMaps?: () => void;
+  }
+}
+
+const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+
 export function OrderForm() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [step, setStep] = useState<"products" | "checkout" | "complete">("products");
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
+  const [deliveryFeeResult, setDeliveryFeeResult] = useState<DeliveryFeeResult | null>(null);
+  const [deliveryFeeLoading, setDeliveryFeeLoading] = useState(false);
+  const [deliveryFeeError, setDeliveryFeeError] = useState("");
+  const [mapsLoaded, setMapsLoaded] = useState(false);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const deliveryAddressInputRef = useRef<HTMLTextAreaElement | null>(null);
 
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
+    setValue,
   } = useForm<CheckoutData>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: { fulfillment: "pickup" },
   });
 
   const fulfillment = watch("fulfillment");
+  const deliveryAddress = watch("deliveryAddress");
+
+  // Load Google Maps Places API
+  useEffect(() => {
+    if (!GOOGLE_MAPS_API_KEY) {
+      return;
+    }
+
+    if (typeof google !== "undefined" && google.maps && google.maps.places) {
+      setMapsLoaded(true);
+      return;
+    }
+
+    window.initOrderFormMaps = () => {
+      setMapsLoaded(true);
+    };
+
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initOrderFormMaps`;
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+
+    return () => {
+      delete window.initOrderFormMaps;
+    };
+  }, []);
+
+  // Calculate delivery fee when address changes
+  useEffect(() => {
+    if (fulfillment !== "delivery" || !deliveryAddress || deliveryAddress.length < 3) {
+      setDeliveryFeeResult(null);
+      setDeliveryFeeError("");
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setDeliveryFeeLoading(true);
+      setDeliveryFeeError("");
+
+      try {
+        const response = await fetch("/api/delivery/calculate-fee", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address: deliveryAddress }),
+        });
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+          throw new Error(responseData.error || "Failed to calculate delivery fee");
+        }
+
+        setDeliveryFeeResult(responseData);
+      } catch (err) {
+        setDeliveryFeeError(
+          err instanceof Error
+            ? err.message
+            : "Unable to calculate delivery fee"
+        );
+        setDeliveryFeeResult(null);
+      } finally {
+        setDeliveryFeeLoading(false);
+      }
+    }, 1000); // Debounce for 1 second
+
+    return () => clearTimeout(timeoutId);
+  }, [fulfillment, deliveryAddress]);
 
   function addToCart(product: (typeof ORDERABLE_PRODUCTS)[number]) {
     setCart((prev) => {
@@ -123,12 +225,13 @@ export function OrderForm() {
 
   const totals = useMemo(() => {
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const deliveryFee = deliveryFeeResult?.withinZone ? deliveryFeeResult.fee : 0;
     const tax = subtotal * BUSINESS_INFO.taxRate;
     const processingFee = subtotal * BUSINESS_INFO.creditProcessingFee;
-    const total = subtotal + tax + processingFee;
+    const total = subtotal + deliveryFee + tax + processingFee;
     const totalTons = cart.reduce((sum, item) => sum + item.quantity, 0);
-    return { subtotal, tax, processingFee, total, totalTons };
-  }, [cart]);
+    return { subtotal, tax, processingFee, deliveryFee, total, totalTons };
+  }, [cart, deliveryFeeResult]);
 
   async function onCheckout(data: CheckoutData) {
     if (cart.length === 0) return;
@@ -144,6 +247,7 @@ export function OrderForm() {
           subtotal: totals.subtotal,
           tax: totals.tax,
           processingFee: totals.processingFee,
+          deliveryFee: totals.deliveryFee,
           total: totals.total,
         }),
       });
@@ -323,6 +427,12 @@ export function OrderForm() {
                     <span className="text-muted-foreground">Subtotal ({totals.totalTons} tons)</span>
                     <span>${totals.subtotal.toFixed(2)}</span>
                   </div>
+                  {totals.deliveryFee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Delivery Fee</span>
+                      <span>${totals.deliveryFee.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Tax (7.25%)</span>
                     <span>${totals.tax.toFixed(2)}</span>
@@ -457,8 +567,86 @@ export function OrderForm() {
                       <Textarea
                         placeholder="Street address, city, state, zip"
                         {...register("deliveryAddress")}
+                        disabled={!mapsLoaded}
                       />
+                      {!mapsLoaded && GOOGLE_MAPS_API_KEY && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Loading address autocomplete...
+                        </p>
+                      )}
                     </div>
+
+                    {/* Delivery Fee Calculation */}
+                    {deliveryFeeLoading && (
+                      <div className="flex items-center p-3 bg-muted/50 rounded-md text-sm">
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin text-muted-foreground" />
+                        <span className="text-muted-foreground">Calculating delivery fee...</span>
+                      </div>
+                    )}
+
+                    {deliveryFeeError && (
+                      <div className="flex items-start p-3 bg-red-50 border border-red-200 rounded-md">
+                        <AlertCircle className="h-4 w-4 text-red-600 mr-2 mt-0.5 flex-shrink-0" />
+                        <p className="text-sm text-red-800">{deliveryFeeError}</p>
+                      </div>
+                    )}
+
+                    {deliveryFeeResult && !deliveryFeeResult.withinZone && (
+                      <div className="flex items-start p-3 bg-amber-50 border border-amber-200 rounded-md">
+                        <AlertCircle className="h-4 w-4 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
+                        <div className="text-sm">
+                          <p className="font-medium text-amber-900 mb-1">
+                            Outside Standard Delivery Zone
+                          </p>
+                          <p className="text-amber-800">
+                            Your location is {deliveryFeeResult.distance.toFixed(1)} miles away,
+                            outside our standard {deliveryFeeResult.settings?.zoneRadiusMiles}-mile
+                            delivery zone. Please call us at{" "}
+                            <a href="tel:7403190183" className="underline font-medium">
+                              (740) 319-0183
+                            </a>{" "}
+                            for special delivery arrangements.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {deliveryFeeResult && deliveryFeeResult.withinZone && (
+                      <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                        <div className="flex items-start mb-2">
+                          <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
+                          <div className="text-sm">
+                            <p className="font-medium text-green-900">
+                              Delivery Available
+                            </p>
+                            <p className="text-green-700 text-xs mt-0.5">
+                              {deliveryFeeResult.distance.toFixed(1)} miles from our location
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-xs space-y-1 text-green-800 border-t border-green-200 pt-2 mt-2">
+                          <div className="flex justify-between">
+                            <span>Base Fee:</span>
+                            <span className="font-medium">
+                              ${deliveryFeeResult.breakdown?.baseFee.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>
+                              Distance Fee ({deliveryFeeResult.distance.toFixed(1)} mi):
+                            </span>
+                            <span className="font-medium">
+                              ${deliveryFeeResult.breakdown?.distanceFee.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between font-semibold border-t border-green-200 pt-1">
+                            <span>Delivery Fee:</span>
+                            <span>${deliveryFeeResult.fee.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <div>
                       <label className="text-sm font-medium mb-1 block">Delivery Notes</label>
                       <Textarea
@@ -467,10 +655,6 @@ export function OrderForm() {
                         {...register("deliveryNotes")}
                       />
                     </div>
-                    <p className="text-xs text-amber-700 bg-amber-50 p-2 rounded">
-                      Delivery fees vary by distance. We&apos;ll confirm the delivery fee
-                      and total before processing payment.
-                    </p>
                   </div>
                 )}
               </div>
@@ -490,6 +674,25 @@ export function OrderForm() {
                     </div>
                   ))}
                   <Separator />
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Subtotal:</span>
+                    <span>${totals.subtotal.toFixed(2)}</span>
+                  </div>
+                  {totals.deliveryFee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Delivery Fee:</span>
+                      <span>${totals.deliveryFee.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tax:</span>
+                    <span>${totals.tax.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Processing Fee:</span>
+                    <span>${totals.processingFee.toFixed(2)}</span>
+                  </div>
+                  <Separator />
                   <div className="flex justify-between font-bold text-base">
                     <span>Total</span>
                     <span className="text-amber-700">${totals.total.toFixed(2)}</span>
@@ -501,7 +704,12 @@ export function OrderForm() {
                 type="submit"
                 className="w-full gap-2 font-semibold"
                 size="lg"
-                disabled={isProcessing}
+                disabled={
+                  isProcessing ||
+                  (fulfillment === "delivery" &&
+                    !!deliveryFeeResult &&
+                    !deliveryFeeResult.withinZone)
+                }
               >
                 {isProcessing ? (
                   <>
