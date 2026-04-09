@@ -82,6 +82,34 @@ model QuoteRequest {
   @@index([status])
 }
 
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  name            String
+  email           String
+  phone           String?
+  items           Json
+  subtotal        Float
+  tax             Float
+  processingFee   Float
+  deliveryFee     Float       @default(0)
+  total           Float
+  deliveryAddress String?     @db.Text
+  deliveryNotes   String?     @db.Text
+  pickupOrDeliver String      @default("pickup")
+  status          String      @default("pending")
+  paymentStatus   String      @default("unpaid")
+  stripeSessionId String?
+  stripePaymentId String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([orderNumber])
+  @@index([email])
+  @@index([status])
+  @@index([stripeSessionId])
+}
+
 model NewsletterSubscriber {
   id        String   @id @default(cuid())
   email     String   @unique
