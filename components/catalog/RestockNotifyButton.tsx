@@ -59,7 +59,7 @@ export function RestockNotifyButton({
         <div className="flex items-center gap-2 text-green-800">
           <Check className="h-5 w-5" />
           <p className="text-sm font-medium">
-            Success! We'll notify you when {productName} is back in stock.
+            Success! We&apos;ll notify you when {productName} is back in stock.
           </p>
         </div>
       </div>

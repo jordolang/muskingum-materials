@@ -12,16 +12,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = restockNotifySchema.parse(body);
 
-    try {
-      await prisma.restockNotification.create({
-        data: {
-          email: data.email,
-          productId: data.productId,
-        },
-      });
-    } catch (dbError) {
-      // Database not configured yet - silently continue
-    }
+    await prisma.restockNotification.create({
+      data: {
+        email: data.email,
+        productId: data.productId,
+      },
+    });
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
@@ -31,8 +27,12 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Log database errors for monitoring
+    console.error('[restock-notify] Database error:', error);
+
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to save notification request. Please try again." },
       { status: 500 }
     );
   }
