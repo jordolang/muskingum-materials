@@ -141,11 +141,16 @@ export async function checkRateLimit(
   if (limiter) {
     try {
       const result = await limiter.limit(identifier);
+      // Normalize reset to milliseconds. Upstash documents reset as ms,
+      // but guard against Unix-seconds values (10-digit timestamps) to
+      // keep Retry-After and X-RateLimit-Reset headers correct.
+      const resetMs =
+        result.reset < 1e12 ? result.reset * 1000 : result.reset;
       return {
         success: result.success,
         limit: result.limit,
         remaining: result.remaining,
-        reset: result.reset,
+        reset: resetMs,
       };
     } catch (error) {
       // Fall back to in-memory if Redis fails
