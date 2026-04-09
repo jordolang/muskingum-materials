@@ -129,13 +129,21 @@ export function addBreadcrumb(
 }
 
 /**
- * Start a performance transaction
- * @param name - Transaction name (e.g., 'checkout', 'api.chat')
+ * Start a performance span
+ * @param name - Span name (e.g., 'checkout', 'api.chat')
  * @param operation - Operation type (e.g., 'http.request', 'db.query')
- * @returns Transaction object that should be finished when done
+ * @param callback - Function to execute within the span
+ * @returns Result of the callback function
  */
-export function startTransaction(name: string, operation: string) {
-  return Sentry.startTransaction({ name, op: operation });
+export function startTransaction<T>(
+  name: string,
+  operation: string,
+  callback: () => T
+): T {
+  return Sentry.startSpan(
+    { name, op: operation },
+    callback
+  );
 }
 
 /**
