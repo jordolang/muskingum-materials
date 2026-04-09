@@ -106,8 +106,8 @@ export async function POST(request: NextRequest) {
           },
         ],
       });
-    } catch {
-      // Database not configured yet — that's okay
+    } catch (error) {
+      console.error("Chat DB save error:", error);
     }
 
     return NextResponse.json({ reply });
