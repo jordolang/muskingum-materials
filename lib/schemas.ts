@@ -92,6 +92,19 @@ export const leadSchema = z.object({
   visitorId: z.string().optional(),
 });
 
+// Review submission schema
+export const reviewSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  email: z.string().email("Valid email is required").optional(),
+  rating: z
+    .number()
+    .min(1, "Rating must be at least 1")
+    .max(5, "Rating must be at most 5"),
+  text: z.string().min(10, "Review must be at least 10 characters"),
+  projectType: z.enum(["driveway", "patio", "landscaping", "commercial", "other"]),
+  orderNumber: z.string().optional(),
+});
+
 // Type exports for convenience
 export type ContactFormData = z.infer<typeof contactSchema>;
 export type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
@@ -102,3 +115,4 @@ export type ProfileUpdateData = z.infer<typeof profileUpdateSchema>;
 export type QuoteData = z.infer<typeof quoteSchema>;
 export type NewsletterData = z.infer<typeof newsletterSchema>;
 export type LeadData = z.infer<typeof leadSchema>;
+export type ReviewData = z.infer<typeof reviewSchema>;
