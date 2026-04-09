@@ -1,16 +1,12 @@
-import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { CheckCircle, Phone, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SERVICES, BUSINESS_INFO } from "@/data/business";
+import { generateServicesMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Services",
-  description:
-    "Material sales, delivery, large project pricing, and on-site loading. Muskingum Materials serves Southeast Ohio.",
-};
+export const metadata = generateServicesMetadata();
 
 export default function ServicesPage() {
   return (

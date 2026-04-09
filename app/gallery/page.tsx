@@ -1,11 +1,7 @@
-import type { Metadata } from "next";
 import Image from "next/image";
+import { generateGalleryMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Gallery",
-  description:
-    "See our equipment, materials, and facility. Muskingum Materials in Zanesville, OH.",
-};
+export const metadata = generateGalleryMetadata();
 
 const GALLERY_IMAGES = [
   { src: "/images/photos/aerial.jpg", alt: "Aerial view of Muskingum Materials", category: "Facility" },
