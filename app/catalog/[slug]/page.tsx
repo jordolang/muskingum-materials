@@ -12,6 +12,7 @@ import {
   ArrowRightLeft,
   Ruler,
   Palette,
+  Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -145,6 +146,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 </div>
               )}
             </div>
+
+            {/* Out of Stock Notification */}
+            {product.stockStatus.toLowerCase() === 'out_of_stock' && (
+              <div className="mt-4">
+                <Button variant="outline" className="gap-2">
+                  <Bell className="h-4 w-4" />
+                  Notify Me When Back in Stock
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
