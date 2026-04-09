@@ -92,6 +92,21 @@ export const leadSchema = z.object({
   visitorId: z.string().optional(),
 });
 
+// Order status update schema
+export const orderStatusUpdateSchema = z.object({
+  status: z.enum([
+    "pending",
+    "confirmed",
+    "processing",
+    "ready",
+    "ready_for_pickup",
+    "out_for_delivery",
+    "completed",
+    "cancelled",
+  ]),
+  statusNotes: z.string().optional(),
+});
+
 // Type exports for convenience
 export type ContactFormData = z.infer<typeof contactSchema>;
 export type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
@@ -102,3 +117,4 @@ export type ProfileUpdateData = z.infer<typeof profileUpdateSchema>;
 export type QuoteData = z.infer<typeof quoteSchema>;
 export type NewsletterData = z.infer<typeof newsletterSchema>;
 export type LeadData = z.infer<typeof leadSchema>;
+export type OrderStatusUpdateData = z.infer<typeof orderStatusUpdateSchema>;

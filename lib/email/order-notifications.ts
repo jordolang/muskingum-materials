@@ -36,7 +36,7 @@ export interface OrderEmailData {
 }
 
 interface EmailTemplate {
-  subject: string;
+  subject: string | ((data: OrderEmailData) => string);
   getBody: (data: OrderEmailData) => string;
 }
 
