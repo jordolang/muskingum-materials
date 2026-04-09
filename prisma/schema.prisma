@@ -210,8 +210,9 @@ model Product {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  comparisons ProductComparison[] @relation("ComparisonProductA")
-  comparedBy  ProductComparison[] @relation("ComparisonProductB")
+  comparisons          ProductComparison[]   @relation("ComparisonProductA")
+  comparedBy           ProductComparison[]   @relation("ComparisonProductB")
+  restockNotifications RestockNotification[]
 
   @@index([category])
   @@index([slug])
@@ -231,6 +232,20 @@ model ProductComparison {
   @@unique([productAId, productBId])
   @@index([productAId])
   @@index([productBId])
+}
+
+model RestockNotification {
+  id        String   @id @default(cuid())
+  email     String
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([productId])
+  @@index([status])
 }
 
 model CostGuide {
