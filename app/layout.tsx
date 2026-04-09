@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ChatWidget } from "@/components/chat/chat-widget";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
-import { ClerkWrapper } from "@/components/providers/clerk-wrapper";
 import "./globals.css";
 
 const fontSans = Inter({
@@ -52,18 +52,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${fontSans.variable} ${fontHeading.variable} font-sans antialiased`}>
-        <ClerkWrapper>
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body className={`${fontSans.variable} ${fontHeading.variable} font-sans antialiased`}>
           <div className="flex min-h-screen flex-col">
             <Navbar />
             <main className="flex-1">{children}</main>
             <Footer />
           </div>
           <ChatWidget />
-        </ClerkWrapper>
-        <GoogleAnalytics />
-      </body>
-    </html>
+          <GoogleAnalytics />
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
