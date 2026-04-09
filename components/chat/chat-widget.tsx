@@ -7,11 +7,8 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useChatStore } from "@/lib/store";
 import { useToast } from "@/lib/use-toast";
-<<<<<<< HEAD
 import { CHAT_CONTACT_THRESHOLD } from "@/lib/constants/business-rules";
-=======
 import { trackChatOpened } from "@/lib/analytics";
->>>>>>> 4a7f9f7 (auto-claude: subtask-4-1 - Add chat widget open event tracking)
 
 export function ChatWidget() {
   const { isOpen, messages, toggleChat, addMessage, visitorId } = useChatStore();
