@@ -16,6 +16,19 @@ import { BUSINESS_INFO, PRODUCTS, SERVICES } from "@/data/business";
 
 const FEATURED_PRODUCTS = PRODUCTS.filter((p) => p.price > 0).slice(0, 6);
 
+const PRODUCT_IMAGES: Record<string, string> = {
+  "Bank Run": "/images/products/bank-run.jpg",
+  "Fill Dirt": "/images/products/fill-dirt.jpg",
+  "Fill Sand": "/images/products/fill-sand.jpg",
+  "Topsoil (Unprocessed)": "/images/products/topsoil.jpg",
+  "#8 Fractured Gravel (Washed)": "/images/products/fractured-gravel.jpg",
+  "#9 Gravel (Washed)": "/images/products/fine-gravel.jpg",
+  "#8 Gravel (Washed)": "/images/photos/stone-close-up.jpg",
+  "#57 Gravel (Washed)": "/images/photos/piles-close-up.jpg",
+  "304 Crushed Gravel": "/images/photos/piles-7.jpg",
+  "Oversized Gravel (Washed)": "/images/photos/stone-hand.jpg",
+};
+
 export default function HomePage() {
   return (
     <>
@@ -98,18 +111,22 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURED_PRODUCTS.map((product) => (
-              <Card key={product.name} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-lg">{product.name}</h3>
-                    <span className="text-lg font-bold text-primary">
-                      ${product.price.toFixed(2)}
-                      <span className="text-xs text-muted-foreground font-normal">
-                        /{product.unit}
-                      </span>
-                    </span>
+              <Card key={product.name} className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 bg-card">
+                <div className="relative h-48 w-full">
+                  <Image
+                    src={PRODUCT_IMAGES[product.name] || "/images/photos/piles.jpg"}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute top-3 right-3 bg-amber-600 text-white px-3 py-1.5 rounded-lg shadow-md">
+                    <span className="text-lg font-bold">${product.price.toFixed(2)}</span>
+                    <span className="text-xs opacity-90">/{product.unit}</span>
                   </div>
-                  <p className="text-sm text-muted-foreground">{product.description}</p>
+                </div>
+                <CardContent className="p-5">
+                  <h3 className="font-bold text-lg mb-1.5">{product.name}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
                 </CardContent>
               </Card>
             ))}
@@ -140,14 +157,22 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {SERVICES.map((service) => (
-              <Card key={service.title} className="hover:shadow-md transition-shadow">
+              <Card key={service.title} className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-card">
                 <CardContent className="p-6">
-                  <h3 className="text-xl font-semibold mb-2">{service.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">{service.description}</p>
-                  <ul className="space-y-1">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+                      {service.icon === "mountain" && <Scale className="h-5 w-5 text-amber-700" />}
+                      {service.icon === "truck" && <Truck className="h-5 w-5 text-amber-700" />}
+                      {service.icon === "calculator" && <Star className="h-5 w-5 text-amber-700" />}
+                      {service.icon === "loader" && <Clock className="h-5 w-5 text-amber-700" />}
+                    </div>
+                    <h3 className="text-xl font-bold">{service.title}</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{service.description}</p>
+                  <ul className="space-y-2">
                     {service.features.map((feature) => (
-                      <li key={feature} className="text-sm flex items-center gap-2">
-                        <Star className="h-3 w-3 text-amber-500" />
+                      <li key={feature} className="text-sm flex items-center gap-2.5">
+                        <div className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
                         {feature}
                       </li>
                     ))}
