@@ -84,10 +84,9 @@ export async function POST(request: NextRequest) {
     // Store conversation in database (best-effort)
     try {
       const conversation = await prisma.chatConversation.upsert({
-        where: { id: data.visitorId || "anonymous" },
+        where: { visitorId: data.visitorId || "anonymous" },
         update: { updatedAt: new Date() },
         create: {
-          id: data.visitorId || `anon-${Date.now()}`,
           visitorId: data.visitorId || "anonymous",
         },
       });
