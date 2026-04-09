@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-
-const leadSchema = z.object({
-  name: z.string().optional(),
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
-  source: z.string().default("chat"),
-  visitorId: z.string().optional(),
-});
+import { leadSchema } from "@/lib/schemas";
 
 export async function POST(request: NextRequest) {
   try {

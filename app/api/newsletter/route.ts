@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-
-const newsletterSchema = z.object({
-  email: z.string().email(),
-  name: z.string().optional(),
-});
+import { newsletterSchema } from "@/lib/schemas";
 
 export async function POST(request: NextRequest) {
   try {
