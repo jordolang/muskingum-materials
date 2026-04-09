@@ -17,6 +17,6 @@ export default async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next|images|videos|favicon.ico|studio|api/chat|api/contact|api/leads|api/quote|api/newsletter).*)",
+    "/((?!_next|images|videos|favicon.ico|studio|api/chat|api/contact|api/leads|api/quote|api/newsletter|api/restock-notify).*)",
   ],
 };
