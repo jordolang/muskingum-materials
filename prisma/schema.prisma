@@ -113,6 +113,19 @@ model Order {
   @@index([stripeSessionId])
 }
 
+model SavedOrder {
+  id              String      @id @default(cuid())
+  userId          String
+  name            String
+  items           Json
+  deliveryAddress String?     @db.Text
+  pickupOrDeliver String      @default("pickup")
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([userId])
+}
+
 model UserProfile {
   id          String    @id @default(cuid())
   userId      String    @unique
