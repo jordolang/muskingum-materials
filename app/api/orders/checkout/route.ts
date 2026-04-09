@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
           subtotal: data.subtotal,
           tax: data.tax,
           processingFee: data.processingFee,
-          deliveryFee: data.deliveryFee || null,
+          deliveryFee: data.deliveryFee,
           total: data.total,
           pickupOrDeliver: data.fulfillment,
           deliveryAddress: data.deliveryAddress || null,
