@@ -58,9 +58,9 @@ export async function POST(request: NextRequest) {
       }
 
       default: {
-        // Handle custom events
-        if (event.type === "order.completed") {
-          const data = event.data.object as { orderNumber?: string };
+        // Handle custom events (not in Stripe's official type definitions)
+        if ((event as any).type === "order.completed") {
+          const data = (event as any).data.object as { orderNumber?: string };
           const orderNumber = data.orderNumber;
 
           if (orderNumber) {
