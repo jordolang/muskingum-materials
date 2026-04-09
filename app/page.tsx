@@ -13,13 +13,24 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { BUSINESS_INFO, PRODUCTS, SERVICES, PRODUCT_IMAGES } from "@/data/business";
+import { BUSINESS_INFO, PRODUCT_IMAGES } from "@/data/business";
 import { ReviewsCarousel } from "@/components/home/reviews-carousel";
 import { HomepageFAQ } from "@/components/home/homepage-faq";
+import { sanityClient } from "@/lib/sanity/client";
+import { productsQuery, servicesQuery } from "@/lib/sanity/queries";
 
-const FEATURED_PRODUCTS = PRODUCTS.filter((p) => p.price > 0).slice(0, 6);
+export const revalidate = 60;
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [products, services] = await Promise.all([
+    sanityClient.fetch(productsQuery),
+    sanityClient.fetch(servicesQuery),
+  ]);
+
+  const featuredProducts = products
+    .filter((p: any) => p.featured && p.available && p.pricePerTon > 0)
+    .slice(0, 6);
+
   return (
     <>
       {/* Hero */}
@@ -100,8 +111,8 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {FEATURED_PRODUCTS.map((product) => (
-              <Card key={product.name} className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 bg-card">
+            {featuredProducts.map((product: any) => (
+              <Card key={product._id} className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 bg-card">
                 <div className="relative h-48 w-full">
                   <Image
                     src={PRODUCT_IMAGES[product.name] || "/images/photos/piles.jpg"}
@@ -110,7 +121,7 @@ export default function HomePage() {
                     className="object-cover"
                   />
                   <div className="absolute top-3 right-3 bg-amber-600 text-white px-3 py-1.5 rounded-lg shadow-md">
-                    <span className="text-lg font-bold">${product.price.toFixed(2)}</span>
+                    <span className="text-lg font-bold">${product.pricePerTon.toFixed(2)}</span>
                     <span className="text-xs opacity-90">/{product.unit}</span>
                   </div>
                 </div>
@@ -146,8 +157,8 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {SERVICES.map((service) => (
-              <Card key={service.title} className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-card">
+            {services.map((service: any) => (
+              <Card key={service._id} className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-card">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
@@ -160,7 +171,7 @@ export default function HomePage() {
                   </div>
                   <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{service.description}</p>
                   <ul className="space-y-2">
-                    {service.features.map((feature) => (
+                    {service.features.map((feature: string) => (
                       <li key={feature} className="text-sm flex items-center gap-2.5">
                         <div className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
                         {feature}
