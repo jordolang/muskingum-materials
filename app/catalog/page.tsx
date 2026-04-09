@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getProductsWithFilters } from "@/lib/products";
 import { BUSINESS_INFO } from "@/data/business";
-import { CatalogFilters } from "@/components/CatalogFilters";
+import { CatalogControls } from "@/components/catalog/catalog-controls";
 
 export const metadata: Metadata = {
   title: "Material Catalog",
@@ -18,13 +18,13 @@ export const metadata: Metadata = {
 export default async function CatalogPage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string; category?: string; sortBy?: string }>;
+  searchParams: Promise<{ q?: string; category?: string; sort?: string }>;
 }) {
   const params = await searchParams;
   const products = await getProductsWithFilters({
-    search: params.search,
+    search: params.q,
     category: params.category,
-    sortBy: params.sortBy as any,
+    sortBy: params.sort as any,
   });
 
   return (
@@ -41,10 +41,10 @@ export default async function CatalogPage({
           </p>
         </div>
 
-        <CatalogFilters
-          search={params.search}
-          category={params.category}
-          sortBy={params.sortBy}
+        <CatalogControls
+          initialSearch={params.q}
+          initialCategory={params.category}
+          initialSort={params.sort}
         />
 
         {products.length === 0 ? (
