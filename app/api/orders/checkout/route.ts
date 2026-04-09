@@ -2,27 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-
-const checkoutSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  phone: z.string().min(10),
-  fulfillment: z.enum(["pickup", "delivery"]),
-  deliveryAddress: z.string().optional(),
-  deliveryNotes: z.string().optional(),
-  items: z.array(
-    z.object({
-      name: z.string(),
-      price: z.number(),
-      unit: z.string(),
-      quantity: z.number().min(1),
-    })
-  ),
-  subtotal: z.number(),
-  tax: z.number(),
-  processingFee: z.number(),
-  total: z.number(),
-});
+import { checkoutSchema, type CheckoutData } from "@/lib/schemas";
 
 function generateOrderNumber(): string {
   const now = new Date();

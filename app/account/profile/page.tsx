@@ -4,20 +4,11 @@ import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Loader2, CheckCircle, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-const profileSchema = z.object({
-  name: z.string().min(2, "Name is required"),
-  email: z.string().email("Valid email required"),
-  phone: z.string().optional(),
-  company: z.string().optional(),
-});
-
-type ProfileData = z.infer<typeof profileSchema>;
+import { profileSchema, type ProfileData } from "@/lib/schemas";
 
 export default function ProfilePage() {
   const { user, isLoaded } = useUser();
