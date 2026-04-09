@@ -1,11 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   Phone,
   Mail,
   MapPin,
   Clock,
   Facebook,
-  Mountain,
 } from "lucide-react";
 import { BUSINESS_INFO } from "@/data/business";
 
@@ -15,13 +15,15 @@ export function Footer() {
       <div className="container py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Mountain className="h-8 w-8 text-amber-500" />
-              <div>
-                <p className="text-lg font-bold text-white">Muskingum</p>
-                <p className="text-xs text-stone-400">Materials</p>
-              </div>
-            </div>
+            <Link href="/" className="inline-block mb-4">
+              <Image
+                src="/logo-light.svg"
+                alt="Muskingum Materials"
+                width={200}
+                height={60}
+                className="h-12 w-auto"
+              />
+            </Link>
             <p className="text-sm text-stone-400 mb-4">
               {BUSINESS_INFO.tagline}
             </p>

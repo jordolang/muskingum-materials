@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" fill="none">
+  <!-- Mountain icon -->
+  <path d="M30 95 L60 35 L75 55 L90 30 L120 95 Z" fill="#B45309" opacity="0.9"/>
+  <path d="M45 95 L75 55 L90 30 L120 95 Z" fill="#D97706" opacity="0.8"/>
+  <path d="M60 95 L90 30 L120 95 Z" fill="#F59E0B" opacity="0.6"/>
+  <!-- Text - white for dark backgrounds -->
+  <text x="140" y="52" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="38" fill="#FAFAF9" letter-spacing="1">MUSKINGUM</text>
+  <text x="140" y="85" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="28" fill="#F59E0B" letter-spacing="3">MATERIALS</text>
+  <text x="140" y="105" font-family="Arial, Helvetica, sans-serif" font-weight="400" font-size="11" fill="#A8A29E" letter-spacing="1.5">SAND · SOIL · GRAVEL</text>
+</svg>

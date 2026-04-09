@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, Phone, Mountain } from "lucide-react";
+import Image from "next/image";
+import { Menu, X, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BUSINESS_INFO } from "@/data/business";
 
@@ -22,16 +23,15 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <Mountain className="h-8 w-8 text-primary" />
-          <div className="flex flex-col">
-            <span className="text-lg font-bold leading-tight text-foreground">
-              Muskingum
-            </span>
-            <span className="text-xs font-medium leading-tight text-muted-foreground">
-              Materials
-            </span>
-          </div>
+        <Link href="/" className="shrink-0">
+          <Image
+            src="/logo.svg"
+            alt="Muskingum Materials"
+            width={200}
+            height={60}
+            className="h-10 w-auto"
+            priority
+          />
         </Link>
 
         <nav className="hidden md:flex items-center gap-6">
