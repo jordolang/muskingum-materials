@@ -5,23 +5,9 @@ import { ShoppingCart, Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PRODUCTS } from "@/data/business";
+import { PRODUCTS, PRODUCT_IMAGES } from "@/data/business";
 
 const ORDERABLE_PRODUCTS = PRODUCTS.filter((p) => p.price > 0);
-
-const PRODUCT_IMAGES: Record<string, string> = {
-  "Bank Run": "/images/products/bank-run.jpg",
-  "Fill Dirt": "/images/products/fill-dirt.jpg",
-  "Fill Sand": "/images/products/fill-sand.jpg",
-  "Topsoil (Unprocessed)": "/images/products/topsoil.jpg",
-  "#8 Fractured Gravel (Washed)": "/images/products/fractured-gravel.jpg",
-  "#9 Gravel (Washed)": "/images/products/fine-gravel.jpg",
-  "#8 Gravel (Washed)": "/images/photos/stone-close-up.jpg",
-  "#57 Gravel (Washed)": "/images/photos/piles-close-up.jpg",
-  "304 Crushed Gravel": "/images/photos/piles-7.jpg",
-  "Oversized Gravel (Washed)": "/images/photos/stone-hand.jpg",
-  "#57 Limestone": "/images/photos/boulders.jpg",
-};
 
 interface CartItem {
   name: string;
