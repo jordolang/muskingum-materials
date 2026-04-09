@@ -36,7 +36,7 @@
     "@sanity/image-url": "^1.1.0",
     "@sanity/vision": "^3.75.0",
     "@stripe/stripe-js": "^5.5.0",
-    "ai": "^4.3.0",
+    "ai": "^6.0.154",
     "@ai-sdk/anthropic": "^1.2.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
