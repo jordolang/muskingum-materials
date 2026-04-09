@@ -48,3 +48,4 @@ prisma/migrations/
 .worktrees/
 .security-key
 logs/security/
+/.env
