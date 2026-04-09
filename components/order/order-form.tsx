@@ -256,8 +256,16 @@ export function OrderForm({ products }: OrderFormProps) {
       });
       const result = await response.json();
       if (result.url) {
+        // Store analytics data for success page tracking before redirect
+        if (result.analytics) {
+          sessionStorage.setItem("orderAnalytics", JSON.stringify(result.analytics));
+        }
         window.location.href = result.url;
       } else if (result.orderNumber) {
+        // Fallback if Stripe not configured — store analytics data for tracking
+        if (result.analytics) {
+          sessionStorage.setItem("orderAnalytics", JSON.stringify(result.analytics));
+        }
         setOrderNumber(result.orderNumber);
         setView("complete");
       } else {

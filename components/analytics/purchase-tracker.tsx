@@ -35,8 +35,8 @@ export function PurchaseTracker({ orderNumber }: PurchaseTrackerProps) {
         // Clear the analytics data after tracking
         sessionStorage.removeItem("orderAnalytics");
       }
-    } catch (error) {
-      console.error("Failed to track purchase:", error);
+    } catch {
+      // Analytics errors are intentionally suppressed - tracking failures should never break UX
     }
   }, [orderNumber]);
 
