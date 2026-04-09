@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { previewClient } from "@/lib/sanity/client";
@@ -7,6 +8,10 @@ import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
+    // Get authenticated user ID if available (optional for guest submissions)
+    const session = await auth();
+    const userId = session?.userId || null;
+
     const body = await request.json();
     const data = reviewSchema.parse(body);
 
@@ -38,6 +43,7 @@ export async function POST(request: NextRequest) {
     try {
       await prisma.reviewSubmission.create({
         data: {
+          userId,
           sanityDocumentId,
           orderNumber: data.orderNumber || null,
         },
