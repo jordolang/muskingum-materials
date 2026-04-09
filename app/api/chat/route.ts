@@ -4,7 +4,17 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { prisma } from "@/lib/prisma";
 import { BUSINESS_INFO, PRODUCTS, SERVICES } from "@/data/business";
 
-const SYSTEM_PROMPT = `You are a friendly, knowledgeable customer service assistant for Muskingum Materials, a family-owned sand, soil, and gravel company in Zanesville, Ohio.
+interface ProductData {
+  name: string;
+  price: number;
+  unit: string;
+  description: string;
+  stockStatus: string;
+  seasonalMessage?: string | null;
+}
+
+function buildSystemPrompt(productsData: ProductData[]) {
+  return `You are a friendly, knowledgeable customer service assistant for Muskingum Materials, a family-owned sand, soil, and gravel company in Zanesville, Ohio.
 
 BUSINESS INFORMATION:
 - Name: ${BUSINESS_INFO.name}
@@ -22,7 +32,22 @@ BUSINESS INFORMATION:
 - Tax: 7.25% | Credit card processing fee: 4.5% per ticket
 
 PRODUCTS AND PRICING (effective 07/01/2025):
-${PRODUCTS.map((p) => `- ${p.name}: ${p.price > 0 ? `$${p.price.toFixed(2)} per ${p.unit}` : "Call for pricing"} — ${p.description}`).join("\n")}
+${productsData.map((p) => {
+  const priceStr = p.price > 0 ? `$${p.price.toFixed(2)} per ${p.unit}` : "Call for pricing";
+  let stockStr = "";
+
+  if (p.stockStatus === "IN_STOCK") {
+    stockStr = "[In Stock]";
+  } else if (p.stockStatus === "LOW_STOCK") {
+    stockStr = "[Low Stock - Limited Supply]";
+  } else if (p.stockStatus === "OUT_OF_STOCK") {
+    stockStr = "[Out of Stock]";
+  } else if (p.stockStatus === "SEASONAL") {
+    stockStr = p.seasonalMessage ? `[Seasonal - ${p.seasonalMessage}]` : "[Seasonal]";
+  }
+
+  return `- ${p.name}: ${priceStr} ${stockStr} — ${p.description}`;
+}).join("\n")}
 
 SERVICES:
 ${SERVICES.map((s) => `- ${s.title}: ${s.description}`).join("\n")}
@@ -30,6 +55,10 @@ ${SERVICES.map((s) => `- ${s.title}: ${s.description}`).join("\n")}
 GUIDELINES:
 - Be friendly, helpful, and concise
 - Always provide accurate pricing from the data above
+- When customers ask about product availability, refer to the stock status indicators above
+- If a product is out of stock, let them know and suggest they call (740) 319-0183 to check when it will be available
+- If a product is low stock, mention limited availability and encourage them to order soon
+- If a product is seasonal, explain when it's typically available
 - If asked about pricing for items marked "Call for pricing," direct them to call (740) 319-0183
 - For delivery rates, tell them to call for current delivery pricing
 - Remind customers that prices are subject to change and to call for the most recent pricing
@@ -37,6 +66,7 @@ GUIDELINES:
 - If you don't know something, say so and direct them to call or email
 - Keep responses brief and helpful — 2-3 sentences max unless they need detailed info
 - Never make up information not provided above`;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,6 +79,44 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Fetch products with stock status from database
+    let productsData: ProductData[] = [];
+    try {
+      const dbProducts = await prisma.product.findMany({
+        where: { active: true },
+        select: {
+          name: true,
+          price: true,
+          unit: true,
+          description: true,
+          stockStatus: true,
+          seasonalMessage: true,
+        },
+        orderBy: { sortOrder: "asc" },
+      });
+
+      productsData = dbProducts.map((p) => ({
+        name: p.name,
+        price: p.price || 0,
+        unit: p.unit,
+        description: p.description,
+        stockStatus: p.stockStatus,
+        seasonalMessage: p.seasonalMessage,
+      }));
+    } catch {
+      // Fallback to static products if database is unavailable
+      productsData = PRODUCTS.map((p) => ({
+        name: p.name,
+        price: p.price,
+        unit: p.unit,
+        description: p.description,
+        stockStatus: "IN_STOCK",
+        seasonalMessage: null,
+      }));
+    }
+
+    const systemPrompt = buildSystemPrompt(productsData);
 
     const messages = [
       ...history.map((m: { role: string; content: string }) => ({
@@ -63,7 +131,7 @@ export async function POST(request: NextRequest) {
     if (process.env.ANTHROPIC_API_KEY) {
       const result = await generateText({
         model: anthropic("claude-haiku-4-5-20251001"),
-        system: SYSTEM_PROMPT,
+        system: systemPrompt,
         messages,
         maxTokens: 500,
       });
