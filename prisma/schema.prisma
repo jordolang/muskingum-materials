@@ -243,3 +243,24 @@ model CostGuide {
 
   @@index([slug])
 }
+
+model RecurringOrder {
+  id               String   @id @default(cuid())
+  userId           String?
+  name             String
+  email            String
+  phone            String?
+  company          String?
+  items            Json
+  deliveryAddress  String   @db.Text
+  deliveryNotes    String?  @db.Text
+  frequency        String   @default("weekly")
+  nextDeliveryDate DateTime
+  status           String   @default("active")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([nextDeliveryDate])
+}
