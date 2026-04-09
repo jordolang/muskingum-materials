@@ -51,19 +51,19 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const content = (
+  return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${fontSans.variable} ${fontHeading.variable} font-sans antialiased`}>
-        <div className="flex min-h-screen flex-col">
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
-        <ChatWidget />
+        <ClerkWrapper>
+          <div className="flex min-h-screen flex-col">
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
+          <ChatWidget />
+        </ClerkWrapper>
         <GoogleAnalytics />
       </body>
     </html>
   );
-
-  return <ClerkWrapper>{content}</ClerkWrapper>;
 }
