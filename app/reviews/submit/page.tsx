@@ -1,14 +1,21 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useUser } from "@clerk/nextjs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ReviewForm } from "@/components/reviews/review-form";
-
-export const metadata: Metadata = {
-  title: "Submit a Review",
-  description:
-    "Share your experience with Muskingum Materials. Your feedback helps us improve and helps others make informed decisions.",
-};
+import { Loader2 } from "lucide-react";
 
 export default function ReviewSubmitPage() {
+  const { user, isLoaded } = useUser();
+
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
     <div className="py-12">
       <div className="container">
@@ -26,7 +33,10 @@ export default function ReviewSubmitPage() {
               <CardTitle>Share Your Experience</CardTitle>
             </CardHeader>
             <CardContent>
-              <ReviewForm />
+              <ReviewForm
+                initialName={user?.fullName || ""}
+                initialEmail={user?.primaryEmailAddress?.emailAddress || ""}
+              />
             </CardContent>
           </Card>
         </div>

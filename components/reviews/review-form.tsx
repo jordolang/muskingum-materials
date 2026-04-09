@@ -17,7 +17,12 @@ import {
 import { StarRating } from "@/components/reviews/star-rating";
 import { reviewSchema, type ReviewData } from "@/lib/schemas";
 
-export function ReviewForm() {
+interface ReviewFormProps {
+  initialName?: string;
+  initialEmail?: string;
+}
+
+export function ReviewForm({ initialName, initialEmail }: ReviewFormProps = {}) {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
 
@@ -30,6 +35,8 @@ export function ReviewForm() {
   } = useForm<ReviewData>({
     resolver: zodResolver(reviewSchema),
     defaultValues: {
+      name: initialName || "",
+      email: initialEmail || "",
       rating: 0,
     },
   });
