@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { LazyVideo } from "@/components/gallery/lazy-video";
 
 export const metadata: Metadata = {
   title: "Gallery",
   description:
     "See our equipment, materials, and facility. Muskingum Materials in Zanesville, OH.",
 };
+
+// Neutral gray blur placeholder for images
+const BLUR_DATA_URL =
+  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZmlsdGVyIGlkPSJiIj48ZmVHYXVzc2lhbkJsdXIgc3RkRGV2aWF0aW9uPSIxMiIgLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2U3ZTVlNCIgZmlsdGVyPSJ1cmwoI2IpIiAvPjwvc3ZnPg==";
 
 const GALLERY_IMAGES = [
   { src: "/images/photos/aerial.jpg", alt: "Aerial view of Muskingum Materials", category: "Facility" },
@@ -54,17 +59,7 @@ export default function GalleryPage() {
               { src: "/images/videos/feeder.mp4", title: "Material Feeder" },
               { src: "/images/videos/water.mp4", title: "Site Overview" },
             ].map((video) => (
-              <div key={video.src} className="rounded-lg overflow-hidden">
-                <video
-                  controls
-                  preload="metadata"
-                  className="w-full aspect-video object-cover"
-                  poster=""
-                >
-                  <source src={video.src} type="video/mp4" />
-                </video>
-                <p className="text-sm font-medium mt-2">{video.title}</p>
-              </div>
+              <LazyVideo key={video.src} src={video.src} title={video.title} />
             ))}
           </div>
         </div>
@@ -72,7 +67,7 @@ export default function GalleryPage() {
         {/* Photo Grid */}
         <h2 className="text-2xl font-bold font-heading mb-6">Photos</h2>
         <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
-          {GALLERY_IMAGES.map((image) => (
+          {GALLERY_IMAGES.map((image, index) => (
             <div
               key={image.src}
               className="relative break-inside-avoid rounded-lg overflow-hidden group"
@@ -83,6 +78,10 @@ export default function GalleryPage() {
                 width={600}
                 height={400}
                 className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-300"
+                priority={index < 3}
+                loading={index >= 3 ? "lazy" : undefined}
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-end">
                 <div className="p-3 text-white opacity-0 group-hover:opacity-100 transition-opacity">
