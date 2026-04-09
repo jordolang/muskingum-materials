@@ -25,8 +25,9 @@ export async function POST(request: NextRequest) {
           message: data.visitorId ? `Chat visitor: ${data.visitorId}` : null,
         },
       });
-    } catch {
-      // Database not configured yet
+    } catch (error) {
+      console.error("Lead creation error:", error);
+      return NextResponse.json({ error: "Failed to create lead" }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
