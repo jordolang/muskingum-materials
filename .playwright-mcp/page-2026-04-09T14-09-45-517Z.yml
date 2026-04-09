@@ -1,0 +1,294 @@
+- generic [ref=e4]:
+  - navigation [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - link "Unsplash Home" [ref=e8] [cursor=pointer]:
+          - /url: /
+          - img "Unsplash Home" [ref=e9]
+        - link "Photos" [ref=e11] [cursor=pointer]:
+          - /url: /
+          - img [ref=e12]
+        - link "Illustrations" [ref=e14] [cursor=pointer]:
+          - /url: /illustrations
+          - img [ref=e15]
+      - generic [ref=e17]:
+        - button "Explore" [ref=e18] [cursor=pointer]:
+          - img [ref=e19]
+        - button "Collections" [ref=e21] [cursor=pointer]:
+          - img [ref=e22]
+        - button "Download History" [ref=e24] [cursor=pointer]:
+          - img [ref=e25]
+      - button "Bookmarks" [ref=e28] [cursor=pointer]:
+        - img [ref=e29]
+    - generic [ref=e31]:
+      - link "Log in / Sign up" [ref=e32] [cursor=pointer]:
+        - /url: /login?referrer=%2Fphotos%2Faerial-photography-of-gray-and-white-stone-lot-wtjrpjZABcQ
+        - img [ref=e33]
+      - button "Language" [ref=e35] [cursor=pointer]:
+        - img [ref=e36]
+      - button "Menu" [ref=e38] [cursor=pointer]:
+        - img [ref=e39]
+  - generic [ref=e41]:
+    - generic [ref=e42]:
+      - navigation [ref=e43]:
+        - search "Find visuals sitewide" [ref=e45]:
+          - button "Search Unsplash" [ref=e46] [cursor=pointer]:
+            - img [ref=e47]
+          - combobox [ref=e49]:
+            - searchbox "Search Unsplash" [ref=e50]
+            - listbox
+          - button "Visual search" [ref=e51] [cursor=pointer]:
+            - img [ref=e52]
+        - generic [ref=e54]:
+          - link "Get Unsplash+" [ref=e55] [cursor=pointer]:
+            - /url: /plus
+          - link "Log in" [ref=e56] [cursor=pointer]:
+            - /url: /login?referrer=%2Fphotos%2Faerial-photography-of-gray-and-white-stone-lot-wtjrpjZABcQ
+        - button "Submit an image" [ref=e58] [cursor=pointer]
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - banner [ref=e62]:
+            - generic [ref=e64]:
+              - link [ref=e65] [cursor=pointer]:
+                - /url: /@johnsalzarulo
+              - generic [ref=e68]:
+                - link "John Salzarulo" [ref=e69] [cursor=pointer]:
+                  - /url: /@johnsalzarulo
+                - link "johnsalzarulo" [ref=e71] [cursor=pointer]:
+                  - /url: /@johnsalzarulo
+            - generic [ref=e72]:
+              - button "Bookmark" [ref=e73] [cursor=pointer]:
+                - img [ref=e74]
+              - button "Add to Collection" [ref=e76] [cursor=pointer]:
+                - img [ref=e77]
+              - button "Edit image" [ref=e79] [cursor=pointer]:
+                - text: Edit image
+                - img [ref=e80]
+              - generic [ref=e83]:
+                - link "Download free" [ref=e84] [cursor=pointer]:
+                  - /url: https://unsplash.com/photos/wtjrpjZABcQ/download?force=true
+                - button "Choose download size" [ref=e86] [cursor=pointer]:
+                  - img [ref=e87]
+          - button "Zoom in on this image" [ref=e92]:
+            - img "aerial photography of gray and white stone lot" [ref=e93]
+            - generic:
+              - generic:
+                - img
+          - generic [ref=e94]:
+            - generic [ref=e95]:
+              - generic [ref=e96]:
+                - generic [ref=e97]:
+                  - heading "Views" [level=3] [ref=e98]
+                  - text: 9,854,337
+                - generic [ref=e99]:
+                  - heading "Downloads" [level=3] [ref=e100]
+                  - text: 69,617
+              - generic [ref=e102]:
+                - heading "Featured in" [level=3] [ref=e103]
+                - generic [ref=e104]:
+                  - link "Photos" [ref=e105] [cursor=pointer]:
+                    - /url: /
+                  - text: ","
+                  - link "Color of Water" [ref=e106] [cursor=pointer]:
+                    - /url: /t/color-of-water
+              - generic [ref=e107]:
+                - button "Share this image" [ref=e108] [cursor=pointer]:
+                  - img [ref=e109]
+                  - generic [ref=e111]: Share
+                - button "Stats about this image" [ref=e112] [cursor=pointer]:
+                  - img [ref=e113]
+                  - generic [ref=e115]: Info
+                - button "More Actions" [ref=e116] [cursor=pointer]:
+                  - img [ref=e117]
+            - generic [ref=e120]:
+              - heading "aerial photography of gray and white stone lot" [level=1] [ref=e122]
+              - paragraph [ref=e126]: Rocks
+              - generic [ref=e128]:
+                - generic [ref=e129]:
+                  - img [ref=e130]
+                  - generic [ref=e133]:
+                    - text: Published on
+                    - time [ref=e134]: February 11, 2016
+                - generic [ref=e135]:
+                  - img [ref=e136]
+                  - button "FUJIFILM, X-E2" [ref=e139] [cursor=pointer]
+                - generic [ref=e140]:
+                  - img [ref=e141]
+                  - generic [ref=e143]:
+                    - text: Free to use under the
+                    - link "Unsplash License" [ref=e144] [cursor=pointer]:
+                      - /url: /license
+            - generic [ref=e146]:
+              - link "beach" [ref=e147] [cursor=pointer]:
+                - /url: /s/photos/beach
+              - link "garden" [ref=e148] [cursor=pointer]:
+                - /url: /s/photos/garden
+              - link "grey" [ref=e149] [cursor=pointer]:
+                - /url: /s/photos/grey
+              - link "rock" [ref=e150] [cursor=pointer]:
+                - /url: /s/photos/rock
+              - link "stone" [ref=e151] [cursor=pointer]:
+                - /url: /s/photos/stone
+              - link "zen" [ref=e152] [cursor=pointer]:
+                - /url: /s/photos/zen
+              - link "rocks" [ref=e153] [cursor=pointer]:
+                - /url: /s/photos/rocks
+              - link "circle" [ref=e154] [cursor=pointer]:
+                - /url: /s/photos/circle
+              - link "gray" [ref=e155] [cursor=pointer]:
+                - /url: /s/photos/gray
+              - link "stones" [ref=e156] [cursor=pointer]:
+                - /url: /s/photos/stones
+              - link "pebbles" [ref=e157] [cursor=pointer]:
+                - /url: /s/photos/pebbles
+              - link "smooth" [ref=e158] [cursor=pointer]:
+                - /url: /s/photos/smooth
+              - link "round" [ref=e159] [cursor=pointer]:
+                - /url: /s/photos/round
+              - link "pebble" [ref=e160] [cursor=pointer]:
+                - /url: /s/photos/pebble
+              - link "stone wallpaper" [ref=e161] [cursor=pointer]:
+                - /url: /s/photos/stone-wallpaper
+              - link "oval" [ref=e162] [cursor=pointer]:
+                - /url: /s/photos/oval
+              - link "riverbed" [ref=e163] [cursor=pointer]:
+                - /url: /s/photos/riverbed
+        - generic [ref=e166]:
+          - generic [ref=e167]:
+            - paragraph [ref=e169]: Browse premium related images on iStock | Save 20% with code UNSPLASH20
+            - generic [ref=e171]:
+              - link "The background of pebbles arranged into a background" [ref=e172] [cursor=pointer]:
+                - /url: https://www.istockphoto.com/photo/the-background-of-pebbles-arranged-into-a-background-gm2187654277-606223593?utm_source=unsplash&utm_medium=affiliate&utm_campaign=adp_photos_sponsored&utm_content=https%3A%2F%2Funsplash.com%2Fphotos%2Faerial-photography-of-gray-and-white-stone-lot-wtjrpjZABcQ&utm_term=beach%3A%3A%3A%3A493c76fc-148a-43e8-8fb3-9268eb781e3d
+                - img "The background of pebbles arranged into a background" [ref=e173]
+              - link "The background of pebbles arranged into a background" [ref=e174] [cursor=pointer]:
+                - /url: https://www.istockphoto.com/photo/the-background-of-pebbles-arranged-into-a-background-gm2187654272-606223591?utm_source=unsplash&utm_medium=affiliate&utm_campaign=adp_photos_sponsored&utm_content=https%3A%2F%2Funsplash.com%2Fphotos%2Faerial-photography-of-gray-and-white-stone-lot-wtjrpjZABcQ&utm_term=beach%3A%3A%3A%3Ab9c427fd-79d6-409e-a035-9ea92f3bd0c9
+                - img "The background of pebbles arranged into a background" [ref=e175]
+              - link "river rock" [ref=e176] [cursor=pointer]:
+                - /url: https://www.istockphoto.com/photo/river-rock-gm180229003-23941639?utm_source=unsplash&utm_medium=affiliate&utm_campaign=adp_photos_sponsored&utm_content=https%3A%2F%2Funsplash.com%2Fphotos%2Faerial-photography-of-gray-and-white-stone-lot-wtjrpjZABcQ&utm_term=beach%3A%3A%3A%3A70c89c82-4cec-43aa-96fc-131ce94552b5
+                - img "river rock" [ref=e177]
+              - link "River stone or Pebbles stone background with vintage filter" [ref=e178] [cursor=pointer]:
+                - /url: https://www.istockphoto.com/photo/river-stone-or-pebbles-stone-background-with-vintage-filter-gm1397866988-452166091?utm_source=unsplash&utm_medium=affiliate&utm_campaign=adp_photos_sponsored&utm_content=https%3A%2F%2Funsplash.com%2Fphotos%2Faerial-photography-of-gray-and-white-stone-lot-wtjrpjZABcQ&utm_term=beach%3A%3A%3A%3Abe287c91-0469-42f0-a70e-1ab9801f00df
+                - img "River stone or Pebbles stone background with vintage filter" [ref=e179]
+              - link "Ocean stones from the beach" [ref=e180] [cursor=pointer]:
+                - /url: https://www.istockphoto.com/photo/ocean-stones-from-the-beach-gm509534189-45910500?utm_source=unsplash&utm_medium=affiliate&utm_campaign=adp_photos_sponsored&utm_content=https%3A%2F%2Funsplash.com%2Fphotos%2Faerial-photography-of-gray-and-white-stone-lot-wtjrpjZABcQ&utm_term=beach%3A%3A%3A%3Adb785250-e880-471d-9be1-2fcce121310f
+                - img "Ocean stones from the beach" [ref=e181]
+              - link "Smooth round pebbles texture background. Pebble sea beach close-up, dark wet pebble and gray dry pebble. High quality photo" [ref=e182] [cursor=pointer]:
+                - /url: https://www.istockphoto.com/photo/smooth-round-pebbles-texture-background-pebble-sea-beach-close-up-dark-wet-pebble-gm2071382543-564608508?utm_source=unsplash&utm_medium=affiliate&utm_campaign=adp_photos_sponsored&utm_content=https%3A%2F%2Funsplash.com%2Fphotos%2Faerial-photography-of-gray-and-white-stone-lot-wtjrpjZABcQ&utm_term=beach%3A%3A%3A%3Ae0ba2c4c-0bd5-484c-9081-82ff9298b773
+                - img "Smooth round pebbles texture background. Pebble sea beach close-up, dark wet pebble and gray dry pebble. High quality photo" [ref=e183]
+              - link "Bed of Gray Pebbles" [ref=e184] [cursor=pointer]:
+                - /url: https://www.istockphoto.com/photo/bed-of-gray-pebbles-gm638209412-114296937?utm_source=unsplash&utm_medium=affiliate&utm_campaign=adp_photos_sponsored&utm_content=https%3A%2F%2Funsplash.com%2Fphotos%2Faerial-photography-of-gray-and-white-stone-lot-wtjrpjZABcQ&utm_term=beach%3A%3A%3A%3A653b29a7-7d5d-412d-8e72-d0b051b82cbf
+                - img "Bed of Gray Pebbles" [ref=e185]
+              - generic [ref=e186]:
+                - link "river stones" [ref=e187] [cursor=pointer]:
+                  - /url: https://www.istockphoto.com/photo/river-stones-gm1670990529-535825000?utm_source=unsplash&utm_medium=affiliate&utm_campaign=adp_photos_sponsored&utm_content=https%3A%2F%2Funsplash.com%2Fphotos%2Faerial-photography-of-gray-and-white-stone-lot-wtjrpjZABcQ&utm_term=beach%3A%3A%3A%3A192f0445-7902-4231-ae10-e0fb3f3d84f7
+                  - img "river stones" [ref=e188]
+                - link "View more on iStock ↗" [ref=e189] [cursor=pointer]:
+                  - /url: https://www.istockphoto.com/search/search-by-image?utm_source=unsplash&utm_medium=affiliate&utm_campaign=adp_photos_sponsored&utm_content=https%3A%2F%2Funsplash.com%2Fphotos%2Faerial-photography-of-gray-and-white-stone-lot-wtjrpjZABcQ&utm_term=beach%3A%3A%3A%3A5a1012a0-5046-44a8-a504-220239eb8057&mediatype=photography&imageurl=aHR0cHM6Ly9zMy51cy13ZXN0LTIuYW1hem9uYXdzLmNvbS9pbWFnZXMudW5zcGxhc2guY29tL3NtYWxsL3Bob3RvLTE0NTUyNDM2MjkxNjEtMWY5OTM3OTdmNzhk&assettype=image
+          - generic [ref=e190]:
+            - heading "Related images" [level=4] [ref=e192]
+            - generic [ref=e196]:
+              - generic [ref=e197]:
+                - figure [ref=e198]:
+                  - link "a close up of a bunch of rocks" [ref=e201]:
+                    - /url: /photos/a-close-up-of-a-bunch-of-rocks-wUEdZygBD-M
+                    - img "a close up of a bunch of rocks" [ref=e202]
+                - figure [ref=e203]:
+                  - generic [ref=e205]:
+                    - link "A pile of dark gray and brown river stones." [ref=e206]:
+                      - /url: /photos/a-pile-of-dark-gray-and-brown-river-stones-vMJL_vKPuFw
+                      - img "A pile of dark gray and brown river stones." [ref=e207]
+                    - link [ref=e208] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-pile-of-dark-gray-and-brown-river-stones-vMJL_vKPuFw
+                      - img [ref=e209]
+                - figure [ref=e211]:
+                  - link "a close up of a bunch of rocks" [ref=e214]:
+                    - /url: /photos/a-close-up-of-a-bunch-of-rocks-bHwluv8DUso
+                    - img "a close up of a bunch of rocks" [ref=e215]
+                - figure [ref=e216]:
+                  - link "brown and gray stones on gray concrete ground" [ref=e219]:
+                    - /url: /photos/brown-and-gray-stones-on-gray-concrete-ground-uP_kno-UAYU
+                    - img "brown and gray stones on gray concrete ground" [ref=e220]
+                - figure [ref=e221]:
+                  - generic [ref=e223]:
+                    - link "A collection of smooth, dark, and textured stones." [ref=e224]:
+                      - /url: /photos/a-collection-of-smooth-dark-and-textured-stones-7X6e9sYQggg
+                      - img "A collection of smooth, dark, and textured stones." [ref=e225]
+                    - link [ref=e226] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-collection-of-smooth-dark-and-textured-stones-7X6e9sYQggg
+                      - img [ref=e227]
+                - figure [ref=e229]:
+                  - link "gray and brown stone fragments" [ref=e232]:
+                    - /url: /photos/gray-and-brown-stone-fragments-3dKfDT9fQXs
+                    - img "gray and brown stone fragments" [ref=e233]
+              - generic [ref=e234]:
+                - figure [ref=e235]:
+                  - link "A bunch of rocks that are next to each other" [ref=e238]:
+                    - /url: /photos/a-bunch-of-rocks-that-are-next-to-each-other-KFhOSawv23U
+                    - img "A bunch of rocks that are next to each other" [ref=e239]
+                - figure [ref=e240]:
+                  - link "gray stone lot" [ref=e243]:
+                    - /url: /photos/gray-stone-lot-5h5N3XVAYBk
+                    - img "gray stone lot" [ref=e244]
+                - figure [ref=e245]:
+                  - generic [ref=e247]:
+                    - link "a close up of a pile of rocks" [ref=e248]:
+                      - /url: /photos/a-close-up-of-a-pile-of-rocks-xO3jDgnc-yQ
+                      - img "a close up of a pile of rocks" [ref=e249]
+                    - link [ref=e250] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-pile-of-rocks-xO3jDgnc-yQ
+                      - img [ref=e251]
+                - figure [ref=e253]:
+                  - link "a close up of a bunch of rocks" [ref=e256]:
+                    - /url: /photos/a-close-up-of-a-bunch-of-rocks-bLNP1VFgIqE
+                    - img "a close up of a bunch of rocks" [ref=e257]
+                - figure [ref=e258]:
+                  - link "a close up of a bunch of rocks" [ref=e261]:
+                    - /url: /photos/a-close-up-of-a-bunch-of-rocks-b3r2l6Aj198
+                    - img "a close up of a bunch of rocks" [ref=e262]
+                - figure [ref=e263]:
+                  - link "grey stones" [ref=e266]:
+                    - /url: /photos/grey-stones-P7MttUHmf68
+                    - img "grey stones" [ref=e267]
+                - figure [ref=e268]:
+                  - link "a close up of a bunch of rocks" [ref=e271]:
+                    - /url: /photos/a-close-up-of-a-bunch-of-rocks-Gx3m757rBCU
+                    - img "a close up of a bunch of rocks" [ref=e272]
+              - generic [ref=e273]:
+                - figure [ref=e274]:
+                  - link "A close-up view of small gray gravel stones" [ref=e277]:
+                    - /url: /photos/a-close-up-view-of-small-gray-gravel-stones-pSU-HwaCvoQ
+                    - img "A close-up view of small gray gravel stones" [ref=e278]
+                - figure [ref=e279]:
+                  - link "A pile of black rocks sitting next to each other" [ref=e282]:
+                    - /url: /photos/a-pile-of-black-rocks-sitting-next-to-each-other-3G4iQc4gSrw
+                    - img "A pile of black rocks sitting next to each other" [ref=e283]
+                - figure [ref=e284]:
+                  - link "a close up of a bunch of rocks" [ref=e287]:
+                    - /url: /photos/a-close-up-of-a-bunch-of-rocks-iQVWlUAWo4Q
+                    - img "a close up of a bunch of rocks" [ref=e288]
+                - figure [ref=e289]:
+                  - link "a close up of a pile of rocks" [ref=e292]:
+                    - /url: /photos/a-close-up-of-a-pile-of-rocks-HWsBdQDp-Ik
+                    - img "a close up of a pile of rocks" [ref=e293]
+                - figure [ref=e294]:
+                  - generic [ref=e296]:
+                    - link "a close up of a bunch of rocks" [ref=e297]:
+                      - /url: /photos/a-close-up-of-a-bunch-of-rocks-QpiCkDf7GkY
+                      - img "a close up of a bunch of rocks" [ref=e298]
+                    - link [ref=e299] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-bunch-of-rocks-QpiCkDf7GkY
+                      - img [ref=e300]
+                - figure [ref=e302]:
+                  - link "grey and blue pebbles" [ref=e305]:
+                    - /url: /photos/grey-and-blue-pebbles-McMw8DdSlJ4
+                    - img "grey and blue pebbles" [ref=e306]
+                - figure [ref=e307]:
+                  - generic [ref=e309]:
+                    - link "A close up of a bunch of rocks" [ref=e310]:
+                      - /url: /photos/a-close-up-of-a-bunch-of-rocks-MdUiN3K5uCU
+                      - img "A close up of a bunch of rocks" [ref=e311]
+                    - link [ref=e312] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-bunch-of-rocks-MdUiN3K5uCU
+                      - img [ref=e313]
+    - generic:
+      - region "Notifications"

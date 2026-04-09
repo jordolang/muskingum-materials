@@ -1,0 +1,378 @@
+- generic [ref=e4]:
+  - navigation [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - link "Unsplash Home" [ref=e8] [cursor=pointer]:
+          - /url: /
+          - img "Unsplash Home" [ref=e9]
+        - link "Photos" [ref=e11] [cursor=pointer]:
+          - /url: /
+          - img [ref=e12]
+        - link "Illustrations" [ref=e14] [cursor=pointer]:
+          - /url: /illustrations
+          - img [ref=e15]
+      - generic [ref=e17]:
+        - button "Explore" [ref=e18] [cursor=pointer]:
+          - img [ref=e19]
+        - button "Collections" [ref=e21] [cursor=pointer]:
+          - img [ref=e22]
+        - button "Download History" [ref=e24] [cursor=pointer]:
+          - img [ref=e25]
+      - button "Bookmarks" [ref=e28] [cursor=pointer]:
+        - img [ref=e29]
+    - generic [ref=e31]:
+      - link "Log in / Sign up" [ref=e32] [cursor=pointer]:
+        - /url: /login?referrer=%2Fphotos%2Fa-close-up-of-a-black-asphalt-surface-zGY9XnUt7p0
+        - img [ref=e33]
+      - button "Language" [ref=e35] [cursor=pointer]:
+        - img [ref=e36]
+      - button "Menu" [ref=e38] [cursor=pointer]:
+        - img [ref=e39]
+  - generic [ref=e41]:
+    - generic [ref=e42]:
+      - navigation [ref=e43]:
+        - search "Find visuals sitewide" [ref=e45]:
+          - button "Search Unsplash" [ref=e46] [cursor=pointer]:
+            - img [ref=e47]
+          - combobox [ref=e49]:
+            - searchbox "Search Unsplash" [ref=e50]
+            - listbox
+          - button "Visual search" [ref=e51] [cursor=pointer]:
+            - img [ref=e52]
+        - generic [ref=e54]:
+          - link "Get Unsplash+" [ref=e55] [cursor=pointer]:
+            - /url: /plus
+          - link "Log in" [ref=e56] [cursor=pointer]:
+            - /url: /login?referrer=%2Fphotos%2Fa-close-up-of-a-black-asphalt-surface-zGY9XnUt7p0
+        - button "Submit an image" [ref=e58] [cursor=pointer]
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - banner [ref=e62]:
+            - generic [ref=e64]:
+              - link [ref=e65] [cursor=pointer]:
+                - /url: /@slashiophotography
+              - generic [ref=e68]:
+                - link "Slashio Photography" [ref=e69] [cursor=pointer]:
+                  - /url: /@slashiophotography
+                - generic [ref=e70]:
+                  - text: For
+                  - link "Unsplash+" [ref=e71] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-black-asphalt-surface-zGY9XnUt7p0
+            - generic [ref=e72]:
+              - button "Bookmark" [ref=e73] [cursor=pointer]:
+                - img [ref=e74]
+              - button "Add to Collection" [ref=e76] [cursor=pointer]:
+                - img [ref=e77]
+              - button "Edit image" [ref=e79] [cursor=pointer]:
+                - text: Edit image
+                - img [ref=e80]
+              - button "Download" [ref=e83] [cursor=pointer]:
+                - img [ref=e84]
+                - text: Download
+          - button "Zoom in on this image" [ref=e89]:
+            - img "a close up of a black asphalt surface" [ref=e90]
+            - generic:
+              - generic:
+                - img
+          - generic [ref=e91]:
+            - generic [ref=e93]:
+              - button "Share this image" [ref=e94] [cursor=pointer]:
+                - img [ref=e95]
+                - generic [ref=e97]: Share
+              - button "More Actions" [ref=e98] [cursor=pointer]:
+                - img [ref=e99]
+            - generic [ref=e102]:
+              - heading "a close up of a black asphalt surface" [level=1] [ref=e104]
+              - paragraph [ref=e108]: Download this HD photo of texture, texture background, abstract background, and backdrop by Slashio Photography (@slashiophotography)
+              - generic [ref=e110]:
+                - generic [ref=e111]:
+                  - img [ref=e112]
+                  - generic [ref=e115]:
+                    - text: Published on
+                    - time [ref=e116]: February 2, 2023
+                - generic [ref=e117]:
+                  - img [ref=e118]
+                  - generic [ref=e120]:
+                    - text: Licensed under the
+                    - link "Unsplash+ License" [ref=e121] [cursor=pointer]:
+                      - /url: /plus/license
+            - generic [ref=e123]:
+              - link "texture" [ref=e124] [cursor=pointer]:
+                - /url: /s/photos/texture
+              - link "texture background" [ref=e125] [cursor=pointer]:
+                - /url: /s/photos/texture-background
+              - link "abstract background" [ref=e126] [cursor=pointer]:
+                - /url: /s/photos/abstract-background
+              - link "backdrop" [ref=e127] [cursor=pointer]:
+                - /url: /s/photos/backdrop
+              - link "ground" [ref=e128] [cursor=pointer]:
+                - /url: /s/photos/ground
+              - link "asphalt" [ref=e129] [cursor=pointer]:
+                - /url: /s/photos/asphalt
+              - link "material" [ref=e130] [cursor=pointer]:
+                - /url: /s/photos/material
+              - link "gravel" [ref=e131] [cursor=pointer]:
+                - /url: /s/photos/gravel
+              - link "rough texture" [ref=e132] [cursor=pointer]:
+                - /url: /s/photos/rough-texture
+              - link "pavement" [ref=e133] [cursor=pointer]:
+                - /url: /s/photos/pavement
+              - link "dark grey" [ref=e134] [cursor=pointer]:
+                - /url: /s/photos/dark-grey
+              - link "ground texture" [ref=e135] [cursor=pointer]:
+                - /url: /s/photos/ground-texture
+              - link "tarmac" [ref=e136] [cursor=pointer]:
+                - /url: /s/photos/tarmac
+              - link "construction material" [ref=e137] [cursor=pointer]:
+                - /url: /s/photos/construction-material
+              - link "dark stone" [ref=e138] [cursor=pointer]:
+                - /url: /s/photos/dark-stone
+              - link "road surface" [ref=e139] [cursor=pointer]:
+                - /url: /s/photos/road-surface
+              - link "rough surface" [ref=e140] [cursor=pointer]:
+                - /url: /s/photos/rough-surface
+        - generic [ref=e143]:
+          - generic [ref=e144]:
+            - paragraph [ref=e146]: From this series
+            - generic [ref=e148]:
+              - button "scroll list to the right" [ref=e150] [cursor=pointer]:
+                - img [ref=e151]
+              - generic [ref=e153]:
+                - generic [ref=e154]:
+                  - link [ref=e155] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-rock-with-moss-growing-on-it-Z_2GpFRFfrE
+                    - img [ref=e156]
+                  - link "a close up of a rock with moss growing on it" [ref=e158]:
+                    - /url: /photos/a-close-up-of-a-rock-with-moss-growing-on-it-Z_2GpFRFfrE
+                    - img "a close up of a rock with moss growing on it" [ref=e159]
+                - generic [ref=e160]:
+                  - link [ref=e161] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-bird-is-perched-on-a-wooden-plank-4d2KgM_bVT4
+                    - img [ref=e162]
+                  - link "a bird is perched on a wooden plank" [ref=e164]:
+                    - /url: /photos/a-bird-is-perched-on-a-wooden-plank-4d2KgM_bVT4
+                    - img "a bird is perched on a wooden plank" [ref=e165]
+                - generic [ref=e166]:
+                  - link [ref=e167] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-blue-and-green-surface-with-rocks-and-grass-helyIwx8-x4
+                    - img [ref=e168]
+                  - link "a blue and green surface with rocks and grass" [ref=e170]:
+                    - /url: /photos/a-blue-and-green-surface-with-rocks-and-grass-helyIwx8-x4
+                    - img "a blue and green surface with rocks and grass" [ref=e171]
+                - generic [ref=e172]:
+                  - link [ref=e173] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-man-holding-a-tennis-racquet-on-top-of-a-tennis-court-yaith3Ahrf0
+                    - img [ref=e174]
+                  - link "a man holding a tennis racquet on top of a tennis court" [ref=e176]:
+                    - /url: /photos/a-man-holding-a-tennis-racquet-on-top-of-a-tennis-court-yaith3Ahrf0
+                    - img "a man holding a tennis racquet on top of a tennis court" [ref=e177]
+                - generic [ref=e178]:
+                  - link [ref=e179] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-close-up-view-of-a-tan-colored-wall-WRWkSZQy4XA
+                    - img [ref=e180]
+                  - link "a close up view of a tan colored wall" [ref=e182]:
+                    - /url: /photos/a-close-up-view-of-a-tan-colored-wall-WRWkSZQy4XA
+                    - img "a close up view of a tan colored wall" [ref=e183]
+                - generic [ref=e184]:
+                  - link [ref=e185] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-bird-standing-on-top-of-a-sandy-beach-3IiRQDWb69g
+                    - img [ref=e186]
+                  - link "a bird standing on top of a sandy beach" [ref=e188]:
+                    - /url: /photos/a-bird-standing-on-top-of-a-sandy-beach-3IiRQDWb69g
+                    - img "a bird standing on top of a sandy beach" [ref=e189]
+                - generic [ref=e190]:
+                  - link [ref=e191] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-rocks-and-dirt-on-the-ground-oihQR8liUgA
+                    - img [ref=e192]
+                  - link "a close up of rocks and dirt on the ground" [ref=e194]:
+                    - /url: /photos/a-close-up-of-rocks-and-dirt-on-the-ground-oihQR8liUgA
+                    - img "a close up of rocks and dirt on the ground" [ref=e195]
+                - generic [ref=e196]:
+                  - link [ref=e197] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-sculpture-of-an-elephant-tocmGXF1dTo
+                    - img [ref=e198]
+                  - link "a close up of a sculpture of an elephant" [ref=e200]:
+                    - /url: /photos/a-close-up-of-a-sculpture-of-an-elephant-tocmGXF1dTo
+                    - img "a close up of a sculpture of an elephant" [ref=e201]
+                - generic [ref=e202]:
+                  - link [ref=e203] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-tree-trunk-with-moss-growing-on-it-OzgFSh4AQ1s
+                    - img [ref=e204]
+                  - link "a close up of a tree trunk with moss growing on it" [ref=e206]:
+                    - /url: /photos/a-close-up-of-a-tree-trunk-with-moss-growing-on-it-OzgFSh4AQ1s
+                    - img "a close up of a tree trunk with moss growing on it" [ref=e207]
+                - generic [ref=e208]:
+                  - link [ref=e209] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-stone-wall-made-of-rocks-dYvZRupVX9U
+                    - img [ref=e210]
+                  - link "a close up of a stone wall made of rocks" [ref=e212]:
+                    - /url: /photos/a-close-up-of-a-stone-wall-made-of-rocks-dYvZRupVX9U
+                    - img "a close up of a stone wall made of rocks" [ref=e213]
+          - generic [ref=e214]:
+            - heading "Related images" [level=4] [ref=e216]
+            - generic [ref=e220]:
+              - generic [ref=e221]:
+                - figure [ref=e222]:
+                  - generic [ref=e224]:
+                    - link "a red stop sign sitting on the side of a road" [ref=e225]:
+                      - /url: /photos/a-red-stop-sign-sitting-on-the-side-of-a-road-1Fl1ws4t3Ss
+                      - img "a red stop sign sitting on the side of a road" [ref=e226]
+                    - link [ref=e227] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-red-stop-sign-sitting-on-the-side-of-a-road-1Fl1ws4t3Ss
+                      - img [ref=e228]
+                - figure [ref=e230]:
+                  - generic [ref=e232]:
+                    - link "a red fire hydrant sitting on top of a pile of dirt" [ref=e233]:
+                      - /url: /photos/a-red-fire-hydrant-sitting-on-top-of-a-pile-of-dirt-Vxm6Ym_CSeU
+                      - img "a red fire hydrant sitting on top of a pile of dirt" [ref=e234]
+                    - link [ref=e235] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-red-fire-hydrant-sitting-on-top-of-a-pile-of-dirt-Vxm6Ym_CSeU
+                      - img [ref=e236]
+                - figure [ref=e238]:
+                  - generic [ref=e240]:
+                    - link "a close up of a wall with a clock on it" [ref=e241]:
+                      - /url: /photos/a-close-up-of-a-wall-with-a-clock-on-it-F37M4Ykcctc
+                      - img "a close up of a wall with a clock on it" [ref=e242]
+                    - link [ref=e243] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-wall-with-a-clock-on-it-F37M4Ykcctc
+                      - img [ref=e244]
+                - figure [ref=e246]:
+                  - generic [ref=e248]:
+                    - link "a close up of a dirt surface with small rocks" [ref=e249]:
+                      - /url: /photos/a-close-up-of-a-dirt-surface-with-small-rocks-glnk6Q49FrM
+                      - img "a close up of a dirt surface with small rocks" [ref=e250]
+                    - link [ref=e251] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-dirt-surface-with-small-rocks-glnk6Q49FrM
+                      - img [ref=e252]
+                - figure [ref=e254]:
+                  - generic [ref=e256]:
+                    - link "Textured grey background with dark spots." [ref=e257]:
+                      - /url: /photos/textured-grey-background-with-dark-spots-vDJXy_5HG34
+                      - img "Textured grey background with dark spots." [ref=e258]
+                    - link [ref=e259] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Ftextured-grey-background-with-dark-spots-vDJXy_5HG34
+                      - img [ref=e260]
+                - figure [ref=e262]:
+                  - generic [ref=e264]:
+                    - link "a close up of a wall made of cement" [ref=e265]:
+                      - /url: /photos/a-close-up-of-a-wall-made-of-cement-Jnz3b7CUv3U
+                      - img "a close up of a wall made of cement" [ref=e266]
+                    - link [ref=e267] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-wall-made-of-cement-Jnz3b7CUv3U
+                      - img [ref=e268]
+              - generic [ref=e270]:
+                - figure [ref=e271]:
+                  - generic [ref=e273]:
+                    - link "a close up of a concrete surface with small rocks" [ref=e274]:
+                      - /url: /photos/a-close-up-of-a-concrete-surface-with-small-rocks-vfB3ylbFruU
+                      - img "a close up of a concrete surface with small rocks" [ref=e275]
+                    - link [ref=e276] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-concrete-surface-with-small-rocks-vfB3ylbFruU
+                      - img [ref=e277]
+                - figure [ref=e279]:
+                  - generic [ref=e281]:
+                    - link "a black and white photo of a granite wall" [ref=e282]:
+                      - /url: /photos/a-black-and-white-photo-of-a-granite-wall-8lC-AZ74eNI
+                      - img "a black and white photo of a granite wall" [ref=e283]
+                    - link [ref=e284] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-black-and-white-photo-of-a-granite-wall-8lC-AZ74eNI
+                      - img [ref=e285]
+                - figure [ref=e287]:
+                  - generic [ref=e289]:
+                    - link "a close up of a bird's footprints in the sand" [ref=e290]:
+                      - /url: /photos/a-close-up-of-a-birds-footprints-in-the-sand-c_qUeLCHpSU
+                      - img "a close up of a bird's footprints in the sand" [ref=e291]
+                    - link [ref=e292] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-birds-footprints-in-the-sand-c_qUeLCHpSU
+                      - img [ref=e293]
+                - figure [ref=e295]:
+                  - generic [ref=e297]:
+                    - link "Rough and textured light-colored concrete surface." [ref=e298]:
+                      - /url: /photos/rough-and-textured-light-colored-concrete-surface-gB7Q1LDJeMw
+                      - img "Rough and textured light-colored concrete surface." [ref=e299]
+                    - link [ref=e300] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Frough-and-textured-light-colored-concrete-surface-gB7Q1LDJeMw
+                      - img [ref=e301]
+                - figure [ref=e303]:
+                  - generic [ref=e305]:
+                    - link "A detailed texture of rough concrete and small pebbles." [ref=e306]:
+                      - /url: /photos/a-detailed-texture-of-rough-concrete-and-small-pebbles-I-py8zE-4qU
+                      - img "A detailed texture of rough concrete and small pebbles." [ref=e307]
+                    - link [ref=e308] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-detailed-texture-of-rough-concrete-and-small-pebbles-I-py8zE-4qU
+                      - img [ref=e309]
+                - figure [ref=e311]:
+                  - generic [ref=e313]:
+                    - link "a close up of a cement wall with small holes in it" [ref=e314]:
+                      - /url: /photos/a-close-up-of-a-cement-wall-with-small-holes-in-it-KpocN3Cq9Fg
+                      - img "a close up of a cement wall with small holes in it" [ref=e315]
+                    - link [ref=e316] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-cement-wall-with-small-holes-in-it-KpocN3Cq9Fg
+                      - img [ref=e317]
+                - figure [ref=e319]:
+                  - generic [ref=e321]:
+                    - link "Close-up of a textured gray surface with small orange elements." [ref=e322]:
+                      - /url: /photos/close-up-of-a-textured-gray-surface-with-small-orange-elements-QfLySrXHdSI
+                      - img "Close-up of a textured gray surface with small orange elements." [ref=e323]
+                    - link [ref=e324] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fclose-up-of-a-textured-gray-surface-with-small-orange-elements-QfLySrXHdSI
+                      - img [ref=e325]
+              - generic [ref=e327]:
+                - figure [ref=e328]:
+                  - generic [ref=e330]:
+                    - link "a close up of a cement wall with dirt on it" [ref=e331]:
+                      - /url: /photos/a-close-up-of-a-cement-wall-with-dirt-on-it-D6vgruBl8nw
+                      - img "a close up of a cement wall with dirt on it" [ref=e332]
+                    - link [ref=e333] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-cement-wall-with-dirt-on-it-D6vgruBl8nw
+                      - img [ref=e334]
+                - figure [ref=e336]:
+                  - generic [ref=e338]:
+                    - link "A concrete surface with a visible crack." [ref=e339]:
+                      - /url: /photos/a-concrete-surface-with-a-visible-crack-INm2s8k_Cy4
+                      - img "A concrete surface with a visible crack." [ref=e340]
+                    - link [ref=e341] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-concrete-surface-with-a-visible-crack-INm2s8k_Cy4
+                      - img [ref=e342]
+                - figure [ref=e344]:
+                  - generic [ref=e346]:
+                    - link "a close up of a cement surface with black dots" [ref=e347]:
+                      - /url: /photos/a-close-up-of-a-cement-surface-with-black-dots-1c8fpr6EJ94
+                      - img "a close up of a cement surface with black dots" [ref=e348]
+                    - link [ref=e349] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-cement-surface-with-black-dots-1c8fpr6EJ94
+                      - img [ref=e350]
+                - figure [ref=e352]:
+                  - generic [ref=e354]:
+                    - link "a black and white dog laying on top of a bed" [ref=e355]:
+                      - /url: /photos/a-black-and-white-dog-laying-on-top-of-a-bed-BkuPFxWgCso
+                      - img "a black and white dog laying on top of a bed" [ref=e356]
+                    - link [ref=e357] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-black-and-white-dog-laying-on-top-of-a-bed-BkuPFxWgCso
+                      - img [ref=e358]
+                - figure [ref=e360]:
+                  - generic [ref=e362]:
+                    - link "a close up of a cement surface with small holes" [ref=e363]:
+                      - /url: /photos/a-close-up-of-a-cement-surface-with-small-holes-APZbb-Sd2XE
+                      - img "a close up of a cement surface with small holes" [ref=e364]
+                    - link [ref=e365] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-cement-surface-with-small-holes-APZbb-Sd2XE
+                      - img [ref=e366]
+                - figure [ref=e368]:
+                  - generic [ref=e370]:
+                    - link "a close up of a cement surface with dirt and rocks" [ref=e371]:
+                      - /url: /photos/a-close-up-of-a-cement-surface-with-dirt-and-rocks-QMxiICqJLVM
+                      - img "a close up of a cement surface with dirt and rocks" [ref=e372]
+                    - link [ref=e373] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-cement-surface-with-dirt-and-rocks-QMxiICqJLVM
+                      - img [ref=e374]
+                - figure [ref=e376]:
+                  - generic [ref=e378]:
+                    - link "a black and white photo of a granite wall" [ref=e379]:
+                      - /url: /photos/a-black-and-white-photo-of-a-granite-wall-vaPunELzQak
+                      - img "a black and white photo of a granite wall" [ref=e380]
+                    - link [ref=e381] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-black-and-white-photo-of-a-granite-wall-vaPunELzQak
+                      - img [ref=e382]
+    - generic:
+      - region "Notifications"

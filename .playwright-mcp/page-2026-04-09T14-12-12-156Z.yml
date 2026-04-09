@@ -1,0 +1,372 @@
+- generic [ref=e4]:
+  - navigation [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - link "Unsplash Home" [ref=e8] [cursor=pointer]:
+          - /url: /
+          - img "Unsplash Home" [ref=e9]
+        - link "Photos" [ref=e11] [cursor=pointer]:
+          - /url: /
+          - img [ref=e12]
+        - link "Illustrations" [ref=e14] [cursor=pointer]:
+          - /url: /illustrations
+          - img [ref=e15]
+      - generic [ref=e17]:
+        - button "Explore" [ref=e18] [cursor=pointer]:
+          - img [ref=e19]
+        - button "Collections" [ref=e21] [cursor=pointer]:
+          - img [ref=e22]
+        - button "Download History" [ref=e24] [cursor=pointer]:
+          - img [ref=e25]
+      - button "Bookmarks" [ref=e28] [cursor=pointer]:
+        - img [ref=e29]
+    - generic [ref=e31]:
+      - link "Log in / Sign up" [ref=e32] [cursor=pointer]:
+        - /url: /login?referrer=%2Fphotos%2Fa-close-up-of-rocks-and-dirt-on-the-ground-oihQR8liUgA
+        - img [ref=e33]
+      - button "Language" [ref=e35] [cursor=pointer]:
+        - img [ref=e36]
+      - button "Menu" [ref=e38] [cursor=pointer]:
+        - img [ref=e39]
+  - generic [ref=e41]:
+    - generic [ref=e42]:
+      - navigation [ref=e43]:
+        - search "Find visuals sitewide" [ref=e45]:
+          - button "Search Unsplash" [ref=e46] [cursor=pointer]:
+            - img [ref=e47]
+          - combobox [ref=e49]:
+            - searchbox "Search Unsplash" [ref=e50]
+            - listbox
+          - button "Visual search" [ref=e51] [cursor=pointer]:
+            - img [ref=e52]
+        - generic [ref=e54]:
+          - link "Get Unsplash+" [ref=e55] [cursor=pointer]:
+            - /url: /plus
+          - link "Log in" [ref=e56] [cursor=pointer]:
+            - /url: /login?referrer=%2Fphotos%2Fa-close-up-of-rocks-and-dirt-on-the-ground-oihQR8liUgA
+        - button "Submit an image" [ref=e58] [cursor=pointer]
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - banner [ref=e62]:
+            - generic [ref=e64]:
+              - link [ref=e65] [cursor=pointer]:
+                - /url: /@slashiophotography
+              - generic [ref=e68]:
+                - link "Slashio Photography" [ref=e69] [cursor=pointer]:
+                  - /url: /@slashiophotography
+                - generic [ref=e70]:
+                  - text: For
+                  - link "Unsplash+" [ref=e71] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-rocks-and-dirt-on-the-ground-oihQR8liUgA
+            - generic [ref=e72]:
+              - button "Bookmark" [ref=e73] [cursor=pointer]:
+                - img [ref=e74]
+              - button "Add to Collection" [ref=e76] [cursor=pointer]:
+                - img [ref=e77]
+              - button "Edit image" [ref=e79] [cursor=pointer]:
+                - text: Edit image
+                - img [ref=e80]
+              - button "Download" [ref=e83] [cursor=pointer]:
+                - img [ref=e84]
+                - text: Download
+          - button "Zoom in on this image" [ref=e89]:
+            - img "a close up of rocks and dirt on the ground" [ref=e90]
+            - generic:
+              - generic:
+                - img
+          - generic [ref=e91]:
+            - generic [ref=e93]:
+              - button "Share this image" [ref=e94] [cursor=pointer]:
+                - img [ref=e95]
+                - generic [ref=e97]: Share
+              - button "More Actions" [ref=e98] [cursor=pointer]:
+                - img [ref=e99]
+            - generic [ref=e102]:
+              - heading "a close up of rocks and dirt on the ground" [level=1] [ref=e104]
+              - paragraph [ref=e108]: Download this HD photo of texture, outdoor, natural, and sand by Slashio Photography (@slashiophotography)
+              - generic [ref=e110]:
+                - generic [ref=e111]:
+                  - img [ref=e112]
+                  - generic [ref=e115]:
+                    - text: Published on
+                    - time [ref=e116]: February 2, 2023
+                - generic [ref=e117]:
+                  - img [ref=e118]
+                  - generic [ref=e120]:
+                    - text: Licensed under the
+                    - link "Unsplash+ License" [ref=e121] [cursor=pointer]:
+                      - /url: /plus/license
+            - generic [ref=e123]:
+              - link "texture" [ref=e124] [cursor=pointer]:
+                - /url: /s/photos/texture
+              - link "outdoor" [ref=e125] [cursor=pointer]:
+                - /url: /s/photos/outdoor
+              - link "natural" [ref=e126] [cursor=pointer]:
+                - /url: /s/photos/natural
+              - link "sand" [ref=e127] [cursor=pointer]:
+                - /url: /s/photos/sand
+              - link "path" [ref=e128] [cursor=pointer]:
+                - /url: /s/photos/path
+              - link "stone" [ref=e129] [cursor=pointer]:
+                - /url: /s/photos/stone
+              - link "ground" [ref=e130] [cursor=pointer]:
+                - /url: /s/photos/ground
+              - link "material" [ref=e131] [cursor=pointer]:
+                - /url: /s/photos/material
+              - link "rustic" [ref=e132] [cursor=pointer]:
+                - /url: /s/photos/rustic
+              - link "pavement" [ref=e133] [cursor=pointer]:
+                - /url: /s/photos/pavement
+              - link "surface" [ref=e134] [cursor=pointer]:
+                - /url: /s/photos/surface
+              - link "cobblestone" [ref=e135] [cursor=pointer]:
+                - /url: /s/photos/cobblestone
+              - link "rough" [ref=e136] [cursor=pointer]:
+                - /url: /s/photos/rough
+              - link "aged" [ref=e137] [cursor=pointer]:
+                - /url: /s/photos/aged
+        - generic [ref=e140]:
+          - generic [ref=e141]:
+            - paragraph [ref=e143]: From this series
+            - generic [ref=e145]:
+              - button "scroll list to the right" [ref=e147] [cursor=pointer]:
+                - img [ref=e148]
+              - generic [ref=e150]:
+                - generic [ref=e151]:
+                  - link [ref=e152] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-rock-with-moss-growing-on-it-Z_2GpFRFfrE
+                    - img [ref=e153]
+                  - link "a close up of a rock with moss growing on it" [ref=e155]:
+                    - /url: /photos/a-close-up-of-a-rock-with-moss-growing-on-it-Z_2GpFRFfrE
+                    - img "a close up of a rock with moss growing on it" [ref=e156]
+                - generic [ref=e157]:
+                  - link [ref=e158] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-bird-is-perched-on-a-wooden-plank-4d2KgM_bVT4
+                    - img [ref=e159]
+                  - link "a bird is perched on a wooden plank" [ref=e161]:
+                    - /url: /photos/a-bird-is-perched-on-a-wooden-plank-4d2KgM_bVT4
+                    - img "a bird is perched on a wooden plank" [ref=e162]
+                - generic [ref=e163]:
+                  - link [ref=e164] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-blue-and-green-surface-with-rocks-and-grass-helyIwx8-x4
+                    - img [ref=e165]
+                  - link "a blue and green surface with rocks and grass" [ref=e167]:
+                    - /url: /photos/a-blue-and-green-surface-with-rocks-and-grass-helyIwx8-x4
+                    - img "a blue and green surface with rocks and grass" [ref=e168]
+                - generic [ref=e169]:
+                  - link [ref=e170] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-man-holding-a-tennis-racquet-on-top-of-a-tennis-court-yaith3Ahrf0
+                    - img [ref=e171]
+                  - link "a man holding a tennis racquet on top of a tennis court" [ref=e173]:
+                    - /url: /photos/a-man-holding-a-tennis-racquet-on-top-of-a-tennis-court-yaith3Ahrf0
+                    - img "a man holding a tennis racquet on top of a tennis court" [ref=e174]
+                - generic [ref=e175]:
+                  - link [ref=e176] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-close-up-view-of-a-tan-colored-wall-WRWkSZQy4XA
+                    - img [ref=e177]
+                  - link "a close up view of a tan colored wall" [ref=e179]:
+                    - /url: /photos/a-close-up-view-of-a-tan-colored-wall-WRWkSZQy4XA
+                    - img "a close up view of a tan colored wall" [ref=e180]
+                - generic [ref=e181]:
+                  - link [ref=e182] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-bird-standing-on-top-of-a-sandy-beach-3IiRQDWb69g
+                    - img [ref=e183]
+                  - link "a bird standing on top of a sandy beach" [ref=e185]:
+                    - /url: /photos/a-bird-standing-on-top-of-a-sandy-beach-3IiRQDWb69g
+                    - img "a bird standing on top of a sandy beach" [ref=e186]
+                - generic [ref=e187]:
+                  - link [ref=e188] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-sculpture-of-an-elephant-tocmGXF1dTo
+                    - img [ref=e189]
+                  - link "a close up of a sculpture of an elephant" [ref=e191]:
+                    - /url: /photos/a-close-up-of-a-sculpture-of-an-elephant-tocmGXF1dTo
+                    - img "a close up of a sculpture of an elephant" [ref=e192]
+                - generic [ref=e193]:
+                  - link [ref=e194] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-tree-trunk-with-moss-growing-on-it-OzgFSh4AQ1s
+                    - img [ref=e195]
+                  - link "a close up of a tree trunk with moss growing on it" [ref=e197]:
+                    - /url: /photos/a-close-up-of-a-tree-trunk-with-moss-growing-on-it-OzgFSh4AQ1s
+                    - img "a close up of a tree trunk with moss growing on it" [ref=e198]
+                - generic [ref=e199]:
+                  - link [ref=e200] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-stone-wall-made-of-rocks-dYvZRupVX9U
+                    - img [ref=e201]
+                  - link "a close up of a stone wall made of rocks" [ref=e203]:
+                    - /url: /photos/a-close-up-of-a-stone-wall-made-of-rocks-dYvZRupVX9U
+                    - img "a close up of a stone wall made of rocks" [ref=e204]
+                - generic [ref=e205]:
+                  - link [ref=e206] [cursor=pointer]:
+                    - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-stone-wall-with-a-clock-on-it-dDRyearGetM
+                    - img [ref=e207]
+                  - link "a close up of a stone wall with a clock on it" [ref=e209]:
+                    - /url: /photos/a-close-up-of-a-stone-wall-with-a-clock-on-it-dDRyearGetM
+                    - img "a close up of a stone wall with a clock on it" [ref=e210]
+          - generic [ref=e211]:
+            - heading "Related images" [level=4] [ref=e213]
+            - generic [ref=e217]:
+              - generic [ref=e218]:
+                - figure [ref=e219]:
+                  - generic [ref=e221]:
+                    - link "a close up of rocks and gravel on a wall" [ref=e222]:
+                      - /url: /photos/a-close-up-of-rocks-and-gravel-on-a-wall-K8YSbloXPqA
+                      - img "a close up of rocks and gravel on a wall" [ref=e223]
+                    - link [ref=e224] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-rocks-and-gravel-on-a-wall-K8YSbloXPqA
+                      - img [ref=e225]
+                - figure [ref=e227]:
+                  - generic [ref=e229]:
+                    - link "a close up of a stone wall with rocks" [ref=e230]:
+                      - /url: /photos/a-close-up-of-a-stone-wall-with-rocks-P5T2213txa8
+                      - img "a close up of a stone wall with rocks" [ref=e231]
+                    - link [ref=e232] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-stone-wall-with-rocks-P5T2213txa8
+                      - img [ref=e233]
+                - figure [ref=e235]:
+                  - generic [ref=e237]:
+                    - link "a close up of a bunch of rocks" [ref=e238]:
+                      - /url: /photos/a-close-up-of-a-bunch-of-rocks-UIrcw2eptxI
+                      - img "a close up of a bunch of rocks" [ref=e239]
+                    - link [ref=e240] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-bunch-of-rocks-UIrcw2eptxI
+                      - img [ref=e241]
+                - figure [ref=e243]:
+                  - generic [ref=e245]:
+                    - link "a close up of a stone wall made of rocks" [ref=e246]:
+                      - /url: /photos/a-close-up-of-a-stone-wall-made-of-rocks-dYvZRupVX9U
+                      - img "a close up of a stone wall made of rocks" [ref=e247]
+                    - link [ref=e248] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-stone-wall-made-of-rocks-dYvZRupVX9U
+                      - img [ref=e249]
+                - figure [ref=e251]:
+                  - generic [ref=e253]:
+                    - link "a close up of a stone wall with rocks on it" [ref=e254]:
+                      - /url: /photos/a-close-up-of-a-stone-wall-with-rocks-on-it-rG4UQ7DcxpY
+                      - img "a close up of a stone wall with rocks on it" [ref=e255]
+                    - link [ref=e256] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-stone-wall-with-rocks-on-it-rG4UQ7DcxpY
+                      - img [ref=e257]
+              - generic [ref=e259]:
+                - figure [ref=e260]:
+                  - generic [ref=e262]:
+                    - link "a close up of a stone wall with rocks on it" [ref=e263]:
+                      - /url: /photos/a-close-up-of-a-stone-wall-with-rocks-on-it-tpS3bwaiSts
+                      - img "a close up of a stone wall with rocks on it" [ref=e264]
+                    - link [ref=e265] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-stone-wall-with-rocks-on-it-tpS3bwaiSts
+                      - img [ref=e266]
+                - figure [ref=e268]:
+                  - generic [ref=e270]:
+                    - link "a close up of rocks and dirt on the ground" [ref=e271]:
+                      - /url: /photos/a-close-up-of-rocks-and-dirt-on-the-ground-Ytt6mMTACcc
+                      - img "a close up of rocks and dirt on the ground" [ref=e272]
+                    - link [ref=e273] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-rocks-and-dirt-on-the-ground-Ytt6mMTACcc
+                      - img [ref=e274]
+                - figure [ref=e276]:
+                  - generic [ref=e278]:
+                    - link "Pebbles and rocks on teh ground" [ref=e279]:
+                      - /url: /photos/pebbles-and-rocks-on-teh-ground-IdIvvmMOGSQ
+                      - img "Pebbles and rocks on teh ground" [ref=e280]
+                    - link [ref=e281] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fpebbles-and-rocks-on-teh-ground-IdIvvmMOGSQ
+                      - img [ref=e282]
+                - figure [ref=e284]:
+                  - generic [ref=e286]:
+                    - link "A textured wall made of rough, varied stones." [ref=e287]:
+                      - /url: /photos/a-textured-wall-made-of-rough-varied-stones-AVzbjVuxiC8
+                      - img "A textured wall made of rough, varied stones." [ref=e288]
+                    - link [ref=e289] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-textured-wall-made-of-rough-varied-stones-AVzbjVuxiC8
+                      - img [ref=e290]
+                - figure [ref=e292]:
+                  - generic [ref=e294]:
+                    - link "rocks and gravel are arranged on the ground" [ref=e295]:
+                      - /url: /photos/rocks-and-gravel-are-arranged-on-the-ground-6N0HTuKEt7A
+                      - img "rocks and gravel are arranged on the ground" [ref=e296]
+                    - link [ref=e297] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Frocks-and-gravel-are-arranged-on-the-ground-6N0HTuKEt7A
+                      - img [ref=e298]
+                - figure [ref=e300]:
+                  - generic [ref=e302]:
+                    - link "a close up of a stone wall with a plant growing out of it" [ref=e303]:
+                      - /url: /photos/a-close-up-of-a-stone-wall-with-a-plant-growing-out-of-it-76eBxIacHJg
+                      - img "a close up of a stone wall with a plant growing out of it" [ref=e304]
+                    - link [ref=e305] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-stone-wall-with-a-plant-growing-out-of-it-76eBxIacHJg
+                      - img [ref=e306]
+                - figure [ref=e308]:
+                  - generic [ref=e310]:
+                    - link "a close up of a stone wall made of rocks" [ref=e311]:
+                      - /url: /photos/a-close-up-of-a-stone-wall-made-of-rocks-UOPv3_nthog
+                      - img "a close up of a stone wall made of rocks" [ref=e312]
+                    - link [ref=e313] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-stone-wall-made-of-rocks-UOPv3_nthog
+                      - img [ref=e314]
+                - figure [ref=e316]:
+                  - generic [ref=e318]:
+                    - link "a close up of a rock with moss growing on it" [ref=e319]:
+                      - /url: /photos/a-close-up-of-a-rock-with-moss-growing-on-it-Z_2GpFRFfrE
+                      - img "a close up of a rock with moss growing on it" [ref=e320]
+                    - link [ref=e321] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-rock-with-moss-growing-on-it-Z_2GpFRFfrE
+                      - img [ref=e322]
+              - generic [ref=e324]:
+                - figure [ref=e325]:
+                  - generic [ref=e327]:
+                    - link "a close up of a stone wall with rocks" [ref=e328]:
+                      - /url: /photos/a-close-up-of-a-stone-wall-with-rocks-ef5KrW0E8Ys
+                      - img "a close up of a stone wall with rocks" [ref=e329]
+                    - link [ref=e330] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-stone-wall-with-rocks-ef5KrW0E8Ys
+                      - img [ref=e331]
+                - figure [ref=e333]:
+                  - generic [ref=e335]:
+                    - link "a close up of a cobblestone sidewalk" [ref=e336]:
+                      - /url: /photos/a-close-up-of-a-cobblestone-sidewalk-Xj7L00YYGIg
+                      - img "a close up of a cobblestone sidewalk" [ref=e337]
+                    - link [ref=e338] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-cobblestone-sidewalk-Xj7L00YYGIg
+                      - img [ref=e339]
+                - figure [ref=e341]:
+                  - generic [ref=e343]:
+                    - link "a bunch of rocks and grass on the ground" [ref=e344]:
+                      - /url: /photos/a-bunch-of-rocks-and-grass-on-the-ground-oPsP5IYcIGA
+                      - img "a bunch of rocks and grass on the ground" [ref=e345]
+                    - link [ref=e346] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-bunch-of-rocks-and-grass-on-the-ground-oPsP5IYcIGA
+                      - img [ref=e347]
+                - figure [ref=e349]:
+                  - generic [ref=e351]:
+                    - link "a close up of a stone wall made of rocks" [ref=e352]:
+                      - /url: /photos/a-close-up-of-a-stone-wall-made-of-rocks-GTsErhndhBo
+                      - img "a close up of a stone wall made of rocks" [ref=e353]
+                    - link [ref=e354] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-a-stone-wall-made-of-rocks-GTsErhndhBo
+                      - img [ref=e355]
+                - figure [ref=e357]:
+                  - generic [ref=e359]:
+                    - link "a close up of snow covered rocks on the ground" [ref=e360]:
+                      - /url: /photos/a-close-up-of-snow-covered-rocks-on-the-ground-RNb7sgM5OO4
+                      - img "a close up of snow covered rocks on the ground" [ref=e361]
+                    - link [ref=e362] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-close-up-of-snow-covered-rocks-on-the-ground-RNb7sgM5OO4
+                      - img [ref=e363]
+                - figure [ref=e365]:
+                  - generic [ref=e367]:
+                    - link "a stone wall with rocks and moss growing on it" [ref=e368]:
+                      - /url: /photos/a-stone-wall-with-rocks-and-moss-growing-on-it-zGo2ObUEvsI
+                      - img "a stone wall with rocks and moss growing on it" [ref=e369]
+                    - link [ref=e370] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-stone-wall-with-rocks-and-moss-growing-on-it-zGo2ObUEvsI
+                      - img [ref=e371]
+                - figure [ref=e373]:
+                  - generic [ref=e375]:
+                    - link "a stone wall with moss growing on it" [ref=e376]:
+                      - /url: /photos/a-stone-wall-with-moss-growing-on-it-YPZw0DxkDN8
+                      - img "a stone wall with moss growing on it" [ref=e377]
+                    - link [ref=e378] [cursor=pointer]:
+                      - /url: /plus?referrer=%2Fphotos%2Fa-stone-wall-with-moss-growing-on-it-YPZw0DxkDN8
+                      - img [ref=e379]
+    - generic:
+      - region "Notifications"
