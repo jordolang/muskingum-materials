@@ -31,6 +31,49 @@ export const product = defineType({
       validation: (Rule) => Rule.required().min(0),
     }),
     defineField({
+      name: "pricingTiers",
+      title: "Volume Pricing Tiers",
+      type: "array",
+      description: "Optional volume-based pricing tiers for bulk orders",
+      of: [
+        {
+          type: "object",
+          fields: [
+            {
+              name: "minQuantity",
+              type: "number",
+              title: "Minimum Quantity (tons)",
+              validation: (Rule) => Rule.required().min(0),
+            },
+            {
+              name: "maxQuantity",
+              type: "number",
+              title: "Maximum Quantity (tons)",
+              description: "Leave empty for unlimited",
+            },
+            {
+              name: "pricePerTon",
+              type: "number",
+              title: "Price Per Ton ($)",
+              validation: (Rule) => Rule.required().min(0),
+            },
+          ],
+          preview: {
+            select: {
+              min: "minQuantity",
+              max: "maxQuantity",
+              price: "pricePerTon",
+            },
+            prepare({ min, max, price }) {
+              return {
+                title: `${min}${max ? `-${max}` : "+"} tons: $${price}/ton`,
+              };
+            },
+          },
+        },
+      ],
+    }),
+    defineField({
       name: "unit",
       title: "Unit",
       type: "string",
