@@ -33,6 +33,9 @@ export const checkoutSchema = checkoutFormSchema.extend({
   tax: z.number(),
   processingFee: z.number(),
   total: z.number(),
+  contractorId: z.string().optional(),
+  contractorDiscountRate: z.number().optional(),
+  contractorDiscount: z.number().optional(),
 });
 
 // Address schema
