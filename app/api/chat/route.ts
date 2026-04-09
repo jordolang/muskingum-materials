@@ -6,15 +6,16 @@ import { prisma } from "@/lib/prisma";
 import { BUSINESS_INFO, PRODUCTS, SERVICES } from "@/data/business";
 
 const chatSchema = z.object({
-  message: z.string().min(1),
-  visitorId: z.string().optional(),
+  message: z.string().min(1).max(5000),
+  visitorId: z.string().min(1).max(100).optional(),
   history: z
     .array(
       z.object({
         role: z.enum(["user", "assistant"]),
-        content: z.string(),
+        content: z.string().max(5000),
       })
     )
+    .max(50)
     .optional()
     .default([]),
 });
