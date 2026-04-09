@@ -49,7 +49,7 @@ export default function HomePage() {
                 </Button>
               </Link>
               <a href={`tel:${BUSINESS_INFO.phone.replace(/\D/g, "")}`}>
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 gap-2">
+                <Button size="lg" className="bg-amber-600 text-white hover:bg-amber-700 font-semibold gap-2">
                   <Phone className="h-4 w-4" />
                   Call {BUSINESS_INFO.phone}
                 </Button>
@@ -60,24 +60,24 @@ export default function HomePage() {
       </section>
 
       {/* Trust Badges */}
-      <section className="bg-stone-800 text-white py-4">
+      <section className="bg-stone-800 text-white py-5">
         <div className="container">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm">
-            <div className="flex items-center justify-center gap-2">
-              <Shield className="h-5 w-5 text-amber-500" />
-              <span>Family Owned</span>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div className="flex items-center justify-center gap-2.5">
+              <Shield className="h-5 w-5 text-amber-400 shrink-0" />
+              <span className="font-bold text-sm tracking-wide uppercase">Family Owned</span>
             </div>
-            <div className="flex items-center justify-center gap-2">
-              <Scale className="h-5 w-5 text-amber-500" />
-              <span>State-Approved Scales</span>
+            <div className="flex items-center justify-center gap-2.5">
+              <Scale className="h-5 w-5 text-amber-400 shrink-0" />
+              <span className="font-bold text-sm tracking-wide uppercase">State-Approved Scales</span>
             </div>
-            <div className="flex items-center justify-center gap-2">
-              <Truck className="h-5 w-5 text-amber-500" />
-              <span>Delivery Available</span>
+            <div className="flex items-center justify-center gap-2.5">
+              <Truck className="h-5 w-5 text-amber-400 shrink-0" />
+              <span className="font-bold text-sm tracking-wide uppercase">Delivery Available</span>
             </div>
-            <div className="flex items-center justify-center gap-2">
-              <Clock className="h-5 w-5 text-amber-500" />
-              <span>Mon-Fri 7:30-4:00</span>
+            <div className="flex items-center justify-center gap-2.5">
+              <Clock className="h-5 w-5 text-amber-400 shrink-0" />
+              <span className="font-bold text-sm tracking-wide uppercase">Mon–Fri 7:30–4:00</span>
             </div>
           </div>
         </div>
