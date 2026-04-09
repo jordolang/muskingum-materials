@@ -297,12 +297,14 @@ export function OrderForm() {
                 {cart.map((item) => (
                   <div key={item.name} className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => removeFromCart(item.name)}
-                        className="text-muted-foreground hover:text-destructive transition-colors"
+                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      </Button>
                       <span className="font-medium">{item.name}</span>
                       <Badge variant="secondary" className="text-xs">
                         {item.quantity} {item.unit}{item.quantity !== 1 ? "s" : ""}

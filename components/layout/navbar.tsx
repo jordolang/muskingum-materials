@@ -118,15 +118,17 @@ function DesktopDropdown({ item }: { item: NavItem }) {
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
     >
-      <button
-        className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+      <Button
+        variant="ghost"
+        size="sm"
+        className="flex items-center gap-1 text-muted-foreground hover:text-primary px-2"
         onClick={() => setOpen((prev) => !prev)}
       >
         {item.label}
         <ChevronDown
           className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}
         />
-      </button>
+      </Button>
 
       {open && (
         <div className="absolute top-full left-0 pt-2 z-50">
@@ -176,15 +178,16 @@ function MobileNavItem({
 
   return (
     <div>
-      <button
-        className="flex items-center justify-between w-full text-sm font-medium py-2 text-muted-foreground hover:text-primary"
+      <Button
+        variant="ghost"
+        className="flex items-center justify-between w-full text-sm font-medium text-muted-foreground hover:text-primary px-0"
         onClick={() => setExpanded((prev) => !prev)}
       >
         {item.label}
         <ChevronDown
           className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`}
         />
-      </button>
+      </Button>
       {expanded && (
         <div className="pl-4 pb-2 space-y-1">
           {item.children.map((child) => (
@@ -244,8 +247,10 @@ export function Navbar() {
           </Link>
         </div>
 
-        <button
-          className="md:hidden p-2"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
         >
@@ -254,7 +259,7 @@ export function Navbar() {
           ) : (
             <Menu className="h-6 w-6" />
           )}
-        </button>
+        </Button>
       </div>
 
       {mobileOpen && (

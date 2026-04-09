@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Phone, MapPin } from "lucide-react";
 import { BUSINESS_INFO } from "@/data/business";
 import { PlannerMap } from "./planner-map";
@@ -124,17 +125,18 @@ export function GravelPlanner({ materials }: GravelPlannerProps) {
               <label className="text-sm font-medium mb-1 block">
                 Gravel Type
               </label>
-              <select
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                value={selectedMaterial}
-                onChange={(e) => handleMaterialChange(e.target.value)}
-              >
-                {materials.map((m) => (
-                  <option key={m.slug} value={m.slug}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
+              <Select value={selectedMaterial} onValueChange={handleMaterialChange}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {materials.map((m) => (
+                    <SelectItem key={m.slug} value={m.slug}>
+                      {m.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>

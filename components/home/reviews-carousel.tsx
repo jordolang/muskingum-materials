@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { REVIEWS } from "@/data/reviews";
 
 const SILHOUETTE_MAP = {
@@ -97,22 +98,25 @@ export function ReviewsCarousel() {
 
       {/* Navigation */}
       <div className="flex items-center justify-center gap-4 mt-6">
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={prev}
-          className="h-10 w-10 rounded-full bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+          className="h-10 w-10 rounded-full bg-white/10 backdrop-blur border border-white/20 text-white hover:bg-white/20"
           aria-label="Previous review"
         >
           <ChevronLeft className="h-5 w-5" />
-        </button>
+        </Button>
 
         <div className="flex gap-2">
           {REVIEWS.map((_, i) => (
-            <button
+            <Button
               key={i}
+              variant="ghost"
               onClick={() => setCurrent(i)}
-              className={`h-2 rounded-full transition-all ${
+              className={`h-2 p-0 rounded-full transition-all ${
                 i === current
-                  ? "w-6 bg-amber-400"
+                  ? "w-6 bg-amber-400 hover:bg-amber-400"
                   : "w-2 bg-white/30 hover:bg-white/50"
               }`}
               aria-label={`Go to review ${i + 1}`}
@@ -120,13 +124,15 @@ export function ReviewsCarousel() {
           ))}
         </div>
 
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={next}
-          className="h-10 w-10 rounded-full bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+          className="h-10 w-10 rounded-full bg-white/10 backdrop-blur border border-white/20 text-white hover:bg-white/20"
           aria-label="Next review"
         >
           <ChevronRight className="h-5 w-5" />
-        </button>
+        </Button>
       </div>
     </div>
   );

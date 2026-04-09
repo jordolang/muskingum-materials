@@ -11,6 +11,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -54,13 +55,14 @@ export function AccountSidebar() {
         );
       })}
 
-      <button
+      <Button
+        variant="ghost"
         onClick={() => signOut({ redirectUrl: "/" })}
-        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors w-full mt-4"
+        className="flex items-center gap-3 justify-start w-full mt-4 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
       >
         <LogOut className="h-4 w-4 shrink-0" />
         Sign Out
-      </button>
+      </Button>
     </nav>
   );
 }

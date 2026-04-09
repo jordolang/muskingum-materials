@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PROJECT_PRESETS = [
   { name: "Single Car Driveway", length: 20, width: 10, depth: 4, icon: "🚗" },
@@ -89,17 +90,18 @@ export function MaterialCalculator({ onApplyEstimate }: MaterialCalculatorProps)
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {PROJECT_PRESETS.map((preset) => (
-              <button
+              <Button
                 key={preset.name}
+                variant="outline"
                 onClick={() => applyPreset(preset)}
-                className="text-left p-3 rounded-lg border hover:border-amber-500 hover:bg-amber-50 transition-colors text-sm"
+                className="h-auto text-left p-3 flex flex-col items-start hover:border-amber-500 hover:bg-amber-50"
               >
                 <span className="text-lg">{preset.icon}</span>
-                <p className="font-medium mt-1">{preset.name}</p>
-                <p className="text-xs text-muted-foreground">
+                <span className="font-medium mt-1 text-sm">{preset.name}</span>
+                <span className="text-xs text-muted-foreground">
                   {preset.length}&apos; x {preset.width}&apos; x {preset.depth}&quot;
-                </p>
-              </button>
+                </span>
+              </Button>
             ))}
           </div>
         </div>
@@ -139,17 +141,21 @@ export function MaterialCalculator({ onApplyEstimate }: MaterialCalculatorProps)
               <label className="text-xs font-medium text-muted-foreground block mb-1">
                 Depth (inches)
               </label>
-              <select
-                value={depth}
-                onChange={(e) => setDepth(Number(e.target.value))}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              <Select
+                value={String(depth)}
+                onValueChange={(val) => setDepth(Number(val))}
               >
-                {DEPTH_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DEPTH_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={String(opt.value)}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>

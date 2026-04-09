@@ -104,13 +104,14 @@ export function ChatWidget() {
   return (
     <>
       {!isOpen && (
-        <button
+        <Button
           onClick={toggleChat}
-          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg hover:bg-primary/90 transition-all hover:scale-105"
+          size="icon"
+          className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg hover:scale-105 transition-all"
           aria-label="Open chat"
         >
           <MessageCircle className="h-6 w-6" />
-        </button>
+        </Button>
       )}
 
       {isOpen && (
@@ -120,9 +121,15 @@ export function ChatWidget() {
               <p className="font-semibold text-sm">Muskingum Materials</p>
               <p className="text-xs opacity-90">Ask us anything!</p>
             </div>
-            <button onClick={toggleChat} className="hover:opacity-70" aria-label="Close chat">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleChat}
+              className="text-white hover:bg-white/20 h-8 w-8"
+              aria-label="Close chat"
+            >
               <X className="h-5 w-5" />
-            </button>
+            </Button>
           </div>
 
           <ScrollArea className="flex-1 p-4 min-h-0 max-h-[400px]" ref={scrollRef}>
