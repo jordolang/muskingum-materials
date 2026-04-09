@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import Image from "next/image";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { REVIEWS } from "@/data/reviews";
 
@@ -66,12 +65,11 @@ export function ReviewsCarousel() {
               <div className="relative">
                 {/* Ambient glow behind silhouette */}
                 <div className="absolute -inset-4 bg-amber-500/10 blur-2xl rounded-full" />
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={SILHOUETTE_MAP[review.type]}
                   alt=""
-                  width={120}
-                  height={180}
-                  className="relative h-44 w-auto drop-shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                  className="relative h-44 w-auto drop-shadow-[0_0_15px_rgba(245,158,11,0.2)] invert brightness-200 opacity-80"
                   aria-hidden
                 />
               </div>
