@@ -21,10 +21,36 @@ import { productsQuery, servicesQuery, testimonialsQuery } from "@/lib/sanity/qu
 
 export const revalidate = 60;
 
+interface HomeProduct {
+  _id: string;
+  name: string;
+  description: string;
+  pricePerTon: number;
+  unit: string;
+  featured?: boolean;
+  available?: boolean;
+}
+
+interface HomeService {
+  _id: string;
+  title: string;
+  description: string;
+  icon?: string;
+  features: string[];
+}
+
+interface HomeTestimonial {
+  _id: string;
+  name: string;
+  company?: string;
+  rating: number;
+  text: string;
+}
+
 export default async function HomePage() {
-  let products: any[] = [];
-  let services: any[] = [];
-  let testimonials: any[] = [];
+  let products: HomeProduct[] = [];
+  let services: HomeService[] = [];
+  let testimonials: HomeTestimonial[] = [];
 
   try {
     [products, services, testimonials] = await Promise.all([
@@ -33,12 +59,11 @@ export default async function HomePage() {
       sanityClient.fetch(testimonialsQuery, {}, { next: { tags: ['testimonials'] } }),
     ]);
   } catch (error) {
-    // If Sanity fetch fails, continue with empty arrays
-    // Error will be logged server-side
+    console.error("Failed to fetch data from Sanity:", error);
   }
 
   const featuredProducts = products
-    .filter((p: any) => p.featured && p.available && p.pricePerTon > 0)
+    .filter((p) => p.featured && p.available && p.pricePerTon > 0)
     .slice(0, 6);
 
   return (
@@ -121,7 +146,7 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredProducts.map((product: any) => (
+            {featuredProducts.map((product) => (
               <Card key={product._id} className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 bg-card">
                 <div className="relative h-48 w-full">
                   <Image
@@ -167,7 +192,7 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {services.map((service: any) => (
+            {services.map((service) => (
               <Card key={service._id} className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-card">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 mb-3">
@@ -181,7 +206,7 @@ export default async function HomePage() {
                   </div>
                   <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{service.description}</p>
                   <ul className="space-y-2">
-                    {service.features.map((feature: string) => (
+                    {service.features.map((feature) => (
                       <li key={feature} className="text-sm flex items-center gap-2.5">
                         <div className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
                         {feature}

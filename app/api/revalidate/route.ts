@@ -4,16 +4,30 @@ import { z } from "zod";
 
 const revalidateSchema = z.object({
   secret: z.string(),
-  type: z.enum(["products", "services", "faq", "gallery", "testimonials"]),
+  type: z.enum(["products", "services", "faq", "gallery", "testimonials", "site-settings"]),
 });
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Malformed JSON in request body" },
+        { status: 400 }
+      );
+    }
     const data = revalidateSchema.parse(body);
 
     // Verify secret token
-    const revalidateSecret = process.env.REVALIDATE_SECRET || "test";
+    const revalidateSecret = process.env.REVALIDATE_SECRET;
+    if (!revalidateSecret) {
+      return NextResponse.json(
+        { error: "Server misconfiguration" },
+        { status: 500 }
+      );
+    }
     if (data.secret !== revalidateSecret) {
       return NextResponse.json(
         { error: "Invalid secret token" },

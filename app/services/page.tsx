@@ -49,8 +49,7 @@ export default async function ServicesPage() {
       sanityClient.fetch<SiteSettings>(siteSettingsQuery, {}, { next: { tags: ['site-settings'] } }),
     ]);
   } catch (error) {
-    // If Sanity fetch fails, continue with empty/null defaults
-    // Error will be logged server-side
+    console.error("Failed to fetch services/settings from Sanity:", error);
   }
 
   // Fallback to static data if Sanity settings unavailable
@@ -69,7 +68,7 @@ export default async function ServicesPage() {
         <div className="space-y-12">
           {services.map((service, i) => (
             <div
-              key={service.title}
+              key={service._id}
               className={`grid grid-cols-1 lg:grid-cols-2 gap-8 items-center ${
                 i % 2 === 1 ? "lg:direction-rtl" : ""
               }`}

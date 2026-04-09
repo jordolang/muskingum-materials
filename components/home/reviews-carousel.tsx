@@ -1,3 +1,4 @@
+import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 import { REVIEWS } from "@/data/reviews";
 import { ReviewsCarouselClient } from "./reviews-carousel-client";
 
@@ -7,7 +8,7 @@ interface Testimonial {
   company?: string;
   rating: number;
   text: string;
-  image?: any;
+  image?: SanityImageSource;
 }
 
 interface ReviewsCarouselProps {

@@ -59,8 +59,7 @@ export default async function ProductsPage() {
       sanityClient.fetch<SiteSettings>(siteSettingsQuery, {}, { next: { tags: ['site-settings'] } }),
     ]);
   } catch (error) {
-    // If Sanity fetch fails, continue with empty/null defaults
-    // Error will be logged server-side
+    console.error("Failed to fetch products/settings from Sanity:", error);
   }
 
   // Fallback to static data if Sanity settings unavailable

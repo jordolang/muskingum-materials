@@ -62,8 +62,8 @@ export default async function GalleryPage() {
   let galleryImages: GalleryImage[] = [];
   try {
     galleryImages = await sanityClient.fetch<GalleryImage[]>(galleryQuery, {}, { next: { tags: ['gallery'] } });
-  } catch {
-    // Sanity fetch failed; fall through to static fallback
+  } catch (error) {
+    console.error("Failed to fetch gallery images from Sanity:", error);
   }
 
   const useSanity = galleryImages.length > 0;

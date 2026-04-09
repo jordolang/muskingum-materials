@@ -17,7 +17,6 @@ interface Testimonial {
   company?: string;
   rating: number;
   text: string;
-  image?: any;
 }
 
 interface ReviewsCarouselClientProps {
@@ -61,7 +60,7 @@ export function ReviewsCarouselClient({ testimonials }: ReviewsCarouselClientPro
   }, [testimonials.length]);
 
   useEffect(() => {
-    if (!isAutoPlaying) return;
+    if (!isAutoPlaying || !testimonials.length) return;
     const timer = setInterval(next, 6000);
     return () => clearInterval(timer);
   }, [isAutoPlaying, next]);
