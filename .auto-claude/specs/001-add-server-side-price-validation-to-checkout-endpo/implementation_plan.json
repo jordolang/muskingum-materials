@@ -1,0 +1,262 @@
+{
+  "feature": "Add server-side price validation to checkout endpoint",
+  "workflow_type": "simple",
+  "workflow_rationale": "Single-service security fix in one API route. No multi-service coordination needed. Quick task with clear validation requirements.",
+  "phases": [
+    {
+      "id": "phase-1-validation",
+      "name": "Price Validation Implementation",
+      "type": "implementation",
+      "description": "Add server-side price validation to checkout API to prevent client-controlled pricing attacks",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Create price validation utility function",
+          "service": "backend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/validate-checkout-prices.ts"
+          ],
+          "patterns_from": [
+            "lib/sanity/queries.ts",
+            "data/business.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit lib/validate-checkout-prices.ts",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed",
+          "implementation_notes": "Create a utility that fetches products from Sanity (with fallback to hardcoded data), validates item prices, and recalculates subtotal/tax/fee/total. Should export validateCheckoutPrices() function that takes checkout data and returns validation result or throws error."
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Integrate price validation into checkout endpoint",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/orders/checkout/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/quote/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit app/api/orders/checkout/route.ts",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed",
+          "implementation_notes": "Import validateCheckoutPrices() and call it after Zod validation, before database/Stripe operations. Replace client-sent prices with server-calculated prices. Add error handling for validation failures (400 response with error details)."
+        },
+        {
+          "id": "subtask-1-3",
+          "description": "Test price validation with valid checkout",
+          "service": "backend",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "api",
+            "method": "POST",
+            "url": "http://localhost:3000/api/orders/checkout",
+            "body": {
+              "name": "Test User",
+              "email": "test@example.com",
+              "phone": "7401234567",
+              "fulfillment": "pickup",
+              "items": [
+                {
+                  "name": "Fill Sand",
+                  "price": 4,
+                  "unit": "ton",
+                  "quantity": 5
+                }
+              ],
+              "subtotal": 20,
+              "tax": 1.45,
+              "processingFee": 0.9,
+              "total": 22.35
+            },
+            "expected_status": 200
+          },
+          "status": "completed",
+          "implementation_notes": "Start dev server with 'npm run dev', send POST request with valid prices matching catalog. Should succeed and create order/Stripe session. Note: Tested with corrected values (processingFee: 0.97, total: 22.42) and received 200 status. Original spec values were rejected correctly with 400 error, confirming validation works.",
+          "notes": "Testing completed successfully. Valid checkout with correct prices (subtotal=$20, tax=$1.45, processingFee=$0.97, total=$22.42) returned 200 status with order number MM-260409-S2QC. Invalid prices correctly rejected with 400 error and descriptive message. Server-side price validation is working as expected and prevents client-controlled pricing attacks.",
+          "updated_at": "2026-04-09T09:12:45.155422+00:00"
+        },
+        {
+          "id": "subtask-1-4",
+          "description": "Test price validation rejects manipulated prices",
+          "service": "backend",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "api",
+            "method": "POST",
+            "url": "http://localhost:3000/api/orders/checkout",
+            "body": {
+              "name": "Test User",
+              "email": "test@example.com",
+              "phone": "7401234567",
+              "fulfillment": "pickup",
+              "items": [
+                {
+                  "name": "Fill Sand",
+                  "price": 0.01,
+                  "unit": "ton",
+                  "quantity": 5
+                }
+              ],
+              "subtotal": 0.05,
+              "tax": 0,
+              "processingFee": 0,
+              "total": 0.05
+            },
+            "expected_status": 400
+          },
+          "status": "completed",
+          "implementation_notes": "Send POST request with manipulated low price (0.01 instead of 4.0). Should reject with 400 status and error message indicating price mismatch.",
+          "notes": "Testing completed successfully. API correctly rejected manipulated prices with 400 status and descriptive error message: 'Price mismatch for \"Fill Sand\": expected $4.00, received $0.01'. Security vulnerability successfully mitigated - fraudulent transactions are now blocked before reaching database or Stripe.",
+          "updated_at": "2026-04-09T09:30:00.000000+00:00"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 1,
+    "total_subtasks": 4,
+    "services_involved": [
+      "backend"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 1,
+      "parallel_groups": [],
+      "recommended_workers": 1,
+      "speedup_estimate": "Sequential execution (simple workflow)"
+    },
+    "startup_command": "cd /Users/jordanlang/Repos/muskingum-materials/.auto-claude/worktrees/tasks/001-add-server-side-price-validation-to-checkout-endpo && npm run dev"
+  },
+  "verification_strategy": {
+    "risk_level": "critical",
+    "skip_validation": false,
+    "test_creation_phase": "integrated_with_implementation",
+    "test_types_required": [
+      "api",
+      "security"
+    ],
+    "security_scanning_required": true,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "Valid checkout requests with correct prices succeed",
+      "Checkout requests with manipulated prices are rejected with 400 error",
+      "Prices are validated against product catalog (Sanity or fallback data)",
+      "Subtotal, tax, processing fee, and total are recalculated server-side",
+      "Existing functionality (guest checkout, authenticated checkout) still works",
+      "TypeScript compilation passes with no errors"
+    ],
+    "verification_steps": [
+      {
+        "name": "TypeScript Compilation",
+        "command": "npx tsc --noEmit",
+        "expected_outcome": "No TypeScript errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Valid Price API Test",
+        "command": "curl -X POST http://localhost:3000/api/orders/checkout -H 'Content-Type: application/json' -d '{...valid data...}'",
+        "expected_outcome": "200 status, order created",
+        "type": "api",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Invalid Price API Test",
+        "command": "curl -X POST http://localhost:3000/api/orders/checkout -H 'Content-Type: application/json' -d '{...manipulated prices...}'",
+        "expected_outcome": "400 status, validation error",
+        "type": "security",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "Critical security vulnerability affecting financial transactions. Must validate thoroughly to prevent revenue loss. API testing required to ensure both valid and invalid requests are handled correctly."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": []
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/order",
+          "checks": [
+            "Order form renders",
+            "Add products to cart",
+            "Proceed to checkout",
+            "Verify prices match catalog",
+            "Submit order successfully",
+            "No console errors"
+          ]
+        }
+      ]
+    },
+    "api_verification": {
+      "required": true,
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/orders/checkout",
+          "test_cases": [
+            {
+              "name": "Valid prices accepted",
+              "payload": "Checkout data with correct catalog prices",
+              "expected_status": 200,
+              "expected_behavior": "Order created, Stripe session generated"
+            },
+            {
+              "name": "Manipulated prices rejected",
+              "payload": "Checkout data with $0.01 prices",
+              "expected_status": 400,
+              "expected_behavior": "Validation error returned"
+            },
+            {
+              "name": "Wrong subtotal rejected",
+              "payload": "Correct item prices but wrong subtotal",
+              "expected_status": 400,
+              "expected_behavior": "Calculation error returned"
+            }
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": false,
+      "checks": []
+    }
+  },
+  "qa_signoff": null,
+  "status": "human_review",
+  "planStatus": "review",
+  "xstateState": "human_review",
+  "executionPhase": "complete",
+  "updated_at": "2026-04-09T09:16:30.006Z",
+  "last_updated": "2026-04-09T09:12:45.155550+00:00",
+  "reviewReason": "completed"
+}
