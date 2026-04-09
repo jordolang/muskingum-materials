@@ -39,7 +39,7 @@ import {
 } from "./project-estimator";
 import { FulfillmentSection } from "./fulfillment-section";
 import { ContactSection } from "./contact-section";
-import { trackAddToCart, getAnalyticsItemId } from "@/lib/analytics";
+import { trackAddToCart, trackBeginCheckout, getAnalyticsItemId } from "@/lib/analytics";
 
 export interface OrderableProduct {
   id: string;
@@ -229,6 +229,16 @@ export function OrderForm({ products }: OrderFormProps) {
   async function submitCheckout(data: CheckoutData) {
     if (cart.length === 0) return;
     setIsProcessing(true);
+    trackBeginCheckout({
+      value: totals.total,
+      items: cart.map((item) => ({
+        itemId: getAnalyticsItemId(item.name),
+        itemName: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        category: "Bulk Materials",
+      })),
+    });
     try {
       const response = await fetch("/api/orders/checkout", {
         method: "POST",
