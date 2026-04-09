@@ -9,6 +9,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { BUSINESS_INFO } from "@/data/business";
+import { generateFAQPageSchema, toJsonLd } from "@/lib/seo/structured-data";
 
 export const metadata: Metadata = {
   title: "FAQ",
@@ -92,8 +93,22 @@ const FAQS = [
 ];
 
 export default function FAQPage() {
+  // Flatten all FAQs for structured data
+  const allFaqs = FAQS.flatMap((section) =>
+    section.items.map((item) => ({
+      question: item.q,
+      answer: item.a,
+    }))
+  );
+
+  const faqSchema = generateFAQPageSchema(allFaqs);
+
   return (
     <div className="py-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(faqSchema) }}
+      />
       <div className="container max-w-3xl">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold font-heading mb-3">
