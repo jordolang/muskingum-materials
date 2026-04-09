@@ -17,6 +17,10 @@ import { BUSINESS_INFO, PRODUCTS, SERVICES } from "@/data/business";
 import { ReviewsCarousel } from "@/components/home/reviews-carousel";
 import { HomepageFAQ } from "@/components/home/homepage-faq";
 import { generateLocalBusinessSchema, toJsonLd } from "@/lib/seo/structured-data";
+import { generateHomeMetadata } from "@/lib/seo/metadata";
+
+// Generate SEO metadata with canonical URL, OG images, and Twitter cards
+export const metadata = generateHomeMetadata();
 
 const FEATURED_PRODUCTS = PRODUCTS.filter((p) => p.price > 0).slice(0, 6);
 
