@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PRODUCTS, BUSINESS_INFO } from "@/data/business";
+import { generateProductSchema, toJsonLd } from "@/lib/seo/structured-data";
 
 export const metadata: Metadata = {
   title: "Products & Pricing",
@@ -28,8 +29,20 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="py-12">
-      <div className="container">
+    <>
+      {/* Product Structured Data */}
+      {PRODUCTS.map((product) => (
+        <script
+          key={product.name}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: toJsonLd(generateProductSchema(product)),
+          }}
+        />
+      ))}
+
+      <div className="py-12">
+        <div className="container">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold font-heading mb-3">
             Products & Pricing
@@ -148,7 +161,8 @@ export default function ProductsPage() {
             </div>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
