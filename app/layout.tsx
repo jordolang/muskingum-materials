@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/footer";
 import { ChatWidget } from "@/components/chat/chat-widget";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { Toaster } from "@/components/ui/toaster";
+import { ErrorBoundary } from "@/components/error-boundary";
 import "./globals.css";
 
 const fontSans = Inter({
@@ -61,7 +62,9 @@ export default function RootLayout({
             <main className="flex-1">{children}</main>
             <Footer />
           </div>
-          <ChatWidget />
+          <ErrorBoundary componentName="ChatWidget">
+            <ChatWidget />
+          </ErrorBoundary>
           <GoogleAnalytics />
           <Toaster />
         </body>
