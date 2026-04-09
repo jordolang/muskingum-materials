@@ -17,15 +17,25 @@ import { BUSINESS_INFO, PRODUCT_IMAGES } from "@/data/business";
 import { ReviewsCarousel } from "@/components/home/reviews-carousel";
 import { HomepageFAQ } from "@/components/home/homepage-faq";
 import { sanityClient } from "@/lib/sanity/client";
-import { productsQuery, servicesQuery } from "@/lib/sanity/queries";
+import { productsQuery, servicesQuery, testimonialsQuery } from "@/lib/sanity/queries";
 
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const [products, services] = await Promise.all([
-    sanityClient.fetch(productsQuery),
-    sanityClient.fetch(servicesQuery),
-  ]);
+  let products: any[] = [];
+  let services: any[] = [];
+  let testimonials: any[] = [];
+
+  try {
+    [products, services, testimonials] = await Promise.all([
+      sanityClient.fetch(productsQuery),
+      sanityClient.fetch(servicesQuery),
+      sanityClient.fetch(testimonialsQuery),
+    ]);
+  } catch (error) {
+    // If Sanity fetch fails, continue with empty arrays
+    // Error will be logged server-side
+  }
 
   const featuredProducts = products
     .filter((p: any) => p.featured && p.available && p.pricePerTon > 0)
@@ -262,7 +272,7 @@ export default async function HomePage() {
               contractors across Southeast Ohio.
             </p>
           </div>
-          <ReviewsCarousel />
+          <ReviewsCarousel testimonials={testimonials} />
         </div>
       </section>
 
