@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://cdn.sanity.io https://lh3.googleusercontent.com",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.clerk.accounts.dev https://clerk.com https://api.stripe.com https://*.stripe.com",
+              "connect-src 'self' https://*.clerk.accounts.dev https://clerk.com https://api.stripe.com https://*.stripe.com https://cdn.sanity.io https://*.sanity.io https://*.apicdn.sanity.io",
               "frame-src 'self' https://*.clerk.accounts.dev https://js.stripe.com https://*.stripe.com",
               "object-src 'none'",
               "base-uri 'self'",
