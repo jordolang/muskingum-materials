@@ -34,7 +34,10 @@ export const BUSINESS_INFO = {
   taxRate: 0.0725,
   creditProcessingFee: 0.045,
   social: {
-    facebook: "https://www.facebook.com/profile.php?id=61566390498498",
+    facebook: "https://www.facebook.com/61584706747584/",
+    facebookAlt: "https://www.facebook.com/61553200424830/",
+    google: "https://www.google.com/maps/place/Muskingum+Materials/",
+    googleMaps: "https://maps.app.goo.gl/muskingum-materials-zanesville",
   },
   googleMapsEmbedUrl:
     "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3072.5!2d-82.03!3d39.94!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMznCsDU2JzI0LjAiTiA4MsKwMDEnNDguMCJX!5e0!3m2!1sen!2sus!4v1",
