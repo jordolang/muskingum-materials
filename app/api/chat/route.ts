@@ -83,11 +83,12 @@ export async function POST(request: NextRequest) {
 
     // Store conversation in database (best-effort)
     try {
+      const visitorId = data.visitorId || `anon-${crypto.randomUUID()}`;
       const conversation = await prisma.chatConversation.upsert({
-        where: { visitorId: data.visitorId || "anonymous" },
+        where: { visitorId },
         update: { updatedAt: new Date() },
         create: {
-          visitorId: data.visitorId || "anonymous",
+          visitorId,
         },
       });
 
