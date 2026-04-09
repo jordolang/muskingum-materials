@@ -15,6 +15,7 @@ export async function getProductsWithFilters(filters: ProductFilters = {}) {
     where.OR = [
       { name: { contains: search, mode: "insensitive" } },
       { description: { contains: search, mode: "insensitive" } },
+      { shortDescription: { contains: search, mode: "insensitive" } },
     ];
   }
 
