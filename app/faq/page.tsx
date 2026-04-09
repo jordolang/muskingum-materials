@@ -8,7 +8,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { BUSINESS_INFO } from "@/data/business";
+import { sanityClient } from "@/lib/sanity/client";
+import { faqQuery, siteSettingsQuery } from "@/lib/sanity/queries";
+
+export const revalidate = 3600; // Revalidate every hour (ISR)
 
 export const metadata: Metadata = {
   title: "FAQ",
@@ -16,82 +19,43 @@ export const metadata: Metadata = {
     "Frequently asked questions about Muskingum Materials products, pricing, delivery, and more.",
 };
 
-const FAQS = [
-  {
-    category: "General",
-    items: [
-      {
-        q: "Where is Muskingum Materials located?",
-        a: `We're located at ${BUSINESS_INFO.address}, ${BUSINESS_INFO.city}, ${BUSINESS_INFO.state} ${BUSINESS_INFO.zip}.`,
-      },
-      {
-        q: "What are your business hours?",
-        a: `We're open ${BUSINESS_INFO.hours}. We're closed on weekends.`,
-      },
-      {
-        q: "Is Muskingum Materials family-owned?",
-        a: "Yes! We're a family-owned and operated business serving Southeast Ohio with quality sand, soil, and gravel products.",
-      },
-    ],
-  },
-  {
-    category: "Products",
-    items: [
-      {
-        q: "What products do you carry?",
-        a: "We carry a wide range of sand, gravel, soil, and stone products including Bank Run, Fill Dirt, Fill Sand, Topsoil, various grades of washed gravel (#8, #9, #57), 304 Crushed Gravel, Limestone, Screenings, and Landscape Rock.",
-      },
-      {
-        q: "Do you have washed products?",
-        a: "Yes! We offer several washed products including #8 Fractured Gravel (Washed), #9 Gravel (Washed), #8 Gravel (Washed), #57 Gravel (Washed), and Oversized Gravel (Washed).",
-      },
-      {
-        q: "What's the difference between #57 and #8 gravel?",
-        a: '#57 gravel is 3/4" to 1" in size, great for driveways, drainage, and landscaping. #8 gravel is 3/8" in size, perfect for concrete mix and decorative applications.',
-      },
-    ],
-  },
-  {
-    category: "Pricing & Payment",
-    items: [
-      {
-        q: "How much does gravel cost?",
-        a: "Prices vary by product. #57 Gravel (Washed) is $15.00/ton, 304 Crushed Gravel is $20.00/ton, and #8 Fractured Gravel (Washed) is $28.00/ton. Call for the most current pricing.",
-      },
-      {
-        q: "What payment methods do you accept?",
-        a: `We accept ${BUSINESS_INFO.paymentMethods.join(", ")}. Please note there is a ${(BUSINESS_INFO.creditProcessingFee * 100).toFixed(1)}% credit card processing fee per ticket.`,
-      },
-      {
-        q: "Is there sales tax?",
-        a: `Yes, Ohio sales tax of ${(BUSINESS_INFO.taxRate * 100).toFixed(2)}% applies to all purchases.`,
-      },
-      {
-        q: "Do you offer volume discounts?",
-        a: "Yes! We offer large-quantity pricing for large projects. Contact us for a custom quote on bulk orders.",
-      },
-    ],
-  },
-  {
-    category: "Delivery",
-    items: [
-      {
-        q: "Do you deliver?",
-        a: "Yes! We offer delivery services throughout Southeast Ohio. Our trucks can handle loads up to 20 tons per trip.",
-      },
-      {
-        q: "How much does delivery cost?",
-        a: "Delivery rates depend on distance and quantity. Call (740) 319-0183 for current delivery rates.",
-      },
-      {
-        q: "Can I pick up materials myself?",
-        a: "Absolutely! You can come to our location at 1133 Ellis Dam Rd, Zanesville. We have state-approved scales on-site for accurate weights and modern equipment for fast loading.",
-      },
-    ],
-  },
-];
+interface FAQ {
+  _id: string;
+  question: string;
+  answer: string;
+  category: string;
+  sortOrder: number;
+}
 
-export default function FAQPage() {
+interface SiteSettings {
+  title: string;
+  description: string;
+  phone: string;
+  altPhone?: string;
+  email: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+}
+
+export default async function FAQPage() {
+  const [faqs, siteSettings] = await Promise.all([
+    sanityClient.fetch<FAQ[]>(faqQuery),
+    sanityClient.fetch<SiteSettings>(siteSettingsQuery),
+  ]);
+
+  // Group FAQs by category
+  const groupedFAQs = faqs.reduce(
+    (acc, faq) => {
+      if (!acc[faq.category]) {
+        acc[faq.category] = [];
+      }
+      acc[faq.category].push(faq);
+      return acc;
+    },
+    {} as Record<string, FAQ[]>
+  );
   return (
     <div className="py-12">
       <div className="container max-w-3xl">
@@ -104,17 +68,17 @@ export default function FAQPage() {
           </p>
         </div>
 
-        {FAQS.map((section) => (
-          <div key={section.category} className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">{section.category}</h2>
+        {Object.entries(groupedFAQs).map(([category, items]) => (
+          <div key={category} className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">{category}</h2>
             <Accordion type="single" collapsible className="w-full">
-              {section.items.map((faq, i) => (
-                <AccordionItem key={i} value={`${section.category}-${i}`}>
+              {items.map((faq) => (
+                <AccordionItem key={faq._id} value={faq._id}>
                   <AccordionTrigger className="text-left">
-                    {faq.q}
+                    {faq.question}
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground">
-                    {faq.a}
+                    {faq.answer}
                   </AccordionContent>
                 </AccordionItem>
               ))}
@@ -130,10 +94,10 @@ export default function FAQPage() {
             We&apos;re happy to help! Reach out to us directly.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href={`tel:${BUSINESS_INFO.phone.replace(/\D/g, "")}`}>
+            <a href={`tel:${siteSettings.phone.replace(/\D/g, "")}`}>
               <Button className="gap-2">
                 <Phone className="h-4 w-4" />
-                Call {BUSINESS_INFO.phone}
+                Call {siteSettings.phone}
               </Button>
             </a>
             <Link href="/contact">
