@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getProducts } from "@/lib/products";
 import { BUSINESS_INFO } from "@/data/business";
+import type { Product } from "@prisma/client";
 
 export const metadata: Metadata = {
   title: "Material Catalog",
@@ -15,7 +16,12 @@ export const metadata: Metadata = {
 };
 
 export default async function CatalogPage() {
-  const products = await getProducts();
+  let products: Product[] = [];
+  try {
+    products = await getProducts();
+  } catch (error) {
+    console.warn('Unable to fetch products:', error);
+  }
 
   const categories = ["gravel", "stone", "soil", "sand"];
   const grouped = categories.reduce(

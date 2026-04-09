@@ -24,8 +24,15 @@ interface ProductPageProps {
 }
 
 export async function generateStaticParams() {
-  const products = await getProducts();
-  return products.map((p) => ({ slug: p.slug }));
+  try {
+    const products = await getProducts();
+    return products.map((p) => ({ slug: p.slug }));
+  } catch (error) {
+    // During build, if database is unavailable, return empty array
+    // Pages will be generated on-demand instead of at build time
+    console.warn('Unable to fetch products for static generation:', error);
+    return [];
+  }
 }
 
 export async function generateMetadata({

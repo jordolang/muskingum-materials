@@ -115,7 +115,7 @@ export function generateLocalBusinessSchema(): LocalBusinessSchema {
         closes: "16:00",
       },
     ],
-    paymentAccepted: BUSINESS_INFO.paymentMethods,
+    paymentAccepted: [...BUSINESS_INFO.paymentMethods],
     priceRange: "$$",
   };
 }
