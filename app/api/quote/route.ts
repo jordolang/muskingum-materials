@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { quoteSchema } from "@/lib/schemas";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,8 +21,12 @@ export async function POST(request: NextRequest) {
           notes: data.notes || null,
         },
       });
-    } catch (error) {
-      console.error("Quote database error:", error);
+    } catch (dbError) {
+      logger.error("Database error saving quote request", dbError, {
+        operation: "quoteRequest.create",
+        email: data.email,
+        company: data.company,
+      });
       return NextResponse.json({ error: "Failed to save quote request" }, { status: 500 });
     }
 
@@ -55,7 +60,11 @@ Notes: ${data.notes || "None"}
           ReplyTo: data.email,
         });
       } catch (emailError) {
-        console.error("Email send error:", emailError);
+        logger.error("Failed to send quote email notification", emailError, {
+          operation: "postmark.sendEmail",
+          email: data.email,
+          company: data.company,
+        });
       }
     }
 
@@ -67,7 +76,9 @@ Notes: ${data.notes || "None"}
         { status: 400 }
       );
     }
-    console.error("Quote API error:", error);
+    logger.error("Quote API error", error, {
+      operation: "quote.POST",
+    });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

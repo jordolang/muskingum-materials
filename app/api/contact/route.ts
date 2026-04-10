@@ -55,7 +55,11 @@ ${data.message}
           ReplyTo: data.email,
         });
       } catch (emailError) {
-        console.error("Email send error:", emailError);
+        logger.error("Failed to send contact email notification", emailError, {
+          operation: "postmark.sendEmail",
+          email: data.email,
+          subject: data.subject,
+        });
       }
     }
 
@@ -67,7 +71,9 @@ ${data.message}
         { status: 400 }
       );
     }
-    console.error("Contact API error:", error);
+    logger.error("Contact API error", error, {
+      operation: "contact.POST",
+    });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
