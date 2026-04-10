@@ -5,8 +5,7 @@ import { CheckCircle, Phone, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BUSINESS_INFO } from "@/data/business";
-import { sanityClient } from "@/lib/sanity/client";
-import { servicesQuery, siteSettingsQuery } from "@/lib/sanity/queries";
+import { getServices } from "@/lib/products";
 
 export const revalidate = 7200; // Revalidate every 2 hours (ISR)
 
@@ -16,44 +15,18 @@ export const metadata: Metadata = {
     "Material sales, delivery, large project pricing, and on-site loading. Muskingum Materials serves Southeast Ohio.",
 };
 
-interface Service {
-  _id: string;
-  title: string;
-  slug: { current: string };
-  description: string;
-  icon?: string;
-  image?: string;
-  features: string[];
-  sortOrder?: number;
-}
-
-interface SiteSettings {
-  title: string;
-  description: string;
-  phone: string;
-  altPhone?: string;
-  email: string;
-  address: string;
-  city: string;
-  state: string;
-  zip: string;
-}
+// Rotate through on-site photos when services don't have their own image
+const SERVICE_FALLBACK_IMAGES = [
+  "/images/photos/equipment.jpg",
+  "/images/photos/piles-4.jpg",
+  "/images/photos/piles-close-up.jpg",
+  "/images/photos/feeding-equipment.jpg",
+] as const;
 
 export default async function ServicesPage() {
-  let services: Service[] = [];
-  let siteSettings: SiteSettings | null = null;
+  const services = await getServices();
+  const phone = BUSINESS_INFO.phone;
 
-  try {
-    [services, siteSettings] = await Promise.all([
-      sanityClient.fetch<Service[]>(servicesQuery, {}, { next: { tags: ['services'] } }),
-      sanityClient.fetch<SiteSettings>(siteSettingsQuery, {}, { next: { tags: ['site-settings'] } }),
-    ]);
-  } catch (error) {
-    console.error("Failed to fetch services/settings from Sanity:", error);
-  }
-
-  // Fallback to static data if Sanity settings unavailable
-  const phone = siteSettings?.phone || BUSINESS_INFO.phone;
   return (
     <div className="py-12">
       <div className="container">
@@ -65,45 +38,58 @@ export default async function ServicesPage() {
           </p>
         </div>
 
-        <div className="space-y-12">
-          {services.map((service, i) => (
-            <div
-              key={service._id}
-              className={`grid grid-cols-1 lg:grid-cols-2 gap-8 items-center ${
-                i % 2 === 1 ? "lg:direction-rtl" : ""
-              }`}
-            >
-              <div className={i % 2 === 1 ? "lg:order-2" : ""}>
-                <div className="relative aspect-video rounded-lg overflow-hidden">
-                  <Image
-                    src={`/images/photos/${
-                      ["equipment", "piles-4", "piles-close-up", "feeding-equipment"][i]
-                    }.jpg`}
-                    alt={service.title}
-                    fill
-                    className="object-cover"
-                  />
+        {services.length === 0 ? (
+          <p className="text-center text-muted-foreground">
+            Services are currently unavailable. Please call {phone} for
+            assistance.
+          </p>
+        ) : (
+          <div className="space-y-12">
+            {services.map((service, i) => {
+              const imageSrc =
+                SERVICE_FALLBACK_IMAGES[i % SERVICE_FALLBACK_IMAGES.length];
+              const isReversed = i % 2 === 1;
+
+              return (
+                <div
+                  key={service.id}
+                  className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center"
+                >
+                  <div className={isReversed ? "lg:order-2" : ""}>
+                    <div className="relative aspect-video rounded-lg overflow-hidden">
+                      <Image
+                        src={imageSrc}
+                        alt={service.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 1024px) 100vw, 50vw"
+                      />
+                    </div>
+                  </div>
+                  <div className={isReversed ? "lg:order-1" : ""}>
+                    <h2 className="text-2xl font-bold font-heading mb-3">
+                      {service.title}
+                    </h2>
+                    <p className="text-muted-foreground mb-4">
+                      {service.description}
+                    </p>
+                    <ul className="space-y-2">
+                      {service.features.map((feature) => (
+                        <li
+                          key={feature}
+                          className="flex items-center gap-2 text-sm"
+                        >
+                          <CheckCircle className="h-4 w-4 text-primary shrink-0" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-              </div>
-              <div className={i % 2 === 1 ? "lg:order-1" : ""}>
-                <h2 className="text-2xl font-bold font-heading mb-3">
-                  {service.title}
-                </h2>
-                <p className="text-muted-foreground mb-4">
-                  {service.description}
-                </p>
-                <ul className="space-y-2">
-                  {service.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-sm">
-                      <CheckCircle className="h-4 w-4 text-primary shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Why Choose Us */}
         <div className="mt-16 bg-muted/50 rounded-lg p-8">

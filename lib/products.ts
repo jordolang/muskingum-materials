@@ -47,3 +47,16 @@ export async function getCostGuideBySlug(slug: string) {
     where: { slug },
   });
 }
+
+export async function getServices() {
+  return prisma.service.findMany({
+    where: { active: true },
+    orderBy: { sortOrder: "asc" },
+  });
+}
+
+export async function getServiceBySlug(slug: string) {
+  return prisma.service.findUnique({
+    where: { slug },
+  });
+}
