@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.clerk.accounts.dev https://clerk.com https://js.stripe.com https://*.stripe.com",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://cdn.sanity.io https://lh3.googleusercontent.com",
+              "img-src 'self' data: blob: https://cdn.sanity.io https://lh3.googleusercontent.com https://images.unsplash.com",
               "font-src 'self' data:",
               "connect-src 'self' https://*.clerk.accounts.dev https://clerk.com https://api.stripe.com https://*.stripe.com https://cdn.sanity.io https://*.sanity.io https://*.apicdn.sanity.io",
               "frame-src 'self' https://*.clerk.accounts.dev https://js.stripe.com https://*.stripe.com",
