@@ -52,6 +52,7 @@ export const profileSchema = z.object({
   email: z.string().email("Valid email required"),
   phone: z.string().optional(),
   company: z.string().optional(),
+  smsOptIn: z.boolean().optional(),
 });
 
 // Profile update schema (API-side with optional fields)
@@ -60,6 +61,7 @@ export const profileUpdateSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string().optional(),
   company: z.string().optional(),
+  smsOptIn: z.boolean().optional(),
 });
 
 // Quote request schema
