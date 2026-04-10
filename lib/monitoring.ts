@@ -147,6 +147,77 @@ export function startTransaction<T>(
 }
 
 /**
+ * Capture a payment failure error with proper tagging for alerting
+ * @param error - The payment error
+ * @param context - Optional context (e.g., amount, currency, provider)
+ */
+export function capturePaymentFailure(
+  error: Error | string,
+  context?: MonitoringContext
+): void {
+  Sentry.withScope((scope) => {
+    scope.setTag('error_type', 'payment_failure');
+    scope.setLevel('error');
+
+    if (context) {
+      scope.setContext('payment', context);
+    }
+
+    if (typeof error === 'string') {
+      Sentry.captureMessage(error, 'error');
+    } else {
+      Sentry.captureException(error);
+    }
+  });
+}
+
+/**
+ * Capture a database connection error with proper tagging for alerting
+ * @param error - The database error
+ * @param context - Optional context (e.g., query, table, operation)
+ */
+export function captureDatabaseError(
+  error: Error | string,
+  context?: MonitoringContext
+): void {
+  Sentry.withScope((scope) => {
+    scope.setTag('error_type', 'database_connection');
+    scope.setLevel('error');
+
+    if (context) {
+      scope.setContext('database', context);
+    }
+
+    if (typeof error === 'string') {
+      Sentry.captureMessage(error, 'error');
+    } else {
+      Sentry.captureException(error);
+    }
+  });
+}
+
+/**
+ * Capture a rate limit warning with proper tagging for alerting
+ * @param message - Warning message about rate limit
+ * @param context - Optional context (e.g., current_usage, limit, endpoint)
+ */
+export function captureRateLimitWarning(
+  message: string,
+  context?: MonitoringContext
+): void {
+  Sentry.withScope((scope) => {
+    scope.setTag('warning_type', 'rate_limit_approaching');
+    scope.setLevel('warning');
+
+    if (context) {
+      scope.setContext('rate_limit', context);
+    }
+
+    Sentry.captureMessage(message, 'warning');
+  });
+}
+
+/**
  * Monitoring utility object with common methods
  */
 export const monitoring = {
@@ -156,23 +227,97 @@ export const monitoring = {
   setUser,
   addBreadcrumb,
   startTransaction,
+  capturePaymentFailure,
+  captureDatabaseError,
+  captureRateLimitWarning,
 };
 
 /**
- * Alert configuration (to be configured in Sentry web UI):
+ * SENTRY ALERT CONFIGURATION GUIDE
+ * =================================
  *
- * 1. Payment Failure Alert
- *    - Trigger: Events with tag "error_type:payment_failure"
- *    - Notification: Email + Slack
- *    - Frequency: Immediate
+ * The following alerts should be configured in the Sentry web UI:
+ * Sentry Dashboard > Alerts > Create Alert Rule
  *
- * 2. Database Connection Alert
- *    - Trigger: Events with tag "error_type:database_connection"
- *    - Notification: Email + Slack
- *    - Frequency: Within 1 minute
+ * ALERT 1: Payment Failure Alert
+ * -------------------------------
+ * Name: Payment Failure - Immediate Alert
  *
- * 3. Rate Limit Threshold Alert
- *    - Trigger: Events with tag "warning_type:rate_limit_approaching"
- *    - Notification: Email
- *    - Frequency: Once per hour
+ * Conditions:
+ *   - When: An event is captured
+ *   - If: ALL of these filters match
+ *     * The event's tags match: error_type equals payment_failure
+ *     * The event's level is equal to error
+ *
+ * Actions:
+ *   - Send a notification via Email (all project members)
+ *   - Send a notification via Slack (#alerts channel)
+ *
+ * Alert Settings:
+ *   - Frequency: On every new issue
+ *   - Alert owner: Engineering team
+ *
+ * Usage in code:
+ *   capturePaymentFailure(error, { amount: 99.99, provider: 'stripe' })
+ *
+ *
+ * ALERT 2: Database Connection Alert
+ * -----------------------------------
+ * Name: Database Connection Error
+ *
+ * Conditions:
+ *   - When: An event is captured
+ *   - If: ALL of these filters match
+ *     * The event's tags match: error_type equals database_connection
+ *     * The event's level is equal to error
+ *
+ * Actions:
+ *   - Send a notification via Email (on-call engineers)
+ *   - Send a notification via Slack (#database-alerts channel)
+ *
+ * Alert Settings:
+ *   - Frequency: At most once every 1 minute for an issue
+ *   - Alert owner: Database team
+ *
+ * Usage in code:
+ *   captureDatabaseError(error, { operation: 'query', table: 'users' })
+ *
+ *
+ * ALERT 3: Rate Limit Threshold Alert
+ * ------------------------------------
+ * Name: Rate Limit Approaching Threshold
+ *
+ * Conditions:
+ *   - When: An event is captured
+ *   - If: ALL of these filters match
+ *     * The event's tags match: warning_type equals rate_limit_approaching
+ *     * The event's level is equal to warning
+ *
+ * Actions:
+ *   - Send a notification via Email (engineering leads)
+ *
+ * Alert Settings:
+ *   - Frequency: At most once every 1 hour for an issue
+ *   - Alert owner: Infrastructure team
+ *
+ * Usage in code:
+ *   captureRateLimitWarning('API rate limit at 80%', {
+ *     current_usage: 800,
+ *     limit: 1000,
+ *     endpoint: '/api/chat'
+ *   })
+ *
+ *
+ * VERIFICATION STEPS
+ * ------------------
+ * After configuring these alerts in Sentry:
+ *
+ * 1. Test each alert by triggering the corresponding capture function in a
+ *    development or staging environment with SENTRY_ENABLED=true
+ *
+ * 2. Verify that notifications are received via the configured channels
+ *
+ * 3. Check alert frequency throttling is working as expected
+ *
+ * 4. Review alert history in Sentry Dashboard > Alerts > Alert History
  */
