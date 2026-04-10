@@ -381,7 +381,7 @@ export default async function HomePage() {
               </Button>
             </a>
             <Link href="/contact">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 gap-2">
+              <Button size="lg" className="bg-white text-black hover:bg-white/90 font-semibold gap-2">
                 <MapPin className="h-5 w-5" />
                 Get Directions
               </Button>
