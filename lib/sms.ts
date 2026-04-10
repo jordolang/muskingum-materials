@@ -8,6 +8,8 @@ import { logger } from "@/lib/logger";
 interface SendSMSParams {
   to: string;
   message: string;
+  email?: string;
+  subject?: string;
 }
 
 interface SendSMSResult {
@@ -17,12 +19,12 @@ interface SendSMSResult {
 }
 
 /**
- * Sends an SMS message using Twilio
- * @param params - The SMS parameters (to phone number and message)
+ * Sends an SMS message using Twilio with email fallback
+ * @param params - The SMS parameters (to phone number, message, optional email and subject)
  * @returns Result object with success status and message ID or error
  */
 export async function sendSMS(params: SendSMSParams): Promise<SendSMSResult> {
-  const { to, message } = params;
+  const { to, message, email, subject } = params;
 
   // Check for required Twilio environment variables
   if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_PHONE_NUMBER) {
@@ -33,6 +35,12 @@ export async function sendSMS(params: SendSMSParams): Promise<SendSMSResult> {
       hasAuthToken: !!process.env.TWILIO_AUTH_TOKEN,
       hasPhoneNumber: !!process.env.TWILIO_PHONE_NUMBER,
     });
+
+    // Try email fallback if SMS is not configured
+    if (email) {
+      return await sendEmailFallback({ email, message, subject });
+    }
+
     return {
       success: false,
       error: "SMS service not configured",
@@ -61,9 +69,76 @@ export async function sendSMS(params: SendSMSParams): Promise<SendSMSResult> {
       operation: "sendSMS",
       to,
     });
+
+    // Try email fallback if SMS fails and email is provided
+    if (email) {
+      logger.error("SMS failed, attempting email fallback", error, {
+        operation: "sendSMS",
+        to,
+        email,
+      });
+      return await sendEmailFallback({ email, message, subject });
+    }
+
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Sends an email as a fallback when SMS fails
+ * @param params - Email parameters (email address, message, optional subject)
+ * @returns Result object with success status
+ */
+async function sendEmailFallback(params: {
+  email: string;
+  message: string;
+  subject?: string;
+}): Promise<SendSMSResult> {
+  const { email, message, subject } = params;
+
+  // Check for Postmark configuration
+  if (!process.env.POSTMARK_API_TOKEN) {
+    logger.error("Email fallback failed: Missing Postmark configuration", new Error("Postmark API token not set"), {
+      operation: "sendEmailFallback",
+      email,
+    });
+    return {
+      success: false,
+      error: "Email service not configured",
+    };
+  }
+
+  try {
+    const postmark = await import("postmark");
+    const client = new postmark.ServerClient(process.env.POSTMARK_API_TOKEN);
+
+    await client.sendEmail({
+      From: process.env.POSTMARK_FROM_EMAIL || "noreply@muskingummaterials.com",
+      To: email,
+      Subject: subject || "Order Update",
+      TextBody: message,
+    });
+
+    logger.error("SMS failed but email fallback succeeded", new Error("SMS delivery failed, used email"), {
+      operation: "sendEmailFallback",
+      email,
+    });
+
+    return {
+      success: true,
+      messageId: "email-fallback",
+    };
+  } catch (error) {
+    logger.error("Email fallback failed", error, {
+      operation: "sendEmailFallback",
+      email,
+    });
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Email fallback failed",
     };
   }
 }
