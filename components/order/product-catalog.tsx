@@ -1,11 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { ShoppingCart, Plus, Minus } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { PRODUCTS, PRODUCT_IMAGES } from "@/data/business";
+import { getDisplayPrice, formatPricingTiers } from "@/lib/pricing-calculator";
 
 const ORDERABLE_PRODUCTS = PRODUCTS.filter((p) => p.price > 0);
 
@@ -30,7 +37,8 @@ export function ProductCatalog({
   onSetQuantity,
 }: ProductCatalogProps) {
   return (
-    <Card className="shadow-lg border-0">
+    <TooltipProvider>
+      <Card className="shadow-lg border-0">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ShoppingCart className="h-5 w-5 text-amber-600" />
@@ -44,6 +52,22 @@ export function ProductCatalog({
         <div className="divide-y">
           {ORDERABLE_PRODUCTS.map((product) => {
             const inCart = cart.find((item) => item.name === product.name);
+            const hasTiers = product.pricingTiers && product.pricingTiers.length > 0;
+            const displayPrice = getDisplayPrice(
+              {
+                name: product.name,
+                pricePerTon: product.price,
+                unit: product.unit,
+                pricingTiers: product.pricingTiers
+              }
+            );
+            const tierLabels = hasTiers ? formatPricingTiers({
+              name: product.name,
+              pricePerTon: product.price,
+              unit: product.unit,
+              pricingTiers: product.pricingTiers
+            }) : [];
+
             return (
               <div
                 key={product.name}
@@ -64,12 +88,41 @@ export function ProductCatalog({
                   <p className="text-xs text-muted-foreground">{product.description}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="font-bold text-amber-700">
-                    ${product.price.toFixed(2)}
-                    <span className="text-xs font-normal text-muted-foreground">
-                      /{product.unit}
-                    </span>
-                  </p>
+                  {hasTiers ? (
+                    <div className="flex items-center gap-1">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Starting at</p>
+                        <p className="font-bold text-amber-700">
+                          ${displayPrice.toFixed(2)}
+                          <span className="text-xs font-normal text-muted-foreground">
+                            /{product.unit}
+                          </span>
+                        </p>
+                      </div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button className="text-muted-foreground hover:text-foreground">
+                            <Info className="h-4 w-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <div className="space-y-1">
+                            <p className="font-semibold text-xs">Volume Pricing</p>
+                            {tierLabels.map((tier, idx) => (
+                              <p key={idx} className="text-xs">{tier}</p>
+                            ))}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  ) : (
+                    <p className="font-bold text-amber-700">
+                      ${product.price.toFixed(2)}
+                      <span className="text-xs font-normal text-muted-foreground">
+                        /{product.unit}
+                      </span>
+                    </p>
+                  )}
                 </div>
                 <div className="shrink-0">
                   {inCart ? (
@@ -118,5 +171,6 @@ export function ProductCatalog({
         </div>
       </CardContent>
     </Card>
+    </TooltipProvider>
   );
 }
