@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendSMS } from "@/lib/sms";
 
 export async function POST(request: NextRequest) {
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
         const orderNumber = session.metadata?.orderNumber;
 
         if (orderNumber) {
-          await prisma.order.update({
+          const order = await prisma.order.update({
             where: { orderNumber },
             data: {
               paymentStatus: "paid",
@@ -37,6 +38,30 @@ export async function POST(request: NextRequest) {
               stripePaymentId: session.payment_intent as string,
             },
           });
+
+          // Send SMS notification if customer opted in
+          if (order.smsOptIn && order.phone) {
+            const message = `Your order #${order.orderNumber} has been confirmed! Track your order at ${process.env.NEXT_PUBLIC_APP_URL}/orders/${order.orderNumber}`;
+
+            const result = await sendSMS({
+              to: order.phone,
+              message,
+            });
+
+            // Create SMS notification record
+            await prisma.smsNotification.create({
+              data: {
+                orderId: order.id,
+                type: "order_confirmed",
+                phone: order.phone,
+                message,
+                status: result.success ? "sent" : "failed",
+                providerId: result.messageId,
+                errorMsg: result.error,
+                sentAt: result.success ? new Date() : null,
+              },
+            });
+          }
         }
         break;
       }
