@@ -67,3 +67,20 @@ export async function sendSMS(params: SendSMSParams): Promise<SendSMSResult> {
     };
   }
 }
+
+/**
+ * Generates an SMS message for order status updates
+ * @param status - The order status (e.g., 'confirmed', 'shipped', 'delivered')
+ * @param orderId - The order ID
+ * @returns Formatted SMS message string
+ */
+export function getOrderStatusMessage(status: string, orderId: string): string {
+  const statusMessages: Record<string, string> = {
+    confirmed: `Your order ${orderId} has been confirmed and is being prepared.`,
+    shipped: `Your order ${orderId} has been shipped and is on its way!`,
+    delivered: `Your order ${orderId} has been delivered. Thank you for your purchase!`,
+    cancelled: `Your order ${orderId} has been cancelled.`,
+  };
+
+  return statusMessages[status] || `Your order ${orderId} status has been updated to: ${status}`;
+}
