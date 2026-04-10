@@ -10,7 +10,7 @@ import { ProductCatalog } from "./product-catalog";
 import { CartSummary } from "./cart-summary";
 import { CheckoutForm } from "./checkout-form";
 
-// @ts-ignore - used for type reference
+// @ts-expect-error - used for type reference
 const ORDERABLE_PRODUCTS = PRODUCTS.filter((p) => p.price > 0);
 
 interface CartItem {
