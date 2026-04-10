@@ -150,7 +150,7 @@ export default async function HomePage() {
               <Card key={product._id} className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 bg-card">
                 <div className="relative h-48 w-full">
                   <Image
-                    src={PRODUCT_IMAGES[product.name] || "/images/photos/piles.jpg"}
+                    src={PRODUCT_IMAGES[product.name as keyof typeof PRODUCT_IMAGES] || "/images/photos/piles.jpg"}
                     alt={product.name}
                     fill
                     className="object-cover"
