@@ -321,3 +321,201 @@ export const monitoring = {
  *
  * 4. Review alert history in Sentry Dashboard > Alerts > Alert History
  */
+
+/**
+ * SENTRY DASHBOARD CONFIGURATION GUIDE
+ * =====================================
+ *
+ * The following dashboards should be configured in the Sentry web UI:
+ * Sentry Dashboard > Dashboards > Create Dashboard
+ *
+ * DASHBOARD: Production Monitoring Overview
+ * ------------------------------------------
+ * Name: Production Monitoring - Error Rates & Performance
+ * Description: Real-time monitoring of application health, error rates, and performance metrics
+ *
+ * WIDGET 1: Error Rate by Route
+ * ------------------------------
+ * Type: Line Chart
+ * Title: Error Rate by Route (Last 7 Days)
+ *
+ * Query:
+ *   - Metric: Events
+ *   - Filters:
+ *     * event.type equals error
+ *     * environment equals production
+ *   - Group by: transaction (this shows the route/endpoint)
+ *   - Time Range: Last 7 days
+ *   - Display: Line chart with multiple series (one per route)
+ *
+ * Purpose: Identify which API routes have the highest error rates
+ *
+ *
+ * WIDGET 2: Response Time Percentiles
+ * ------------------------------------
+ * Type: Line Chart
+ * Title: API Response Time Percentiles (Last 7 Days)
+ *
+ * Query:
+ *   - Metric: transaction.duration
+ *   - Filters:
+ *     * environment equals production
+ *     * transaction.op equals http.server
+ *   - Aggregations:
+ *     * p50 (median)
+ *     * p75 (75th percentile)
+ *     * p95 (95th percentile)
+ *     * p99 (99th percentile)
+ *   - Time Range: Last 7 days
+ *   - Display: Line chart with multiple percentile lines
+ *
+ * Purpose: Monitor API response time distribution and identify performance degradation
+ *
+ *
+ * WIDGET 3: Payment Success/Failure Rate
+ * ---------------------------------------
+ * Type: Big Number + Line Chart (2 widgets side by side)
+ *
+ * Widget 3a - Payment Failure Count:
+ *   - Type: Big Number
+ *   - Title: Payment Failures (Last 24 Hours)
+ *   - Metric: Events
+ *   - Filters:
+ *     * error_type equals payment_failure
+ *     * environment equals production
+ *   - Time Range: Last 24 hours
+ *   - Display: Large number with trend indicator
+ *
+ * Widget 3b - Payment Failure Trend:
+ *   - Type: Line Chart
+ *   - Title: Payment Failure Trend (Last 7 Days)
+ *   - Metric: Events
+ *   - Filters:
+ *     * error_type equals payment_failure
+ *     * environment equals production
+ *   - Time Range: Last 7 days
+ *   - Display: Line chart showing failures over time
+ *
+ * Purpose: Track payment processing health and identify payment provider issues
+ *
+ *
+ * WIDGET 4: Rate Limit Violations
+ * --------------------------------
+ * Type: Table + Line Chart (2 widgets)
+ *
+ * Widget 4a - Rate Limit Warning Count:
+ *   - Type: Big Number
+ *   - Title: Rate Limit Warnings (Last 24 Hours)
+ *   - Metric: Events
+ *   - Filters:
+ *     * warning_type equals rate_limit_approaching
+ *     * environment equals production
+ *   - Time Range: Last 24 hours
+ *   - Display: Large number with trend indicator
+ *
+ * Widget 4b - Rate Limit Warnings by Endpoint:
+ *   - Type: Table
+ *   - Title: Rate Limit Warnings by Endpoint (Last 7 Days)
+ *   - Metric: Events
+ *   - Filters:
+ *     * warning_type equals rate_limit_approaching
+ *     * environment equals production
+ *   - Group by: transaction
+ *   - Sort by: Count (descending)
+ *   - Time Range: Last 7 days
+ *   - Limit: Top 10 endpoints
+ *
+ * Purpose: Identify endpoints approaching rate limits and prevent service degradation
+ *
+ *
+ * WIDGET 5: Overall Error Rate Trend
+ * -----------------------------------
+ * Type: Area Chart
+ * Title: Total Error Events (Last 7 Days)
+ *
+ * Query:
+ *   - Metric: Events
+ *   - Filters:
+ *     * event.type equals error
+ *     * environment equals production
+ *   - Time Range: Last 7 days
+ *   - Display: Area chart with hourly buckets
+ *
+ * Purpose: Monitor overall application health and detect error spikes
+ *
+ *
+ * WIDGET 6: Database Error Rate
+ * ------------------------------
+ * Type: Line Chart
+ * Title: Database Connection Errors (Last 7 Days)
+ *
+ * Query:
+ *   - Metric: Events
+ *   - Filters:
+ *     * error_type equals database_connection
+ *     * environment equals production
+ *   - Time Range: Last 7 days
+ *   - Display: Line chart
+ *
+ * Purpose: Monitor database health and connection pool issues
+ *
+ *
+ * DASHBOARD LAYOUT
+ * ----------------
+ * Recommended widget arrangement (2-column grid):
+ *
+ * Row 1: [Widget 1: Error Rate by Route - Full Width]
+ * Row 2: [Widget 2: Response Time Percentiles - Full Width]
+ * Row 3: [Widget 3a: Payment Failures Count | Widget 3b: Payment Failure Trend]
+ * Row 4: [Widget 4a: Rate Limit Count | Widget 4b: Rate Limit by Endpoint]
+ * Row 5: [Widget 5: Overall Error Trend - Full Width]
+ * Row 6: [Widget 6: Database Error Rate - Full Width]
+ *
+ *
+ * DASHBOARD SETUP STEPS
+ * ---------------------
+ * 1. Navigate to Sentry Dashboard > Dashboards
+ * 2. Click "Create Dashboard"
+ * 3. Name: "Production Monitoring - Error Rates & Performance"
+ * 4. Add each widget using the "Add Widget" button
+ * 5. Configure each widget according to the specifications above
+ * 6. Arrange widgets in the recommended layout
+ * 7. Click "Save Dashboard"
+ * 8. Set as default dashboard (optional)
+ *
+ *
+ * VERIFICATION CHECKLIST
+ * ----------------------
+ * After dashboard configuration:
+ *
+ * ✓ Widget 1 shows error counts grouped by API route
+ * ✓ Widget 2 displays response time percentiles (p50, p75, p95, p99)
+ * ✓ Widget 3a/3b show payment failure metrics with trend data
+ * ✓ Widget 4a/4b display rate limit warnings and top affected endpoints
+ * ✓ Widget 5 shows overall error event trend over time
+ * ✓ Widget 6 tracks database connection errors
+ * ✓ All widgets display data for production environment only
+ * ✓ Time ranges are set correctly (24h for big numbers, 7d for trends)
+ * ✓ Dashboard loads within 2-3 seconds
+ * ✓ Dashboard is accessible to all team members
+ *
+ *
+ * DASHBOARD SCREENSHOT
+ * --------------------
+ * After configuring the dashboard:
+ * 1. Navigate to the dashboard in Sentry
+ * 2. Take a full-page screenshot showing all widgets
+ * 3. Save screenshot to: .auto-claude/specs/028-structured-logging-production-monitoring/dashboard-screenshot.png
+ * 4. Verify all widgets are visible and displaying data
+ *
+ *
+ * MONITORING BEST PRACTICES
+ * --------------------------
+ * - Review dashboard daily during business hours
+ * - Set up alerts for anomalies (covered in Alert Configuration above)
+ * - Correlate error spikes with deployment times
+ * - Monitor response time percentiles for performance regressions
+ * - Track payment failure trends for business impact
+ * - Review rate limit warnings before they become violations
+ * - Export dashboard data weekly for long-term trend analysis
+ */
