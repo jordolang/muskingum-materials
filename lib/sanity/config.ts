@@ -7,9 +7,12 @@
 const rawProjectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? "";
 const isValidProjectId = /^[a-z0-9-]+$/.test(rawProjectId);
 
+const rawDataset = process.env.NEXT_PUBLIC_SANITY_DATASET ?? "";
+const isValidDataset = /^~?[a-z0-9_-]{1,64}$/.test(rawDataset);
+
 export const sanityConfig = {
   projectId: isValidProjectId ? rawProjectId : "placeholder",
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
+  dataset: isValidDataset ? rawDataset : "production",
   apiVersion: "2024-01-01",
   useCdn: process.env.NODE_ENV === "production",
 };
