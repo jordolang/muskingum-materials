@@ -15,14 +15,6 @@ export const metadata: Metadata = {
     "View our complete list of sand, gravel, soil, and stone products with current pricing. Serving Southeast Ohio from Zanesville.",
 };
 
-const CATEGORIES = [
-  { value: "all", label: "All Products" },
-  { value: "gravel", label: "Gravel" },
-  { value: "sand", label: "Sand" },
-  { value: "soil", label: "Soil" },
-  { value: "stone", label: "Stone" },
-];
-
 interface Product {
   _id: string;
   name: string;

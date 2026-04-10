@@ -63,7 +63,7 @@ export function ReviewsCarouselClient({ testimonials }: ReviewsCarouselClientPro
     if (!isAutoPlaying || !testimonials.length) return;
     const timer = setInterval(next, 6000);
     return () => clearInterval(timer);
-  }, [isAutoPlaying, next]);
+  }, [isAutoPlaying, next, testimonials.length]);
 
   if (!testimonials.length) {
     return (
