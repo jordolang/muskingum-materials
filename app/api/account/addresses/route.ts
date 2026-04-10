@@ -3,10 +3,12 @@ import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { addressSchema } from "@/lib/schemas";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
+  let session;
   try {
-    const session = await auth();
+    session = await auth();
     if (!session?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -36,25 +38,39 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    logger.info("Address created successfully", {
+      userId: session.userId,
+      addressId: address.id,
+      isDefault: address.isDefault,
+    });
+
     return NextResponse.json({ address });
   } catch (error) {
     if (error instanceof z.ZodError) {
+      logger.warn("Address creation validation failed", {
+        userId: session?.userId,
+        errors: error.errors,
+      });
       return NextResponse.json({ error: "Invalid data", details: error.errors }, { status: 400 });
     }
-    console.error("Address create error:", error);
+    logger.error("Failed to create address", error, {
+      userId: session?.userId,
+    });
     return NextResponse.json({ error: "Failed to create address" }, { status: 500 });
   }
 }
 
 export async function DELETE(request: NextRequest) {
+  let session;
+  let addressId;
   try {
-    const session = await auth();
+    session = await auth();
     if (!session?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const addressId = searchParams.get("id");
+    addressId = searchParams.get("id");
     if (!addressId) {
       return NextResponse.json({ error: "Address ID required" }, { status: 400 });
     }
@@ -71,9 +87,17 @@ export async function DELETE(request: NextRequest) {
       where: { id: addressId, userProfileId: profile.id },
     });
 
+    logger.info("Address deleted successfully", {
+      userId: session.userId,
+      addressId,
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Address delete error:", error);
+    logger.error("Failed to delete address", error, {
+      userId: session?.userId,
+      addressId,
+    });
     return NextResponse.json({ error: "Failed to delete address" }, { status: 500 });
   }
 }

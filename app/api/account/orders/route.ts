@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: Request) {
+  let session;
   try {
-    const session = await auth();
+    session = await auth();
     if (!session?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -48,6 +50,14 @@ export async function GET(request: Request) {
     // Calculate total pages
     const pages = Math.ceil(total / limit);
 
+    logger.info("Orders fetched successfully", {
+      userId: session.userId,
+      page,
+      limit,
+      total,
+      orderCount: orders.length,
+    });
+
     return NextResponse.json({
       orders,
       total,
@@ -56,7 +66,9 @@ export async function GET(request: Request) {
       pages
     });
   } catch (error) {
-    console.error("Orders fetch error:", error);
+    logger.error("Failed to fetch user orders", error, {
+      userId: session?.userId,
+    });
     return NextResponse.json({ error: "Failed to fetch orders" }, { status: 500 });
   }
 }
