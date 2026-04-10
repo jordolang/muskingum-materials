@@ -93,11 +93,12 @@ export function OrderForm() {
 
   const totals = useMemo(() => {
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const volumeDiscount = 0; // Will be calculated in subtask 4-4
     const tax = subtotal * BUSINESS_INFO.taxRate;
     const processingFee = subtotal * BUSINESS_INFO.creditProcessingFee;
     const total = subtotal + tax + processingFee;
     const totalTons = cart.reduce((sum, item) => sum + item.quantity, 0);
-    return { subtotal, tax, processingFee, total, totalTons };
+    return { subtotal, volumeDiscount, tax, processingFee, total, totalTons };
   }, [cart]);
 
   async function onCheckout(data: CheckoutData) {

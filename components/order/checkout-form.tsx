@@ -19,6 +19,7 @@ interface CartItem {
 
 interface Totals {
   subtotal: number;
+  volumeDiscount: number;
   tax: number;
   processingFee: number;
   total: number;
