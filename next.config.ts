@@ -28,17 +28,13 @@ const nextConfig: NextConfig = {
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
-              "frame-ancestors 'none'",
+              "frame-ancestors 'self' https://*.sanity.io https://*.sanity.work https://*.sanity.build",
               "upgrade-insecure-requests",
             ].join("; "),
           },
           {
             key: "Strict-Transport-Security",
             value: "max-age=31536000; includeSubDomains",
-          },
-          {
-            key: "X-Frame-Options",
-            value: "DENY",
           },
           {
             key: "X-Content-Type-Options",
