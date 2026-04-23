@@ -1,4 +1,5 @@
 import { requireAdmin } from "@/lib/admin-auth";
+import { AdminSidebar } from "@/components/admin/sidebar";
 
 function UnauthorizedPage() {
   return (
@@ -42,13 +43,22 @@ export default async function AdminLayout({
   return (
     <div className="py-8">
       <div className="container">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">
-            Manage your business operations
-          </p>
+        <div className="grid gap-8 md:grid-cols-[240px_1fr] lg:grid-cols-[280px_1fr]">
+          {/* Sidebar - hidden on mobile, shown on md+ */}
+          <aside className="hidden md:block">
+            <div className="sticky top-8">
+              <AdminSidebar />
+            </div>
+          </aside>
+
+          {/* Mobile sidebar - shown on mobile only */}
+          <div className="md:hidden mb-6">
+            <AdminSidebar />
+          </div>
+
+          {/* Main content */}
+          <main>{children}</main>
         </div>
-        <main>{children}</main>
       </div>
     </div>
   );
