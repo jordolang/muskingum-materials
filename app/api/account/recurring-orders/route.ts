@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { createRecurringOrderSchema } from "@/lib/schemas";
+import { z } from "zod";
 
 export async function GET(request: Request) {
   try {
@@ -57,5 +59,41 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch recurring orders" }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const session = await auth();
+    if (!session?.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const validated = createRecurringOrderSchema.parse(body);
+
+    // Create recurring order in database
+    const recurringOrder = await prisma.recurringOrder.create({
+      data: {
+        userId: session.userId,
+        name: validated.name,
+        email: validated.email,
+        phone: validated.phone,
+        company: validated.company || null,
+        items: validated.items,
+        deliveryAddress: validated.deliveryAddress,
+        deliveryNotes: validated.deliveryNotes || null,
+        frequency: validated.frequency,
+        nextDeliveryDate: new Date(validated.nextDeliveryDate),
+        status: 'active',
+      },
+    });
+
+    return NextResponse.json({ recurringOrder }, { status: 201 });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: "Validation failed", details: error.errors }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Failed to create recurring order" }, { status: 500 });
   }
 }
