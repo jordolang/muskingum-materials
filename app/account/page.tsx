@@ -12,11 +12,30 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
+import { ContractorDashboard } from "@/components/account/contractor-dashboard";
 
 export default async function AccountDashboardPage() {
   const session = await auth();
   const user = await currentUser();
 
+  // Check if user is a contractor
+  let isContractor = false;
+  try {
+    const profile = await prisma.userProfile.findUnique({
+      where: { userId: session?.userId ?? undefined },
+      select: { isContractor: true },
+    });
+    isContractor = profile?.isContractor ?? false;
+  } catch {
+    // DB not ready
+  }
+
+  // If contractor, show contractor dashboard
+  if (isContractor) {
+    return <ContractorDashboard />;
+  }
+
+  // Otherwise, show standard dashboard
   let orders: Array<{
     id: string;
     orderNumber: string;
