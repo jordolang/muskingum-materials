@@ -12,7 +12,7 @@ interface RecurringOrder {
   id: string;
   name: string;
   email: string;
-  phone: string;
+  phone: string | null;
   company: string | null;
   items: unknown;
   deliveryAddress: string;

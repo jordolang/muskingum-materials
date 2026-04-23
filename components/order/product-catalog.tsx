@@ -52,16 +52,16 @@ export function ProductCatalog({
         <div className="divide-y">
           {ORDERABLE_PRODUCTS.map((product) => {
             const inCart = cart.find((item) => item.name === product.name);
-            const hasTiers = product.pricingTiers && product.pricingTiers.length > 0;
+            const hasTiers = 'pricingTiers' in product && product.pricingTiers && product.pricingTiers.length > 0;
             const displayPrice = getDisplayPrice(
               {
                 name: product.name,
                 pricePerTon: product.price,
                 unit: product.unit,
-                pricingTiers: product.pricingTiers
+                pricingTiers: 'pricingTiers' in product ? product.pricingTiers : undefined
               }
             );
-            const tierLabels = hasTiers ? formatPricingTiers({
+            const tierLabels = hasTiers && 'pricingTiers' in product ? formatPricingTiers({
               name: product.name,
               pricePerTon: product.price,
               unit: product.unit,

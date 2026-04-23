@@ -1,3 +1,16 @@
+interface Product {
+  name: string;
+  price: number;
+  unit: string;
+  category: string;
+  description: string;
+  pricingTiers?: Array<{
+    minQuantity: number;
+    maxQuantity?: number;
+    pricePerTon: number;
+  }>;
+}
+
 export const BUSINESS_INFO = {
   name: "Muskingum Materials",
   tagline: "Southeast Ohio's Resource for Sand, Soil, and Gravel",
@@ -203,7 +216,7 @@ export const PRODUCTS = [
     category: "stone",
     description: "Decorative landscape rock for gardens and outdoor features. Call for pricing.",
   },
-] as const;
+] as const satisfies readonly Product[];
 
 export const PRODUCT_IMAGES: Partial<Record<(typeof PRODUCTS)[number]["name"], string>> = {
   "Bank Run": "/images/products/bank-run.jpg",

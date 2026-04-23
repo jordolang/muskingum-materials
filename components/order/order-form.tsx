@@ -97,7 +97,7 @@ export function OrderForm() {
     // Calculate volume discount based on pricing tiers
     const volumeDiscount = cart.reduce((totalDiscount, item) => {
       const product = ORDERABLE_PRODUCTS.find((p) => p.name === item.name);
-      if (!product || !product.pricingTiers) return totalDiscount;
+      if (!product || !('pricingTiers' in product) || !product.pricingTiers) return totalDiscount;
 
       // Find the highest applicable tier based on quantity
       const applicableTier = product.pricingTiers
