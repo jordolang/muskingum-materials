@@ -5,23 +5,23 @@ import { prisma } from "@/lib/prisma";
 interface Metrics {
   ordersThisWeek: number;
   totalRevenue: number;
-  pendingOrders: number;
-  totalCustomers: number;
+  pendingQuotes: number;
+  newLeads: number;
 }
 
 export default async function AdminPage() {
   let metrics: Metrics = {
     ordersThisWeek: 0,
     totalRevenue: 0,
-    pendingOrders: 0,
-    totalCustomers: 0,
+    pendingQuotes: 0,
+    newLeads: 0,
   };
 
   try {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    const [ordersThisWeek, allOrders, pendingOrders, uniqueUserIds] = await Promise.all([
+    const [ordersThisWeek, allOrders, pendingQuotes, newLeads] = await Promise.all([
       prisma.order.count({
         where: {
           createdAt: {
@@ -34,16 +34,15 @@ export default async function AdminPage() {
           total: true,
         },
       }),
-      prisma.order.count({
+      prisma.quoteRequest.count({
         where: {
           status: "pending",
         },
       }),
-      prisma.order.findMany({
-        select: {
-          userId: true,
+      prisma.lead.count({
+        where: {
+          status: "new",
         },
-        distinct: ["userId"],
       }),
     ]);
 
@@ -52,8 +51,8 @@ export default async function AdminPage() {
     metrics = {
       ordersThisWeek,
       totalRevenue,
-      pendingOrders,
-      totalCustomers: uniqueUserIds.length,
+      pendingQuotes,
+      newLeads,
     };
   } catch {
     // DB not ready
@@ -110,10 +109,10 @@ export default async function AdminPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Pending Orders
+                  Pending Quotes
                 </p>
                 <p className="text-2xl font-bold mt-2">
-                  {metrics.pendingOrders}
+                  {metrics.pendingQuotes}
                 </p>
               </div>
               <div className="h-12 w-12 rounded-full bg-yellow-100 flex items-center justify-center">
@@ -128,10 +127,10 @@ export default async function AdminPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Total Customers
+                  New Leads
                 </p>
                 <p className="text-2xl font-bold mt-2">
-                  {metrics.totalCustomers}
+                  {metrics.newLeads}
                 </p>
               </div>
               <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">

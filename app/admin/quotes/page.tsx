@@ -147,8 +147,9 @@ export default async function AdminQuotesPage({ searchParams }: AdminQuotesPageP
             {quotes.map((quote) => {
               const products = quote.products as Array<{ name: string; category?: string }> | null;
               return (
-                <Card key={quote.id} className="border-0 shadow-md hover:shadow-lg transition-all">
-                  <CardContent className="p-5">
+                <Link key={quote.id} href={`/admin/quotes/${quote.id}`}>
+                  <Card className="border-0 shadow-md hover:shadow-lg transition-all cursor-pointer">
+                    <CardContent className="p-5">
                     <div className="space-y-3">
                       {/* Header Row */}
                       <div className="flex items-start justify-between gap-3">
@@ -244,6 +245,7 @@ export default async function AdminQuotesPage({ searchParams }: AdminQuotesPageP
                     </div>
                   </CardContent>
                 </Card>
+                </Link>
               );
             })}
           </div>

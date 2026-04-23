@@ -132,8 +132,9 @@ export default async function AdminChatsPage({ searchParams }: AdminChatsPagePro
           <div className="space-y-3">
             {chats.map((chat) => {
               return (
-                <Card key={chat.id} className="border-0 shadow-md hover:shadow-lg transition-all">
-                  <CardContent className="p-5">
+                <Link key={chat.id} href={`/admin/chats/${chat.id}`}>
+                  <Card className="border-0 shadow-md hover:shadow-lg transition-all cursor-pointer">
+                    <CardContent className="p-5">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -188,6 +189,7 @@ export default async function AdminChatsPage({ searchParams }: AdminChatsPagePro
                     </div>
                   </CardContent>
                 </Card>
+                </Link>
               );
             })}
           </div>

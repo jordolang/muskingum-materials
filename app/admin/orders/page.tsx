@@ -130,7 +130,7 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
             {orders.map((order) => {
               const items = order.items as Array<{ name: string; quantity: number; unit: string }>;
               return (
-                <Link key={order.id} href={`/account/orders/${order.orderNumber}`}>
+                <Link key={order.id} href={`/admin/orders/${order.id}`}>
                   <Card className="border-0 shadow-md hover:shadow-lg transition-all cursor-pointer">
                     <CardContent className="p-5">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

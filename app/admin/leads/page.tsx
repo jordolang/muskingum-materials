@@ -134,8 +134,9 @@ export default async function AdminLeadsPage({ searchParams }: AdminLeadsPagePro
           <div className="space-y-3">
             {leads.map((lead) => {
               return (
-                <Card key={lead.id} className="border-0 shadow-md hover:shadow-lg transition-all">
-                  <CardContent className="p-5">
+                <Link key={lead.id} href={`/admin/leads/${lead.id}`}>
+                  <Card className="border-0 shadow-md hover:shadow-lg transition-all cursor-pointer">
+                    <CardContent className="p-5">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -179,6 +180,7 @@ export default async function AdminLeadsPage({ searchParams }: AdminLeadsPagePro
                     </div>
                   </CardContent>
                 </Card>
+                </Link>
               );
             })}
           </div>
