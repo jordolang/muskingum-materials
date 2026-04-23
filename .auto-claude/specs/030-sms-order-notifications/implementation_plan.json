@@ -410,8 +410,15 @@
           "description": "Test SMS opt-out via STOP command",
           "service": "backend",
           "files_to_modify": [],
-          "files_to_create": [],
-          "patterns_from": [],
+          "files_to_create": [
+            "test-sms-opt-out.js",
+            "test-sms-opt-out.sh",
+            "E2E-TEST-SMS-OPT-OUT.md"
+          ],
+          "patterns_from": [
+            "test-sms-e2e.js",
+            "app/api/sms/webhook/route.ts"
+          ],
           "verification": {
             "type": "e2e",
             "steps": [
@@ -421,8 +428,9 @@
               "Create new order with same phone - verify no SMS sent"
             ]
           },
-          "status": "pending",
-          "notes": "TCPA compliance requires immediate opt-out handling"
+          "status": "completed",
+          "notes": "Created comprehensive E2E test scripts (Node.js and bash) with full documentation. Tests verify TCPA-compliant STOP command handling: webhook signature validation, database updates (UserProfile and Order), and SMS prevention for opted-out users.",
+          "updated_at": "2026-04-23T20:55:00.000000+00:00"
         },
         {
           "id": "subtask-7-4",
@@ -588,7 +596,7 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-04-23T20:37:47.244Z",
+  "updated_at": "2026-04-23T20:44:16.685Z",
   "recoveryNote": "Task recovered from stuck state at 2026-04-23T20:32:22.787Z",
   "last_updated": "2026-04-23T20:36:54.040112+00:00"
 }
