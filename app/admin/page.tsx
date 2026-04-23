@@ -1,12 +1,145 @@
-export default function AdminPage() {
+import { DollarSign, ShoppingCart, Clock, Users } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { prisma } from "@/lib/prisma";
+
+interface Metrics {
+  ordersThisWeek: number;
+  totalRevenue: number;
+  pendingOrders: number;
+  totalCustomers: number;
+}
+
+export default async function AdminPage() {
+  let metrics: Metrics = {
+    ordersThisWeek: 0,
+    totalRevenue: 0,
+    pendingOrders: 0,
+    totalCustomers: 0,
+  };
+
+  try {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const [ordersThisWeek, allOrders, pendingOrders, uniqueUserIds] = await Promise.all([
+      prisma.order.count({
+        where: {
+          createdAt: {
+            gte: oneWeekAgo,
+          },
+        },
+      }),
+      prisma.order.findMany({
+        select: {
+          total: true,
+        },
+      }),
+      prisma.order.count({
+        where: {
+          status: "pending",
+        },
+      }),
+      prisma.order.findMany({
+        select: {
+          userId: true,
+        },
+        distinct: ["userId"],
+      }),
+    ]);
+
+    const totalRevenue = allOrders.reduce((sum, order) => sum + order.total, 0);
+
+    metrics = {
+      ordersThisWeek,
+      totalRevenue,
+      pendingOrders,
+      totalCustomers: uniqueUserIds.length,
+    };
+  } catch {
+    // DB not ready
+  }
+
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Welcome to Admin</h2>
-        <p className="text-gray-600">
-          This is the admin dashboard. Additional functionality will be added
-          here.
+      <div>
+        <h1 className="text-2xl font-bold font-heading">Dashboard</h1>
+        <p className="text-sm text-muted-foreground">
+          Overview of your business metrics
         </p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-0 shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Orders This Week
+                </p>
+                <p className="text-2xl font-bold mt-2">
+                  {metrics.ordersThisWeek}
+                </p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                <ShoppingCart className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Revenue
+                </p>
+                <p className="text-2xl font-bold mt-2">
+                  ${metrics.totalRevenue.toFixed(2)}
+                </p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                <DollarSign className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Pending Orders
+                </p>
+                <p className="text-2xl font-bold mt-2">
+                  {metrics.pendingOrders}
+                </p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-yellow-100 flex items-center justify-center">
+                <Clock className="h-6 w-6 text-yellow-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Customers
+                </p>
+                <p className="text-2xl font-bold mt-2">
+                  {metrics.totalCustomers}
+                </p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
+                <Users className="h-6 w-6 text-purple-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
