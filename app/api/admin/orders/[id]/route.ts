@@ -10,11 +10,14 @@ const orderUpdateSchema = z.object({
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify admin authentication
     await requireAdmin();
+
+    // Await params (Next.js 15 pattern)
+    const { id } = await params;
 
     // Parse and validate request body
     const body = await request.json();
@@ -31,7 +34,7 @@ export async function PATCH(
 
     // Check if order exists
     const existingOrder = await prisma.order.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existingOrder) {
@@ -43,7 +46,7 @@ export async function PATCH(
 
     // Update order status
     const updatedOrder = await prisma.order.update({
-      where: { id: params.id },
+      where: { id },
       data: { status },
       select: {
         id: true,

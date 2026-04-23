@@ -27,8 +27,9 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
     paymentStatus: string;
     pickupOrDeliver: string;
     createdAt: Date;
-    customerName: string | null;
-    customerEmail: string | null;
+    name: string;
+    email: string;
+    phone: string | null;
     userId: string | null;
   }> = [];
   let totalOrders = 0;
@@ -41,8 +42,8 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
       status?: string;
       OR?: Array<{
         orderNumber?: { contains: string; mode: "insensitive" };
-        customerEmail?: { contains: string; mode: "insensitive" };
-        customerName?: { contains: string; mode: "insensitive" };
+        email?: { contains: string; mode: "insensitive" };
+        name?: { contains: string; mode: "insensitive" };
       }>;
     } = {};
 
@@ -55,8 +56,8 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
     if (searchQuery) {
       where.OR = [
         { orderNumber: { contains: searchQuery, mode: "insensitive" } },
-        { customerEmail: { contains: searchQuery, mode: "insensitive" } },
-        { customerName: { contains: searchQuery, mode: "insensitive" } },
+        { email: { contains: searchQuery, mode: "insensitive" } },
+        { name: { contains: searchQuery, mode: "insensitive" } },
       ];
     }
 
@@ -152,12 +153,10 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
                             })}
                           </p>
                           <p className="text-sm font-medium mt-1">
-                            {order.customerName || "Guest"}
-                            {order.customerEmail && (
-                              <span className="text-muted-foreground text-xs ml-2">
-                                {order.customerEmail}
-                              </span>
-                            )}
+                            {order.name}
+                            <span className="text-muted-foreground text-xs ml-2">
+                              {order.email}
+                            </span>
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
                             {items.map((i) => `${i.name} (${i.quantity} ${i.unit}${i.quantity !== 1 ? "s" : ""})`).join(", ")}
