@@ -62,6 +62,8 @@ export const profileUpdateSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string().optional(),
   company: z.string().optional(),
+  isContractor: z.boolean().optional(),
+  contractorDiscount: z.number().min(0).max(100).optional(),
 });
 
 // Quote request schema
