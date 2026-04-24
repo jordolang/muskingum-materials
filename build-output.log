@@ -1,0 +1,32 @@
+
+> muskingum-materials@1.0.0 build
+> next build
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/jordanlang/Repos/muskingum-materials/package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * /Users/jordanlang/Repos/muskingum-materials/.auto-claude/worktrees/tasks/036-eliminate-sanity-studio-from-main-app-bundle-with-/package-lock.json
+
+   ▲ Next.js 15.5.15
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+Webpack Bundle Analyzer saved report to /Users/jordanlang/Repos/muskingum-materials/.auto-claude/worktrees/tasks/036-eliminate-sanity-studio-from-main-app-bundle-with-/.next/server/analyze/server.html
+Webpack Bundle Analyzer saved report to /Users/jordanlang/Repos/muskingum-materials/.auto-claude/worktrees/tasks/036-eliminate-sanity-studio-from-main-app-bundle-with-/.next/analyze/server.html
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (153kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (192kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+Webpack Bundle Analyzer saved report to /Users/jordanlang/Repos/muskingum-materials/.auto-claude/worktrees/tasks/036-eliminate-sanity-studio-from-main-app-bundle-with-/.next/analyze/client.html
+ ⚠ Compiled with warnings in 14.9min
+
+./node_modules/@upstash/redis/nodejs.mjs
+A Node.js API is used (process.version at line: 240) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/@upstash/redis/nodejs.mjs
+./lib/rate-limit.ts
+
+   Linting and checking validity of types ...
+ ⨯ ESLint: Plugin "@next/next" was conflicted between ".eslintrc.json » eslint-config-next/core-web-vitals » plugin:@next/next/core-web-vitals" and "../../../../.eslintrc.json » eslint-config-next/core-web-vitals » plugin:@next/next/core-web-vitals".
