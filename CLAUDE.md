@@ -33,6 +33,23 @@ Note that `product` and `service` exist in **both** systems. Prisma is what the 
 
 `siteSettings` is a Sanity singleton enforced in `sanity.config.ts` (filters out templates and limits actions to publish/discardChanges/restore).
 
+### ISR caching for Sanity content
+
+Sanity-powered pages use **Incremental Static Regeneration (ISR)** to balance performance and freshness:
+
+- **Time-based revalidation**: Pages auto-revalidate after 3600 seconds (1 hour) via Next.js `revalidate` export. This ensures stale content eventually updates even if webhooks fail.
+- **On-demand revalidation**: `app/api/revalidate/route.ts` receives Sanity webhooks on publish/unpublish events. The endpoint verifies the webhook signature (`SANITY_REVALIDATE_SECRET`), extracts the document type and slug from the payload, and calls `revalidatePath()` or `revalidateTag()` to instantly purge the cache for affected routes.
+- **Graceful degradation**: If `SANITY_REVALIDATE_SECRET` is missing, the webhook endpoint returns 501; pages still revalidate hourly via the time-based fallback.
+
+**Webhook setup** (in Sanity Studio dashboard):
+1. Create a webhook pointing to `https://your-domain.com/api/revalidate`
+2. Set the secret to match `SANITY_REVALIDATE_SECRET` in `.env.local`
+3. Configure triggers for `publish` and `unpublish` events on `page`, `post`, `product`, `service`, `faq`, `testimonial`, and other content types that appear on the site
+
+The webhook payload includes `_type` and `slug.current` (or similar identifier), which the API route maps to Next.js route patterns. For example, a `page` with slug `about` revalidates `/about`, a `post` with slug `news-update` revalidates `/blog/news-update`.
+
+**Debugging**: Check webhook delivery logs in Sanity Studio. If revalidation isn't working, verify the secret matches and the API route is accessible (not blocked by middleware or rate limiting).
+
 ### Middleware does two things
 
 `middleware.ts` runs in this order on every non-static request (matcher excludes `_next`, `images`, `videos`, `favicon.ico`, `studio`):
