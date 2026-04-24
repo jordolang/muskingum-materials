@@ -237,7 +237,12 @@ export function CheckoutForm({
                       register("deliveryAddress").ref(e);
                       deliveryAddressRef.current = e;
                     }}
+                    readOnly={selectedAddressId !== "" && selectedAddressId !== "manual"}
+                    className={selectedAddressId !== "" && selectedAddressId !== "manual" ? "bg-muted/50 cursor-not-allowed" : ""}
                   />
+                  {errors.deliveryAddress && (
+                    <p className="text-xs text-destructive mt-1">{errors.deliveryAddress.message}</p>
+                  )}
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1 block">Delivery Notes</label>
