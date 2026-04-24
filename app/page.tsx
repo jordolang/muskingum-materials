@@ -93,7 +93,10 @@ export default async function HomePage() {
       }),
   ]);
 
-  const featuredProducts: HomeProduct[] = productRows.map((row) => ({
+  type ProductRow = typeof productRows[number];
+  type ServiceRow = typeof serviceRows[number];
+
+  const featuredProducts: HomeProduct[] = productRows.map((row: ProductRow) => ({
     _id: row.id,
     name: row.name,
     description: row.shortDescription ?? row.description,
@@ -103,7 +106,7 @@ export default async function HomePage() {
     imageAlt: row.imageAlt ?? undefined,
   }));
 
-  const services: HomeService[] = serviceRows.map((row) => ({
+  const services: HomeService[] = serviceRows.map((row: ServiceRow) => ({
     _id: row.id,
     title: row.title,
     description: row.description,

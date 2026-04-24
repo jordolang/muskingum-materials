@@ -10,7 +10,8 @@ export const metadata: Metadata = {
 
 export default async function TonsToYardsPage() {
   const products = await getProducts();
-  const gravelProducts = products.map((p) => ({
+  type Product = Awaited<ReturnType<typeof getProducts>>[number];
+  const gravelProducts = products.map((p: Product) => ({
     slug: p.slug,
     name: p.name,
     densityLow: p.densityLow ?? 1.4,

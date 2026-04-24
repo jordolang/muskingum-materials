@@ -25,7 +25,8 @@ interface ProductPageProps {
 
 export async function generateStaticParams() {
   const products = await getProducts();
-  return products.map((p) => ({ slug: p.slug }));
+  type Product = Awaited<ReturnType<typeof getProducts>>[number];
+  return products.map((p: Product) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({
@@ -45,16 +46,22 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
+  type ProductType = NonNullable<Awaited<ReturnType<typeof getProductBySlug>>>;
+  type Comparison = ProductType['comparisons'][number];
+  type ComparedBy = ProductType['comparedBy'][number];
+
   const allComparisons = [
-    ...product.comparisons.map((c) => ({
+    ...product.comparisons.map((c: Comparison) => ({
       otherProduct: c.productB,
       summary: c.summary,
     })),
-    ...product.comparedBy.map((c) => ({
+    ...product.comparedBy.map((c: ComparedBy) => ({
       otherProduct: c.productA,
       summary: c.summary,
     })),
   ];
+
+  type AllComparison = typeof allComparisons[number];
 
   return (
     <div className="py-12">
@@ -147,7 +154,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
-                  {product.bestFor.map((item) => (
+                  {product.bestFor.map((item: string) => (
                     <li key={item} className="flex items-start gap-2 text-sm">
                       <Check className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
                       {item}
@@ -167,7 +174,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
-                  {product.notFor.map((item) => (
+                  {product.notFor.map((item: string) => (
                     <li key={item} className="flex items-start gap-2 text-sm">
                       <X className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
                       {item}
@@ -187,7 +194,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {product.commonUses.map((use) => (
+                {product.commonUses.map((use: string) => (
                   <Badge key={use} variant="secondary">
                     {use}
                   </Badge>
@@ -209,7 +216,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
-                  {product.pros.map((pro) => (
+                  {product.pros.map((pro: string) => (
                     <li key={pro} className="flex items-start gap-2 text-sm">
                       <Check className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
                       {pro}
@@ -229,7 +236,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
-                  {product.cons.map((con) => (
+                  {product.cons.map((con: string) => (
                     <li key={con} className="flex items-start gap-2 text-sm">
                       <X className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
                       {con}
@@ -279,7 +286,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               Compare With Similar Materials
             </h2>
             <div className="grid grid-cols-1 gap-4">
-              {allComparisons.map((comp) => (
+              {allComparisons.map((comp: AllComparison) => (
                 <Link
                   key={comp.otherProduct.id}
                   href={`/catalog/${comp.otherProduct.slug}`}

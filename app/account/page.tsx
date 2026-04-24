@@ -42,11 +42,13 @@ export default async function AccountDashboardPage() {
       },
     });
 
+    type StatusCount = typeof statusCounts[number];
+
     orderStats = {
-      total: statusCounts.reduce((sum, item) => sum + item._count.status, 0),
-      pending: statusCounts.find((item) => item.status === 'pending')?._count.status ?? 0,
-      confirmed: statusCounts.find((item) => item.status === 'confirmed')?._count.status ?? 0,
-      completed: statusCounts.find((item) => item.status === 'completed')?._count.status ?? 0,
+      total: statusCounts.reduce((sum: number, item: StatusCount) => sum + item._count.status, 0),
+      pending: statusCounts.find((item: StatusCount) => item.status === 'pending')?._count.status ?? 0,
+      confirmed: statusCounts.find((item: StatusCount) => item.status === 'confirmed')?._count.status ?? 0,
+      completed: statusCounts.find((item: StatusCount) => item.status === 'completed')?._count.status ?? 0,
     };
   } catch {
     // DB not ready

@@ -1579,7 +1579,8 @@ async function main() {
 
   // Create comparisons between related products
   const allProducts = await prisma.product.findMany();
-  const slugMap = new Map(allProducts.map((p) => [p.slug, p]));
+  type Product = typeof allProducts[number];
+  const slugMap = new Map(allProducts.map((p: Product) => [p.slug, p]));
 
   const comparisons = [
     {
@@ -1645,17 +1646,17 @@ async function main() {
   ];
 
   for (const comp of comparisons) {
-    const productA = slugMap.get(comp.a);
-    const productB = slugMap.get(comp.b);
-    if (productA && productB) {
-      await prisma.productComparison.create({
-        data: {
-          productAId: productA.id,
-          productBId: productB.id,
-          summary: comp.summary,
-        },
-      });
-    }
+    const productA: Product | undefined = slugMap.get(comp.a);
+    const productB: Product | undefined = slugMap.get(comp.b);
+    if (!productA || !productB) continue;
+
+    await prisma.productComparison.create({
+      data: {
+        productAId: productA.id,
+        productBId: productB.id,
+        summary: comp.summary,
+      },
+    });
   }
 
   const productCount = await prisma.product.count();

@@ -14,7 +14,8 @@ interface CostGuidePageProps {
 
 export async function generateStaticParams() {
   const guides = await getCostGuides();
-  return guides.map((g) => ({ slug: g.slug }));
+  type Guide = Awaited<ReturnType<typeof getCostGuides>>[number];
+  return guides.map((g: Guide) => ({ slug: g.slug }));
 }
 
 export async function generateMetadata({

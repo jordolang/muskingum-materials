@@ -16,12 +16,13 @@ export const metadata: Metadata = {
 
 export default async function CatalogPage() {
   const products = await getProducts();
+  type Product = Awaited<ReturnType<typeof getProducts>>[number];
 
   const categories = ["gravel", "stone", "soil", "sand"];
   const grouped = categories.reduce(
     (acc, cat) => ({
       ...acc,
-      [cat]: products.filter((p) => p.category === cat),
+      [cat]: products.filter((p: Product) => p.category === cat),
     }),
     {} as Record<string, typeof products>,
   );
@@ -49,7 +50,7 @@ export default async function CatalogPage() {
                 {category}
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {categoryProducts.map((product) => (
+                {categoryProducts.map((product: Product) => (
                   <Link key={product.slug} href={`/catalog/${product.slug}`}>
                     <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer group">
                       {product.imageUrl && (
