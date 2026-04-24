@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import { checkoutSchema, type CheckoutData } from "@/lib/schemas";
+import { checkoutSchema } from "@/lib/schemas";
 import { validateCheckoutPrices } from "@/lib/validate-checkout-prices";
+import { sendEmail } from "@/lib/email";
 
 function generateOrderNumber(): string {
   const now = new Date();
@@ -153,19 +154,14 @@ export async function POST(request: NextRequest) {
 
     // Non-Stripe fallback: just save the order
     // Send email notification
-    if (process.env.POSTMARK_API_TOKEN) {
-      try {
-        const postmark = await import("postmark");
-        const client = new postmark.ServerClient(process.env.POSTMARK_API_TOKEN);
-        const itemsList = data.items
-          .map((i) => `  - ${i.name}: ${i.quantity} ${i.unit}(s) @ $${i.price.toFixed(2)} = $${(i.price * i.quantity).toFixed(2)}`)
-          .join("\n");
+    const itemsList = data.items
+      .map((i) => `  - ${i.name}: ${i.quantity} ${i.unit}(s) @ $${i.price.toFixed(2)} = $${(i.price * i.quantity).toFixed(2)}`)
+      .join("\n");
 
-        await client.sendEmail({
-          From: process.env.POSTMARK_FROM_EMAIL || "noreply@muskingummaterials.com",
-          To: "sales@muskingummaterials.com",
-          Subject: `New Online Order ${orderNumber} from ${data.name}`,
-          TextBody: `
+    await sendEmail({
+      to: "sales@muskingummaterials.com",
+      subject: `New Online Order ${orderNumber} from ${data.name}`,
+      textBody: `
 New online order received!
 
 Order #: ${orderNumber}
@@ -185,13 +181,9 @@ Processing Fee (4.5%): $${validatedPrices.processingFee.toFixed(2)}
 Total: $${validatedPrices.total.toFixed(2)}
 
 Payment: Pending — Stripe not configured, customer will pay on pickup/delivery.
-          `.trim(),
-          ReplyTo: data.email,
-        });
-      } catch (emailError) {
-        console.error("Email error:", emailError);
-      }
-    }
+      `.trim(),
+      replyTo: data.email,
+    });
 
     return NextResponse.json({ orderNumber });
   } catch (error) {

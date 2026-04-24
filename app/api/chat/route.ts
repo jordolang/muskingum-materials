@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         model: anthropic("claude-haiku-4-5-20251001"),
         system: SYSTEM_PROMPT,
         messages,
-        maxTokens: 500,
+        maxOutputTokens: 500,
       });
       reply = result.text;
     } else {
