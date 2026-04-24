@@ -10,6 +10,7 @@ import {
   Star,
   MapPin,
   Camera,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -152,6 +153,12 @@ export default async function HomePage() {
               Southeast Ohio since day one.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
+              <Link href="/recommendations">
+                <Button size="lg" className="bg-amber-700 text-white hover:bg-amber-800 font-semibold gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  Find Your Material
+                </Button>
+              </Link>
               <Link href="/products">
                 <Button size="lg" className="bg-white text-amber-800 hover:bg-white/90 font-semibold gap-2">
                   View Products & Pricing
