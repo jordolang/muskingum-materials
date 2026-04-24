@@ -7,6 +7,11 @@ import { ChatWidgetLoader } from "@/components/chat/chat-widget-loader";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import "./globals.css";
 
+const hasClerk = Boolean(
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY !== "your_clerk_publishable_key"
+);
+
 const fontSans = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -51,19 +56,19 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
-        <body className={`${fontSans.variable} ${fontHeading.variable} font-sans antialiased`}>
-          <div className="flex min-h-screen flex-col">
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-          <ChatWidgetLoader />
-          <GoogleAnalytics />
-        </body>
-      </html>
-    </ClerkProvider>
+  const tree = (
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${fontSans.variable} ${fontHeading.variable} font-sans antialiased`}>
+        <div className="flex min-h-screen flex-col">
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </div>
+        <ChatWidgetLoader />
+        <GoogleAnalytics />
+      </body>
+    </html>
   );
+
+  return hasClerk ? <ClerkProvider>{tree}</ClerkProvider> : tree;
 }
