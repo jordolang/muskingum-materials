@@ -7,11 +7,13 @@ import {
   Truck,
   ArrowRight,
   Package,
+  Award,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
+import { getTierBenefits, type Tier } from "@/lib/loyalty";
 import { StatusBadge } from "@/components/order/status-badge";
 
 export default async function AccountDashboardPage() {
@@ -28,6 +30,7 @@ export default async function AccountDashboardPage() {
     items: unknown;
   }> = [];
   let orderStats = { total: 0, pending: 0, confirmed: 0, completed: 0 };
+  let loyaltyAccount: { points: number; tier: Tier } | null = null;
 
   try {
     orders = await prisma.order.findMany({
@@ -49,6 +52,17 @@ export default async function AccountDashboardPage() {
       confirmed: statusCounts.find((item) => item.status === 'confirmed')?._count.status ?? 0,
       completed: statusCounts.find((item) => item.status === 'completed')?._count.status ?? 0,
     };
+
+    // Fetch loyalty account
+    if (session?.userId) {
+      const account = await prisma.loyaltyAccount.findUnique({
+        where: { userId: session.userId },
+        select: { points: true, tier: true },
+      });
+      if (account) {
+        loyaltyAccount = account as { points: number; tier: Tier };
+      }
+    }
   } catch {
     // DB not ready
   }
@@ -95,6 +109,38 @@ export default async function AccountDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Loyalty Rewards Summary */}
+      {loyaltyAccount && (
+        <Link href="/account/rewards">
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Award className="h-10 w-10 text-amber-600" />
+                  <div>
+                    <h3 className="font-semibold text-lg font-heading">
+                      Loyalty Rewards
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {getTierBenefits(loyaltyAccount.tier).displayName} Member
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-amber-600">
+                      {loyaltyAccount.points}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Points Available</p>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      )}
 
       {/* Recent Orders */}
       <Card className="border-0 shadow-lg">
