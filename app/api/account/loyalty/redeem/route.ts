@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get or create loyalty account
-    let account = await prisma.loyaltyAccount.findUnique({
+    const account = await prisma.loyaltyAccount.findUnique({
       where: { userId: session.userId },
     });
 

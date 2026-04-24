@@ -1,9 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
-import { Award, TrendingUp, ArrowRight, Gift, Sparkles } from "lucide-react";
+import { Award, TrendingUp, Gift, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
 import { getTierBenefits, calculateDiscountForPoints, MIN_REDEMPTION_POINTS } from "@/lib/loyalty";
 import type { Tier } from "@/lib/loyalty";
