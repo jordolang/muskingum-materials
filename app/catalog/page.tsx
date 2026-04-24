@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { Phone, ArrowRight } from "lucide-react";
+import { Phone, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +39,28 @@ export default async function CatalogPage() {
             comparisons.
           </p>
         </div>
+
+        <Card className="bg-gradient-to-r from-primary/10 to-amber-500/10 border-primary/20 mb-10">
+          <CardContent className="p-6 md:p-8">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="text-center md:text-left">
+                <h2 className="text-2xl font-bold font-heading mb-2 flex items-center justify-center md:justify-start gap-2">
+                  <Sparkles className="h-6 w-6 text-primary" />
+                  Not Sure Which Material?
+                </h2>
+                <p className="text-muted-foreground">
+                  Try our recommendation wizard to find the perfect material for your project in minutes.
+                </p>
+              </div>
+              <Link href="/recommendations">
+                <Button size="lg" className="bg-primary hover:bg-primary/90 font-semibold gap-2 whitespace-nowrap">
+                  Get Recommendation
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
 
         {categories.map((category) => {
           const categoryProducts = grouped[category] ?? [];
