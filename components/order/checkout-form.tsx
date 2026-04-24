@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useUser } from "@clerk/nextjs";
 import { UseFormRegister, FieldErrors, UseFormWatch, UseFormHandleSubmit } from "react-hook-form";
 import { Loader2, CreditCard, MapPin, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,8 +10,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { BUSINESS_INFO } from "@/data/business";
 import type { CheckoutData } from "./order-form";
+
+interface Address {
+  id: string;
+  label: string;
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+  isDefault: boolean;
+}
 
 interface CartItem {
   name: string;
@@ -49,7 +68,49 @@ export function CheckoutForm({
   isProcessing,
   onBack,
 }: CheckoutFormProps) {
+  const { user, isLoaded } = useUser();
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+  const deliveryAddressRef = useRef<HTMLTextAreaElement | null>(null);
   const fulfillment = watch("fulfillment");
+
+  const loadAddresses = useCallback(async () => {
+    try {
+      const res = await fetch("/api/account/profile");
+      const data = await res.json();
+      setAddresses(data.profile?.addresses || []);
+    } catch {
+      // Ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded && user) {
+      loadAddresses();
+    }
+  }, [isLoaded, user, loadAddresses]);
+
+  const handleAddressSelect = useCallback((addressId: string) => {
+    setSelectedAddressId(addressId);
+
+    if (addressId === "manual") {
+      // Clear the textarea for manual entry
+      if (deliveryAddressRef.current) {
+        deliveryAddressRef.current.value = "";
+        deliveryAddressRef.current.focus();
+      }
+      return;
+    }
+
+    const address = addresses.find((a) => a.id === addressId);
+    if (address && deliveryAddressRef.current) {
+      const formatted = `${address.street}, ${address.city}, ${address.state} ${address.zip}`;
+      deliveryAddressRef.current.value = formatted;
+      // Trigger change event so react-hook-form picks it up
+      const event = new Event("input", { bubbles: true });
+      deliveryAddressRef.current.dispatchEvent(event);
+    }
+  }, [addresses]);
 
   return (
     <Card className="shadow-lg border-0">
@@ -166,12 +227,49 @@ export function CheckoutForm({
 
             {fulfillment === "delivery" && (
               <div className="mt-3 space-y-3">
+                {isLoaded && user && addresses.length > 0 && (
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Saved Addresses</label>
+                    <Select value={selectedAddressId} onValueChange={handleAddressSelect}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a saved address or enter manually" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manual">Enter address manually</SelectItem>
+                        {addresses.map((addr) => (
+                          <SelectItem key={addr.id} value={addr.id}>
+                            {addr.label} - {addr.street}, {addr.city}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {isLoaded && !user && (
+                  <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                    💡 Sign in to save addresses for faster checkout next time
+                  </p>
+                )}
+                {isLoaded && user && addresses.length === 0 && (
+                  <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                    💡 You can save addresses in your account settings for faster checkout
+                  </p>
+                )}
                 <div>
                   <label className="text-sm font-medium mb-1 block">Delivery Address *</label>
                   <Textarea
                     placeholder="Street address, city, state, zip"
                     {...register("deliveryAddress")}
+                    ref={(e) => {
+                      register("deliveryAddress").ref(e);
+                      deliveryAddressRef.current = e;
+                    }}
+                    readOnly={selectedAddressId !== "" && selectedAddressId !== "manual"}
+                    className={selectedAddressId !== "" && selectedAddressId !== "manual" ? "bg-muted/50 cursor-not-allowed" : ""}
                   />
+                  {errors.deliveryAddress && (
+                    <p className="text-xs text-destructive mt-1">{errors.deliveryAddress.message}</p>
+                  )}
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1 block">Delivery Notes</label>

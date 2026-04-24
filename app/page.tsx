@@ -10,15 +10,19 @@ import {
   Star,
   MapPin,
   Camera,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { BUSINESS_INFO, PRODUCT_IMAGES } from "@/data/business";
+import { BUSINESS_INFO } from "@/data/business";
 import { ReviewsCarousel } from "@/components/home/reviews-carousel";
 import { HomepageFAQ } from "@/components/home/homepage-faq";
+import { prisma } from "@/lib/prisma";
 import { sanityClient } from "@/lib/sanity/client";
-import { productsQuery, servicesQuery, testimonialsQuery } from "@/lib/sanity/queries";
+import { testimonialsQuery } from "@/lib/sanity/queries";
 
+// ISR — rebuild the homepage at most once per minute and let on-demand
+// revalidation refresh it when database content changes.
 export const revalidate = 60;
 
 interface HomeProduct {
@@ -27,8 +31,8 @@ interface HomeProduct {
   description: string;
   pricePerTon: number;
   unit: string;
-  featured?: boolean;
-  available?: boolean;
+  imageUrl?: string;
+  imageAlt?: string;
 }
 
 interface HomeService {
@@ -48,23 +52,67 @@ interface HomeTestimonial {
 }
 
 export default async function HomePage() {
-  let products: HomeProduct[] = [];
-  let services: HomeService[] = [];
-  let testimonials: HomeTestimonial[] = [];
+  // Pull products and services from Postgres (Prisma). Testimonials still
+  // come from Sanity for now and degrade to a static fallback inside the
+  // ReviewsCarousel server component when empty.
+  const [productRows, serviceRows, testimonialResult] = await Promise.all([
+    prisma.product.findMany({
+      where: { active: true, price: { gt: 0 } },
+      orderBy: [{ featured: "desc" }, { sortOrder: "asc" }],
+      take: 6,
+      select: {
+        id: true,
+        name: true,
+        shortDescription: true,
+        description: true,
+        price: true,
+        unit: true,
+        imageUrl: true,
+        imageAlt: true,
+      },
+    }),
+    prisma.service.findMany({
+      where: { active: true },
+      orderBy: { sortOrder: "asc" },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        icon: true,
+        features: true,
+      },
+    }),
+    sanityClient
+      .fetch<HomeTestimonial[]>(
+        testimonialsQuery,
+        {},
+        { next: { tags: ["testimonials"] } }
+      )
+      .catch((error) => {
+        console.error("Failed to fetch testimonials from Sanity:", error);
+        return [] as HomeTestimonial[];
+      }),
+  ]);
 
-  try {
-    [products, services, testimonials] = await Promise.all([
-      sanityClient.fetch(productsQuery, {}, { next: { tags: ['products'] } }),
-      sanityClient.fetch(servicesQuery, {}, { next: { tags: ['services'] } }),
-      sanityClient.fetch(testimonialsQuery, {}, { next: { tags: ['testimonials'] } }),
-    ]);
-  } catch (error) {
-    console.error("Failed to fetch data from Sanity:", error);
-  }
+  const featuredProducts: HomeProduct[] = productRows.map((row) => ({
+    _id: row.id,
+    name: row.name,
+    description: row.shortDescription ?? row.description,
+    pricePerTon: row.price ?? 0,
+    unit: row.unit,
+    imageUrl: row.imageUrl ?? undefined,
+    imageAlt: row.imageAlt ?? undefined,
+  }));
 
-  const featuredProducts = products
-    .filter((p) => p.featured && p.available && p.pricePerTon > 0)
-    .slice(0, 6);
+  const services: HomeService[] = serviceRows.map((row) => ({
+    _id: row.id,
+    title: row.title,
+    description: row.description,
+    icon: row.icon ?? undefined,
+    features: row.features,
+  }));
+
+  const testimonials: HomeTestimonial[] = testimonialResult;
 
   return (
     <>
@@ -91,6 +139,12 @@ export default async function HomePage() {
               Southeast Ohio since day one.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
+              <Link href="/recommendations">
+                <Button size="lg" className="bg-amber-700 text-white hover:bg-amber-800 font-semibold gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  Find Your Material
+                </Button>
+              </Link>
               <Link href="/products">
                 <Button size="lg" className="bg-white text-amber-800 hover:bg-white/90 font-semibold gap-2">
                   View Products & Pricing
@@ -150,8 +204,8 @@ export default async function HomePage() {
               <Card key={product._id} className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 bg-card">
                 <div className="relative h-48 w-full">
                   <Image
-                    src={PRODUCT_IMAGES[product.name] || "/images/photos/piles.jpg"}
-                    alt={product.name}
+                    src={product.imageUrl || "/images/photos/piles.jpg"}
+                    alt={product.imageAlt || product.name}
                     fill
                     className="object-cover"
                   />
@@ -334,7 +388,7 @@ export default async function HomePage() {
               </Button>
             </a>
             <Link href="/contact">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 gap-2">
+              <Button size="lg" className="bg-white text-black hover:bg-white/90 font-semibold gap-2">
                 <MapPin className="h-5 w-5" />
                 Get Directions
               </Button>

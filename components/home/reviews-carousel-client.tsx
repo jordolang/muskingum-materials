@@ -63,7 +63,7 @@ export function ReviewsCarouselClient({ testimonials }: ReviewsCarouselClientPro
     if (!isAutoPlaying || !testimonials.length) return;
     const timer = setInterval(next, 6000);
     return () => clearInterval(timer);
-  }, [isAutoPlaying, next]);
+  }, [isAutoPlaying, next, testimonials.length]);
 
   if (!testimonials.length) {
     return (
@@ -90,7 +90,7 @@ export function ReviewsCarouselClient({ testimonials }: ReviewsCarouselClientPro
 
           <div className="relative flex items-stretch min-h-[280px]">
             {/* Silhouette Side */}
-            <div className="hidden sm:flex w-40 shrink-0 items-end justify-center px-4 pb-0">
+            <div className="hidden sm:flex w-40 shrink-0 items-center justify-center px-4">
               <div className="relative">
                 {/* Ambient glow behind silhouette */}
                 <div className="absolute -inset-4 bg-amber-500/10 blur-2xl rounded-full" />
