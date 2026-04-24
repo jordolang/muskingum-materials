@@ -228,6 +228,16 @@ export function CheckoutForm({
                     </Select>
                   </div>
                 )}
+                {isLoaded && !user && (
+                  <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                    💡 Sign in to save addresses for faster checkout next time
+                  </p>
+                )}
+                {isLoaded && user && addresses.length === 0 && (
+                  <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                    💡 You can save addresses in your account settings for faster checkout
+                  </p>
+                )}
                 <div>
                   <label className="text-sm font-medium mb-1 block">Delivery Address *</label>
                   <Textarea
