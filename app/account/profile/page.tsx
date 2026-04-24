@@ -1,23 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Loader2, CheckCircle, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-const profileSchema = z.object({
-  name: z.string().min(2, "Name is required"),
-  email: z.string().email("Valid email required"),
-  phone: z.string().optional(),
-  company: z.string().optional(),
-});
-
-type ProfileData = z.infer<typeof profileSchema>;
+import { profileSchema, type ProfileData } from "@/lib/schemas";
 
 export default function ProfilePage() {
   const { user, isLoaded } = useUser();
@@ -110,10 +102,13 @@ export default function ProfilePage() {
         <CardContent>
           <div className="flex items-center gap-4">
             {user?.imageUrl && (
-              <img
+              <Image
                 src={user.imageUrl}
                 alt="Profile"
+                width={56}
+                height={56}
                 className="h-14 w-14 rounded-full"
+                unoptimized
               />
             )}
             <div>

@@ -34,15 +34,19 @@ export default async function AccountDashboardPage() {
       orderBy: { createdAt: "desc" },
       take: 5,
     });
-    const allOrders = await prisma.order.findMany({
+    const statusCounts = await prisma.order.groupBy({
+      by: ['status'],
       where: { userId: session?.userId ?? undefined },
-      select: { status: true },
+      _count: {
+        status: true,
+      },
     });
+
     orderStats = {
-      total: allOrders.length,
-      pending: allOrders.filter((o) => o.status === "pending").length,
-      confirmed: allOrders.filter((o) => o.status === "confirmed").length,
-      completed: allOrders.filter((o) => o.status === "completed").length,
+      total: statusCounts.reduce((sum, item) => sum + item._count.status, 0),
+      pending: statusCounts.find((item) => item.status === 'pending')?._count.status ?? 0,
+      confirmed: statusCounts.find((item) => item.status === 'confirmed')?._count.status ?? 0,
+      completed: statusCounts.find((item) => item.status === 'completed')?._count.status ?? 0,
     };
   } catch {
     // DB not ready
