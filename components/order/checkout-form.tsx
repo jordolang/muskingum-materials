@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
 import { UseFormRegister, FieldErrors, UseFormWatch, UseFormHandleSubmit } from "react-hook-form";
 import { Loader2, CreditCard, MapPin, Truck } from "lucide-react";
@@ -9,6 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { BUSINESS_INFO } from "@/data/business";
 import type { CheckoutData } from "./order-form";
 
@@ -62,6 +69,8 @@ export function CheckoutForm({
 }: CheckoutFormProps) {
   const { user, isLoaded } = useUser();
   const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+  const deliveryAddressRef = useRef<HTMLTextAreaElement | null>(null);
   const fulfillment = watch("fulfillment");
 
   const loadAddresses = useCallback(async () => {
@@ -79,6 +88,28 @@ export function CheckoutForm({
       loadAddresses();
     }
   }, [isLoaded, user, loadAddresses]);
+
+  const handleAddressSelect = useCallback((addressId: string) => {
+    setSelectedAddressId(addressId);
+
+    if (addressId === "manual") {
+      // Clear the textarea for manual entry
+      if (deliveryAddressRef.current) {
+        deliveryAddressRef.current.value = "";
+        deliveryAddressRef.current.focus();
+      }
+      return;
+    }
+
+    const address = addresses.find((a) => a.id === addressId);
+    if (address && deliveryAddressRef.current) {
+      const formatted = `${address.street}, ${address.city}, ${address.state} ${address.zip}`;
+      deliveryAddressRef.current.value = formatted;
+      // Trigger change event so react-hook-form picks it up
+      const event = new Event("input", { bubbles: true });
+      deliveryAddressRef.current.dispatchEvent(event);
+    }
+  }, [addresses]);
 
   return (
     <Card className="shadow-lg border-0">
@@ -179,11 +210,33 @@ export function CheckoutForm({
 
             {fulfillment === "delivery" && (
               <div className="mt-3 space-y-3">
+                {isLoaded && user && addresses.length > 0 && (
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Saved Addresses</label>
+                    <Select value={selectedAddressId} onValueChange={handleAddressSelect}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a saved address or enter manually" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manual">Enter address manually</SelectItem>
+                        {addresses.map((addr) => (
+                          <SelectItem key={addr.id} value={addr.id}>
+                            {addr.label} - {addr.street}, {addr.city}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div>
                   <label className="text-sm font-medium mb-1 block">Delivery Address *</label>
                   <Textarea
                     placeholder="Street address, city, state, zip"
                     {...register("deliveryAddress")}
+                    ref={(e) => {
+                      register("deliveryAddress").ref(e);
+                      deliveryAddressRef.current = e;
+                    }}
                   />
                 </div>
                 <div>
