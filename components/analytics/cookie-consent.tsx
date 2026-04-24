@@ -41,14 +41,17 @@ function updateGtagConsent(choice: "granted" | "denied") {
   });
 }
 
+const GA_ID_PATTERN = /^G-[A-Z0-9]{4,}$/;
+
 export function CookieConsent() {
+  const gaId = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID;
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (getStoredConsent() === null) {
+    if (gaId && GA_ID_PATTERN.test(gaId) && getStoredConsent() === null) {
       setVisible(true);
     }
-  }, []);
+  }, [gaId]);
 
   if (!visible) return null;
 
