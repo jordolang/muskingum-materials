@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendSMS } from "@/lib/sms";
 import { calculatePointsForAmount } from "@/lib/loyalty";
 import { logger } from "@/lib/logger";
 import { addBreadcrumb } from "@/lib/monitoring";
@@ -75,7 +76,6 @@ export async function POST(request: NextRequest) {
           if (order.userId) {
             const pointsEarned = calculatePointsForAmount(order.total);
 
-            // Find or create loyalty account
             let loyaltyAccount = await prisma.loyaltyAccount.findUnique({
               where: { userId: order.userId },
             });
@@ -91,7 +91,6 @@ export async function POST(request: NextRequest) {
               });
             }
 
-            // Create transaction and update points
             await prisma.$transaction([
               prisma.loyaltyTransaction.create({
                 data: {
@@ -110,6 +109,29 @@ export async function POST(request: NextRequest) {
                 },
               }),
             ]);
+          }
+
+          // Send SMS notification if customer opted in
+          if (order.smsOptIn && order.phone) {
+            const message = `Your order #${order.orderNumber} has been confirmed! Track your order at ${process.env.NEXT_PUBLIC_APP_URL}/orders/${order.orderNumber}`;
+
+            const result = await sendSMS({
+              to: order.phone,
+              message,
+            });
+
+            await prisma.smsNotification.create({
+              data: {
+                orderId: order.id,
+                type: "order_confirmed",
+                phone: order.phone,
+                message,
+                status: result.success ? "sent" : "failed",
+                providerId: result.messageId,
+                errorMsg: result.error,
+                sentAt: result.success ? new Date() : null,
+              },
+            });
           }
         } else {
           logger.warn("Payment completed but no orderNumber in metadata", {

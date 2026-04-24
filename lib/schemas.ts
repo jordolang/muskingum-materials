@@ -17,6 +17,7 @@ export const checkoutFormSchema = z.object({
   fulfillment: z.enum(["pickup", "delivery"]),
   deliveryAddress: z.string().optional(),
   deliveryNotes: z.string().optional(),
+  smsOptIn: z.boolean().optional(),
 });
 
 // Checkout schema (API-side with order details)
@@ -62,6 +63,7 @@ export const profileSchema = z.object({
   email: z.string().email("Valid email required"),
   phone: z.string().optional(),
   company: z.string().optional(),
+  smsOptIn: z.boolean().optional(),
 });
 
 // Profile update schema (API-side with optional fields)
@@ -70,6 +72,7 @@ export const profileUpdateSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string().optional(),
   company: z.string().optional(),
+  smsOptIn: z.boolean().optional(),
 });
 
 // Quote request schema
