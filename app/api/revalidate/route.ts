@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Revalidate the cache tag for the specified content type
-    revalidateTag(data.type);
+    revalidateTag(data.type, {});
 
     return NextResponse.json({
       success: true,
