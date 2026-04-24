@@ -1,10 +1,14 @@
-import type { CostGuide, Product, Service } from "@prisma/client";
+import type { CostGuide, Prisma, Product, Service } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
-type ProductWithComparisons = Product & {
-  comparisons: Array<{ productB: Product }>;
-  comparedBy: Array<{ productA: Product }>;
-};
+const productWithComparisonsInclude = {
+  comparisons: { include: { productB: true } },
+  comparedBy: { include: { productA: true } },
+} as const satisfies Prisma.ProductInclude;
+
+type ProductWithComparisons = Prisma.ProductGetPayload<{
+  include: typeof productWithComparisonsInclude;
+}>;
 
 // Preview Vercel deployments run `next build` without a DATABASE_URL because
 // the Neon preview branch isn't wired into the build env. Short-circuiting
@@ -36,14 +40,7 @@ export async function getProductBySlug(
   if (!hasDatabase()) return null;
   return prisma.product.findUnique({
     where: { slug },
-    include: {
-      comparisons: {
-        include: { productB: true },
-      },
-      comparedBy: {
-        include: { productA: true },
-      },
-    },
+    include: productWithComparisonsInclude,
   });
 }
 
