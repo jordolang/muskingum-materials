@@ -52,11 +52,31 @@ export function OrderForm() {
 
   const totals = useMemo(() => {
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const tax = subtotal * BUSINESS_INFO.taxRate;
-    const processingFee = subtotal * BUSINESS_INFO.creditProcessingFee;
-    const total = subtotal + tax + processingFee;
+
+    // Calculate volume discount based on pricing tiers
+    const volumeDiscount = cart.reduce((totalDiscount, item) => {
+      const product = PRODUCTS.find((p) => p.name === item.name);
+      if (!product || !('pricingTiers' in product) || !product.pricingTiers) return totalDiscount;
+
+      // Find the highest applicable tier based on quantity
+      const applicableTier = product.pricingTiers
+        .filter((tier) => item.quantity >= tier.minQuantity)
+        .sort((a, b) => b.minQuantity - a.minQuantity)[0];
+
+      if (applicableTier) {
+        const discount = (item.price - applicableTier.pricePerTon) * item.quantity;
+        return totalDiscount + discount;
+      }
+
+      return totalDiscount;
+    }, 0);
+
+    const discountedSubtotal = subtotal - volumeDiscount;
+    const tax = discountedSubtotal * BUSINESS_INFO.taxRate;
+    const processingFee = discountedSubtotal * BUSINESS_INFO.creditProcessingFee;
+    const total = discountedSubtotal + tax + processingFee;
     const totalTons = cart.reduce((sum, item) => sum + item.quantity, 0);
-    return { subtotal, tax, processingFee, total, totalTons };
+    return { subtotal, volumeDiscount, tax, processingFee, total, totalTons };
   }, [cart]);
 
   async function onCheckout(data: CheckoutData) {
@@ -71,6 +91,7 @@ export function OrderForm() {
           ...data,
           items: cart,
           subtotal: totals.subtotal,
+          volumeDiscount: totals.volumeDiscount,
           tax: totals.tax,
           processingFee: totals.processingFee,
           total: totals.total,

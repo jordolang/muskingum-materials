@@ -129,16 +129,18 @@ model OrderStatusHistory {
 }
 
 model UserProfile {
-  id        String    @id @default(cuid())
-  userId    String    @unique
-  name      String?
-  email     String?
-  phone     String?
-  company   String?
-  smsOptIn  Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  addresses Address[]
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  name               String?
+  email              String?
+  phone              String?
+  company            String?
+  isContractor       Boolean   @default(false)
+  contractorDiscount Float?
+  smsOptIn           Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  addresses          Address[]
 
   @@index([userId])
 }
@@ -299,6 +301,27 @@ model CostGuide {
   updatedAt DateTime @updatedAt
 
   @@index([slug])
+}
+
+model RecurringOrder {
+  id               String   @id @default(cuid())
+  userId           String?
+  name             String
+  email            String
+  phone            String?
+  company          String?
+  items            Json
+  deliveryAddress  String   @db.Text
+  deliveryNotes    String?  @db.Text
+  frequency        String   @default("weekly")
+  nextDeliveryDate DateTime
+  status           String   @default("active")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([nextDeliveryDate])
 }
 
 model SmsNotification {

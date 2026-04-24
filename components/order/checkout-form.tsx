@@ -39,6 +39,7 @@ interface CartItem {
 
 interface Totals {
   subtotal: number;
+  volumeDiscount: number;
   tax: number;
   processingFee: number;
   total: number;
@@ -301,6 +302,29 @@ export function CheckoutForm({
                   <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
                 </div>
               ))}
+              <Separator />
+              <div className="space-y-1.5">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Subtotal ({totals.totalTons} tons)</span>
+                  <span>${totals.subtotal.toFixed(2)}</span>
+                </div>
+                {totals.volumeDiscount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-green-600 font-medium">Volume Discount</span>
+                    <span className="text-green-600 font-medium">
+                      -${totals.volumeDiscount.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Tax (7.25%)</span>
+                  <span>${totals.tax.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Card Processing (4.5%)</span>
+                  <span>${totals.processingFee.toFixed(2)}</span>
+                </div>
+              </div>
               <Separator />
               <div className="flex justify-between font-bold text-base">
                 <span>Total</span>

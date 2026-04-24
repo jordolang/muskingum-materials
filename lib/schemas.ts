@@ -34,6 +34,9 @@ export const checkoutSchema = checkoutFormSchema.extend({
   tax: z.number(),
   processingFee: z.number(),
   total: z.number(),
+  contractorId: z.string().optional(),
+  contractorDiscountRate: z.number().optional(),
+  contractorDiscount: z.number().optional(),
 });
 
 // Address schema
@@ -72,6 +75,8 @@ export const profileUpdateSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string().optional(),
   company: z.string().optional(),
+  isContractor: z.boolean().optional(),
+  contractorDiscount: z.number().min(0).max(100).optional(),
   smsOptIn: z.boolean().optional(),
 });
 
@@ -104,6 +109,32 @@ export const leadSchema = z.object({
   phone: z.string().optional(),
   source: z.string().default("chat"),
   visitorId: z.string().optional(),
+});
+
+// Recurring order schemas
+export const createRecurringOrderSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(10, "Phone number must be at least 10 digits"),
+  company: z.string().optional(),
+  items: z.array(
+    z.object({
+      productId: z.string(),
+      productName: z.string(),
+      quantity: z.number().positive("Quantity must be greater than 0"),
+      unit: z.string(),
+    })
+  ).min(1, "At least one item is required"),
+  deliveryAddress: z.string().min(1, "Delivery address is required"),
+  deliveryNotes: z.string().optional(),
+  frequency: z.enum(['daily', 'weekly', 'biweekly', 'monthly'], {
+    errorMap: () => ({ message: "Frequency must be daily, weekly, biweekly, or monthly" })
+  }),
+  nextDeliveryDate: z.string().datetime("Invalid date format"),
+});
+
+export const updateRecurringOrderSchema = createRecurringOrderSchema.partial().extend({
+  status: z.enum(['active', 'paused', 'cancelled']).optional(),
 });
 
 // Review submission schema
@@ -161,6 +192,8 @@ export type ProfileUpdateData = z.infer<typeof profileUpdateSchema>;
 export type QuoteData = z.infer<typeof quoteSchema>;
 export type NewsletterData = z.infer<typeof newsletterSchema>;
 export type LeadData = z.infer<typeof leadSchema>;
+export type CreateRecurringOrderData = z.infer<typeof createRecurringOrderSchema>;
+export type UpdateRecurringOrderData = z.infer<typeof updateRecurringOrderSchema>;
 export type ReviewData = z.infer<typeof reviewSchema>;
 export type OrderStatusUpdateData = z.infer<typeof orderStatusUpdateSchema>;
 export type PointRedemptionData = z.infer<typeof pointRedemptionSchema>;

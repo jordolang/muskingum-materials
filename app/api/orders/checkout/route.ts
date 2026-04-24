@@ -37,10 +37,32 @@ async function handleCheckout(request: NextRequest) {
       fulfillment: data.fulfillment,
     });
 
+    // Get authenticated user if available
+    let userId: string | null = null;
+    let contractorDiscount: number | undefined;
+    try {
+      const session = await auth();
+      userId = session?.userId ?? null;
+
+      // Fetch contractor status and discount if authenticated
+      if (userId) {
+        const profile = await prisma.userProfile.findUnique({
+          where: { userId },
+          select: { isContractor: true, contractorDiscount: true },
+        });
+
+        if (profile?.isContractor && profile.contractorDiscount) {
+          contractorDiscount = profile.contractorDiscount;
+        }
+      }
+    } catch {
+      // Not authenticated - that's fine for guest checkout
+    }
+
     // Validate prices against product catalog
     let validatedPrices;
     try {
-      validatedPrices = await validateCheckoutPrices(data);
+      validatedPrices = await validateCheckoutPrices(data, contractorDiscount);
 
       addBreadcrumb('Price validation successful', 'checkout', {
         subtotal: validatedPrices.subtotal,
@@ -63,15 +85,6 @@ async function handleCheckout(request: NextRequest) {
     }
 
     const orderNumber = generateOrderNumber();
-
-    // Get authenticated user if available
-    let userId: string | null = null;
-    try {
-      const session = await auth();
-      userId = session?.userId ?? null;
-    } catch {
-      // Not authenticated - that's fine for guest checkout
-    }
 
     // Create order in database
     let order;

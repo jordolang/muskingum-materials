@@ -1,6 +1,7 @@
 import { sanityClient } from "@/lib/sanity/client";
 import { productsQuery } from "@/lib/sanity/queries";
 import { BUSINESS_INFO, PRODUCTS } from "@/data/business";
+import { calculatePrice } from "@/lib/pricing-calculator";
 
 interface CheckoutItem {
   name: string;
@@ -24,10 +25,17 @@ interface ValidatedPrices {
   total: number;
 }
 
+interface PricingTier {
+  minQuantity: number;
+  maxQuantity?: number;
+  pricePerTon: number;
+}
+
 interface Product {
   name: string;
   pricePerTon: number;
   unit: string;
+  pricingTiers?: PricingTier[];
 }
 
 /**
@@ -35,11 +43,13 @@ interface Product {
  * Fetches products from Sanity with fallback to hardcoded data.
  *
  * @param data - Checkout data with items and claimed prices
+ * @param contractorDiscountPercent - Optional contractor discount percentage (0-100)
  * @returns Validated and recalculated prices
  * @throws Error if prices don't match catalog or calculations are incorrect
  */
 export async function validateCheckoutPrices(
-  data: CheckoutData
+  data: CheckoutData,
+  contractorDiscountPercent?: number
 ): Promise<ValidatedPrices> {
   // Fetch products from Sanity, fallback to hardcoded PRODUCTS
   let products: Product[];
@@ -86,13 +96,18 @@ export async function validateCheckoutPrices(
       );
     }
 
-    // Validate price matches catalog
-    const catalogPrice = catalogProduct.pricePerTon;
+    // Calculate the correct price based on quantity and volume tiers
+    const priceCalculation = calculatePrice(
+      catalogProduct,
+      item.quantity,
+      contractorDiscountPercent
+    );
+    const expectedPrice = priceCalculation.finalPrice;
     const tolerance = 0.01; // Allow 1 cent tolerance for rounding
 
-    if (Math.abs(item.price - catalogPrice) > tolerance) {
+    if (Math.abs(item.price - expectedPrice) > tolerance) {
       throw new Error(
-        `Price mismatch for "${item.name}": expected $${catalogPrice.toFixed(2)}, received $${item.price.toFixed(2)}`
+        `Price mismatch for "${item.name}": expected $${expectedPrice.toFixed(2)}, received $${item.price.toFixed(2)}`
       );
     }
 
