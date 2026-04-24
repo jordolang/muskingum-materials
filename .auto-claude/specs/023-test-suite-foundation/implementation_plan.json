@@ -390,7 +390,7 @@
             "type": "manual",
             "instructions": "Verify coverage/ and test-results/ are gitignored"
           },
-          "status": "pending",
+          "status": "completed",
           "notes": "Add: coverage/, test-results/, playwright-report/"
         },
         {
@@ -549,5 +549,5 @@
   "planStatus": "in_progress",
   "xstateState": "coding",
   "executionPhase": "coding",
-  "updated_at": "2026-04-24T03:40:31.600Z"
+  "updated_at": "2026-04-24T03:43:51.138Z"
 }
