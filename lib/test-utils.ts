@@ -22,7 +22,7 @@ export function renderWithProviders(
   const { clerkUser, ...renderOptions } = options || {};
 
   if (clerkUser) {
-    global.clerkUser = clerkUser;
+    (global as unknown as { clerkUser?: unknown }).clerkUser = clerkUser;
   }
 
   return render(ui, renderOptions);
@@ -96,5 +96,5 @@ export function mockFetch(
 export function resetAllMocks() {
   vi.clearAllMocks();
   vi.resetAllMocks();
-  delete global.clerkUser;
+  delete (global as unknown as { clerkUser?: unknown }).clerkUser;
 }

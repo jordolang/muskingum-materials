@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
 import Image from "next/image";
+import { generateGalleryMetadata } from "@/lib/seo/metadata";
 import { LazyVideo } from "@/components/gallery/lazy-video";
 import { sanityClient } from "@/lib/sanity/client";
 import { galleryQuery } from "@/lib/sanity/queries";
@@ -7,11 +7,7 @@ import { urlFor } from "@/lib/sanity/image";
 
 export const revalidate = 3600; // Revalidate every hour (ISR)
 
-export const metadata: Metadata = {
-  title: "Gallery",
-  description:
-    "See our equipment, materials, and facility. Muskingum Materials in Zanesville, OH.",
-};
+export const metadata = generateGalleryMetadata();
 
 // Neutral gray blur placeholder for images
 const BLUR_DATA_URL =

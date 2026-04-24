@@ -103,6 +103,37 @@ export const leadSchema = z.object({
   visitorId: z.string().optional(),
 });
 
+// Order status update schema
+export const orderStatusUpdateSchema = z.object({
+  status: z.enum([
+    "pending",
+    "confirmed",
+    "processing",
+    "ready",
+    "ready_for_pickup",
+    "out_for_delivery",
+    "completed",
+    "cancelled",
+  ]),
+  statusNotes: z.string().optional(),
+});
+
+// Point redemption schema
+export const pointRedemptionSchema = z.object({
+  points: z.number().min(1, "Points must be at least 1"),
+  rewardId: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+// Campaign schema
+export const campaignSchema = z.object({
+  subject: z.string().min(3, "Subject must be at least 3 characters"),
+  body: z.string().min(10, "Body must be at least 10 characters"),
+  templateId: z.string().optional(),
+  scheduledFor: z.coerce.date().optional(),
+  recipientFilter: z.string().optional(),
+});
+
 // Type exports for convenience
 export type ContactFormData = z.infer<typeof contactSchema>;
 export type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
@@ -114,3 +145,6 @@ export type ProfileUpdateData = z.infer<typeof profileUpdateSchema>;
 export type QuoteData = z.infer<typeof quoteSchema>;
 export type NewsletterData = z.infer<typeof newsletterSchema>;
 export type LeadData = z.infer<typeof leadSchema>;
+export type OrderStatusUpdateData = z.infer<typeof orderStatusUpdateSchema>;
+export type PointRedemptionData = z.infer<typeof pointRedemptionSchema>;
+export type CampaignData = z.infer<typeof campaignSchema>;
