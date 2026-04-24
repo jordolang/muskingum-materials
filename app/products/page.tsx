@@ -3,7 +3,12 @@ import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PRODUCTS, BUSINESS_INFO } from "@/data/business";
+import { BUSINESS_INFO } from "@/data/business";
+import { prisma } from "@/lib/prisma";
+
+// Revalidate hourly so price/SKU edits in the database surface on the
+// statically generated page within an hour without a redeploy.
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Products & Pricing",
@@ -11,20 +16,46 @@ export const metadata: Metadata = {
     "View our complete list of sand, gravel, soil, and stone products with current pricing. Serving Southeast Ohio from Zanesville.",
 };
 
-const CATEGORIES = [
-  { value: "all", label: "All Products" },
-  { value: "gravel", label: "Gravel" },
-  { value: "sand", label: "Sand" },
-  { value: "soil", label: "Soil" },
-  { value: "stone", label: "Stone" },
-];
+interface Product {
+  _id: string;
+  name: string;
+  description: string;
+  pricePerTon: number;
+  unit: string;
+  category: string;
+}
 
-export default function ProductsPage() {
+export default async function ProductsPage() {
+  const productRows = await prisma.product.findMany({
+    where: { active: true },
+    orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      shortDescription: true,
+      description: true,
+      price: true,
+      unit: true,
+      category: true,
+    },
+  });
+
+  const products: Product[] = productRows.map((row) => ({
+    _id: row.id,
+    name: row.name,
+    description: row.shortDescription ?? row.description,
+    pricePerTon: row.price ?? 0,
+    unit: row.unit,
+    category: row.category,
+  }));
+
+  const phone = BUSINESS_INFO.phone;
+
   const grouped = {
-    gravel: PRODUCTS.filter((p) => p.category === "gravel"),
-    sand: PRODUCTS.filter((p) => p.category === "sand"),
-    soil: PRODUCTS.filter((p) => p.category === "soil"),
-    stone: PRODUCTS.filter((p) => p.category === "stone"),
+    gravel: products.filter((p) => p.category === "gravel"),
+    sand: products.filter((p) => p.category === "sand"),
+    soil: products.filter((p) => p.category === "soil"),
+    stone: products.filter((p) => p.category === "stone"),
   };
 
   return (
@@ -54,9 +85,9 @@ export default function ProductsPage() {
                 </tr>
               </thead>
               <tbody>
-                {PRODUCTS.map((product, i) => (
+                {products.map((product, i) => (
                   <tr
-                    key={product.name}
+                    key={product._id}
                     className={`border-b ${i % 2 === 0 ? "bg-background" : "bg-muted/30"}`}
                   >
                     <td className="px-4 py-3 font-medium">{product.name}</td>
@@ -66,8 +97,8 @@ export default function ProductsPage() {
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-right font-semibold text-primary">
-                      {product.price > 0
-                        ? `$${product.price.toFixed(2)}`
+                      {product.pricePerTon > 0
+                        ? `$${product.pricePerTon.toFixed(2)}`
                         : "Call for Pricing"}
                     </td>
                     <td className="px-4 py-3 text-right text-muted-foreground capitalize">
@@ -88,16 +119,16 @@ export default function ProductsPage() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.map((product) => (
-                <Card key={product.name} className="hover:shadow-md transition-shadow">
+                <Card key={product._id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-3">
                       <h3 className="font-semibold text-lg leading-tight">
                         {product.name}
                       </h3>
                       <div className="text-right shrink-0 ml-3">
-                        {product.price > 0 ? (
+                        {product.pricePerTon > 0 ? (
                           <span className="text-xl font-bold text-primary">
-                            ${product.price.toFixed(2)}
+                            ${product.pricePerTon.toFixed(2)}
                             <span className="text-xs text-muted-foreground font-normal block">
                               per {product.unit}
                             </span>
@@ -139,10 +170,10 @@ export default function ProductsPage() {
                 Call us today to place your order or get a custom quote for your
                 project. We offer volume discounts for large orders.
               </p>
-              <a href={`tel:${BUSINESS_INFO.phone.replace(/\D/g, "")}`}>
+              <a href={`tel:${phone.replace(/\D/g, "")}`}>
                 <Button className="gap-2">
                   <Phone className="h-4 w-4" />
-                  Call {BUSINESS_INFO.phone}
+                  Call {phone}
                 </Button>
               </a>
             </div>
