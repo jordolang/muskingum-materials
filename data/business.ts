@@ -1,3 +1,16 @@
+interface Product {
+  name: string;
+  price: number;
+  unit: string;
+  category: string;
+  description: string;
+  pricingTiers?: Array<{
+    minQuantity: number;
+    maxQuantity?: number;
+    pricePerTon: number;
+  }>;
+}
+
 export const BUSINESS_INFO = {
   name: "Muskingum Materials",
   tagline: "Southeast Ohio's Resource for Sand, Soil, and Gravel",
@@ -54,6 +67,11 @@ export const PRODUCTS = [
     unit: "ton",
     category: "soil",
     description: "Natural mix of sand, gravel, and soil. Ideal for fill and base material.",
+    pricingTiers: [
+      { minQuantity: 10, pricePerTon: 1.85 },
+      { minQuantity: 50, pricePerTon: 1.70 },
+      { minQuantity: 100, pricePerTon: 1.50 },
+    ],
   },
   {
     name: "Fill Dirt",
@@ -61,6 +79,11 @@ export const PRODUCTS = [
     unit: "ton",
     category: "soil",
     description: "Clean fill dirt perfect for grading, backfill, and landscaping projects.",
+    pricingTiers: [
+      { minQuantity: 10, pricePerTon: 1.85 },
+      { minQuantity: 50, pricePerTon: 1.70 },
+      { minQuantity: 100, pricePerTon: 1.50 },
+    ],
   },
   {
     name: "Fill Sand",
@@ -68,6 +91,11 @@ export const PRODUCTS = [
     unit: "ton",
     category: "sand",
     description: "Quality fill sand for construction and backfill applications.",
+    pricingTiers: [
+      { minQuantity: 10, pricePerTon: 3.75 },
+      { minQuantity: 50, pricePerTon: 3.50 },
+      { minQuantity: 100, pricePerTon: 3.25 },
+    ],
   },
   {
     name: "Topsoil (Unprocessed)",
@@ -75,6 +103,11 @@ export const PRODUCTS = [
     unit: "ton",
     category: "soil",
     description: "Natural unprocessed topsoil for landscaping and gardening.",
+    pricingTiers: [
+      { minQuantity: 10, pricePerTon: 7.50 },
+      { minQuantity: 50, pricePerTon: 7.00 },
+      { minQuantity: 100, pricePerTon: 6.50 },
+    ],
   },
   {
     name: "#8 Fractured Gravel (Washed)",
@@ -82,6 +115,11 @@ export const PRODUCTS = [
     unit: "ton",
     category: "gravel",
     description: "Washed fractured gravel, 3/8\" to 1/2\" size. Great for driveways and walkways.",
+    pricingTiers: [
+      { minQuantity: 10, pricePerTon: 26.50 },
+      { minQuantity: 50, pricePerTon: 25.00 },
+      { minQuantity: 100, pricePerTon: 23.50 },
+    ],
   },
   {
     name: "#9 Gravel (Washed)",
@@ -89,6 +127,11 @@ export const PRODUCTS = [
     unit: "ton",
     category: "gravel",
     description: "Fine washed gravel ideal for pipe bedding and drainage applications.",
+    pricingTiers: [
+      { minQuantity: 10, pricePerTon: 7.50 },
+      { minQuantity: 50, pricePerTon: 7.00 },
+      { minQuantity: 100, pricePerTon: 6.50 },
+    ],
   },
   {
     name: "#8 Gravel (Washed)",
@@ -96,6 +139,11 @@ export const PRODUCTS = [
     unit: "ton",
     category: "gravel",
     description: "Washed 3/8\" gravel perfect for concrete mix and decorative applications.",
+    pricingTiers: [
+      { minQuantity: 10, pricePerTon: 14.00 },
+      { minQuantity: 50, pricePerTon: 13.00 },
+      { minQuantity: 100, pricePerTon: 12.00 },
+    ],
   },
   {
     name: "#57 Gravel (Washed)",
@@ -103,6 +151,11 @@ export const PRODUCTS = [
     unit: "ton",
     category: "gravel",
     description: "Washed 3/4\" to 1\" gravel. Popular for driveways, drainage, and landscaping.",
+    pricingTiers: [
+      { minQuantity: 10, pricePerTon: 14.00 },
+      { minQuantity: 50, pricePerTon: 13.00 },
+      { minQuantity: 100, pricePerTon: 12.00 },
+    ],
   },
   {
     name: "304 Crushed Gravel",
@@ -110,6 +163,11 @@ export const PRODUCTS = [
     unit: "ton",
     category: "gravel",
     description: "Crushed limestone aggregate perfect for driveways and base material. Compacts well.",
+    pricingTiers: [
+      { minQuantity: 10, pricePerTon: 18.50 },
+      { minQuantity: 50, pricePerTon: 17.50 },
+      { minQuantity: 100, pricePerTon: 16.00 },
+    ],
   },
   {
     name: "Oversized Gravel (Washed)",
@@ -117,6 +175,11 @@ export const PRODUCTS = [
     unit: "ton",
     category: "gravel",
     description: "Large washed gravel for drainage, erosion control, and decorative use.",
+    pricingTiers: [
+      { minQuantity: 10, pricePerTon: 26.50 },
+      { minQuantity: 50, pricePerTon: 25.00 },
+      { minQuantity: 100, pricePerTon: 23.50 },
+    ],
   },
   {
     name: "#57 Limestone",
@@ -153,7 +216,21 @@ export const PRODUCTS = [
     category: "stone",
     description: "Decorative landscape rock for gardens and outdoor features. Call for pricing.",
   },
-] as const;
+] as const satisfies readonly Product[];
+
+export const PRODUCT_IMAGES: Partial<Record<(typeof PRODUCTS)[number]["name"], string>> = {
+  "Bank Run": "/images/products/bank-run.jpg",
+  "Fill Dirt": "/images/products/fill-dirt.jpg",
+  "Fill Sand": "/images/products/fill-sand.jpg",
+  "Topsoil (Unprocessed)": "/images/products/topsoil.jpg",
+  "#8 Fractured Gravel (Washed)": "/images/products/fractured-gravel.jpg",
+  "#9 Gravel (Washed)": "/images/products/fine-gravel.jpg",
+  "#8 Gravel (Washed)": "/images/photos/stone-close-up.jpg",
+  "#57 Gravel (Washed)": "/images/photos/piles-close-up.jpg",
+  "304 Crushed Gravel": "/images/photos/piles-7.jpg",
+  "Oversized Gravel (Washed)": "/images/photos/stone-hand.jpg",
+  "#57 Limestone": "/images/photos/boulders.jpg",
+};
 
 export const SERVICES = [
   {

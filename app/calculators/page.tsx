@@ -1,13 +1,9 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { Calculator, ArrowRightLeft, BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { generateCalculatorsMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Gravel Calculators",
-  description:
-    "Free gravel calculators to estimate how much material you need. Calculate tons, cubic yards, coverage, and costs for your project.",
-};
+export const metadata = generateCalculatorsMetadata();
 
 const CALCULATORS = [
   {

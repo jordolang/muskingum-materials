@@ -1,20 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { generateText } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { prisma } from "@/lib/prisma";
 import { BUSINESS_INFO, PRODUCTS, SERVICES } from "@/data/business";
+import { logger } from "@/lib/logger";
+import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 
-interface ProductData {
-  name: string;
-  price: number;
-  unit: string;
-  description: string;
-  stockStatus: string;
-  seasonalMessage?: string | null;
-}
+const chatSchema = z.object({
+  message: z.string().min(1).max(5000),
+  visitorId: z.string().min(1).max(100).optional(),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z.string().max(5000),
+      })
+    )
+    .max(50)
+    .optional()
+    .default([]),
+});
 
-function buildSystemPrompt(productsData: ProductData[]) {
-  return `You are a friendly, knowledgeable customer service assistant for Muskingum Materials, a family-owned sand, soil, and gravel company in Zanesville, Ohio.
+const SYSTEM_PROMPT = `You are a friendly, knowledgeable customer service assistant for Muskingum Materials, a family-owned sand, soil, and gravel company in Zanesville, Ohio.
 
 BUSINESS INFORMATION:
 - Name: ${BUSINESS_INFO.name}
@@ -32,22 +40,7 @@ BUSINESS INFORMATION:
 - Tax: 7.25% | Credit card processing fee: 4.5% per ticket
 
 PRODUCTS AND PRICING (effective 07/01/2025):
-${productsData.map((p) => {
-  const priceStr = p.price > 0 ? `$${p.price.toFixed(2)} per ${p.unit}` : "Call for pricing";
-  let stockStr = "";
-
-  if (p.stockStatus === "IN_STOCK") {
-    stockStr = "[In Stock]";
-  } else if (p.stockStatus === "LOW_STOCK") {
-    stockStr = "[Low Stock - Limited Supply]";
-  } else if (p.stockStatus === "OUT_OF_STOCK") {
-    stockStr = "[Out of Stock]";
-  } else if (p.stockStatus === "SEASONAL") {
-    stockStr = p.seasonalMessage ? `[Seasonal - ${p.seasonalMessage}]` : "[Seasonal]";
-  }
-
-  return `- ${p.name}: ${priceStr} ${stockStr} — ${p.description}`;
-}).join("\n")}
+${PRODUCTS.map((p) => `- ${p.name}: ${p.price > 0 ? `$${p.price.toFixed(2)} per ${p.unit}` : "Call for pricing"} — ${p.description}`).join("\n")}
 
 SERVICES:
 ${SERVICES.map((s) => `- ${s.title}: ${s.description}`).join("\n")}
@@ -55,10 +48,6 @@ ${SERVICES.map((s) => `- ${s.title}: ${s.description}`).join("\n")}
 GUIDELINES:
 - Be friendly, helpful, and concise
 - Always provide accurate pricing from the data above
-- When customers ask about product availability, refer to the stock status indicators above
-- If a product is out of stock, let them know and suggest they call (740) 319-0183 to check when it will be available
-- If a product is low stock, mention limited availability and encourage them to order soon
-- If a product is seasonal, explain when it's typically available
 - If asked about pricing for items marked "Call for pricing," direct them to call (740) 319-0183
 - For delivery rates, tell them to call for current delivery pricing
 - Remind customers that prices are subject to change and to call for the most recent pricing
@@ -66,64 +55,64 @@ GUIDELINES:
 - If you don't know something, say so and direct them to call or email
 - Keep responses brief and helpful — 2-3 sentences max unless they need detailed info
 - Never make up information not provided above`;
-}
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { message, visitorId, history = [] } = body;
+    // Check rate limit
+    const identifier = getClientIdentifier(request);
+    const rateLimitResult = await checkRateLimit(identifier, "chat");
 
-    if (!message || typeof message !== "string") {
+    logger.info("Chat request rate limit check", {
+      identifier,
+      success: rateLimitResult.success,
+      remaining: rateLimitResult.remaining,
+      limit: rateLimitResult.limit,
+    });
+
+    if (!rateLimitResult.success) {
+      logger.warn("Chat rate limit exceeded", {
+        identifier,
+        limit: rateLimitResult.limit,
+        reset: rateLimitResult.reset,
+      });
+
+      const retryAfter = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
+
       return NextResponse.json(
-        { error: "Message is required" },
-        { status: 400 }
+        {
+          error: "Too many requests. Please try again later.",
+          retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": rateLimitResult.limit.toString(),
+            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+            "X-RateLimit-Reset": rateLimitResult.reset.toString(),
+            "Retry-After": retryAfter.toString(),
+          },
+        }
       );
     }
 
-    // Fetch products with stock status from database
-    let productsData: ProductData[] = [];
-    try {
-      const dbProducts = await prisma.product.findMany({
-        where: { active: true },
-        select: {
-          name: true,
-          price: true,
-          unit: true,
-          description: true,
-          stockStatus: true,
-          seasonalMessage: true,
-        },
-        orderBy: { sortOrder: "asc" },
+    // Warn if approaching rate limit
+    if (rateLimitResult.remaining <= 1) {
+      logger.warn("Chat rate limit approaching", {
+        identifier,
+        remaining: rateLimitResult.remaining,
+        limit: rateLimitResult.limit,
       });
-
-      productsData = dbProducts.map((p) => ({
-        name: p.name,
-        price: p.price || 0,
-        unit: p.unit,
-        description: p.description,
-        stockStatus: p.stockStatus,
-        seasonalMessage: p.seasonalMessage,
-      }));
-    } catch {
-      // Fallback to static products if database is unavailable
-      productsData = PRODUCTS.map((p) => ({
-        name: p.name,
-        price: p.price,
-        unit: p.unit,
-        description: p.description,
-        stockStatus: "IN_STOCK",
-        seasonalMessage: null,
-      }));
     }
 
-    const systemPrompt = buildSystemPrompt(productsData);
+    const body = await request.json();
+    const data = chatSchema.parse(body);
 
     const messages = [
-      ...history.map((m: { role: string; content: string }) => ({
+      ...data.history.map((m) => ({
         role: m.role as "user" | "assistant",
         content: m.content,
       })),
-      { role: "user" as const, content: message },
+      { role: "user" as const, content: data.message },
     ];
 
     let reply: string;
@@ -131,23 +120,23 @@ export async function POST(request: NextRequest) {
     if (process.env.ANTHROPIC_API_KEY) {
       const result = await generateText({
         model: anthropic("claude-haiku-4-5-20251001"),
-        system: systemPrompt,
+        system: SYSTEM_PROMPT,
         messages,
-        maxTokens: 500,
+        maxOutputTokens: 500,
       });
       reply = result.text;
     } else {
-      reply = getStaticResponse(message);
+      reply = getStaticResponse(data.message);
     }
 
     // Store conversation in database (best-effort)
+    const visitorId = data.visitorId || `anon-${crypto.randomUUID()}`;
     try {
       const conversation = await prisma.chatConversation.upsert({
-        where: { id: visitorId || "anonymous" },
+        where: { visitorId },
         update: { updatedAt: new Date() },
         create: {
-          id: visitorId || `anon-${Date.now()}`,
-          visitorId: visitorId || "anonymous",
+          visitorId,
         },
       });
 
@@ -156,7 +145,7 @@ export async function POST(request: NextRequest) {
           {
             conversationId: conversation.id,
             role: "user",
-            content: message,
+            content: data.message,
           },
           {
             conversationId: conversation.id,
@@ -165,13 +154,23 @@ export async function POST(request: NextRequest) {
           },
         ],
       });
-    } catch {
-      // Database not configured yet — that's okay
+    } catch (error) {
+      logger.error("Chat DB save error", error, { visitorId });
     }
 
     return NextResponse.json({ reply });
   } catch (error) {
-    console.error("Chat API error:", error);
+    if (error instanceof z.ZodError) {
+      logger.warn("Chat request validation failed", {
+        errors: error.errors,
+      });
+      return NextResponse.json(
+        { error: "Invalid request data", details: error.errors },
+        { status: 400 }
+      );
+    }
+
+    logger.error("Chat request processing error", error);
     return NextResponse.json(
       {
         reply:

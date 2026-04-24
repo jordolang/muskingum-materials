@@ -7,15 +7,17 @@ import {
   Truck,
   Phone,
   Mail,
-  Download,
   Printer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { StatusBadge } from "@/components/order/status-badge";
+import { PaymentBadge } from "@/components/order/payment-badge";
 import { prisma } from "@/lib/prisma";
 import { BUSINESS_INFO } from "@/data/business";
+import { StatusProgress } from "@/components/order/status-progress";
+import { OrderStatusTimeline } from "@/components/order/order-status-timeline";
 
 export default async function OrderDetailPage({
   params,
@@ -31,6 +33,13 @@ export default async function OrderDetailPage({
       where: {
         orderNumber,
         userId: session?.userId ?? undefined,
+      },
+      include: {
+        statusHistory: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
       },
     });
   } catch {
@@ -84,6 +93,13 @@ export default async function OrderDetailPage({
         <StatusBadge status={order.status} />
         <PaymentBadge status={order.paymentStatus} />
       </div>
+
+      {/* Status Progress */}
+      <Card className="border-0 shadow-md">
+        <CardContent className="p-6">
+          <StatusProgress currentStatus={order.status} />
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Order Items - Invoice Style */}
@@ -224,6 +240,19 @@ export default async function OrderDetailPage({
             </CardContent>
           </Card>
 
+          {/* Status Timeline */}
+          <Card className="border-0 shadow-md">
+            <CardHeader>
+              <CardTitle className="text-sm">Status History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <OrderStatusTimeline
+                statusHistory={order.statusHistory}
+                currentStatus={order.status}
+              />
+            </CardContent>
+          </Card>
+
           {/* Need Help */}
           <Card className="border-0 shadow-md bg-muted/50">
             <CardContent className="p-4 text-center">
@@ -240,30 +269,4 @@ export default async function OrderDetailPage({
       </div>
     </div>
   );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    pending: "bg-yellow-100 text-yellow-800",
-    confirmed: "bg-blue-100 text-blue-800",
-    processing: "bg-purple-100 text-purple-800",
-    ready: "bg-green-100 text-green-800",
-    completed: "bg-green-100 text-green-800",
-    canceled: "bg-red-100 text-red-800",
-  };
-  return (
-    <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${map[status] || "bg-gray-100 text-gray-800"}`}>
-      {status}
-    </span>
-  );
-}
-
-function PaymentBadge({ status }: { status: string }) {
-  if (status === "paid") {
-    return <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">Paid</span>;
-  }
-  if (status === "unpaid") {
-    return <span className="px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">Unpaid</span>;
-  }
-  return null;
 }

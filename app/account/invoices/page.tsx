@@ -1,13 +1,22 @@
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
-import { FileText, Download, Eye } from "lucide-react";
+import { FileText, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
 
-export default async function InvoicesPage() {
+const ITEMS_PER_PAGE = 10;
+
+interface InvoicesPageProps {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function InvoicesPage({ searchParams }: InvoicesPageProps) {
   const session = await auth();
+  const params = await searchParams;
+  const currentPage = Math.max(1, parseInt(params.page ?? "1", 10));
+  const skip = (currentPage - 1) * ITEMS_PER_PAGE;
 
   let orders: Array<{
     id: string;
@@ -18,24 +27,36 @@ export default async function InvoicesPage() {
     items: unknown;
     name: string;
   }> = [];
+  let totalCount = 0;
 
   try {
-    orders = await prisma.order.findMany({
-      where: { userId: session?.userId ?? undefined },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        orderNumber: true,
-        total: true,
-        paymentStatus: true,
-        createdAt: true,
-        items: true,
-        name: true,
-      },
-    });
+    const where = { userId: session?.userId ?? undefined };
+
+    [orders, totalCount] = await Promise.all([
+      prisma.order.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        take: ITEMS_PER_PAGE,
+        skip,
+        select: {
+          id: true,
+          orderNumber: true,
+          total: true,
+          paymentStatus: true,
+          createdAt: true,
+          items: true,
+          name: true,
+        },
+      }),
+      prisma.order.count({ where }),
+    ]);
   } catch {
     // DB not ready
   }
+
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+  const hasNextPage = currentPage < totalPages;
+  const hasPrevPage = currentPage > 1;
 
   return (
     <div className="space-y-6">
@@ -115,6 +136,40 @@ export default async function InvoicesPage() {
                 </tbody>
               </table>
             </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-5 py-4 border-t">
+                <p className="text-sm text-muted-foreground">
+                  Showing {skip + 1} to {Math.min(skip + ITEMS_PER_PAGE, totalCount)} of {totalCount} invoices
+                </p>
+                <div className="flex items-center gap-2">
+                  <Link href={`/account/invoices?page=${currentPage - 1}`}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={!hasPrevPage}
+                      className="gap-1"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                  </Link>
+                  <span className="text-sm text-muted-foreground px-2">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Link href={`/account/invoices?page=${currentPage + 1}`}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={!hasNextPage}
+                      className="gap-1"
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
