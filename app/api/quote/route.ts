@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { quoteSchema } from "@/lib/schemas";
+import { sendEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
@@ -31,19 +32,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Send email notification
-    if (process.env.POSTMARK_API_TOKEN) {
-      try {
-        const postmark = await import("postmark");
-        const client = new postmark.ServerClient(process.env.POSTMARK_API_TOKEN);
-        const productList = data.products
-          .map((p) => `  - ${p.productName}: ${p.quantity}`)
-          .join("\n");
+    const productList = data.products
+      .map((p) => `  - ${p.productName}: ${p.quantity}`)
+      .join("\n");
 
-        await client.sendEmail({
-          From: process.env.POSTMARK_FROM_EMAIL || "noreply@muskingummaterials.com",
-          To: "sales@muskingummaterials.com",
-          Subject: `Quote Request from ${data.name}`,
-          TextBody: `
+    await sendEmail({
+      to: "sales@muskingummaterials.com",
+      subject: `Quote Request from ${data.name}`,
+      textBody: `
 New quote request:
 
 Name: ${data.name}
@@ -56,17 +52,9 @@ ${productList}
 
 Delivery Address: ${data.deliveryAddr || "Pickup"}
 Notes: ${data.notes || "None"}
-          `.trim(),
-          ReplyTo: data.email,
-        });
-      } catch (emailError) {
-        logger.error("Failed to send quote email notification", emailError, {
-          operation: "postmark.sendEmail",
-          email: data.email,
-          company: data.company,
-        });
-      }
-    }
+      `.trim(),
+      replyTo: data.email,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
