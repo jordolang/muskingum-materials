@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
+import { useUser } from "@clerk/nextjs";
 import { UseFormRegister, FieldErrors, UseFormWatch, UseFormHandleSubmit } from "react-hook-form";
 import { Loader2, CreditCard, MapPin, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +11,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { BUSINESS_INFO } from "@/data/business";
 import type { CheckoutData } from "./order-form";
+
+interface Address {
+  id: string;
+  label: string;
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+  isDefault: boolean;
+}
 
 interface CartItem {
   name: string;
@@ -48,7 +60,25 @@ export function CheckoutForm({
   isProcessing,
   onBack,
 }: CheckoutFormProps) {
+  const { user, isLoaded } = useUser();
+  const [addresses, setAddresses] = useState<Address[]>([]);
   const fulfillment = watch("fulfillment");
+
+  const loadAddresses = useCallback(async () => {
+    try {
+      const res = await fetch("/api/account/profile");
+      const data = await res.json();
+      setAddresses(data.profile?.addresses || []);
+    } catch {
+      // Ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded && user) {
+      loadAddresses();
+    }
+  }, [isLoaded, user, loadAddresses]);
 
   return (
     <Card className="shadow-lg border-0">
