@@ -8,6 +8,13 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum StockStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+  SEASONAL
+}
+
 model Lead {
   id        String   @id @default(cuid())
   name      String
@@ -254,11 +261,16 @@ model Product {
   featured  Boolean @default(false)
   active    Boolean @default(true)
 
+  // Inventory & Availability
+  stockStatus     StockStatus @default(IN_STOCK)
+  seasonalMessage String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  comparisons ProductComparison[] @relation("ComparisonProductA")
-  comparedBy  ProductComparison[] @relation("ComparisonProductB")
+  comparisons          ProductComparison[]   @relation("ComparisonProductA")
+  comparedBy           ProductComparison[]   @relation("ComparisonProductB")
+  restockNotifications RestockNotification[]
 
   @@index([category])
   @@index([slug])
@@ -278,6 +290,20 @@ model ProductComparison {
   @@unique([productAId, productBId])
   @@index([productAId])
   @@index([productBId])
+}
+
+model RestockNotification {
+  id        String   @id @default(cuid())
+  email     String
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([productId])
+  @@index([status])
 }
 
 model Service {
