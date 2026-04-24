@@ -4,6 +4,7 @@ import { CheckCircle, Phone, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BUSINESS_INFO } from "@/data/business";
+import { PurchaseTracker } from "@/components/analytics/purchase-tracker";
 
 export const metadata: Metadata = {
   title: "Order Confirmed",
@@ -20,6 +21,7 @@ export default async function OrderSuccessPage({
 
   return (
     <div className="py-12">
+      <PurchaseTracker orderNumber={orderNumber} />
       <div className="container max-w-xl">
         <Card className="shadow-lg border-0">
           <CardContent className="p-8 text-center">

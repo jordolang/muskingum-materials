@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getProductBySlug, getProducts } from "@/lib/products";
 import { BUSINESS_INFO } from "@/data/business";
+import { ProductViewTracker } from "@/components/analytics/product-view-tracker";
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -65,6 +66,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <div className="py-12">
+      <ProductViewTracker
+        itemId={product.id}
+        itemName={product.name}
+        price={product.price ?? 0}
+        category={product.category}
+      />
       <div className="container max-w-4xl">
         <Link
           href="/catalog"
