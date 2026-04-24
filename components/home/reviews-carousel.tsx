@@ -1,4 +1,4 @@
-import type { SanityImageSource } from "@sanity/image-url";
+import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 import { REVIEWS } from "@/data/reviews";
 import { ReviewsCarouselClient } from "./reviews-carousel-client";
 
