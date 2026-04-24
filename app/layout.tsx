@@ -7,6 +7,16 @@ import { ChatWidgetLoader } from "@/components/chat/chat-widget-loader";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import "./globals.css";
 
+// Preview Vercel builds don't have NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY set,
+// and ClerkProvider throws "Missing publishableKey" during _not-found
+// prerender. Match the middleware's existing pattern of only engaging
+// Clerk when a real publishable key is present.
+const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const hasClerk = Boolean(
+  clerkPublishableKey &&
+    clerkPublishableKey !== "your_clerk_publishable_key",
+);
+
 const fontSans = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -51,19 +61,19 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
-        <body className={`${fontSans.variable} ${fontHeading.variable} font-sans antialiased`}>
-          <div className="flex min-h-screen flex-col">
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-          <ChatWidgetLoader />
-          <GoogleAnalytics />
-        </body>
-      </html>
-    </ClerkProvider>
+  const tree = (
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${fontSans.variable} ${fontHeading.variable} font-sans antialiased`}>
+        <div className="flex min-h-screen flex-col">
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </div>
+        <ChatWidgetLoader />
+        <GoogleAnalytics />
+      </body>
+    </html>
   );
+
+  return hasClerk ? <ClerkProvider>{tree}</ClerkProvider> : tree;
 }

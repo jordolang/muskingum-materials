@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
 import { ContractorDashboard } from "@/components/account/contractor-dashboard";
+import { StatusBadge } from "@/components/order/status-badge";
 
 export default async function AccountDashboardPage() {
   const session = await auth();
@@ -205,17 +206,4 @@ export default async function AccountDashboardPage() {
       </div>
     </div>
   );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
-    pending: { label: "Pending", variant: "outline" },
-    confirmed: { label: "Confirmed", variant: "default" },
-    processing: { label: "Processing", variant: "secondary" },
-    ready: { label: "Ready", variant: "default" },
-    completed: { label: "Completed", variant: "secondary" },
-    canceled: { label: "Canceled", variant: "outline" },
-  };
-  const { label, variant } = config[status] || { label: status, variant: "outline" as const };
-  return <Badge variant={variant} className="text-xs">{label}</Badge>;
 }
