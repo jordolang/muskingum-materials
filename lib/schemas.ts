@@ -45,6 +45,17 @@ export const addressSchema = z.object({
   isDefault: z.boolean().optional(),
 });
 
+// Address update schema (API-side with id and optional fields)
+export const addressUpdateSchema = z.object({
+  id: z.string().min(1, "Address ID is required"),
+  label: z.string().min(1).optional(),
+  street: z.string().min(3).optional(),
+  city: z.string().min(2).optional(),
+  state: z.string().min(2).optional(),
+  zip: z.string().min(5).optional(),
+  isDefault: z.boolean().optional(),
+});
+
 // Profile schema (client-side with required fields)
 export const profileSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -112,6 +123,7 @@ export type ContactFormData = z.infer<typeof contactSchema>;
 export type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
 export type CheckoutData = z.infer<typeof checkoutSchema>;
 export type AddressData = z.infer<typeof addressSchema>;
+export type AddressUpdateData = z.infer<typeof addressUpdateSchema>;
 export type ProfileData = z.infer<typeof profileSchema>;
 export type ProfileUpdateData = z.infer<typeof profileUpdateSchema>;
 export type QuoteData = z.infer<typeof quoteSchema>;

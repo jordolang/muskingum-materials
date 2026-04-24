@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { quoteSchema } from "@/lib/schemas";
+import { sendEmail } from "@/lib/email";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,24 +22,20 @@ export async function POST(request: NextRequest) {
           notes: data.notes || null,
         },
       });
-    } catch {
-      // Database not configured yet
+    } catch (error) {
+      logger.error("Quote database error:", error);
+      return NextResponse.json({ error: "Failed to save quote request" }, { status: 500 });
     }
 
     // Send email notification
-    if (process.env.POSTMARK_API_TOKEN) {
-      try {
-        const postmark = await import("postmark");
-        const client = new postmark.ServerClient(process.env.POSTMARK_API_TOKEN);
-        const productList = data.products
-          .map((p) => `  - ${p.productName}: ${p.quantity}`)
-          .join("\n");
+    const productList = data.products
+      .map((p) => `  - ${p.productName}: ${p.quantity}`)
+      .join("\n");
 
-        await client.sendEmail({
-          From: process.env.POSTMARK_FROM_EMAIL || "noreply@muskingummaterials.com",
-          To: "sales@muskingummaterials.com",
-          Subject: `Quote Request from ${data.name}`,
-          TextBody: `
+    await sendEmail({
+      to: "sales@muskingummaterials.com",
+      subject: `Quote Request from ${data.name}`,
+      textBody: `
 New quote request:
 
 Name: ${data.name}
@@ -50,13 +48,9 @@ ${productList}
 
 Delivery Address: ${data.deliveryAddr || "Pickup"}
 Notes: ${data.notes || "None"}
-          `.trim(),
-          ReplyTo: data.email,
-        });
-      } catch (emailError) {
-        console.error("Email send error:", emailError);
-      }
-    }
+      `.trim(),
+      replyTo: data.email,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -66,7 +60,7 @@ Notes: ${data.notes || "None"}
         { status: 400 }
       );
     }
-    console.error("Quote API error:", error);
+    logger.error("Quote API error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
