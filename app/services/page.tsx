@@ -1,19 +1,15 @@
-import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { CheckCircle, Phone, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { BUSINESS_INFO } from "@/data/business";
+import { SERVICES, BUSINESS_INFO } from "@/data/business";
 import { getServices } from "@/lib/products";
+import { generateServicesMetadata } from "@/lib/seo/metadata";
 
 export const revalidate = 7200; // Revalidate every 2 hours (ISR)
 
-export const metadata: Metadata = {
-  title: "Services",
-  description:
-    "Material sales, delivery, large project pricing, and on-site loading. Muskingum Materials serves Southeast Ohio.",
-};
+export const metadata = generateServicesMetadata();
 
 // Rotate through on-site photos when services don't have their own image
 const SERVICE_FALLBACK_IMAGES = [

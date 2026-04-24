@@ -103,15 +103,28 @@ model Order {
   stripePaymentId  String?
   invoiceUrl       String?
   smsOptIn         Boolean           @default(false)
+  statusHistory    OrderStatusHistory[]
+  smsNotifications SmsNotification[]
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
-  smsNotifications SmsNotification[]
 
   @@index([orderNumber])
   @@index([userId])
   @@index([email])
   @@index([status])
   @@index([stripeSessionId])
+}
+
+model OrderStatusHistory {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    String
+  notes     String?  @db.Text
+  changedBy String?
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
 }
 
 model UserProfile {
@@ -153,6 +166,33 @@ model NewsletterSubscriber {
   createdAt DateTime @default(now())
 
   @@index([email])
+}
+
+model LoyaltyAccount {
+  id              String               @id @default(cuid())
+  userId          String               @unique
+  points          Int                  @default(0)
+  pointsLifetime  Int                  @default(0)
+  tier            String               @default("bronze")
+  tierSince       DateTime             @default(now())
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  transactions    LoyaltyTransaction[]
+
+  @@index([userId])
+}
+
+model LoyaltyTransaction {
+  id          String         @id @default(cuid())
+  accountId   String
+  account     LoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  type        String
+  points      Int
+  orderId     String?
+  description String?        @db.Text
+  createdAt   DateTime       @default(now())
+
+  @@index([accountId])
 }
 
 model Product {

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
 import { AdminSidebar } from "@/components/admin/sidebar";
 
@@ -15,12 +16,12 @@ function UnauthorizedPage() {
             required.
           </p>
           <div className="mt-6">
-            <a
+            <Link
               href="/"
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
             >
               Return to Home
-            </a>
+            </Link>
           </div>
         </div>
       </div>
