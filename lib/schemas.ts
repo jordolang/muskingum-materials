@@ -134,6 +134,50 @@ export const updateRecurringOrderSchema = createRecurringOrderSchema.partial().e
   status: z.enum(['active', 'paused', 'cancelled']).optional(),
 });
 
+// Review submission schema
+export const reviewSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  email: z.string().email("Valid email is required").optional(),
+  rating: z
+    .number()
+    .min(1, "Rating must be at least 1")
+    .max(5, "Rating must be at most 5"),
+  text: z.string().min(10, "Review must be at least 10 characters"),
+  projectType: z.enum(["driveway", "patio", "landscaping", "commercial", "other"]),
+  orderNumber: z.string().optional(),
+});
+
+// Order status update schema
+export const orderStatusUpdateSchema = z.object({
+  status: z.enum([
+    "pending",
+    "confirmed",
+    "processing",
+    "ready",
+    "ready_for_pickup",
+    "out_for_delivery",
+    "completed",
+    "cancelled",
+  ]),
+  statusNotes: z.string().optional(),
+});
+
+// Point redemption schema
+export const pointRedemptionSchema = z.object({
+  points: z.number().min(1, "Points must be at least 1"),
+  rewardId: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+// Campaign schema
+export const campaignSchema = z.object({
+  subject: z.string().min(3, "Subject must be at least 3 characters"),
+  body: z.string().min(10, "Body must be at least 10 characters"),
+  templateId: z.string().optional(),
+  scheduledFor: z.coerce.date().optional(),
+  recipientFilter: z.string().optional(),
+});
+
 // Type exports for convenience
 export type ContactFormData = z.infer<typeof contactSchema>;
 export type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
@@ -147,3 +191,7 @@ export type NewsletterData = z.infer<typeof newsletterSchema>;
 export type LeadData = z.infer<typeof leadSchema>;
 export type CreateRecurringOrderData = z.infer<typeof createRecurringOrderSchema>;
 export type UpdateRecurringOrderData = z.infer<typeof updateRecurringOrderSchema>;
+export type ReviewData = z.infer<typeof reviewSchema>;
+export type OrderStatusUpdateData = z.infer<typeof orderStatusUpdateSchema>;
+export type PointRedemptionData = z.infer<typeof pointRedemptionSchema>;
+export type CampaignData = z.infer<typeof campaignSchema>;

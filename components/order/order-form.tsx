@@ -5,6 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { PRODUCTS, BUSINESS_INFO } from "@/data/business";
+import { checkoutFormSchema, type CheckoutFormData } from "@/lib/schemas";
+import { useToast } from "@/lib/use-toast";
 import { useCartStore } from "@/lib/store";
 import { OrderConfirmation } from "./order-confirmation";
 import { ProductCatalog } from "./product-catalog";
@@ -35,6 +37,7 @@ export function OrderForm() {
   const [step, setStep] = useState<"products" | "checkout" | "complete">("products");
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
+  const { toast } = useToast();
 
   const {
     register,
@@ -51,7 +54,7 @@ export function OrderForm() {
 
     // Calculate volume discount based on pricing tiers
     const volumeDiscount = cart.reduce((totalDiscount, item) => {
-      const product = ORDERABLE_PRODUCTS.find((p) => p.name === item.name);
+      const product = PRODUCTS.find((p) => p.name === item.name);
       if (!product || !('pricingTiers' in product) || !product.pricingTiers) return totalDiscount;
 
       // Find the highest applicable tier based on quantity
@@ -107,11 +110,14 @@ export function OrderForm() {
         throw new Error(result.error || "Checkout failed");
       }
     } catch (error) {
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong. Please call (740) 319-0183 to place your order."
-      );
+      toast({
+        variant: "destructive",
+        title: "Checkout failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong. Please call (740) 319-0183 to place your order.",
+      });
     } finally {
       setIsProcessing(false);
     }

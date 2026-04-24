@@ -1,15 +1,11 @@
-import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { CheckCircle, Phone, ArrowRight, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BUSINESS_INFO } from "@/data/business";
+import { generateAboutMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "About Us",
-  description:
-    "Muskingum Materials is a family-owned sand, soil, and gravel company in Zanesville, OH serving Southeast Ohio.",
-};
+export const metadata = generateAboutMetadata();
 
 export default function AboutPage() {
   return (

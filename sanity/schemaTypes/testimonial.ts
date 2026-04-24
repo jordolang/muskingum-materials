@@ -30,6 +30,20 @@ export const testimonial = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: "projectType",
+      title: "Project Type",
+      type: "string",
+      options: {
+        list: [
+          { title: "Driveway", value: "driveway" },
+          { title: "Patio", value: "patio" },
+          { title: "Landscaping", value: "landscaping" },
+          { title: "Commercial", value: "commercial" },
+          { title: "Other", value: "other" },
+        ],
+      },
+    }),
+    defineField({
       name: "image",
       title: "Photo",
       type: "image",

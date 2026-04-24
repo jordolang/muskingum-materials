@@ -3,18 +3,16 @@ import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BUSINESS_INFO } from "@/data/business";
+import { PRODUCTS, BUSINESS_INFO } from "@/data/business";
 import { prisma } from "@/lib/prisma";
+import { generateProductSchema, toJsonLd } from "@/lib/seo/structured-data";
+import { generateProductsMetadata } from "@/lib/seo/metadata";
 
 // Revalidate hourly so price/SKU edits in the database surface on the
 // statically generated page within an hour without a redeploy.
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: "Products & Pricing",
-  description:
-    "View our complete list of sand, gravel, soil, and stone products with current pricing. Serving Southeast Ohio from Zanesville.",
-};
+export const metadata: Metadata = generateProductsMetadata();
 
 interface Product {
   _id: string;
@@ -59,8 +57,20 @@ export default async function ProductsPage() {
   };
 
   return (
-    <div className="py-12">
-      <div className="container">
+    <>
+      {/* Product Structured Data */}
+      {PRODUCTS.map((product) => (
+        <script
+          key={product.name}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: toJsonLd(generateProductSchema(product)),
+          }}
+        />
+      ))}
+
+      <div className="py-12">
+        <div className="container">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold font-heading mb-3">
             Products & Pricing
@@ -179,7 +189,8 @@ export default async function ProductsPage() {
             </div>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

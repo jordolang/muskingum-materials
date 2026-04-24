@@ -5,6 +5,9 @@
 
 # testing
 /coverage
+test-results/
+playwright-report/
+.nyc_output/
 
 # next.js
 /.next/
@@ -49,6 +52,7 @@ prisma/migrations/
 .worktrees/
 .security-key
 logs/security/
+/.env
 
 # Local agent / tooling state (not part of the app)
 .omc/

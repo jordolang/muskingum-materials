@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 
 const ToastProvider = ToastPrimitives.Provider;
 
+type ToastActionElement = React.ReactElement<typeof ToastPrimitives.Action>;
+
 const ToastViewport = React.forwardRef<
   React.ComponentRef<typeof ToastPrimitives.Viewport>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>
@@ -49,6 +51,8 @@ const Toast = React.forwardRef<
 ));
 Toast.displayName = ToastPrimitives.Root.displayName;
 
+type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>;
+
 const ToastClose = React.forwardRef<
   React.ComponentRef<typeof ToastPrimitives.Close>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Close>
@@ -83,4 +87,13 @@ const ToastDescription = React.forwardRef<
 ));
 ToastDescription.displayName = ToastPrimitives.Description.displayName;
 
-export { ToastProvider, ToastViewport, Toast, ToastTitle, ToastDescription, ToastClose };
+export {
+  type ToastProps,
+  type ToastActionElement,
+  ToastProvider,
+  ToastViewport,
+  Toast,
+  ToastTitle,
+  ToastDescription,
+  ToastClose,
+};
