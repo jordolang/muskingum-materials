@@ -81,11 +81,26 @@ export async function POST(
 
     for (const subscriber of subscribers) {
       try {
+        // Build unsubscribe URL for this specific subscriber
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        const unsubscribeUrl = `${baseUrl}/api/newsletter/unsubscribe?email=${encodeURIComponent(subscriber.email)}`;
+
+        // Replace {{unsubscribe_url}} placeholder in both HTML and text content
+        const htmlWithUnsubscribe = campaign.htmlContent.replace(
+          /\{\{unsubscribe_url\}\}/g,
+          unsubscribeUrl
+        );
+        const textWithUnsubscribe = (campaign.textContent || "").replace(
+          /\{\{unsubscribe_url\}\}/g,
+          unsubscribeUrl
+        );
+
+        // Send email with processed content
         const result = await sendMarketingEmail(
           subscriber.email,
           campaign.subject,
-          campaign.textContent || campaign.htmlContent.replace(/<[^>]*>/g, ""), // Strip HTML tags for text fallback
-          campaign.htmlContent,
+          textWithUnsubscribe || htmlWithUnsubscribe.replace(/<[^>]*>/g, ""), // Use processed text or strip HTML from processed HTML
+          htmlWithUnsubscribe,
           {
             campaignId: campaign.id,
             tag: "newsletter-broadcast",
