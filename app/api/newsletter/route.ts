@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { newsletterSchema } from "@/lib/schemas";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,8 +18,9 @@ export async function POST(request: NextRequest) {
           name: data.name || null,
         },
       });
-    } catch {
-      // Database not configured yet
+    } catch (error) {
+      logger.error("Newsletter subscription error", error);
+      return NextResponse.json({ error: "Failed to subscribe to newsletter" }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    console.error("Newsletter API error:", error);
+    logger.error("Newsletter API error", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

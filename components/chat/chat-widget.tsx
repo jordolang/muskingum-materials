@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useChatStore } from "@/lib/store";
-import { trackChatOpened } from "@/lib/analytics";
+import { useToast } from "@/lib/use-toast";
 
 export function ChatWidget() {
   const { isOpen, messages, toggleChat, addMessage, visitorId } = useChatStore();
+  const { toast } = useToast();
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
@@ -17,7 +18,6 @@ export function ChatWidget() {
   const [contactSubmitted, setContactSubmitted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const prevIsOpenRef = useRef(false);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -40,13 +40,6 @@ export function ChatWidget() {
       });
     }
   }, [isOpen, messages.length, addMessage]);
-
-  useEffect(() => {
-    if (isOpen && !prevIsOpenRef.current) {
-      trackChatOpened({ visitorId });
-    }
-    prevIsOpenRef.current = isOpen;
-  }, [isOpen, visitorId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -77,10 +70,10 @@ export function ChatWidget() {
         setShowContactForm(true);
       }
     } catch {
-      addMessage({
-        role: "assistant",
-        content:
-          "I'm sorry, I'm having trouble connecting right now. Please call us at (740) 319-0183 or email sales@muskingummaterials.com for immediate assistance.",
+      toast({
+        title: "Connection Error",
+        description: "Unable to send message. Please call us at (740) 319-0183 or email sales@muskingummaterials.com for immediate assistance.",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -106,6 +99,11 @@ export function ChatWidget() {
         content: `Thanks${contactInfo.name ? `, ${contactInfo.name}` : ""}! We have your info and will follow up if needed. How else can I help?`,
       });
     } catch {
+      toast({
+        title: "Submission Failed",
+        description: "Unable to submit your information. Please try again later.",
+        variant: "destructive",
+      });
       setShowContactForm(false);
     }
   }

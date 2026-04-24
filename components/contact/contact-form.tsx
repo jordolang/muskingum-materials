@@ -8,11 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { contactSchema, type ContactFormData } from "@/lib/schemas";
-import { trackContact } from "@/lib/analytics";
+import { useToast } from "@/lib/use-toast";
 
 export function ContactForm() {
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState("");
+  const { toast } = useToast();
 
   const {
     register,
@@ -24,7 +24,6 @@ export function ContactForm() {
   });
 
   async function onSubmit(data: ContactFormData) {
-    setError("");
     try {
       const response = await fetch("/api/contact", {
         method: "POST",
@@ -34,17 +33,19 @@ export function ContactForm() {
 
       if (!response.ok) throw new Error("Submission failed");
 
-      const result = await response.json();
-
-      // Track contact form submission event
-      if (result.analytics?.subject) {
-        trackContact({ subject: result.analytics.subject });
-      }
+      toast({
+        title: "Message sent!",
+        description: "Thank you for reaching out. We'll get back to you as soon as possible.",
+      });
 
       setSubmitted(true);
       reset();
     } catch {
-      setError("Something went wrong. Please try again or call us directly.");
+      toast({
+        variant: "destructive",
+        title: "Submission failed",
+        description: "Something went wrong. Please try again or call us directly.",
+      });
     }
   }
 
@@ -118,10 +119,6 @@ export function ContactForm() {
           <p className="text-xs text-destructive mt-1">{errors.message.message}</p>
         )}
       </div>
-
-      {error && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
 
       <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
         {isSubmitting ? (

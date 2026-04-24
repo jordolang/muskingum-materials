@@ -1,12 +1,8 @@
 // Type definitions for Google Analytics gtag
 declare global {
   interface Window {
-    gtag?: (
-      command: string,
-      targetId: string | Date,
-      config?: Record<string, unknown>
-    ) => void;
-    dataLayer?: unknown[];
+    dataLayer: Record<string, unknown>[];
+    gtag: (...args: unknown[]) => void;
   }
 }
 

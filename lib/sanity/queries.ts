@@ -7,6 +7,7 @@ export const productsQuery = groq`
     slug,
     description,
     pricePerTon,
+    pricingTiers,
     unit,
     category,
     image,
