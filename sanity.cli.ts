@@ -5,5 +5,8 @@ export default defineCliConfig({
     projectId: "hjsycpxl",
     dataset: "production",
   },
+  deployment: {
+    appId: 'dlt4im9p89qhygnmadfowywf'
+  },
   studioHost: "muskingum-materials",
 });

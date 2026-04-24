@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -101,10 +102,13 @@ export default function ProfilePage() {
         <CardContent>
           <div className="flex items-center gap-4">
             {user?.imageUrl && (
-              <img
+              <Image
                 src={user.imageUrl}
                 alt="Profile"
+                width={56}
+                height={56}
                 className="h-14 w-14 rounded-full"
+                unoptimized
               />
             )}
             <div>

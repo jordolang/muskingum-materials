@@ -152,7 +152,7 @@ export async function checkRateLimit(
         remaining: result.remaining,
         reset: resetMs,
       };
-    } catch (error) {
+    } catch {
       // Fall back to in-memory if Redis fails
       return checkInMemoryRateLimit(
         `${tier}:${identifier}`,
