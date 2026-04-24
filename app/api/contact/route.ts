@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { contactSchema } from "@/lib/schemas";
 import { logger } from "@/lib/logger";
+import { sendEmail } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,15 +34,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Send email via Postmark
-    if (process.env.POSTMARK_API_TOKEN) {
-      try {
-        const postmark = await import("postmark");
-        const client = new postmark.ServerClient(process.env.POSTMARK_API_TOKEN);
-        await client.sendEmail({
-          From: process.env.POSTMARK_FROM_EMAIL || "noreply@muskingummaterials.com",
-          To: "sales@muskingummaterials.com",
-          Subject: `Website Contact: ${data.subject}`,
-          TextBody: `
+    await sendEmail({
+      to: "sales@muskingummaterials.com",
+      subject: `Website Contact: ${data.subject}`,
+      textBody: `
 New contact form submission:
 
 Name: ${data.name}
@@ -51,13 +47,9 @@ Subject: ${data.subject}
 
 Message:
 ${data.message}
-          `.trim(),
-          ReplyTo: data.email,
-        });
-      } catch (emailError) {
-        console.error("Email send error:", emailError);
-      }
-    }
+      `.trim(),
+      replyTo: data.email,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -67,7 +59,7 @@ ${data.message}
         { status: 400 }
       );
     }
-    console.error("Contact API error:", error);
+    logger.error("Contact API error", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
