@@ -143,7 +143,7 @@ export default async function CampaignDetailPage({
                 <EmailPreview
                   subject={campaign.subject}
                   htmlContent={campaign.htmlContent}
-                  textContent={campaign.textContent}
+                  textContent={campaign.textContent ?? undefined}
                 />
               </div>
 
