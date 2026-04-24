@@ -22,8 +22,12 @@ export async function POST(request: NextRequest) {
           notes: data.notes || null,
         },
       });
-    } catch (error) {
-      logger.error("Quote database error:", error);
+    } catch (dbError) {
+      logger.error("Database error saving quote request", dbError, {
+        operation: "quoteRequest.create",
+        email: data.email,
+        company: data.company,
+      });
       return NextResponse.json({ error: "Failed to save quote request" }, { status: 500 });
     }
 
@@ -60,7 +64,9 @@ Notes: ${data.notes || "None"}
         { status: 400 }
       );
     }
-    logger.error("Quote API error:", error);
+    logger.error("Quote API error", error, {
+      operation: "quote.POST",
+    });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -51,6 +51,10 @@ async function testEmailAutomation(): Promise<void> {
         phone: "555-0100",
         status: "completed",
         completedAt,
+        items: [],
+        subtotal: 150.0,
+        tax: 0,
+        processingFee: 0,
         total: 150.0,
         createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), // 14 days ago
       },
@@ -70,7 +74,7 @@ async function testEmailAutomation(): Promise<void> {
     console.log("\nStep 2: Verifying order is eligible for email...");
 
     const cutoffDate = new Date(Date.now() - delayMinutes * 60 * 1000);
-    const eligible = order.completedAt && order.completedAt <= cutoffDate;
+    const eligible = !!(order.completedAt && order.completedAt <= cutoffDate);
 
     results.push({
       success: eligible,
