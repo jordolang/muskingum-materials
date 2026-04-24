@@ -1,7 +1,7 @@
 import { defineConfig } from "sanity";
 import { structureTool } from "sanity/structure";
 import { visionTool } from "@sanity/vision";
-import { schemaTypes } from "./sanity/schema";
+import { schemaTypes } from "./sanity/schemaTypes";
 import { sanityConfig } from "./lib/sanity/config";
 
 const singletonTypes = new Set(["siteSettings"]);
@@ -35,6 +35,7 @@ export default defineConfig({
             S.documentTypeListItem("faq").title("FAQs"),
             S.documentTypeListItem("galleryImage").title("Gallery"),
             S.documentTypeListItem("page").title("Pages"),
+            S.documentTypeListItem("post").title("Posts"),
           ]),
     }),
     visionTool({ defaultApiVersion: sanityConfig.apiVersion }),

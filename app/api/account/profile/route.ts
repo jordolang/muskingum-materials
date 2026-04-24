@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { profileUpdateSchema } from "@/lib/schemas";
 
 export async function GET() {
   try {
@@ -22,13 +23,6 @@ export async function GET() {
   }
 }
 
-const profileSchema = z.object({
-  name: z.string().min(2).optional(),
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
-  company: z.string().optional(),
-});
-
 export async function PUT(request: NextRequest) {
   try {
     const session = await auth();
@@ -37,7 +31,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const data = profileSchema.parse(body);
+    const data = profileUpdateSchema.parse(body);
 
     const profile = await prisma.userProfile.upsert({
       where: { userId: session.userId },

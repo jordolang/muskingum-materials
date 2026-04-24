@@ -2,32 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-
-const checkoutSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  phone: z.string().min(10),
-  fulfillment: z.enum(["pickup", "delivery"]),
-  deliveryAddress: z.string().optional(),
-  deliveryNotes: z.string().optional(),
-  items: z.array(
-    z.object({
-      name: z.string(),
-      price: z.number(),
-      unit: z.string(),
-      quantity: z.number().min(1),
-    })
-  ),
-  subtotal: z.number(),
-  tax: z.number(),
-  processingFee: z.number(),
-  total: z.number(),
-});
+import { checkoutSchema } from "@/lib/schemas";
+import { validateCheckoutPrices } from "@/lib/validate-checkout-prices";
+import { sendEmail } from "@/lib/email";
 
 function generateOrderNumber(): string {
   const now = new Date();
   const datePart = now.toISOString().slice(2, 10).replace(/-/g, "");
-  const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const randomPart = crypto.randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase();
   return `MM-${datePart}-${randomPart}`;
 }
 
@@ -35,6 +17,21 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const data = checkoutSchema.parse(body);
+
+    // Validate prices against product catalog
+    let validatedPrices;
+    try {
+      validatedPrices = await validateCheckoutPrices(data);
+    } catch (validationError) {
+      const errorMessage = validationError instanceof Error
+        ? validationError.message
+        : "Price validation failed";
+      return NextResponse.json(
+        { error: errorMessage },
+        { status: 400 }
+      );
+    }
+
     const orderNumber = generateOrderNumber();
 
     // Get authenticated user if available
@@ -57,10 +54,10 @@ export async function POST(request: NextRequest) {
           email: data.email,
           phone: data.phone,
           items: data.items,
-          subtotal: data.subtotal,
-          tax: data.tax,
-          processingFee: data.processingFee,
-          total: data.total,
+          subtotal: validatedPrices.subtotal,
+          tax: validatedPrices.tax,
+          processingFee: validatedPrices.processingFee,
+          total: validatedPrices.total,
           pickupOrDeliver: data.fulfillment,
           deliveryAddress: data.deliveryAddress || null,
           deliveryNotes: data.deliveryNotes || null,
@@ -68,8 +65,12 @@ export async function POST(request: NextRequest) {
           paymentStatus: "unpaid",
         },
       });
-    } catch {
-      // Database might not be configured
+    } catch (error) {
+      console.error("Order creation error:", error);
+      return NextResponse.json(
+        { error: "Failed to create order. Please try again or call (740) 319-0183." },
+        { status: 500 }
+      );
     }
 
     // Try Stripe Checkout Session
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest) {
               name: "Ohio Sales Tax (7.25%)",
               description: "State sales tax",
             },
-            unit_amount: Math.round(data.tax * 100),
+            unit_amount: Math.round(validatedPrices.tax * 100),
           },
           quantity: 1,
         });
@@ -111,7 +112,7 @@ export async function POST(request: NextRequest) {
               name: "Credit Card Processing Fee (4.5%)",
               description: "Card processing fee",
             },
-            unit_amount: Math.round(data.processingFee * 100),
+            unit_amount: Math.round(validatedPrices.processingFee * 100),
           },
           quantity: 1,
         });
@@ -138,8 +139,9 @@ export async function POST(request: NextRequest) {
               where: { id: order.id },
               data: { stripeSessionId: session.id },
             });
-          } catch {
-            // Ignore update failure
+          } catch (error) {
+            console.error("Order update error (Stripe session ID):", error);
+            // Continue anyway - Stripe session was created successfully
           }
         }
 
@@ -152,19 +154,14 @@ export async function POST(request: NextRequest) {
 
     // Non-Stripe fallback: just save the order
     // Send email notification
-    if (process.env.POSTMARK_API_TOKEN) {
-      try {
-        const postmark = await import("postmark");
-        const client = new postmark.ServerClient(process.env.POSTMARK_API_TOKEN);
-        const itemsList = data.items
-          .map((i) => `  - ${i.name}: ${i.quantity} ${i.unit}(s) @ $${i.price.toFixed(2)} = $${(i.price * i.quantity).toFixed(2)}`)
-          .join("\n");
+    const itemsList = data.items
+      .map((i) => `  - ${i.name}: ${i.quantity} ${i.unit}(s) @ $${i.price.toFixed(2)} = $${(i.price * i.quantity).toFixed(2)}`)
+      .join("\n");
 
-        await client.sendEmail({
-          From: process.env.POSTMARK_FROM_EMAIL || "noreply@muskingummaterials.com",
-          To: "sales@muskingummaterials.com",
-          Subject: `New Online Order ${orderNumber} from ${data.name}`,
-          TextBody: `
+    await sendEmail({
+      to: "sales@muskingummaterials.com",
+      subject: `New Online Order ${orderNumber} from ${data.name}`,
+      textBody: `
 New online order received!
 
 Order #: ${orderNumber}
@@ -178,19 +175,15 @@ ${data.deliveryNotes ? `Notes: ${data.deliveryNotes}` : ""}
 Items:
 ${itemsList}
 
-Subtotal: $${data.subtotal.toFixed(2)}
-Tax (7.25%): $${data.tax.toFixed(2)}
-Processing Fee (4.5%): $${data.processingFee.toFixed(2)}
-Total: $${data.total.toFixed(2)}
+Subtotal: $${validatedPrices.subtotal.toFixed(2)}
+Tax (7.25%): $${validatedPrices.tax.toFixed(2)}
+Processing Fee (4.5%): $${validatedPrices.processingFee.toFixed(2)}
+Total: $${validatedPrices.total.toFixed(2)}
 
 Payment: Pending — Stripe not configured, customer will pay on pickup/delivery.
-          `.trim(),
-          ReplyTo: data.email,
-        });
-      } catch (emailError) {
-        console.error("Email error:", emailError);
-      }
-    }
+      `.trim(),
+      replyTo: data.email,
+    });
 
     return NextResponse.json({ orderNumber });
   } catch (error) {
