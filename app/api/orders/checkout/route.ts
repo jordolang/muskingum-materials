@@ -292,7 +292,7 @@ Payment: Pending — Stripe not configured, customer will pay on pickup/delivery
     }
 
     logger.error('Checkout failed with unexpected error', error, {
-      email: (error as any)?.email,
+      email: (error as { email?: string })?.email,
     });
 
     return NextResponse.json(

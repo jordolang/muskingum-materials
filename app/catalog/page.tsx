@@ -24,7 +24,7 @@ export default async function CatalogPage({
   const products = await getProductsWithFilters({
     search: params.q,
     category: params.category,
-    sortBy: params.sort as any,
+    sortBy: params.sort as "name-asc" | "name-desc" | "price-asc" | "price-desc" | undefined,
   });
 
   return (
