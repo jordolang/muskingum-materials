@@ -89,19 +89,7 @@ export function PlannerMap({ onAreaChange }: PlannerMapProps) {
     }
   }
 
-  // Remove selected polygon
-  const removeSelected = useCallback(() => {
-    const idx = selectedRef.current;
-    if (idx < 0 || idx >= polygonsRef.current.length) return;
 
-    const data = polygonsRef.current[idx];
-    data.polygon.setMap(null);
-    data.label.setMap(null);
-    polygonsRef.current.splice(idx, 1);
-    selectedRef.current = -1;
-    setPolygonCount(polygonsRef.current.length);
-    updateTotalArea();
-  }, [updateTotalArea]);
 
   // Undo last polygon
   const undoLast = useCallback(() => {

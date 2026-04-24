@@ -40,7 +40,7 @@ model ContactSubmission {
 
 model ChatConversation {
   id        String        @id @default(cuid())
-  visitorId String
+  visitorId String        @unique
   name      String?
   email     String?
   phone     String?
@@ -50,7 +50,6 @@ model ChatConversation {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
-  @@index([visitorId])
   @@index([status])
 }
 
@@ -83,8 +82,8 @@ model QuoteRequest {
 }
 
 model Order {
-  id              String      @id @default(cuid())
-  orderNumber     String      @unique
+  id              String   @id @default(cuid())
+  orderNumber     String   @unique
   userId          String?
   name            String
   email           String
@@ -93,18 +92,18 @@ model Order {
   subtotal        Float
   tax             Float
   processingFee   Float
-  deliveryFee     Float       @default(0)
+  deliveryFee     Float    @default(0)
   total           Float
-  deliveryAddress String?     @db.Text
-  deliveryNotes   String?     @db.Text
-  pickupOrDeliver String      @default("pickup")
-  status          String      @default("pending")
-  paymentStatus   String      @default("unpaid")
+  deliveryAddress String?  @db.Text
+  deliveryNotes   String?  @db.Text
+  pickupOrDeliver String   @default("pickup")
+  status          String   @default("pending")
+  paymentStatus   String   @default("unpaid")
   stripeSessionId String?
   stripePaymentId String?
   invoiceUrl      String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([orderNumber])
   @@index([userId])
@@ -114,31 +113,31 @@ model Order {
 }
 
 model UserProfile {
-  id          String    @id @default(cuid())
-  userId      String    @unique
-  name        String?
-  email       String?
-  phone       String?
-  company     String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  addresses   Address[]
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  name      String?
+  email     String?
+  phone     String?
+  company   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  addresses Address[]
 
   @@index([userId])
 }
 
 model Address {
-  id            String       @id @default(cuid())
+  id            String      @id @default(cuid())
   userProfileId String
-  userProfile   UserProfile  @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
-  label         String       @default("Default")
+  userProfile   UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+  label         String      @default("Default")
   street        String
   city          String
   state         String
   zip           String
-  isDefault     Boolean      @default(false)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  isDefault     Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   @@index([userProfileId])
 }
@@ -181,18 +180,18 @@ model LoyaltyTransaction {
 }
 
 model Product {
-  id               String   @id @default(cuid())
-  slug             String   @unique
+  id               String  @id @default(cuid())
+  slug             String  @unique
   name             String
   category         String
-  description      String   @db.Text
-  shortDescription String?  @db.Text
+  description      String  @db.Text
+  shortDescription String? @db.Text
   imageUrl         String?
   imageAlt         String?
 
   // Pricing - Muskingum local pricing
-  price            Float?
-  unit             String   @default("ton")
+  price Float?
+  unit  String @default("ton")
 
   // Market pricing ranges (from industry data)
   marketPriceLowPerTon   Float?
@@ -203,31 +202,31 @@ model Product {
   // Physical properties
   sizeDescription  String?
   colorDescription String?
-  densityLow       Float?   @default(1.4)
-  densityHigh      Float?   @default(1.5)
+  densityLow       Float?  @default(1.4)
+  densityHigh      Float?  @default(1.5)
 
   // Detailed content
-  bestFor          String[] @default([])
-  notFor           String[] @default([])
-  commonUses       String[] @default([])
-  pros             String[] @default([])
-  cons             String[] @default([])
-  altNames         String[] @default([])
+  bestFor    String[] @default([])
+  notFor     String[] @default([])
+  commonUses String[] @default([])
+  pros       String[] @default([])
+  cons       String[] @default([])
+  altNames   String[] @default([])
 
   // SEO
-  metaTitle        String?
-  metaDescription  String?  @db.Text
+  metaTitle       String?
+  metaDescription String? @db.Text
 
   // Ordering
-  sortOrder        Int      @default(0)
-  featured         Boolean  @default(false)
-  active           Boolean  @default(true)
+  sortOrder Int     @default(0)
+  featured  Boolean @default(false)
+  active    Boolean @default(true)
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  comparisons      ProductComparison[] @relation("ComparisonProductA")
-  comparedBy       ProductComparison[] @relation("ComparisonProductB")
+  comparisons ProductComparison[] @relation("ComparisonProductA")
+  comparedBy  ProductComparison[] @relation("ComparisonProductB")
 
   @@index([category])
   @@index([slug])
@@ -242,29 +241,45 @@ model ProductComparison {
   productB   Product @relation("ComparisonProductB", fields: [productBId], references: [id], onDelete: Cascade)
   summary    String? @db.Text
 
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([productAId, productBId])
   @@index([productAId])
   @@index([productBId])
 }
 
+model Service {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String   @db.Text
+  icon        String?
+  features    String[] @default([])
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active])
+  @@index([sortOrder])
+}
+
 model CostGuide {
-  id               String   @id @default(cuid())
-  slug             String   @unique
-  title            String
-  subtitle         String?
-  description      String   @db.Text
-  content          Json
-  icon             String?
-  sortOrder        Int      @default(0)
-  active           Boolean  @default(true)
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  title       String
+  subtitle    String?
+  description String  @db.Text
+  content     Json
+  icon        String?
+  sortOrder   Int     @default(0)
+  active      Boolean @default(true)
 
-  metaTitle        String?
-  metaDescription  String?  @db.Text
+  metaTitle       String?
+  metaDescription String? @db.Text
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([slug])
 }
