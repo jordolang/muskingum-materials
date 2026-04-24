@@ -5,6 +5,8 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ChatWidgetLoader } from "@/components/chat/chat-widget-loader";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { Toaster } from "@/components/ui/toaster";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { CookieConsent } from "@/components/analytics/cookie-consent";
 import "./globals.css";
 
@@ -70,8 +72,11 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
         </div>
-        <ChatWidgetLoader />
+        <ErrorBoundary componentName="ChatWidget">
+          <ChatWidgetLoader />
+        </ErrorBoundary>
         <GoogleAnalytics />
+        <Toaster />
         <CookieConsent />
       </body>
     </html>
