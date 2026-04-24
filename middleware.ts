@@ -62,7 +62,8 @@ export default async function middleware(request: NextRequest) {
   if (hasClerk) {
     const { clerkMiddleware } = await import("@clerk/nextjs/server");
     const handler = clerkMiddleware();
-    const response = (await handler(request, {} as never)) ?? NextResponse.next();
+    const handlerResponse = await handler(request, {} as never);
+    const response = (handlerResponse ?? NextResponse.next()) as NextResponse;
     const duration = Date.now() - startTime;
     logResponse(request, response, duration, { clerkAuth: true });
     return response;
