@@ -82,30 +82,32 @@ model QuoteRequest {
 }
 
 model Order {
-  id              String   @id @default(cuid())
-  orderNumber     String   @unique
-  userId          String?
-  name            String
-  email           String
-  phone           String?
-  items           Json
-  subtotal        Float
-  tax             Float
-  processingFee   Float
-  deliveryFee     Float    @default(0)
-  total           Float
-  deliveryAddress String?  @db.Text
-  deliveryNotes   String?  @db.Text
-  pickupOrDeliver String   @default("pickup")
-  status          String   @default("pending")
-  paymentStatus   String   @default("unpaid")
-  stripeSessionId String?
-  stripePaymentId String?
-  invoiceUrl      String?
-  completedAt     DateTime?
-  statusHistory   OrderStatusHistory[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id               String            @id @default(cuid())
+  orderNumber      String            @unique
+  userId           String?
+  name             String
+  email            String
+  phone            String?
+  items            Json
+  subtotal         Float
+  tax              Float
+  processingFee    Float
+  deliveryFee      Float             @default(0)
+  total            Float
+  deliveryAddress  String?           @db.Text
+  deliveryNotes    String?           @db.Text
+  pickupOrDeliver  String            @default("pickup")
+  status           String            @default("pending")
+  paymentStatus    String            @default("unpaid")
+  stripeSessionId  String?
+  stripePaymentId  String?
+  invoiceUrl       String?
+  smsOptIn         Boolean           @default(false)
+  completedAt      DateTime?
+  statusHistory    OrderStatusHistory[]
+  smsNotifications SmsNotification[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
   @@index([orderNumber])
   @@index([userId])
@@ -135,6 +137,7 @@ model UserProfile {
   company            String?
   isContractor       Boolean   @default(false)
   contractorDiscount Float?
+  smsOptIn           Boolean   @default(false)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
   addresses          Address[]
@@ -319,6 +322,25 @@ model RecurringOrder {
   @@index([userId])
   @@index([status])
   @@index([nextDeliveryDate])
+}
+
+model SmsNotification {
+  id         String    @id @default(cuid())
+  orderId    String?
+  order      Order?    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  type       String
+  phone      String
+  message    String    @db.Text
+  status     String    @default("pending")
+  providerId String?
+  errorMsg   String?   @db.Text
+  sentAt     DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([orderId])
+  @@index([status])
+  @@index([phone])
 }
 
 model ReviewSubmission {
