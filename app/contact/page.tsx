@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Phone, Mail, MapPin, Clock, Facebook, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ContactForm } from "@/components/contact/contact-form";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { BUSINESS_INFO } from "@/data/business";
 
 export const metadata: Metadata = {
@@ -131,7 +132,9 @@ export default function ContactPage() {
                 <CardTitle>Send Us a Message</CardTitle>
               </CardHeader>
               <CardContent>
-                <ContactForm />
+                <ErrorBoundary componentName="ContactForm">
+                  <ContactForm />
+                </ErrorBoundary>
               </CardContent>
             </Card>
 

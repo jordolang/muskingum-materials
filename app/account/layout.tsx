@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { AccountSidebar } from "@/components/account/sidebar";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 export default async function AccountLayout({
   children,
@@ -26,7 +27,11 @@ export default async function AccountLayout({
           <aside className="lg:col-span-1">
             <AccountSidebar />
           </aside>
-          <main className="lg:col-span-3">{children}</main>
+          <main className="lg:col-span-3">
+            <ErrorBoundary componentName="AccountDashboard">
+              {children}
+            </ErrorBoundary>
+          </main>
         </div>
       </div>
     </div>
