@@ -10,14 +10,15 @@
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test",
+    "analyze:bundle": "node scripts/verify-bundle-isolation.mjs",
     "postinstall": "prisma generate",
-    "db:push": "prisma db push",
-    "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:push": "dotenv -e .env.local -- prisma db push",
+    "db:studio": "dotenv -e .env.local -- prisma studio",
+    "db:seed": "dotenv -e .env.local -- tsx prisma/seed.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.0",
-    "@clerk/nextjs": "^6.12.0",
+    "@clerk/nextjs": "^6.39.2",
     "@clerk/themes": "^2.2.0",
     "@hookform/resolvers": "^4.1.0",
     "@neondatabase/serverless": "^1.0.0",
@@ -74,6 +75,7 @@
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.4",
     "autoprefixer": "^10.4.0",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "^15.3.0",
     "jsdom": "^29.0.2",
