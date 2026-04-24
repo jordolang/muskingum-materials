@@ -7,6 +7,7 @@ import {
   Truck,
   ArrowRight,
   Package,
+  Star,
   Award,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -196,7 +197,7 @@ export default async function AccountDashboardPage() {
       </Card>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <Link href="/order">
           <Card className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
             <CardContent className="p-4 flex items-center gap-3">
@@ -226,6 +227,17 @@ export default async function AccountDashboardPage() {
               <div>
                 <p className="font-semibold text-sm">Addresses</p>
                 <p className="text-xs text-muted-foreground">Manage delivery addresses</p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/reviews/submit">
+          <Card className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
+            <CardContent className="p-4 flex items-center gap-3">
+              <Star className="h-8 w-8 text-purple-600" />
+              <div>
+                <p className="font-semibold text-sm">Leave a Review</p>
+                <p className="text-xs text-muted-foreground">Share your feedback</p>
               </div>
             </CardContent>
           </Card>

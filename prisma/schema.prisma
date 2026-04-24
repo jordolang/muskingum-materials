@@ -103,6 +103,7 @@ model Order {
   stripePaymentId  String?
   invoiceUrl       String?
   smsOptIn         Boolean           @default(false)
+  completedAt      DateTime?
   statusHistory    OrderStatusHistory[]
   smsNotifications SmsNotification[]
   createdAt        DateTime          @default(now())
@@ -317,6 +318,17 @@ model SmsNotification {
   @@index([orderId])
   @@index([status])
   @@index([phone])
+}
+
+model ReviewSubmission {
+  id               String   @id @default(cuid())
+  userId           String?
+  sanityDocumentId String?
+  orderNumber      String?
+  submittedAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([orderNumber])
 }
 
 model EmailTemplate {

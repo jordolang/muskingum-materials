@@ -184,6 +184,26 @@ export async function POST(request: NextRequest) {
         }
         break;
       }
+
+      default: {
+        // Handle custom events (not in Stripe's official type definitions)
+        const customEvent = event as { type?: string; data?: { object?: { orderNumber?: string } } };
+        if (customEvent.type === "order.completed") {
+          const data = customEvent.data?.object as { orderNumber?: string } | undefined;
+          const orderNumber = data?.orderNumber;
+
+          if (orderNumber) {
+            await prisma.order.update({
+              where: { orderNumber },
+              data: {
+                status: "completed",
+                completedAt: new Date(),
+              },
+            });
+          }
+        }
+        break;
+      }
     }
 
     return NextResponse.json({ received: true });
