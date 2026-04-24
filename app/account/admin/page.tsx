@@ -1,4 +1,4 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
@@ -17,11 +17,10 @@ import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminDashboardPage() {
-  const session = await auth();
   const user = await currentUser();
 
   // Check admin access
-  if (!session?.userId || user?.publicMetadata?.role !== "admin") {
+  if (!user || user.publicMetadata.role !== "admin") {
     redirect("/account");
   }
 

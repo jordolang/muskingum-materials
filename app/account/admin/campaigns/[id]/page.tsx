@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { prisma } from "@/lib/prisma";
+import { EmailPreview } from "@/components/admin/email-preview";
 
 export default async function CampaignDetailPage({
   params,
@@ -139,21 +140,11 @@ export default async function CampaignDetailPage({
 
               {/* Content */}
               <div className="mb-6">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                  Email Content
-                </p>
-                <div className="border rounded-md p-4 bg-muted/20 max-h-96 overflow-y-auto">
-                  {campaign.htmlContent ? (
-                    <div
-                      className="prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: campaign.htmlContent }}
-                    />
-                  ) : (
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                      {campaign.textContent || "No content"}
-                    </p>
-                  )}
-                </div>
+                <EmailPreview
+                  subject={campaign.subject}
+                  htmlContent={campaign.htmlContent}
+                  textContent={campaign.textContent}
+                />
               </div>
 
               {/* Metrics for sent campaigns */}
