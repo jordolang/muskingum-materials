@@ -102,6 +102,7 @@ model Order {
   stripeSessionId String?
   stripePaymentId String?
   invoiceUrl      String?
+  completedAt     DateTime?
   statusHistory   OrderStatusHistory[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -295,6 +296,17 @@ model CostGuide {
   updatedAt DateTime @updatedAt
 
   @@index([slug])
+}
+
+model ReviewSubmission {
+  id               String   @id @default(cuid())
+  userId           String?
+  sanityDocumentId String?
+  orderNumber      String?
+  submittedAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([orderNumber])
 }
 
 model EmailTemplate {
