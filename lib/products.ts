@@ -18,6 +18,46 @@ type ProductWithComparisons = Prisma.ProductGetPayload<{
 // PR history if reviving.
 const hasDatabase = (): boolean => Boolean(process.env.DATABASE_URL);
 
+export interface ProductFilters {
+  search?: string;
+  category?: string;
+  sortBy?: "name-asc" | "name-desc" | "price-asc" | "price-desc";
+}
+
+export async function getProductsWithFilters(
+  filters: ProductFilters = {},
+): Promise<Product[]> {
+  if (!hasDatabase()) return [];
+  const { search, category, sortBy } = filters;
+
+  const where: Prisma.ProductWhereInput = { active: true };
+
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
+      { shortDescription: { contains: search, mode: "insensitive" } },
+    ];
+  }
+
+  if (category) {
+    where.category = category;
+  }
+
+  let orderBy: Prisma.ProductOrderByWithRelationInput = { sortOrder: "asc" };
+  if (sortBy === "name-asc") {
+    orderBy = { name: "asc" };
+  } else if (sortBy === "name-desc") {
+    orderBy = { name: "desc" };
+  } else if (sortBy === "price-asc") {
+    orderBy = { price: "asc" };
+  } else if (sortBy === "price-desc") {
+    orderBy = { price: "desc" };
+  }
+
+  return prisma.product.findMany({ where, orderBy });
+}
+
 export async function getProducts(): Promise<Product[]> {
   if (!hasDatabase()) return [];
   return prisma.product.findMany({
