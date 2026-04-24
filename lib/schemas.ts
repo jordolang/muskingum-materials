@@ -110,6 +110,15 @@ export const pointRedemptionSchema = z.object({
   notes: z.string().optional(),
 });
 
+// Campaign schema
+export const campaignSchema = z.object({
+  subject: z.string().min(3, "Subject must be at least 3 characters"),
+  body: z.string().min(10, "Body must be at least 10 characters"),
+  templateId: z.string().optional(),
+  scheduledFor: z.coerce.date().optional(),
+  recipientFilter: z.string().optional(),
+});
+
 // Type exports for convenience
 export type ContactFormData = z.infer<typeof contactSchema>;
 export type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
@@ -122,3 +131,4 @@ export type QuoteData = z.infer<typeof quoteSchema>;
 export type NewsletterData = z.infer<typeof newsletterSchema>;
 export type LeadData = z.infer<typeof leadSchema>;
 export type PointRedemptionData = z.infer<typeof pointRedemptionSchema>;
+export type CampaignData = z.infer<typeof campaignSchema>;
