@@ -5,19 +5,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { PRODUCTS, BUSINESS_INFO } from "@/data/business";
+import { useCartStore } from "@/lib/store";
 import { OrderConfirmation } from "./order-confirmation";
 import { ProductCatalog } from "./product-catalog";
 import { CartSummary } from "./cart-summary";
 import { CheckoutForm } from "./checkout-form";
 
 type OrderableProduct = (typeof PRODUCTS)[number];
-
-interface CartItem {
-  name: string;
-  price: number;
-  unit: string;
-  quantity: number;
-}
 
 export const checkoutSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -31,7 +25,13 @@ export const checkoutSchema = z.object({
 export type CheckoutData = z.infer<typeof checkoutSchema>;
 
 export function OrderForm() {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const cart = useCartStore((state) => state.items);
+  const addToCart = useCartStore((state) => state.addToCart);
+  const updateQuantity = useCartStore((state) => state.updateQuantity);
+  const setQuantity = useCartStore((state) => state.setQuantity);
+  const removeFromCart = useCartStore((state) => state.removeFromCart);
+  const clearCart = useCartStore((state) => state.clearCart);
+
   const [step, setStep] = useState<"products" | "checkout" | "complete">("products");
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
@@ -45,51 +45,6 @@ export function OrderForm() {
     resolver: zodResolver(checkoutSchema),
     defaultValues: { fulfillment: "pickup" },
   });
-
-  function addToCart(product: OrderableProduct) {
-    setCart((prev) => {
-      const existing = prev.find((item) => item.name === product.name);
-      if (existing) {
-        return prev.map((item) =>
-          item.name === product.name
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [
-        ...prev,
-        { name: product.name, price: product.price, unit: product.unit, quantity: 1 },
-      ];
-    });
-  }
-
-  function updateQuantity(name: string, delta: number) {
-    setCart((prev) =>
-      prev
-        .map((item) =>
-          item.name === name
-            ? { ...item, quantity: Math.max(0, item.quantity + delta) }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
-  }
-
-  function setQuantity(name: string, qty: number) {
-    if (qty <= 0) {
-      setCart((prev) => prev.filter((item) => item.name !== name));
-    } else {
-      setCart((prev) =>
-        prev.map((item) =>
-          item.name === name ? { ...item, quantity: qty } : item
-        )
-      );
-    }
-  }
-
-  function removeFromCart(name: string) {
-    setCart((prev) => prev.filter((item) => item.name !== name));
-  }
 
   const totals = useMemo(() => {
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -142,7 +97,7 @@ export function OrderForm() {
   }
 
   function handleReset() {
-    setCart([]);
+    clearCart();
     setStep("products");
   }
 
