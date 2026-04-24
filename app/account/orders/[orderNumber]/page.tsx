@@ -16,6 +16,8 @@ import { StatusBadge } from "@/components/order/status-badge";
 import { PaymentBadge } from "@/components/order/payment-badge";
 import { prisma } from "@/lib/prisma";
 import { BUSINESS_INFO } from "@/data/business";
+import { StatusProgress } from "@/components/order/status-progress";
+import { OrderStatusTimeline } from "@/components/order/order-status-timeline";
 
 export default async function OrderDetailPage({
   params,
@@ -31,6 +33,13 @@ export default async function OrderDetailPage({
       where: {
         orderNumber,
         userId: session?.userId ?? undefined,
+      },
+      include: {
+        statusHistory: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
       },
     });
   } catch {
@@ -84,6 +93,13 @@ export default async function OrderDetailPage({
         <StatusBadge status={order.status} />
         <PaymentBadge status={order.paymentStatus} />
       </div>
+
+      {/* Status Progress */}
+      <Card className="border-0 shadow-md">
+        <CardContent className="p-6">
+          <StatusProgress currentStatus={order.status} />
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Order Items - Invoice Style */}
@@ -221,6 +237,19 @@ export default async function OrderDetailPage({
                   <span>{order.phone}</span>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Status Timeline */}
+          <Card className="border-0 shadow-md">
+            <CardHeader>
+              <CardTitle className="text-sm">Status History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <OrderStatusTimeline
+                statusHistory={order.statusHistory}
+                currentStatus={order.status}
+              />
             </CardContent>
           </Card>
 
