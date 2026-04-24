@@ -40,8 +40,6 @@ export function TonsToYardsConverter({ products }: TonsToYardsConverterProps) {
     const product = products.find((p) => p.slug === selectedProduct);
     if (!product || isNaN(value) || value <= 0) return;
 
-    const avgDensity = (product.densityLow + product.densityHigh) / 2;
-
     if (direction === "tons-to-yards") {
       const yardsLow = value / product.densityHigh;
       const yardsHigh = value / product.densityLow;

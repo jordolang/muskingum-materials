@@ -1,8 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { generateText } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { prisma } from "@/lib/prisma";
 import { BUSINESS_INFO, PRODUCTS, SERVICES } from "@/data/business";
+import { logger } from "@/lib/logger";
+import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+
+const chatSchema = z.object({
+  message: z.string().min(1).max(5000),
+  visitorId: z.string().min(1).max(100).optional(),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z.string().max(5000),
+      })
+    )
+    .max(50)
+    .optional()
+    .default([]),
+});
 
 const SYSTEM_PROMPT = `You are a friendly, knowledgeable customer service assistant for Muskingum Materials, a family-owned sand, soil, and gravel company in Zanesville, Ohio.
 
@@ -40,22 +58,61 @@ GUIDELINES:
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { message, visitorId, history = [] } = body;
+    // Check rate limit
+    const identifier = getClientIdentifier(request);
+    const rateLimitResult = await checkRateLimit(identifier, "chat");
 
-    if (!message || typeof message !== "string") {
+    logger.info("Chat request rate limit check", {
+      identifier,
+      success: rateLimitResult.success,
+      remaining: rateLimitResult.remaining,
+      limit: rateLimitResult.limit,
+    });
+
+    if (!rateLimitResult.success) {
+      logger.warn("Chat rate limit exceeded", {
+        identifier,
+        limit: rateLimitResult.limit,
+        reset: rateLimitResult.reset,
+      });
+
+      const retryAfter = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
+
       return NextResponse.json(
-        { error: "Message is required" },
-        { status: 400 }
+        {
+          error: "Too many requests. Please try again later.",
+          retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": rateLimitResult.limit.toString(),
+            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+            "X-RateLimit-Reset": rateLimitResult.reset.toString(),
+            "Retry-After": retryAfter.toString(),
+          },
+        }
       );
     }
 
+    // Warn if approaching rate limit
+    if (rateLimitResult.remaining <= 1) {
+      logger.warn("Chat rate limit approaching", {
+        identifier,
+        remaining: rateLimitResult.remaining,
+        limit: rateLimitResult.limit,
+      });
+    }
+
+    const body = await request.json();
+    const data = chatSchema.parse(body);
+
     const messages = [
-      ...history.map((m: { role: string; content: string }) => ({
+      ...data.history.map((m) => ({
         role: m.role as "user" | "assistant",
         content: m.content,
       })),
-      { role: "user" as const, content: message },
+      { role: "user" as const, content: data.message },
     ];
 
     let reply: string;
@@ -65,21 +122,21 @@ export async function POST(request: NextRequest) {
         model: anthropic("claude-haiku-4-5-20251001"),
         system: SYSTEM_PROMPT,
         messages,
-        maxTokens: 500,
+        maxOutputTokens: 500,
       });
       reply = result.text;
     } else {
-      reply = getStaticResponse(message);
+      reply = getStaticResponse(data.message);
     }
 
     // Store conversation in database (best-effort)
+    const visitorId = data.visitorId || `anon-${crypto.randomUUID()}`;
     try {
       const conversation = await prisma.chatConversation.upsert({
-        where: { id: visitorId || "anonymous" },
+        where: { visitorId },
         update: { updatedAt: new Date() },
         create: {
-          id: visitorId || `anon-${Date.now()}`,
-          visitorId: visitorId || "anonymous",
+          visitorId,
         },
       });
 
@@ -88,7 +145,7 @@ export async function POST(request: NextRequest) {
           {
             conversationId: conversation.id,
             role: "user",
-            content: message,
+            content: data.message,
           },
           {
             conversationId: conversation.id,
@@ -97,13 +154,23 @@ export async function POST(request: NextRequest) {
           },
         ],
       });
-    } catch {
-      // Database not configured yet — that's okay
+    } catch (error) {
+      logger.error("Chat DB save error", error, { visitorId });
     }
 
     return NextResponse.json({ reply });
   } catch (error) {
-    console.error("Chat API error:", error);
+    if (error instanceof z.ZodError) {
+      logger.warn("Chat request validation failed", {
+        errors: error.errors,
+      });
+      return NextResponse.json(
+        { error: "Invalid request data", details: error.errors },
+        { status: 400 }
+      );
+    }
+
+    logger.error("Chat request processing error", error);
     return NextResponse.json(
       {
         reply:

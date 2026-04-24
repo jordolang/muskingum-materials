@@ -1,237 +1,83 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import Image from "next/image";
-import {
-  ShoppingCart,
-  Plus,
-  Minus,
-  Trash2,
-  Truck,
-  MapPin,
-  Loader2,
-  CreditCard,
-  CheckCircle,
-  AlertCircle,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { PRODUCTS, BUSINESS_INFO } from "@/data/business";
+import { checkoutFormSchema, type CheckoutFormData } from "@/lib/schemas";
+import { useToast } from "@/lib/use-toast";
+import { useCartStore } from "@/lib/store";
+import { OrderConfirmation } from "./order-confirmation";
+import { ProductCatalog } from "./product-catalog";
+import { CartSummary } from "./cart-summary";
+import { CheckoutForm } from "./checkout-form";
 
-const ORDERABLE_PRODUCTS = PRODUCTS.filter((p) => p.price > 0);
+type OrderableProduct = (typeof PRODUCTS)[number];
 
-const PRODUCT_IMAGES: Record<string, string> = {
-  "Bank Run": "/images/products/bank-run.jpg",
-  "Fill Dirt": "/images/products/fill-dirt.jpg",
-  "Fill Sand": "/images/products/fill-sand.jpg",
-  "Topsoil (Unprocessed)": "/images/products/topsoil.jpg",
-  "#8 Fractured Gravel (Washed)": "/images/products/fractured-gravel.jpg",
-  "#9 Gravel (Washed)": "/images/products/fine-gravel.jpg",
-  "#8 Gravel (Washed)": "/images/photos/stone-close-up.jpg",
-  "#57 Gravel (Washed)": "/images/photos/piles-close-up.jpg",
-  "304 Crushed Gravel": "/images/photos/piles-7.jpg",
-  "Oversized Gravel (Washed)": "/images/photos/stone-hand.jpg",
-  "#57 Limestone": "/images/photos/boulders.jpg",
-};
-
-interface CartItem {
-  name: string;
-  price: number;
-  unit: string;
-  quantity: number;
-}
-
-const checkoutSchema = z.object({
+export const checkoutSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Valid email is required"),
   phone: z.string().min(10, "Phone number is required"),
+  smsOptIn: z.boolean().optional(),
   fulfillment: z.enum(["pickup", "delivery"]),
   deliveryAddress: z.string().optional(),
   deliveryNotes: z.string().optional(),
 });
 
-type CheckoutData = z.infer<typeof checkoutSchema>;
-
-interface DeliveryFeeResult {
-  success: boolean;
-  address: string;
-  withinZone: boolean;
-  distance: number;
-  fee: number;
-  breakdown?: {
-    baseFee: number;
-    distanceFee: number;
-  };
-  settings?: {
-    zoneRadiusMiles: number;
-    baseFee: number;
-    perMileRate: number;
-  };
-}
-
-// Extend window for Google Maps
-declare global {
-  interface Window {
-    initOrderFormMaps?: () => void;
-  }
-}
-
-const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+export type CheckoutData = z.infer<typeof checkoutSchema>;
 
 export function OrderForm() {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const cart = useCartStore((state) => state.items);
+  const addToCart = useCartStore((state) => state.addToCart);
+  const updateQuantity = useCartStore((state) => state.updateQuantity);
+  const setQuantity = useCartStore((state) => state.setQuantity);
+  const removeFromCart = useCartStore((state) => state.removeFromCart);
+  const clearCart = useCartStore((state) => state.clearCart);
+
   const [step, setStep] = useState<"products" | "checkout" | "complete">("products");
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
-  const [deliveryFeeResult, setDeliveryFeeResult] = useState<DeliveryFeeResult | null>(null);
-  const [deliveryFeeLoading, setDeliveryFeeLoading] = useState(false);
-  const [deliveryFeeError, setDeliveryFeeError] = useState("");
-  const [mapsLoaded, setMapsLoaded] = useState(false);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-  const deliveryAddressInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const { toast } = useToast();
 
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
-    setValue,
   } = useForm<CheckoutData>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: { fulfillment: "pickup" },
   });
 
-  const fulfillment = watch("fulfillment");
-  const deliveryAddress = watch("deliveryAddress");
-
-  // Load Google Maps Places API
-  useEffect(() => {
-    if (!GOOGLE_MAPS_API_KEY) {
-      return;
-    }
-
-    if (typeof google !== "undefined" && google.maps && google.maps.places) {
-      setMapsLoaded(true);
-      return;
-    }
-
-    window.initOrderFormMaps = () => {
-      setMapsLoaded(true);
-    };
-
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initOrderFormMaps`;
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
-
-    return () => {
-      delete window.initOrderFormMaps;
-    };
-  }, []);
-
-  // Calculate delivery fee when address changes
-  useEffect(() => {
-    if (fulfillment !== "delivery" || !deliveryAddress || deliveryAddress.length < 3) {
-      setDeliveryFeeResult(null);
-      setDeliveryFeeError("");
-      return;
-    }
-
-    const timeoutId = setTimeout(async () => {
-      setDeliveryFeeLoading(true);
-      setDeliveryFeeError("");
-
-      try {
-        const response = await fetch("/api/delivery/calculate-fee", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ address: deliveryAddress }),
-        });
-
-        const responseData = await response.json();
-
-        if (!response.ok) {
-          throw new Error(responseData.error || "Failed to calculate delivery fee");
-        }
-
-        setDeliveryFeeResult(responseData);
-      } catch (err) {
-        setDeliveryFeeError(
-          err instanceof Error
-            ? err.message
-            : "Unable to calculate delivery fee"
-        );
-        setDeliveryFeeResult(null);
-      } finally {
-        setDeliveryFeeLoading(false);
-      }
-    }, 1000); // Debounce for 1 second
-
-    return () => clearTimeout(timeoutId);
-  }, [fulfillment, deliveryAddress]);
-
-  function addToCart(product: (typeof ORDERABLE_PRODUCTS)[number]) {
-    setCart((prev) => {
-      const existing = prev.find((item) => item.name === product.name);
-      if (existing) {
-        return prev.map((item) =>
-          item.name === product.name
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [
-        ...prev,
-        { name: product.name, price: product.price, unit: product.unit, quantity: 1 },
-      ];
-    });
-  }
-
-  function updateQuantity(name: string, delta: number) {
-    setCart((prev) =>
-      prev
-        .map((item) =>
-          item.name === name
-            ? { ...item, quantity: Math.max(0, item.quantity + delta) }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
-  }
-
-  function setQuantity(name: string, qty: number) {
-    if (qty <= 0) {
-      setCart((prev) => prev.filter((item) => item.name !== name));
-    } else {
-      setCart((prev) =>
-        prev.map((item) =>
-          item.name === name ? { ...item, quantity: qty } : item
-        )
-      );
-    }
-  }
-
-  function removeFromCart(name: string) {
-    setCart((prev) => prev.filter((item) => item.name !== name));
-  }
-
   const totals = useMemo(() => {
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const deliveryFee = deliveryFeeResult?.withinZone ? deliveryFeeResult.fee : 0;
-    const tax = subtotal * BUSINESS_INFO.taxRate;
-    const processingFee = subtotal * BUSINESS_INFO.creditProcessingFee;
-    const total = subtotal + deliveryFee + tax + processingFee;
+
+    // Calculate volume discount based on pricing tiers
+    const volumeDiscount = cart.reduce((totalDiscount, item) => {
+      const product = PRODUCTS.find((p) => p.name === item.name);
+      if (!product || !('pricingTiers' in product) || !product.pricingTiers) return totalDiscount;
+
+      // Find the highest applicable tier based on quantity
+      const applicableTier = product.pricingTiers
+        .filter((tier) => item.quantity >= tier.minQuantity)
+        .sort((a, b) => b.minQuantity - a.minQuantity)[0];
+
+      if (applicableTier) {
+        const discount = (item.price - applicableTier.pricePerTon) * item.quantity;
+        return totalDiscount + discount;
+      }
+
+      return totalDiscount;
+    }, 0);
+
+    const discountedSubtotal = subtotal - volumeDiscount;
+    const tax = discountedSubtotal * BUSINESS_INFO.taxRate;
+    const processingFee = discountedSubtotal * BUSINESS_INFO.creditProcessingFee;
+    const total = discountedSubtotal + tax + processingFee;
     const totalTons = cart.reduce((sum, item) => sum + item.quantity, 0);
-    return { subtotal, tax, processingFee, deliveryFee, total, totalTons };
-  }, [cart, deliveryFeeResult]);
+    return { subtotal, volumeDiscount, tax, processingFee, total, totalTons };
+  }, [cart]);
 
   async function onCheckout(data: CheckoutData) {
     if (cart.length === 0) return;
@@ -245,9 +91,9 @@ export function OrderForm() {
           ...data,
           items: cart,
           subtotal: totals.subtotal,
+          volumeDiscount: totals.volumeDiscount,
           tax: totals.tax,
           processingFee: totals.processingFee,
-          deliveryFee: totals.deliveryFee,
           total: totals.total,
         }),
       });
@@ -265,472 +111,59 @@ export function OrderForm() {
         throw new Error(result.error || "Checkout failed");
       }
     } catch (error) {
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong. Please call (740) 319-0183 to place your order."
-      );
+      toast({
+        variant: "destructive",
+        title: "Checkout failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong. Please call (740) 319-0183 to place your order.",
+      });
     } finally {
       setIsProcessing(false);
     }
   }
 
+  function handleReset() {
+    clearCart();
+    setStep("products");
+  }
+
   if (step === "complete") {
-    return (
-      <Card className="shadow-lg border-0">
-        <CardContent className="p-8 text-center">
-          <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Order Submitted!</h2>
-          <p className="text-muted-foreground mb-2">
-            Your order number is{" "}
-            <span className="font-bold text-foreground">{orderNumber}</span>
-          </p>
-          <p className="text-sm text-muted-foreground mb-6">
-            We&apos;ll review your order and contact you to confirm. Payment will
-            be processed when your order is ready.
-          </p>
-          <Button onClick={() => { setCart([]); setStep("products"); }}>
-            Place Another Order
-          </Button>
-        </CardContent>
-      </Card>
-    );
+    return <OrderConfirmation orderNumber={orderNumber} onReset={handleReset} />;
   }
 
   return (
     <div className="space-y-6">
-      {/* Step 1: Product Selection */}
       {step === "products" && (
         <>
-          <Card className="shadow-lg border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5 text-amber-600" />
-                Select Products
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Choose your materials and quantity in tons. Prices effective 07/01/2025.
-              </p>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y">
-                {ORDERABLE_PRODUCTS.map((product) => {
-                  const inCart = cart.find((item) => item.name === product.name);
-                  return (
-                    <div
-                      key={product.name}
-                      className={`flex items-center gap-4 p-4 transition-colors ${
-                        inCart ? "bg-amber-50/50" : "hover:bg-muted/30"
-                      }`}
-                    >
-                      <div className="relative h-14 w-14 rounded-lg overflow-hidden shrink-0">
-                        <Image
-                          src={PRODUCT_IMAGES[product.name] || "/images/photos/piles.jpg"}
-                          alt={product.name}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm truncate">{product.name}</p>
-                        <p className="text-xs text-muted-foreground">{product.description}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="font-bold text-amber-700">
-                          ${product.price.toFixed(2)}
-                          <span className="text-xs font-normal text-muted-foreground">
-                            /{product.unit}
-                          </span>
-                        </p>
-                      </div>
-                      <div className="shrink-0">
-                        {inCart ? (
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => updateQuantity(product.name, -1)}
-                            >
-                              <Minus className="h-3 w-3" />
-                            </Button>
-                            <Input
-                              type="number"
-                              value={inCart.quantity}
-                              onChange={(e) =>
-                                setQuantity(product.name, parseInt(e.target.value) || 0)
-                              }
-                              className="w-16 h-8 text-center text-sm"
-                              min="0"
-                            />
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => updateQuantity(product.name, 1)}
-                            >
-                              <Plus className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => addToCart(product)}
-                            className="gap-1"
-                          >
-                            <Plus className="h-3 w-3" />
-                            Add
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Cart Summary */}
-          {cart.length > 0 && (
-            <Card className="shadow-lg border-0 border-t-4 border-t-amber-500">
-              <CardHeader>
-                <CardTitle className="text-lg">Order Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {cart.map((item) => (
-                  <div key={item.name} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeFromCart(item.name)}
-                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                      <span className="font-medium">{item.name}</span>
-                      <Badge variant="secondary" className="text-xs">
-                        {item.quantity} {item.unit}{item.quantity !== 1 ? "s" : ""}
-                      </Badge>
-                    </div>
-                    <span className="font-semibold">
-                      ${(item.price * item.quantity).toFixed(2)}
-                    </span>
-                  </div>
-                ))}
-
-                <Separator className="my-3" />
-
-                <div className="space-y-1.5 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal ({totals.totalTons} tons)</span>
-                    <span>${totals.subtotal.toFixed(2)}</span>
-                  </div>
-                  {totals.deliveryFee > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Delivery Fee</span>
-                      <span>${totals.deliveryFee.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Tax (7.25%)</span>
-                    <span>${totals.tax.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Card Processing (4.5%)</span>
-                    <span>${totals.processingFee.toFixed(2)}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between text-base font-bold">
-                    <span>Total</span>
-                    <span className="text-amber-700">${totals.total.toFixed(2)}</span>
-                  </div>
-                </div>
-
-                <Button
-                  className="w-full mt-4 gap-2 font-semibold"
-                  size="lg"
-                  onClick={() => setStep("checkout")}
-                >
-                  <CreditCard className="h-4 w-4" />
-                  Proceed to Checkout
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+          <ProductCatalog
+            cart={cart}
+            onAddToCart={addToCart}
+            onUpdateQuantity={updateQuantity}
+            onSetQuantity={setQuantity}
+          />
+          <CartSummary
+            cart={cart}
+            totals={totals}
+            onRemoveItem={removeFromCart}
+            onCheckout={() => setStep("checkout")}
+          />
         </>
       )}
 
-      {/* Step 2: Checkout */}
       {step === "checkout" && (
-        <Card className="shadow-lg border-0">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-amber-600" />
-                Checkout
-              </CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => setStep("products")}>
-                ← Back to Products
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onCheckout)} className="space-y-6">
-              {/* Contact Info */}
-              <div>
-                <h3 className="font-semibold mb-3">Contact Information</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium mb-1 block">Name *</label>
-                    <Input placeholder="Your full name" {...register("name")} />
-                    {errors.name && (
-                      <p className="text-xs text-destructive mt-1">{errors.name.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-1 block">Phone *</label>
-                    <Input placeholder="(740) 555-0123" {...register("phone")} />
-                    {errors.phone && (
-                      <p className="text-xs text-destructive mt-1">{errors.phone.message}</p>
-                    )}
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <label className="text-sm font-medium mb-1 block">Email *</label>
-                  <Input type="email" placeholder="your@email.com" {...register("email")} />
-                  {errors.email && (
-                    <p className="text-xs text-destructive mt-1">{errors.email.message}</p>
-                  )}
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Fulfillment */}
-              <div>
-                <h3 className="font-semibold mb-3">Pickup or Delivery</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <label
-                    className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                      fulfillment === "pickup"
-                        ? "border-amber-500 bg-amber-50"
-                        : "border-border hover:border-amber-300"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      value="pickup"
-                      {...register("fulfillment")}
-                      className="sr-only"
-                    />
-                    <MapPin className={`h-5 w-5 ${fulfillment === "pickup" ? "text-amber-600" : "text-muted-foreground"}`} />
-                    <div>
-                      <p className="font-semibold text-sm">Pickup</p>
-                      <p className="text-xs text-muted-foreground">At our yard</p>
-                    </div>
-                  </label>
-                  <label
-                    className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                      fulfillment === "delivery"
-                        ? "border-amber-500 bg-amber-50"
-                        : "border-border hover:border-amber-300"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      value="delivery"
-                      {...register("fulfillment")}
-                      className="sr-only"
-                    />
-                    <Truck className={`h-5 w-5 ${fulfillment === "delivery" ? "text-amber-600" : "text-muted-foreground"}`} />
-                    <div>
-                      <p className="font-semibold text-sm">Delivery</p>
-                      <p className="text-xs text-muted-foreground">To your site</p>
-                    </div>
-                  </label>
-                </div>
-
-                {fulfillment === "pickup" && (
-                  <div className="mt-3 p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
-                    <p className="font-medium text-foreground">Pickup Location:</p>
-                    <p>{BUSINESS_INFO.address}, {BUSINESS_INFO.city}, {BUSINESS_INFO.state} {BUSINESS_INFO.zip}</p>
-                    <p>Hours: {BUSINESS_INFO.hours}</p>
-                  </div>
-                )}
-
-                {fulfillment === "delivery" && (
-                  <div className="mt-3 space-y-3">
-                    <div>
-                      <label className="text-sm font-medium mb-1 block">Delivery Address *</label>
-                      <Textarea
-                        placeholder="Street address, city, state, zip"
-                        {...register("deliveryAddress")}
-                        disabled={!mapsLoaded}
-                      />
-                      {!mapsLoaded && GOOGLE_MAPS_API_KEY && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Loading address autocomplete...
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Delivery Fee Calculation */}
-                    {deliveryFeeLoading && (
-                      <div className="flex items-center p-3 bg-muted/50 rounded-md text-sm">
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin text-muted-foreground" />
-                        <span className="text-muted-foreground">Calculating delivery fee...</span>
-                      </div>
-                    )}
-
-                    {deliveryFeeError && (
-                      <div className="flex items-start p-3 bg-red-50 border border-red-200 rounded-md">
-                        <AlertCircle className="h-4 w-4 text-red-600 mr-2 mt-0.5 flex-shrink-0" />
-                        <p className="text-sm text-red-800">{deliveryFeeError}</p>
-                      </div>
-                    )}
-
-                    {deliveryFeeResult && !deliveryFeeResult.withinZone && (
-                      <div className="flex items-start p-3 bg-amber-50 border border-amber-200 rounded-md">
-                        <AlertCircle className="h-4 w-4 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
-                        <div className="text-sm">
-                          <p className="font-medium text-amber-900 mb-1">
-                            Outside Standard Delivery Zone
-                          </p>
-                          <p className="text-amber-800">
-                            Your location is {deliveryFeeResult.distance.toFixed(1)} miles away,
-                            outside our standard {deliveryFeeResult.settings?.zoneRadiusMiles}-mile
-                            delivery zone. Please call us at{" "}
-                            <a href="tel:7403190183" className="underline font-medium">
-                              (740) 319-0183
-                            </a>{" "}
-                            for special delivery arrangements.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {deliveryFeeResult && deliveryFeeResult.withinZone && (
-                      <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-                        <div className="flex items-start mb-2">
-                          <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                          <div className="text-sm">
-                            <p className="font-medium text-green-900">
-                              Delivery Available
-                            </p>
-                            <p className="text-green-700 text-xs mt-0.5">
-                              {deliveryFeeResult.distance.toFixed(1)} miles from our location
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-xs space-y-1 text-green-800 border-t border-green-200 pt-2 mt-2">
-                          <div className="flex justify-between">
-                            <span>Base Fee:</span>
-                            <span className="font-medium">
-                              ${deliveryFeeResult.breakdown?.baseFee.toFixed(2)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>
-                              Distance Fee ({deliveryFeeResult.distance.toFixed(1)} mi):
-                            </span>
-                            <span className="font-medium">
-                              ${deliveryFeeResult.breakdown?.distanceFee.toFixed(2)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between font-semibold border-t border-green-200 pt-1">
-                            <span>Delivery Fee:</span>
-                            <span>${deliveryFeeResult.fee.toFixed(2)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    <div>
-                      <label className="text-sm font-medium mb-1 block">Delivery Notes</label>
-                      <Textarea
-                        placeholder="Gate code, site instructions, etc."
-                        rows={2}
-                        {...register("deliveryNotes")}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <Separator />
-
-              {/* Order Summary */}
-              <div>
-                <h3 className="font-semibold mb-3">Order Summary</h3>
-                <div className="space-y-2 text-sm">
-                  {cart.map((item) => (
-                    <div key={item.name} className="flex justify-between">
-                      <span>
-                        {item.name} x {item.quantity} {item.unit}{item.quantity !== 1 ? "s" : ""}
-                      </span>
-                      <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
-                    </div>
-                  ))}
-                  <Separator />
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal:</span>
-                    <span>${totals.subtotal.toFixed(2)}</span>
-                  </div>
-                  {totals.deliveryFee > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Delivery Fee:</span>
-                      <span>${totals.deliveryFee.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Tax:</span>
-                    <span>${totals.tax.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Processing Fee:</span>
-                    <span>${totals.processingFee.toFixed(2)}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between font-bold text-base">
-                    <span>Total</span>
-                    <span className="text-amber-700">${totals.total.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full gap-2 font-semibold"
-                size="lg"
-                disabled={
-                  isProcessing ||
-                  (fulfillment === "delivery" &&
-                    !!deliveryFeeResult &&
-                    !deliveryFeeResult.withinZone)
-                }
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="h-4 w-4" />
-                    Pay ${totals.total.toFixed(2)}
-                  </>
-                )}
-              </Button>
-
-              <p className="text-xs text-center text-muted-foreground">
-                Secure payment powered by Stripe. We accept Visa, Mastercard,
-                Discover, Apple Pay, and Google Pay.
-              </p>
-            </form>
-          </CardContent>
-        </Card>
+        <CheckoutForm
+          cart={cart}
+          totals={totals}
+          register={register}
+          errors={errors}
+          watch={watch}
+          handleSubmit={handleSubmit}
+          onCheckout={onCheckout}
+          isProcessing={isProcessing}
+          onBack={() => setStep("products")}
+        />
       )}
     </div>
   );
