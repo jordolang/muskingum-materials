@@ -1,0 +1,553 @@
+{
+  "feature": "Test Suite Foundation",
+  "workflow_type": "feature",
+  "workflow_rationale": "Adding testing infrastructure is a new capability (feature) being added to the codebase. It follows the pattern: setup → unit → integration → e2e → ci-integration.",
+  "phases": [
+    {
+      "id": "phase-1-setup",
+      "name": "Test Framework Setup",
+      "type": "setup",
+      "description": "Install and configure Vitest and Playwright with TypeScript support, path aliases, and test environment setup",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Install Vitest and testing dependencies",
+          "service": "frontend",
+          "files_to_modify": [
+            "package.json"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npm list vitest @vitejs/plugin-react",
+            "expected": "Packages installed successfully"
+          },
+          "status": "completed",
+          "notes": "Install: vitest, @vitejs/plugin-react, @testing-library/react, @testing-library/jest-dom, jsdom, @types/node"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Create Vitest configuration with path aliases",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "vitest.config.ts"
+          ],
+          "patterns_from": [
+            "next.config.ts",
+            "tsconfig.json"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx vitest --version",
+            "expected": "Vitest version displayed"
+          },
+          "status": "completed",
+          "notes": "Match path aliases from tsconfig.json (@ -> root), configure jsdom environment"
+        },
+        {
+          "id": "subtask-1-3",
+          "description": "Install Playwright for E2E testing",
+          "service": "frontend",
+          "files_to_modify": [
+            "package.json"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npx playwright --version",
+            "expected": "Playwright version displayed"
+          },
+          "status": "completed",
+          "notes": "Install: @playwright/test"
+        },
+        {
+          "id": "subtask-1-4",
+          "description": "Create Playwright configuration",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "playwright.config.ts"
+          ],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npx playwright test --list",
+            "expected": "No errors, ready to run tests"
+          },
+          "status": "completed",
+          "notes": "Configure baseURL for localhost:3000, setup test reporter"
+        },
+        {
+          "id": "subtask-1-5",
+          "description": "Create test utilities and mocks",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/test-utils.ts",
+            "lib/test-mocks.ts"
+          ],
+          "patterns_from": [
+            "lib/prisma.ts",
+            "lib/schemas.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run build",
+            "expected": "Build succeeds with new test files"
+          },
+          "status": "completed",
+          "notes": "Create mocks for Prisma, Stripe, Postmark, and testing utilities"
+        },
+        {
+          "id": "subtask-1-6",
+          "description": "Add test scripts to package.json",
+          "service": "frontend",
+          "files_to_modify": [
+            "package.json"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npm run test -- --help && npm run test:e2e -- --help",
+            "expected": "Both test commands available"
+          },
+          "status": "completed",
+          "notes": "Add: test, test:ui, test:coverage, test:e2e, test:e2e:ui scripts"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-unit-tests",
+      "name": "Unit Tests - Business Logic",
+      "type": "implementation",
+      "description": "Write unit tests for pure business logic: price calculations, Zod schemas, and material calculator math",
+      "depends_on": [
+        "phase-1-setup"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Write unit tests for price validation logic",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/__tests__/validate-checkout-prices.test.ts"
+          ],
+          "patterns_from": [
+            "lib/validate-checkout-prices.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm test -- validate-checkout-prices.test.ts",
+            "expected": "All tests pass"
+          },
+          "status": "completed",
+          "notes": "Test: price validation, tax calculation (7.25%), processing fee (4.5%), product lookup, error cases (invalid product, price mismatch)"
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Write unit tests for Zod schemas",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/__tests__/schemas.test.ts"
+          ],
+          "patterns_from": [
+            "lib/schemas.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm test -- schemas.test.ts",
+            "expected": "All tests pass"
+          },
+          "status": "completed",
+          "notes": "Test all schemas: contactSchema, checkoutSchema, quoteSchema, addressSchema, profileSchema - validate required fields, email format, min lengths"
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Write unit tests for gravel calculator logic",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/calculators/__tests__/gravel-calculator.test.tsx"
+          ],
+          "patterns_from": [
+            "components/calculators/gravel-calculator.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm test -- gravel-calculator.test.tsx",
+            "expected": "All tests pass"
+          },
+          "status": "completed",
+          "notes": "Test calculate() function: rectangle area, circle area, triangle area, cubic yards conversion, overage calculation, tons/cost estimation"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-integration-tests",
+      "name": "Integration Tests - API Routes",
+      "type": "implementation",
+      "description": "Write integration tests for API route handlers with mocked external services (Prisma, Stripe, Postmark)",
+      "depends_on": [
+        "phase-1-setup"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Write integration tests for order checkout API",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "app/api/orders/__tests__/checkout.test.ts"
+          ],
+          "patterns_from": [
+            "app/api/orders/checkout/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm test -- checkout.test.ts",
+            "expected": "All tests pass"
+          },
+          "status": "completed",
+          "notes": "Mock Prisma, Stripe, Postmark. Test: valid order creation, price validation, Stripe session creation, authenticated vs guest, error handling"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Write integration tests for contact form API",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "app/api/contact/__tests__/route.test.ts"
+          ],
+          "patterns_from": [
+            "app/api/contact/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm test -- contact/route.test.ts",
+            "expected": "All tests pass"
+          },
+          "status": "completed",
+          "notes": "Mock Prisma and Postmark. Test: valid submission, invalid data (Zod errors), email sending, database save"
+        },
+        {
+          "id": "subtask-3-3",
+          "description": "Write integration tests for quote request API",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "app/api/quote/__tests__/route.test.ts"
+          ],
+          "patterns_from": [
+            "app/api/quote/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm test -- quote/route.test.ts",
+            "expected": "All tests pass"
+          },
+          "status": "completed",
+          "notes": "Mock Prisma and Postmark. Test: valid quote request, product validation, email notification"
+        },
+        {
+          "id": "subtask-3-4",
+          "description": "Write integration tests for AI chat API",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "app/api/chat/__tests__/route.test.ts"
+          ],
+          "patterns_from": [
+            "app/api/chat/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm test -- chat/route.test.ts",
+            "expected": "All tests pass"
+          },
+          "status": "completed",
+          "notes": "Mock Anthropic AI SDK and Prisma. Test: message validation, chat history, AI response generation, rate limiting"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-e2e-tests",
+      "name": "E2E Tests - Critical Flows",
+      "type": "implementation",
+      "description": "Write Playwright E2E tests for revenue-critical user flows: order checkout, quote request, and contact form",
+      "depends_on": [
+        "phase-1-setup"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Write E2E test for order checkout flow",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "e2e/order-flow.spec.ts"
+          ],
+          "patterns_from": [
+            "app/order/page.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run test:e2e -- order-flow.spec.ts",
+            "expected": "E2E test passes"
+          },
+          "status": "completed",
+          "notes": "Test: navigate to order page, fill form, add items, proceed to checkout, verify Stripe redirect (mock in test env)"
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Write E2E test for quote request flow",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "e2e/quote-request.spec.ts"
+          ],
+          "patterns_from": [
+            "app/contact/page.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run test:e2e -- quote-request.spec.ts",
+            "expected": "E2E test passes"
+          },
+          "status": "completed",
+          "notes": "Test: navigate to quote page, fill form with products, submit, verify success message"
+        },
+        {
+          "id": "subtask-4-3",
+          "description": "Write E2E test for contact form flow",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "e2e/contact-form.spec.ts"
+          ],
+          "patterns_from": [
+            "app/contact/page.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run test:e2e -- contact-form.spec.ts",
+            "expected": "E2E test passes"
+          },
+          "status": "completed",
+          "notes": "Test: navigate to contact page, fill form, submit, verify success message or error handling"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-coverage-and-ci",
+      "name": "Coverage Reporting & CI Integration",
+      "type": "integration",
+      "description": "Configure code coverage reporting with 30% baseline and ensure tests can run in CI",
+      "depends_on": [
+        "phase-2-unit-tests",
+        "phase-3-integration-tests",
+        "phase-4-e2e-tests"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Configure Vitest coverage with 30% threshold",
+          "service": "frontend",
+          "files_to_modify": [
+            "vitest.config.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npm run test:coverage",
+            "expected": "Coverage report generated with 30%+ coverage"
+          },
+          "status": "completed",
+          "notes": "Add @vitest/coverage-v8, configure coverage thresholds for critical paths (lib/, app/api/)"
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Update .gitignore for test artifacts",
+          "service": "frontend",
+          "files_to_modify": [
+            ".gitignore"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify coverage/ and test-results/ are gitignored"
+          },
+          "status": "completed",
+          "notes": "Add: coverage/, test-results/, playwright-report/"
+        },
+        {
+          "id": "subtask-5-3",
+          "description": "Create CI-friendly test environment file",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            ".env.test"
+          ],
+          "patterns_from": [
+            ".env.local"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify .env.test has mock values for all required env vars"
+          },
+          "status": "completed",
+          "notes": "Create .env.test with mock DATABASE_URL, mock API keys, test mode flags"
+        },
+        {
+          "id": "subtask-5-4",
+          "description": "Verify all tests pass in CI mode",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npm test && npm run test:e2e",
+            "expected": "All unit, integration, and E2E tests pass"
+          },
+          "status": "pending",
+          "notes": "Run full test suite to ensure everything works together"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 5,
+    "total_subtasks": 17,
+    "services_involved": [
+      "frontend"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 3,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-2-unit-tests",
+            "phase-3-integration-tests",
+            "phase-4-e2e-tests"
+          ],
+          "reason": "All three test phases depend only on phase-1-setup and have no file conflicts"
+        }
+      ],
+      "recommended_workers": 3,
+      "speedup_estimate": "2x faster than sequential (phases 2-4 run in parallel)"
+    },
+    "startup_command": "source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 023 --parallel 3"
+  },
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "implementation",
+    "test_types_required": [
+      "unit",
+      "integration",
+      "e2e"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "All unit tests pass (price calc, schemas, calculator)",
+      "All integration tests pass (API routes with mocks)",
+      "All E2E tests pass (order, quote, contact flows)",
+      "Code coverage >= 30% for critical paths",
+      "Test scripts work in CI environment",
+      "No breaking changes to existing functionality"
+    ],
+    "verification_steps": [
+      {
+        "name": "Unit Tests",
+        "command": "npm test -- --run",
+        "expected_outcome": "All unit tests pass",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Integration Tests",
+        "command": "npm test -- --run app/api",
+        "expected_outcome": "All API integration tests pass",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "E2E Tests",
+        "command": "npm run test:e2e",
+        "expected_outcome": "All Playwright tests pass",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Coverage Report",
+        "command": "npm run test:coverage",
+        "expected_outcome": "30%+ coverage on critical paths",
+        "type": "test",
+        "required": true,
+        "blocking": false
+      }
+    ],
+    "reasoning": "Medium risk - adding test infrastructure should not break existing code, but comprehensive testing is needed to ensure tests themselves are reliable"
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": true,
+      "commands": [
+        "npm test -- --run"
+      ],
+      "minimum_coverage": 30
+    },
+    "integration_tests": {
+      "required": true,
+      "commands": [
+        "npm test -- --run app/api"
+      ],
+      "services_to_test": [
+        "frontend"
+      ]
+    },
+    "e2e_tests": {
+      "required": true,
+      "commands": [
+        "npm run test:e2e"
+      ],
+      "flows": [
+        "order-flow",
+        "quote-request",
+        "contact-form"
+      ]
+    },
+    "browser_verification": {
+      "required": false,
+      "pages": []
+    },
+    "database_verification": {
+      "required": false,
+      "checks": []
+    }
+  },
+  "qa_signoff": null,
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "xstateState": "coding",
+  "executionPhase": "coding",
+  "updated_at": "2026-04-24T03:49:11.117Z"
+}

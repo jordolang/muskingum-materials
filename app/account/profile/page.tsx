@@ -1,23 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Loader2, CheckCircle, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-const profileSchema = z.object({
-  name: z.string().min(2, "Name is required"),
-  email: z.string().email("Valid email required"),
-  phone: z.string().optional(),
-  company: z.string().optional(),
-});
-
-type ProfileData = z.infer<typeof profileSchema>;
+import { profileSchema, type ProfileData } from "@/lib/schemas";
 
 export default function ProfilePage() {
   const { user, isLoaded } = useUser();
@@ -44,6 +37,7 @@ export default function ProfilePage() {
             email: data.profile.email || user?.primaryEmailAddress?.emailAddress || "",
             phone: data.profile.phone || "",
             company: data.profile.company || "",
+            smsOptIn: data.profile.smsOptIn || false,
           });
         } else if (user) {
           reset({
@@ -51,6 +45,7 @@ export default function ProfilePage() {
             email: user.primaryEmailAddress?.emailAddress || "",
             phone: "",
             company: "",
+            smsOptIn: false,
           });
         }
       } catch {
@@ -60,6 +55,7 @@ export default function ProfilePage() {
             email: user.primaryEmailAddress?.emailAddress || "",
             phone: "",
             company: "",
+            smsOptIn: false,
           });
         }
       } finally {
@@ -110,10 +106,13 @@ export default function ProfilePage() {
         <CardContent>
           <div className="flex items-center gap-4">
             {user?.imageUrl && (
-              <img
+              <Image
                 src={user.imageUrl}
                 alt="Profile"
+                width={56}
+                height={56}
                 className="h-14 w-14 rounded-full"
+                unoptimized
               />
             )}
             <div>
@@ -170,6 +169,22 @@ export default function ProfilePage() {
                 <label className="text-sm font-medium mb-1 block">Company</label>
                 <Input placeholder="Company name (optional)" {...register("company")} />
               </div>
+            </div>
+
+            {/* SMS Opt-in */}
+            <div className="mt-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  {...register("smsOptIn")}
+                  className="mt-1"
+                />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Send me SMS order updates (optional)</p>
+                  <p className="text-xs text-muted-foreground">
+                    By checking this box, you consent to receive automated text messages about your order status and delivery updates at the phone number provided. Message and data rates may apply. You can opt out at any time by replying STOP. Message frequency varies.
+                  </p>
+                </div>
+              </label>
             </div>
 
             <div className="flex items-center gap-3">

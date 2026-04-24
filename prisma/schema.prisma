@@ -40,7 +40,7 @@ model ContactSubmission {
 
 model ChatConversation {
   id        String        @id @default(cuid())
-  visitorId String
+  visitorId String        @unique
   name      String?
   email     String?
   phone     String?
@@ -50,7 +50,6 @@ model ChatConversation {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
-  @@index([visitorId])
   @@index([status])
 }
 
@@ -83,28 +82,32 @@ model QuoteRequest {
 }
 
 model Order {
-  id              String      @id @default(cuid())
-  orderNumber     String      @unique
-  userId          String?
-  name            String
-  email           String
-  phone           String?
-  items           Json
-  subtotal        Float
-  tax             Float
-  processingFee   Float
-  deliveryFee     Float       @default(0)
-  total           Float
-  deliveryAddress String?     @db.Text
-  deliveryNotes   String?     @db.Text
-  pickupOrDeliver String      @default("pickup")
-  status          String      @default("pending")
-  paymentStatus   String      @default("unpaid")
-  stripeSessionId String?
-  stripePaymentId String?
-  invoiceUrl      String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id               String            @id @default(cuid())
+  orderNumber      String            @unique
+  userId           String?
+  name             String
+  email            String
+  phone            String?
+  items            Json
+  subtotal         Float
+  tax              Float
+  processingFee    Float
+  deliveryFee      Float             @default(0)
+  total            Float
+  deliveryAddress  String?           @db.Text
+  deliveryNotes    String?           @db.Text
+  pickupOrDeliver  String            @default("pickup")
+  status           String            @default("pending")
+  paymentStatus    String            @default("unpaid")
+  stripeSessionId  String?
+  stripePaymentId  String?
+  invoiceUrl       String?
+  smsOptIn         Boolean           @default(false)
+  completedAt      DateTime?
+  statusHistory    OrderStatusHistory[]
+  smsNotifications SmsNotification[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
   @@index([orderNumber])
   @@index([userId])
@@ -126,32 +129,47 @@ model SavedOrder {
   @@index([userId])
 }
 
+model OrderStatusHistory {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    String
+  notes     String?  @db.Text
+  changedBy String?
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+}
+
 model UserProfile {
-  id          String    @id @default(cuid())
-  userId      String    @unique
-  name        String?
-  email       String?
-  phone       String?
-  company     String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  addresses   Address[]
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  name               String?
+  email              String?
+  phone              String?
+  company            String?
+  isContractor       Boolean   @default(false)
+  contractorDiscount Float?
+  smsOptIn           Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  addresses          Address[]
 
   @@index([userId])
 }
 
 model Address {
-  id            String       @id @default(cuid())
+  id            String      @id @default(cuid())
   userProfileId String
-  userProfile   UserProfile  @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
-  label         String       @default("Default")
+  userProfile   UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+  label         String      @default("Default")
   street        String
   city          String
   state         String
   zip           String
-  isDefault     Boolean      @default(false)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  isDefault     Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   @@index([userProfileId])
 }
@@ -166,19 +184,46 @@ model NewsletterSubscriber {
   @@index([email])
 }
 
+model LoyaltyAccount {
+  id              String               @id @default(cuid())
+  userId          String               @unique
+  points          Int                  @default(0)
+  pointsLifetime  Int                  @default(0)
+  tier            String               @default("bronze")
+  tierSince       DateTime             @default(now())
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  transactions    LoyaltyTransaction[]
+
+  @@index([userId])
+}
+
+model LoyaltyTransaction {
+  id          String         @id @default(cuid())
+  accountId   String
+  account     LoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  type        String
+  points      Int
+  orderId     String?
+  description String?        @db.Text
+  createdAt   DateTime       @default(now())
+
+  @@index([accountId])
+}
+
 model Product {
-  id               String   @id @default(cuid())
-  slug             String   @unique
+  id               String  @id @default(cuid())
+  slug             String  @unique
   name             String
   category         String
-  description      String   @db.Text
-  shortDescription String?  @db.Text
+  description      String  @db.Text
+  shortDescription String? @db.Text
   imageUrl         String?
   imageAlt         String?
 
   // Pricing - Muskingum local pricing
-  price            Float?
-  unit             String   @default("ton")
+  price Float?
+  unit  String @default("ton")
 
   // Market pricing ranges (from industry data)
   marketPriceLowPerTon   Float?
@@ -189,31 +234,31 @@ model Product {
   // Physical properties
   sizeDescription  String?
   colorDescription String?
-  densityLow       Float?   @default(1.4)
-  densityHigh      Float?   @default(1.5)
+  densityLow       Float?  @default(1.4)
+  densityHigh      Float?  @default(1.5)
 
   // Detailed content
-  bestFor          String[] @default([])
-  notFor           String[] @default([])
-  commonUses       String[] @default([])
-  pros             String[] @default([])
-  cons             String[] @default([])
-  altNames         String[] @default([])
+  bestFor    String[] @default([])
+  notFor     String[] @default([])
+  commonUses String[] @default([])
+  pros       String[] @default([])
+  cons       String[] @default([])
+  altNames   String[] @default([])
 
   // SEO
-  metaTitle        String?
-  metaDescription  String?  @db.Text
+  metaTitle       String?
+  metaDescription String? @db.Text
 
   // Ordering
-  sortOrder        Int      @default(0)
-  featured         Boolean  @default(false)
-  active           Boolean  @default(true)
+  sortOrder Int     @default(0)
+  featured  Boolean @default(false)
+  active    Boolean @default(true)
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  comparisons      ProductComparison[] @relation("ComparisonProductA")
-  comparedBy       ProductComparison[] @relation("ComparisonProductB")
+  comparisons ProductComparison[] @relation("ComparisonProductA")
+  comparedBy  ProductComparison[] @relation("ComparisonProductB")
 
   @@index([category])
   @@index([slug])
@@ -228,29 +273,133 @@ model ProductComparison {
   productB   Product @relation("ComparisonProductB", fields: [productBId], references: [id], onDelete: Cascade)
   summary    String? @db.Text
 
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([productAId, productBId])
   @@index([productAId])
   @@index([productBId])
 }
 
+model Service {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String   @db.Text
+  icon        String?
+  features    String[] @default([])
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active])
+  @@index([sortOrder])
+}
+
 model CostGuide {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  title       String
+  subtitle    String?
+  description String  @db.Text
+  content     Json
+  icon        String?
+  sortOrder   Int     @default(0)
+  active      Boolean @default(true)
+
+  metaTitle       String?
+  metaDescription String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+}
+
+model RecurringOrder {
   id               String   @id @default(cuid())
-  slug             String   @unique
-  title            String
-  subtitle         String?
-  description      String   @db.Text
-  content          Json
-  icon             String?
-  sortOrder        Int      @default(0)
-  active           Boolean  @default(true)
-
-  metaTitle        String?
-  metaDescription  String?  @db.Text
-
+  userId           String?
+  name             String
+  email            String
+  phone            String?
+  company          String?
+  items            Json
+  deliveryAddress  String   @db.Text
+  deliveryNotes    String?  @db.Text
+  frequency        String   @default("weekly")
+  nextDeliveryDate DateTime
+  status           String   @default("active")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  @@index([slug])
+  @@index([userId])
+  @@index([status])
+  @@index([nextDeliveryDate])
+}
+
+model SmsNotification {
+  id         String    @id @default(cuid())
+  orderId    String?
+  order      Order?    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  type       String
+  phone      String
+  message    String    @db.Text
+  status     String    @default("pending")
+  providerId String?
+  errorMsg   String?   @db.Text
+  sentAt     DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([orderId])
+  @@index([status])
+  @@index([phone])
+}
+
+model ReviewSubmission {
+  id               String   @id @default(cuid())
+  userId           String?
+  sanityDocumentId String?
+  orderNumber      String?
+  submittedAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([orderNumber])
+}
+
+model EmailTemplate {
+  id          String     @id @default(cuid())
+  name        String
+  subject     String
+  htmlContent String     @db.Text
+  textContent String?    @db.Text
+  category    String?
+  active      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  campaigns   Campaign[]
+
+  @@index([active])
+  @@index([category])
+}
+
+model Campaign {
+  id             String         @id @default(cuid())
+  name           String
+  subject        String
+  htmlContent    String         @db.Text
+  textContent    String?        @db.Text
+  templateId     String?
+  template       EmailTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  status         String         @default("draft")
+  scheduledAt    DateTime?
+  sentAt         DateTime?
+  recipientCount Int            @default(0)
+  metrics        Json?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([status])
+  @@index([scheduledAt])
+  @@index([templateId])
 }

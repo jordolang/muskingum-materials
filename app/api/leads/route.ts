@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-
-const leadSchema = z.object({
-  name: z.string().optional(),
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
-  source: z.string().default("chat"),
-  visitorId: z.string().optional(),
-});
+import { leadSchema } from "@/lib/schemas";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,8 +26,9 @@ export async function POST(request: NextRequest) {
           message: data.visitorId ? `Chat visitor: ${data.visitorId}` : null,
         },
       });
-    } catch {
-      // Database not configured yet
+    } catch (error) {
+      logger.error("Lead creation error", error);
+      return NextResponse.json({ error: "Failed to create lead" }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
@@ -44,7 +39,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    console.error("Lead API error:", error);
+    logger.error("Lead API error", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
