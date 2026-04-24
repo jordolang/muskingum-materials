@@ -5,6 +5,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ChatWidgetLoader } from "@/components/chat/chat-widget-loader";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { CookieConsent } from "@/components/analytics/cookie-consent";
 import "./globals.css";
 
 const fontSans = Inter({
@@ -62,6 +63,7 @@ export default function RootLayout({
           </div>
           <ChatWidgetLoader />
           <GoogleAnalytics />
+          <CookieConsent />
         </body>
       </html>
     </ClerkProvider>
