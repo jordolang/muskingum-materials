@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { Menu, X, Phone, User, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -207,6 +208,7 @@ function MobileNavItem({
 }
 
 export function Navbar() {
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
