@@ -5,6 +5,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ChatWidgetLoader } from "@/components/chat/chat-widget-loader";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { CookieConsent } from "@/components/analytics/cookie-consent";
 import "./globals.css";
 
 // Preview Vercel builds don't have NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY set,
@@ -71,6 +72,7 @@ export default function RootLayout({
         </div>
         <ChatWidgetLoader />
         <GoogleAnalytics />
+        <CookieConsent />
       </body>
     </html>
   );
