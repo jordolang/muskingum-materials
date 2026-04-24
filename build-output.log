@@ -30,3 +30,88 @@ Import trace for requested module:
 
    Linting and checking validity of types ...
  ⨯ ESLint: Plugin "@next/next" was conflicted between ".eslintrc.json » eslint-config-next/core-web-vitals » plugin:@next/next/core-web-vitals" and "../../../../.eslintrc.json » eslint-config-next/core-web-vitals » plugin:@next/next/core-web-vitals".
+   Collecting page data ...
+(node:55618) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55627) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55629) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55632) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+   Generating static pages (0/67) ...
+(node:56614) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+   Generating static pages (16/67) 
+(node:56615) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+   Generating static pages (33/67) 
+   Generating static pages (50/67) 
+(node:56616) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ Generating static pages (67/67)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS  Revalidate  Expire
+┌ ○ /                                    4.35 kB         130 kB          1m      1y
+├ ○ /_not-found                             1 kB         103 kB
+├ ○ /about                                 185 B         111 kB
+├ ƒ /account                               186 B         106 kB
+├ ƒ /account/addresses                   5.15 kB         137 kB
+├ ƒ /account/invoices                      186 B         106 kB
+├ ƒ /account/orders                        186 B         106 kB
+├ ƒ /account/orders/[orderNumber]        1.52 kB         114 kB
+├ ƒ /account/profile                     5.05 kB         171 kB
+├ ƒ /api/account/addresses                 168 B         102 kB
+├ ƒ /api/account/orders                    168 B         102 kB
+├ ƒ /api/account/orders/[orderNumber]      168 B         102 kB
+├ ƒ /api/account/profile                   168 B         102 kB
+├ ƒ /api/chat                              168 B         102 kB
+├ ƒ /api/contact                           168 B         102 kB
+├ ƒ /api/leads                             168 B         102 kB
+├ ƒ /api/newsletter                        168 B         102 kB
+├ ƒ /api/orders/checkout                   168 B         102 kB
+├ ƒ /api/orders/webhook                    168 B         102 kB
+├ ƒ /api/quote                             168 B         102 kB
+├ ƒ /api/revalidate                        168 B         102 kB
+├ ○ /calculators                           186 B         106 kB
+├ ○ /calculators/coverage-chart          3.13 kB         143 kB
+├ ○ /calculators/gravel-calculator        3.5 kB         144 kB
+├ ○ /calculators/tons-to-yards           2.96 kB         143 kB
+├ ○ /catalog                               185 B         111 kB
+├ ● /catalog/[slug]                        185 B         111 kB
+├   ├ /catalog/411-gravel
+├   ├ /catalog/57-gravel
+├   ├ /catalog/8-gravel
+├   └ [+24 more paths]
+├ ○ /contact                             3.92 kB         135 kB
+├ ○ /costs                                 186 B         106 kB
+├ ● /costs/[slug]                          186 B         106 kB
+├   ├ /costs/delivery-cost
+├   ├ /costs/driveway-cost
+├   ├ /costs/cost-per-yard
+├   └ /costs/cost-per-ton
+├ ○ /faq                                   752 B         121 kB          1h      1y
+├ ○ /gallery                               855 B         108 kB          1h      1y
+├ ○ /icon.svg                                0 B            0 B
+├ ○ /order                               10.6 kB         178 kB
+├ ƒ /order/success                         186 B         106 kB
+├ ○ /planner                             7.71 kB         148 kB
+├ ○ /products                              168 B         102 kB          1h      1y
+├ ○ /services                              185 B         111 kB          2h      1y
+├ ƒ /sign-in/[[...sign-in]]              2.09 kB         133 kB
+├ ƒ /sign-up/[[...sign-up]]              2.08 kB         133 kB
+└ ƒ /studio/[[...tool]]                  1.68 MB         1.8 MB
++ First Load JS shared by all             102 kB
+  ├ chunks/1255-47f39d486ee86e84.js      45.6 kB
+  ├ chunks/4bd1b696-182b6b13bdad92e3.js  54.2 kB
+  └ other shared chunks (total)          2.45 kB
+
+
+ƒ Middleware                              112 kB
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+
