@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import { checkoutSchema, type CheckoutData } from "@/lib/schemas";
+import { checkoutSchema } from "@/lib/schemas";
 import { validateCheckoutPrices } from "@/lib/validate-checkout-prices";
 import { logger } from "@/lib/logger";
 import { addBreadcrumb, startTransaction } from "@/lib/monitoring";

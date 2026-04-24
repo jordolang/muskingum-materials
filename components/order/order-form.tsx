@@ -10,7 +10,7 @@ import { ProductCatalog } from "./product-catalog";
 import { CartSummary } from "./cart-summary";
 import { CheckoutForm } from "./checkout-form";
 
-const ORDERABLE_PRODUCTS = PRODUCTS.filter((p) => p.price > 0);
+type OrderableProduct = (typeof PRODUCTS)[number];
 
 interface CartItem {
   name: string;
@@ -46,7 +46,7 @@ export function OrderForm() {
     defaultValues: { fulfillment: "pickup" },
   });
 
-  function addToCart(product: (typeof ORDERABLE_PRODUCTS)[number]) {
+  function addToCart(product: OrderableProduct) {
     setCart((prev) => {
       const existing = prev.find((item) => item.name === product.name);
       if (existing) {

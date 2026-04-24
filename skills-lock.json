@@ -11,6 +11,16 @@
       "sourceType": "github",
       "computedHash": "9f0c62274cf8ccf41dd32fc2f2629f4c9a8e5a920826f30c2eb226d7e796b031"
     },
+    "create-agent-with-sanity-context": {
+      "source": "sanity-io/agent-context",
+      "sourceType": "github",
+      "computedHash": "b3c8bba53144308a011e3eb78bdade6266363474275200c58e31c479bd3852d1"
+    },
+    "dial-your-context": {
+      "source": "sanity-io/agent-context",
+      "sourceType": "github",
+      "computedHash": "6457172cf80695a7563116847f68fa64d1bf48b77cac6a850b964e5dacdb5241"
+    },
     "sanity-best-practices": {
       "source": "sanity-io/agent-toolkit",
       "sourceType": "github",
@@ -20,6 +30,11 @@
       "source": "sanity-io/agent-toolkit",
       "sourceType": "github",
       "computedHash": "edb99db85683ff99678fcb1bebc3a5653c3ea927eea9ee2534f19be86c7b8b81"
+    },
+    "shape-your-agent": {
+      "source": "sanity-io/agent-context",
+      "sourceType": "github",
+      "computedHash": "13ca2066c058f34c89685dcbb2fdb519dbbe8fa08a6e6211ed3f719d4c62c5bb"
     }
   }
 }

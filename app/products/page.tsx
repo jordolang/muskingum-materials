@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BUSINESS_INFO } from "@/data/business";
-import { sanityClient } from "@/lib/sanity/client";
-import { productsQuery, siteSettingsQuery } from "@/lib/sanity/queries";
+import { prisma } from "@/lib/prisma";
 
-export const revalidate = 3600; // Revalidate every hour (ISR)
+// Revalidate hourly so price/SKU edits in the database surface on the
+// statically generated page within an hour without a redeploy.
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Products & Pricing",
@@ -15,55 +16,40 @@ export const metadata: Metadata = {
     "View our complete list of sand, gravel, soil, and stone products with current pricing. Serving Southeast Ohio from Zanesville.",
 };
 
-const CATEGORIES = [
-  { value: "all", label: "All Products" },
-  { value: "gravel", label: "Gravel" },
-  { value: "sand", label: "Sand" },
-  { value: "soil", label: "Soil" },
-  { value: "stone", label: "Stone" },
-];
-
 interface Product {
   _id: string;
   name: string;
-  slug: { current: string };
   description: string;
   pricePerTon: number;
   unit: string;
   category: string;
-  image?: string;
-  featured?: boolean;
-  available?: boolean;
-  sortOrder?: number;
-}
-
-interface SiteSettings {
-  title: string;
-  description: string;
-  phone: string;
-  altPhone?: string;
-  email: string;
-  address: string;
-  city: string;
-  state: string;
-  zip: string;
 }
 
 export default async function ProductsPage() {
-  let products: Product[] = [];
-  let siteSettings: SiteSettings | null = null;
+  const productRows = await prisma.product.findMany({
+    where: { active: true },
+    orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      shortDescription: true,
+      description: true,
+      price: true,
+      unit: true,
+      category: true,
+    },
+  });
 
-  try {
-    [products, siteSettings] = await Promise.all([
-      sanityClient.fetch<Product[]>(productsQuery, {}, { next: { tags: ['products'] } }),
-      sanityClient.fetch<SiteSettings>(siteSettingsQuery, {}, { next: { tags: ['site-settings'] } }),
-    ]);
-  } catch (error) {
-    console.error("Failed to fetch products/settings from Sanity:", error);
-  }
+  const products: Product[] = productRows.map((row) => ({
+    _id: row.id,
+    name: row.name,
+    description: row.shortDescription ?? row.description,
+    pricePerTon: row.price ?? 0,
+    unit: row.unit,
+    category: row.category,
+  }));
 
-  // Fallback to static data if Sanity settings unavailable
-  const phone = siteSettings?.phone || BUSINESS_INFO.phone;
+  const phone = BUSINESS_INFO.phone;
 
   const grouped = {
     gravel: products.filter((p) => p.category === "gravel"),
