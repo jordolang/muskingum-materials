@@ -59,7 +59,9 @@ ${data.message}
         { status: 400 }
       );
     }
-    logger.error("Contact API error", error);
+    logger.error("Contact API error", error, {
+      operation: "contact.POST",
+    });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

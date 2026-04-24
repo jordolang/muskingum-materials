@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { checkRateLimit, getClientIdentifier } from "./lib/rate-limit";
 import type { RateLimitTier } from "./lib/rate-limit";
+import { logRequest, logResponse } from "./lib/request-logger";
 
 const hasClerk = Boolean(
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
@@ -18,7 +19,11 @@ const rateLimitedEndpoints: Record<string, RateLimitTier> = {
 };
 
 export default async function middleware(request: NextRequest) {
+  const startTime = Date.now();
   const { pathname } = request.nextUrl;
+
+  // Log incoming request
+  logRequest(request);
 
   // Check if this is a rate-limited public API endpoint
   const rateLimitTier = rateLimitedEndpoints[pathname];
@@ -30,7 +35,7 @@ export default async function middleware(request: NextRequest) {
       // Calculate Retry-After in seconds
       const retryAfter = Math.ceil((result.reset - Date.now()) / 1000);
 
-      return new NextResponse(
+      const response = new NextResponse(
         JSON.stringify({
           error: "Too many requests",
           message: "Rate limit exceeded. Please try again later.",
@@ -46,15 +51,27 @@ export default async function middleware(request: NextRequest) {
           },
         }
       );
+
+      const duration = Date.now() - startTime;
+      logResponse(request, response, duration, { rateLimited: true });
+
+      return response;
     }
   }
 
   if (hasClerk) {
     const { clerkMiddleware } = await import("@clerk/nextjs/server");
     const handler = clerkMiddleware();
-    return handler(request, {} as never);
+    const response = (await handler(request, {} as never)) ?? NextResponse.next();
+    const duration = Date.now() - startTime;
+    logResponse(request, response, duration, { clerkAuth: true });
+    return response;
   }
-  return NextResponse.next();
+
+  const response = NextResponse.next();
+  const duration = Date.now() - startTime;
+  logResponse(request, response, duration);
+  return response;
 }
 
 export const config = {

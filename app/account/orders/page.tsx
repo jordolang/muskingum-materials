@@ -3,8 +3,9 @@ import Link from "next/link";
 import { ArrowRight, Package, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
+import { StatusBadge } from "@/components/order/status-badge";
+import { PaymentBadge } from "@/components/order/payment-badge";
 
 const ORDERS_PER_PAGE = 10;
 
@@ -170,37 +171,4 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
       )}
     </div>
   );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    pending: "bg-yellow-100 text-yellow-800",
-    confirmed: "bg-blue-100 text-blue-800",
-    processing: "bg-purple-100 text-purple-800",
-    ready: "bg-green-100 text-green-800",
-    ready_for_pickup: "bg-green-100 text-green-800",
-    out_for_delivery: "bg-cyan-100 text-cyan-800",
-    completed: "bg-green-100 text-green-800",
-    canceled: "bg-red-100 text-red-800",
-    cancelled: "bg-red-100 text-red-800",
-  };
-
-  // Format display text for underscored statuses
-  const displayText = status.replace(/_/g, " ");
-
-  return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${map[status] || "bg-gray-100 text-gray-800"}`}>
-      {displayText}
-    </span>
-  );
-}
-
-function PaymentBadge({ status }: { status: string }) {
-  if (status === "paid") {
-    return <Badge variant="default" className="text-xs bg-green-600">Paid</Badge>;
-  }
-  if (status === "unpaid") {
-    return <Badge variant="outline" className="text-xs">Unpaid</Badge>;
-  }
-  return null;
 }

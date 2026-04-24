@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { OrderForm } from "@/components/order/order-form";
 import { MaterialCalculator } from "@/components/order/material-calculator";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 export const metadata: Metadata = {
   title: "Order Materials Online",
@@ -26,13 +27,17 @@ export default function OrderPage() {
           {/* Calculator - Left Side */}
           <div className="lg:col-span-2">
             <div className="sticky top-20">
-              <MaterialCalculator />
+              <ErrorBoundary componentName="MaterialCalculator">
+                <MaterialCalculator />
+              </ErrorBoundary>
             </div>
           </div>
 
           {/* Order Form - Right Side */}
           <div className="lg:col-span-3">
-            <OrderForm />
+            <ErrorBoundary componentName="OrderForm">
+              <OrderForm />
+            </ErrorBoundary>
           </div>
         </div>
       </div>
