@@ -51,7 +51,12 @@ ${data.message}
       replyTo: data.email,
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      analytics: {
+        subject: data.subject,
+      },
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

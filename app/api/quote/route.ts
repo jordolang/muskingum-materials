@@ -56,7 +56,13 @@ Notes: ${data.notes || "None"}
       replyTo: data.email,
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      analytics: {
+        productCount: data.products.length,
+        leadSource: "quote_form",
+      },
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

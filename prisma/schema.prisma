@@ -123,6 +123,19 @@ model Order {
   @@index([stripeSessionId])
 }
 
+model SavedOrder {
+  id              String      @id @default(cuid())
+  userId          String
+  name            String
+  items           Json
+  deliveryAddress String?     @db.Text
+  pickupOrDeliver String      @default("pickup")
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([userId])
+}
+
 model OrderStatusHistory {
   id        String   @id @default(cuid())
   orderId   String
@@ -307,7 +320,6 @@ model Service {
 
   @@index([active])
   @@index([sortOrder])
->>>>>>> origin/main
 }
 
 model CostGuide {

@@ -4,6 +4,7 @@ import { ArrowRight, Package, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
+import { ReorderButton } from "@/components/account/reorder-button";
 import { StatusBadge } from "@/components/order/status-badge";
 import { PaymentBadge } from "@/components/order/payment-badge";
 
@@ -26,6 +27,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
     status: string;
     paymentStatus: string;
     pickupOrDeliver: string;
+    deliveryAddress: string | null;
     createdAt: Date;
   }> = [];
   let totalOrders = 0;
@@ -121,6 +123,13 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                               {order.pickupOrDeliver}
                             </p>
                           </div>
+                          <ReorderButton
+                            orderData={{
+                              items,
+                              pickupOrDeliver: order.pickupOrDeliver,
+                              deliveryAddress: order.deliveryAddress,
+                            }}
+                          />
                           <ArrowRight className="h-5 w-5 text-muted-foreground" />
                         </div>
                       </div>
