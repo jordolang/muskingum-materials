@@ -8,7 +8,7 @@ import Script from "next/script";
 const GA_ID_PATTERN = /^G-[A-Z0-9]{4,}$/;
 
 export function GoogleAnalytics() {
-  const gaId = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID;
+  const gaId = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID || "G-5N79W1SG59";
   if (!gaId || !GA_ID_PATTERN.test(gaId)) return null;
 
   return (
