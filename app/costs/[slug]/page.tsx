@@ -13,6 +13,7 @@ interface CostGuidePageProps {
 }
 
 export async function generateStaticParams() {
+  if (!process.env.DATABASE_URL) return [];
   const guides = await getCostGuides();
   return guides.map((g) => ({ slug: g.slug }));
 }

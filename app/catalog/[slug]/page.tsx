@@ -24,6 +24,7 @@ interface ProductPageProps {
 }
 
 export async function generateStaticParams() {
+  if (!process.env.DATABASE_URL) return [];
   const products = await getProducts();
   return products.map((p) => ({ slug: p.slug }));
 }
