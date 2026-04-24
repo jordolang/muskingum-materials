@@ -1493,6 +1493,65 @@ const COST_GUIDES_DATA = [
   },
 ];
 
+const SERVICES_DATA = [
+  {
+    slug: "material-sales",
+    title: "Material Sales",
+    description:
+      "Wide selection of sand, gravel, soil, and stone products at competitive prices. On-site state-approved scales ensure accurate measurements.",
+    icon: "mountain",
+    features: [
+      "15+ product varieties",
+      "State-approved scales",
+      "Competitive pricing",
+      "Volume discounts available",
+    ],
+    sortOrder: 0,
+  },
+  {
+    slug: "delivery-services",
+    title: "Delivery Services",
+    description:
+      "We deliver materials directly to your job site with our fleet of trucks, handling loads up to 20 tons per trip.",
+    icon: "truck",
+    features: [
+      "Up to 20 tons per load",
+      "Serving Southeast Ohio",
+      "Timely delivery",
+      "Call for delivery rates",
+    ],
+    sortOrder: 1,
+  },
+  {
+    slug: "large-project-pricing",
+    title: "Large Project Pricing",
+    description:
+      "Special pricing for large-quantity orders. Whether you're a contractor or homeowner with a big project, we offer volume discounts.",
+    icon: "calculator",
+    features: [
+      "Volume discounts",
+      "Contractor pricing",
+      "Project consultation",
+      "Custom orders",
+    ],
+    sortOrder: 2,
+  },
+  {
+    slug: "on-site-loading",
+    title: "On-Site Loading",
+    description:
+      "State of the art equipment for fast, efficient loading. Drive in, get loaded, and get back to your project quickly.",
+    icon: "loader",
+    features: [
+      "Fast loading times",
+      "Modern equipment",
+      "Accurate weights",
+      "Easy access",
+    ],
+    sortOrder: 3,
+  },
+];
+
 async function main() {
   // Clear existing data
   await prisma.productComparison.deleteMany();
@@ -1507,6 +1566,15 @@ async function main() {
   // Seed cost guides
   for (const guide of COST_GUIDES_DATA) {
     await prisma.costGuide.create({ data: guide });
+  }
+
+  // Upsert services (idempotent — keeps existing rows in sync)
+  for (const service of SERVICES_DATA) {
+    await prisma.service.upsert({
+      where: { slug: service.slug },
+      create: service,
+      update: service,
+    });
   }
 
   // Create comparisons between related products
@@ -1593,8 +1661,9 @@ async function main() {
   const productCount = await prisma.product.count();
   const guideCount = await prisma.costGuide.count();
   const compCount = await prisma.productComparison.count();
+  const serviceCount = await prisma.service.count();
   process.stdout.write(
-    `Seeded ${productCount} products, ${guideCount} cost guides, ${compCount} comparisons\n`
+    `Seeded ${productCount} products, ${guideCount} cost guides, ${compCount} comparisons, ${serviceCount} services\n`
   );
 }
 

@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-
-const contactSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  phone: z.string().optional(),
-  subject: z.string().min(2),
-  message: z.string().min(10),
-});
+import { contactSchema } from "@/lib/schemas";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,8 +20,16 @@ export async function POST(request: NextRequest) {
           message: data.message,
         },
       });
-    } catch {
-      // Database not configured yet
+    } catch (dbError) {
+      logger.error("Database error saving contact submission", dbError, {
+        operation: "contactSubmission.create",
+        email: data.email,
+        subject: data.subject,
+      });
+      return NextResponse.json(
+        { error: "Failed to save contact submission" },
+        { status: 500 }
+      );
     }
 
     // Send email via Postmark

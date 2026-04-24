@@ -14,26 +14,106 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { BUSINESS_INFO, PRODUCTS, SERVICES } from "@/data/business";
+import { BUSINESS_INFO } from "@/data/business";
 import { ReviewsCarousel } from "@/components/home/reviews-carousel";
 import { HomepageFAQ } from "@/components/home/homepage-faq";
+import { prisma } from "@/lib/prisma";
+import { sanityClient } from "@/lib/sanity/client";
+import { testimonialsQuery } from "@/lib/sanity/queries";
 
-const FEATURED_PRODUCTS = PRODUCTS.filter((p) => p.price > 0).slice(0, 6);
+// ISR — rebuild the homepage at most once per minute and let on-demand
+// revalidation refresh it when database content changes.
+export const revalidate = 60;
 
-const PRODUCT_IMAGES: Record<string, string> = {
-  "Bank Run": "/images/products/bank-run.jpg",
-  "Fill Dirt": "/images/products/fill-dirt.jpg",
-  "Fill Sand": "/images/products/fill-sand.jpg",
-  "Topsoil (Unprocessed)": "/images/products/topsoil.jpg",
-  "#8 Fractured Gravel (Washed)": "/images/products/fractured-gravel.jpg",
-  "#9 Gravel (Washed)": "/images/products/fine-gravel.jpg",
-  "#8 Gravel (Washed)": "/images/photos/stone-close-up.jpg",
-  "#57 Gravel (Washed)": "/images/photos/piles-close-up.jpg",
-  "304 Crushed Gravel": "/images/photos/piles-7.jpg",
-  "Oversized Gravel (Washed)": "/images/photos/stone-hand.jpg",
-};
+interface HomeProduct {
+  _id: string;
+  name: string;
+  description: string;
+  pricePerTon: number;
+  unit: string;
+  imageUrl?: string;
+  imageAlt?: string;
+}
 
-export default function HomePage() {
+interface HomeService {
+  _id: string;
+  title: string;
+  description: string;
+  icon?: string;
+  features: string[];
+}
+
+interface HomeTestimonial {
+  _id: string;
+  name: string;
+  company?: string;
+  rating: number;
+  text: string;
+}
+
+export default async function HomePage() {
+  // Pull products and services from Postgres (Prisma). Testimonials still
+  // come from Sanity for now and degrade to a static fallback inside the
+  // ReviewsCarousel server component when empty.
+  const [productRows, serviceRows, testimonialResult] = await Promise.all([
+    prisma.product.findMany({
+      where: { active: true, price: { gt: 0 } },
+      orderBy: [{ featured: "desc" }, { sortOrder: "asc" }],
+      take: 6,
+      select: {
+        id: true,
+        name: true,
+        shortDescription: true,
+        description: true,
+        price: true,
+        unit: true,
+        imageUrl: true,
+        imageAlt: true,
+      },
+    }),
+    prisma.service.findMany({
+      where: { active: true },
+      orderBy: { sortOrder: "asc" },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        icon: true,
+        features: true,
+      },
+    }),
+    sanityClient
+      .fetch<HomeTestimonial[]>(
+        testimonialsQuery,
+        {},
+        { next: { tags: ["testimonials"] } }
+      )
+      .catch((error) => {
+        console.error("Failed to fetch testimonials from Sanity:", error);
+        return [] as HomeTestimonial[];
+      }),
+  ]);
+
+  const featuredProducts: HomeProduct[] = productRows.map((row) => ({
+    _id: row.id,
+    name: row.name,
+    description: row.shortDescription ?? row.description,
+    pricePerTon: row.price ?? 0,
+    unit: row.unit,
+    imageUrl: row.imageUrl ?? undefined,
+    imageAlt: row.imageAlt ?? undefined,
+  }));
+
+  const services: HomeService[] = serviceRows.map((row) => ({
+    _id: row.id,
+    title: row.title,
+    description: row.description,
+    icon: row.icon ?? undefined,
+    features: row.features,
+  }));
+
+  const testimonials: HomeTestimonial[] = testimonialResult;
+
   return (
     <>
       {/* Hero */}
@@ -120,17 +200,17 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {FEATURED_PRODUCTS.map((product) => (
-              <Card key={product.name} className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 bg-card">
+            {featuredProducts.map((product) => (
+              <Card key={product._id} className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 bg-card">
                 <div className="relative h-48 w-full">
                   <Image
-                    src={PRODUCT_IMAGES[product.name] || "/images/photos/piles.jpg"}
-                    alt={product.name}
+                    src={product.imageUrl || "/images/photos/piles.jpg"}
+                    alt={product.imageAlt || product.name}
                     fill
                     className="object-cover"
                   />
                   <div className="absolute top-3 right-3 bg-amber-600 text-white px-3 py-1.5 rounded-lg shadow-md">
-                    <span className="text-lg font-bold">${product.price.toFixed(2)}</span>
+                    <span className="text-lg font-bold">${product.pricePerTon.toFixed(2)}</span>
                     <span className="text-xs opacity-90">/{product.unit}</span>
                   </div>
                 </div>
@@ -166,8 +246,8 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {SERVICES.map((service) => (
-              <Card key={service.title} className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-card">
+            {services.map((service) => (
+              <Card key={service._id} className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-card">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
@@ -271,7 +351,7 @@ export default function HomePage() {
               contractors across Southeast Ohio.
             </p>
           </div>
-          <ReviewsCarousel />
+          <ReviewsCarousel testimonials={testimonials} />
         </div>
       </section>
 
@@ -308,7 +388,7 @@ export default function HomePage() {
               </Button>
             </a>
             <Link href="/contact">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 gap-2">
+              <Button size="lg" className="bg-white text-black hover:bg-white/90 font-semibold gap-2">
                 <MapPin className="h-5 w-5" />
                 Get Directions
               </Button>

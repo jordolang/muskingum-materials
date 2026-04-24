@@ -3,23 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Loader2, Plus, Trash2, MapPin, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-const addressSchema = z.object({
-  label: z.string().min(1, "Label is required"),
-  street: z.string().min(3, "Street is required"),
-  city: z.string().min(2, "City is required"),
-  state: z.string().min(2, "State is required"),
-  zip: z.string().min(5, "ZIP is required"),
-  isDefault: z.boolean().optional(),
-});
-
-type AddressData = z.infer<typeof addressSchema>;
+import { addressSchema, type AddressData } from "@/lib/schemas";
 
 interface Address {
   id: string;
