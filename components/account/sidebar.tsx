@@ -9,6 +9,7 @@ import {
   MapPin,
   FileText,
   LogOut,
+  Bookmark,
   Repeat,
   Award,
   Shield,
@@ -24,6 +25,7 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { href: "/account", label: "Dashboard", icon: LayoutDashboard },
   { href: "/account/orders", label: "My Orders", icon: ShoppingBag },
+  { href: "/account/saved-orders", label: "Saved Orders", icon: Bookmark },
   { href: "/account/recurring-orders", label: "Recurring Orders", icon: Repeat },
   { href: "/account/rewards", label: "Rewards", icon: Award },
   { href: "/account/profile", label: "Profile", icon: User },
