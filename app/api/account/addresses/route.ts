@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { addressSchema } from "@/lib/schemas";
+import { addressSchema, addressUpdateSchema } from "@/lib/schemas";
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,6 +43,57 @@ export async function POST(request: NextRequest) {
     }
     console.error("Address create error:", error);
     return NextResponse.json({ error: "Failed to create address" }, { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session?.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const data = addressUpdateSchema.parse(body);
+
+    const profile = await prisma.userProfile.findUnique({
+      where: { userId: session.userId },
+    });
+
+    if (!profile) {
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    }
+
+    // Verify address belongs to user
+    const existingAddress = await prisma.address.findFirst({
+      where: { id: data.id, userProfileId: profile.id },
+    });
+
+    if (!existingAddress) {
+      return NextResponse.json({ error: "Address not found" }, { status: 404 });
+    }
+
+    // If setting as default, unset other defaults
+    if (data.isDefault) {
+      await prisma.address.updateMany({
+        where: { userProfileId: profile.id, id: { not: data.id } },
+        data: { isDefault: false },
+      });
+    }
+
+    const { id, ...updateData } = data;
+    const address = await prisma.address.update({
+      where: { id },
+      data: updateData,
+    });
+
+    return NextResponse.json({ address });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: "Invalid data", details: error.errors }, { status: 400 });
+    }
+    console.error("Address update error:", error);
+    return NextResponse.json({ error: "Failed to update address" }, { status: 500 });
   }
 }
 
