@@ -20,6 +20,11 @@ import { HomepageFAQ } from "@/components/home/homepage-faq";
 import { prisma } from "@/lib/prisma";
 import { sanityClient } from "@/lib/sanity/client";
 import { testimonialsQuery } from "@/lib/sanity/queries";
+import { generateLocalBusinessSchema, toJsonLd } from "@/lib/seo/structured-data";
+import { generateHomeMetadata } from "@/lib/seo/metadata";
+
+// Generate SEO metadata with canonical URL, OG images, and Twitter cards
+export const metadata = generateHomeMetadata();
 
 // ISR — rebuild the homepage at most once per minute and let on-demand
 // revalidation refresh it when database content changes.
@@ -114,8 +119,17 @@ export default async function HomePage() {
 
   const testimonials: HomeTestimonial[] = testimonialResult;
 
+  const localBusinessSchema = generateLocalBusinessSchema();
+
+
   return (
     <>
+      {/* Structured Data - LocalBusiness Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(localBusinessSchema) }}
+      />
+
       {/* Hero */}
       <section className="relative min-h-[600px] flex items-center">
         <div className="absolute inset-0 z-0">

@@ -4,16 +4,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ContactForm } from "@/components/contact/contact-form";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { BUSINESS_INFO } from "@/data/business";
+import { generateLocalBusinessSchema, toJsonLd } from "@/lib/seo/structured-data";
+import { generateContactMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Contact Us",
-  description:
-    "Contact Muskingum Materials in Zanesville, OH. Call (740) 319-0183 or email sales@muskingummaterials.com.",
-};
+export const metadata: Metadata = generateContactMetadata();
 
 export default function ContactPage() {
+  const localBusinessSchema = generateLocalBusinessSchema();
+
   return (
-    <div className="py-12">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(localBusinessSchema) }}
+      />
+      <div className="py-12">
       <div className="container">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold font-heading mb-3">Contact Us</h1>
@@ -155,5 +160,6 @@ export default function ContactPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
