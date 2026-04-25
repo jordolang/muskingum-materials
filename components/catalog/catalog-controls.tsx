@@ -15,8 +15,10 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
+const ALL_CATEGORIES = "all" as const;
+
 const CATEGORY_OPTIONS = [
-  { label: "All Categories", value: "" },
+  { label: "All Categories", value: ALL_CATEGORIES },
   { label: "Sand", value: "sand" },
   { label: "Gravel", value: "gravel" },
   { label: "Soil", value: "soil" },
@@ -47,7 +49,7 @@ export function CatalogControls({
   const searchParams = useSearchParams();
 
   const [searchTerm, setSearchTerm] = useState(initialSearch);
-  const [category, setCategory] = useState(initialCategory);
+  const [category, setCategory] = useState(initialCategory || ALL_CATEGORIES);
   const [sortBy, setSortBy] = useState(initialSort);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
@@ -102,7 +104,8 @@ export function CatalogControls({
 
   const handleCategoryChange = (value: string) => {
     setCategory(value);
-    updateURL({ category: value });
+    // Translate sentinel "all" back to empty string for URL/server filtering
+    updateURL({ category: value === ALL_CATEGORIES ? "" : value });
   };
 
   const handleSortChange = (value: string) => {
@@ -112,12 +115,12 @@ export function CatalogControls({
 
   const handleClearFilters = () => {
     setSearchTerm("");
-    setCategory("");
+    setCategory(ALL_CATEGORIES);
     setSortBy("name-asc");
     router.push(pathname, { scroll: false });
   };
 
-  const hasActiveFilters = searchTerm || category || sortBy !== "name-asc";
+  const hasActiveFilters = searchTerm || category !== ALL_CATEGORIES || sortBy !== "name-asc";
 
   return (
     <div className="space-y-4">
