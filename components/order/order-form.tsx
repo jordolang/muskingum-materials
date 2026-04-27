@@ -113,18 +113,10 @@ export function OrderForm() {
     } catch (error) {
       toast({
         variant: "destructive",
-<<<<<<< HEAD
         title: "Checkout Error",
         description: error instanceof Error
           ? error.message
           : "Something went wrong. Please call (740) 319-0183 to place your order.",
-=======
-        title: "Checkout failed",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Something went wrong. Please call (740) 319-0183 to place your order.",
->>>>>>> main
       });
     } finally {
       setIsProcessing(false);
