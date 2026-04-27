@@ -23,6 +23,18 @@ vi.mock("@ai-sdk/anthropic", () => ({
   anthropic: vi.fn(() => "mocked-model"),
 }));
 
+vi.mock("@/lib/rate-limit", () => ({
+  checkRateLimit: vi.fn(() =>
+    Promise.resolve({
+      success: true,
+      limit: 5,
+      remaining: 4,
+      reset: Date.now() + 60000,
+    })
+  ),
+  getClientIdentifier: vi.fn(() => "test-client"),
+}));
+
 describe("POST /api/chat", () => {
   const validChatData = {
     message: "What are your hours of operation?",
