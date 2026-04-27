@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { checkRateLimit, getClientIdentifier } from "./lib/rate-limit";
 import type { RateLimitTier } from "./lib/rate-limit";
 import { logRequest, logResponse } from "./lib/request-logger";
+import { logger } from "./lib/logger";
 
 const hasClerk = Boolean(
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
@@ -14,6 +15,7 @@ const rateLimitedEndpoints: Record<string, RateLimitTier> = {
   "/api/chat": "chat",
   "/api/contact": "contact-quote",
   "/api/quote": "contact-quote",
+  "/api/orders/checkout": "contact-quote",
   "/api/leads": "leads-newsletter",
   "/api/newsletter": "leads-newsletter",
 };
@@ -32,6 +34,14 @@ export default async function middleware(request: NextRequest) {
     const result = await checkRateLimit(identifier, rateLimitTier);
 
     if (!result.success) {
+      logger.error("Rate limit exceeded", new Error("Rate limit violation"), {
+        endpoint: pathname,
+        identifier,
+        tier: rateLimitTier,
+        limit: result.limit,
+        resetAt: new Date(result.reset).toISOString(),
+      });
+
       // Calculate Retry-After in seconds
       const retryAfter = Math.ceil((result.reset - Date.now()) / 1000);
 
