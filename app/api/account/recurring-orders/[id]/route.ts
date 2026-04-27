@@ -57,7 +57,7 @@ export async function PATCH(
     }
 
     // Prepare update data
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (validated.name !== undefined) updateData.name = validated.name;
     if (validated.email !== undefined) updateData.email = validated.email;
     if (validated.phone !== undefined) updateData.phone = validated.phone;

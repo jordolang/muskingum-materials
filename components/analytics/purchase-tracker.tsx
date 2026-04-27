@@ -23,7 +23,7 @@ export function PurchaseTracker({ orderNumber }: PurchaseTrackerProps) {
           transactionId: data.orderNumber,
           value: data.total,
           tax: data.tax,
-          items: data.items.map((item: any) => ({
+          items: data.items.map((item: { id: string; name: string; price: number; quantity: number }) => ({
             itemId: item.id,
             itemName: item.name,
             price: item.price,

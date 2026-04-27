@@ -37,7 +37,7 @@ export async function ContractorDashboard() {
     nextDeliveryDate: Date;
     status: string;
   }> = [];
-  let contractorStats = {
+  const contractorStats = {
     totalOrders: 0,
     totalSpent: 0,
     estimatedSavings: 0,

@@ -25,6 +25,7 @@ const recurringOrderFormSchema = z.object({
 type RecurringOrderFormData = z.infer<typeof recurringOrderFormSchema>;
 
 interface RecurringOrderFormProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   order?: any;
   onClose: () => void;
   onSuccess: () => void;
