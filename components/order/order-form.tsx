@@ -5,25 +5,21 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { PRODUCTS, BUSINESS_INFO } from "@/data/business";
+import { checkoutFormSchema, type CheckoutFormData } from "@/lib/schemas";
+import { useToast } from "@/lib/use-toast";
+import { useCartStore } from "@/lib/store";
 import { OrderConfirmation } from "./order-confirmation";
 import { ProductCatalog } from "./product-catalog";
 import { CartSummary } from "./cart-summary";
 import { CheckoutForm } from "./checkout-form";
-import { useToast } from "@/hooks/use-toast";
 
 type OrderableProduct = (typeof PRODUCTS)[number];
-
-interface CartItem {
-  name: string;
-  price: number;
-  unit: string;
-  quantity: number;
-}
 
 export const checkoutSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Valid email is required"),
   phone: z.string().min(10, "Phone number is required"),
+  smsOptIn: z.boolean().optional(),
   fulfillment: z.enum(["pickup", "delivery"]),
   deliveryAddress: z.string().optional(),
   deliveryNotes: z.string().optional(),
@@ -32,7 +28,13 @@ export const checkoutSchema = z.object({
 export type CheckoutData = z.infer<typeof checkoutSchema>;
 
 export function OrderForm() {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const cart = useCartStore((state) => state.items);
+  const addToCart = useCartStore((state) => state.addToCart);
+  const updateQuantity = useCartStore((state) => state.updateQuantity);
+  const setQuantity = useCartStore((state) => state.setQuantity);
+  const removeFromCart = useCartStore((state) => state.removeFromCart);
+  const clearCart = useCartStore((state) => state.clearCart);
+
   const [step, setStep] = useState<"products" | "checkout" | "complete">("products");
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
@@ -48,58 +50,33 @@ export function OrderForm() {
     defaultValues: { fulfillment: "pickup" },
   });
 
-  function addToCart(product: OrderableProduct) {
-    setCart((prev) => {
-      const existing = prev.find((item) => item.name === product.name);
-      if (existing) {
-        return prev.map((item) =>
-          item.name === product.name
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [
-        ...prev,
-        { name: product.name, price: product.price, unit: product.unit, quantity: 1 },
-      ];
-    });
-  }
-
-  function updateQuantity(name: string, delta: number) {
-    setCart((prev) =>
-      prev
-        .map((item) =>
-          item.name === name
-            ? { ...item, quantity: Math.max(0, item.quantity + delta) }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
-  }
-
-  function setQuantity(name: string, qty: number) {
-    if (qty <= 0) {
-      setCart((prev) => prev.filter((item) => item.name !== name));
-    } else {
-      setCart((prev) =>
-        prev.map((item) =>
-          item.name === name ? { ...item, quantity: qty } : item
-        )
-      );
-    }
-  }
-
-  function removeFromCart(name: string) {
-    setCart((prev) => prev.filter((item) => item.name !== name));
-  }
-
   const totals = useMemo(() => {
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const tax = subtotal * BUSINESS_INFO.taxRate;
-    const processingFee = subtotal * BUSINESS_INFO.creditProcessingFee;
-    const total = subtotal + tax + processingFee;
+
+    // Calculate volume discount based on pricing tiers
+    const volumeDiscount = cart.reduce((totalDiscount, item) => {
+      const product = PRODUCTS.find((p) => p.name === item.name);
+      if (!product || !('pricingTiers' in product) || !product.pricingTiers) return totalDiscount;
+
+      // Find the highest applicable tier based on quantity
+      const applicableTier = product.pricingTiers
+        .filter((tier) => item.quantity >= tier.minQuantity)
+        .sort((a, b) => b.minQuantity - a.minQuantity)[0];
+
+      if (applicableTier) {
+        const discount = (item.price - applicableTier.pricePerTon) * item.quantity;
+        return totalDiscount + discount;
+      }
+
+      return totalDiscount;
+    }, 0);
+
+    const discountedSubtotal = subtotal - volumeDiscount;
+    const tax = discountedSubtotal * BUSINESS_INFO.taxRate;
+    const processingFee = discountedSubtotal * BUSINESS_INFO.creditProcessingFee;
+    const total = discountedSubtotal + tax + processingFee;
     const totalTons = cart.reduce((sum, item) => sum + item.quantity, 0);
-    return { subtotal, tax, processingFee, total, totalTons };
+    return { subtotal, volumeDiscount, tax, processingFee, total, totalTons };
   }, [cart]);
 
   async function onCheckout(data: CheckoutData) {
@@ -114,6 +91,7 @@ export function OrderForm() {
           ...data,
           items: cart,
           subtotal: totals.subtotal,
+          volumeDiscount: totals.volumeDiscount,
           tax: totals.tax,
           processingFee: totals.processingFee,
           total: totals.total,
@@ -135,10 +113,18 @@ export function OrderForm() {
     } catch (error) {
       toast({
         variant: "destructive",
+<<<<<<< HEAD
         title: "Checkout Error",
         description: error instanceof Error
           ? error.message
           : "Something went wrong. Please call (740) 319-0183 to place your order.",
+=======
+        title: "Checkout failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong. Please call (740) 319-0183 to place your order.",
+>>>>>>> main
       });
     } finally {
       setIsProcessing(false);
@@ -146,7 +132,7 @@ export function OrderForm() {
   }
 
   function handleReset() {
-    setCart([]);
+    clearCart();
     setStep("products");
   }
 

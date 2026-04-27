@@ -7,6 +7,7 @@ import { Loader2, CreditCard, MapPin, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -38,6 +39,7 @@ interface CartItem {
 
 interface Totals {
   subtotal: number;
+  volumeDiscount: number;
   tax: number;
   processingFee: number;
   total: number;
@@ -151,6 +153,22 @@ export function CheckoutForm({
               {errors.email && (
                 <p className="text-xs text-destructive mt-1">{errors.email.message}</p>
               )}
+            </div>
+
+            {/* SMS Opt-in */}
+            <div className="mt-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  {...register("smsOptIn")}
+                  className="mt-1"
+                />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Send me SMS order updates (optional)</p>
+                  <p className="text-xs text-muted-foreground">
+                    By checking this box, you consent to receive automated text messages about your order status and delivery updates at the phone number provided. Message and data rates may apply. You can opt out at any time by replying STOP. Message frequency varies.
+                  </p>
+                </div>
+              </label>
             </div>
           </div>
 
@@ -284,6 +302,29 @@ export function CheckoutForm({
                   <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
                 </div>
               ))}
+              <Separator />
+              <div className="space-y-1.5">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Subtotal ({totals.totalTons} tons)</span>
+                  <span>${totals.subtotal.toFixed(2)}</span>
+                </div>
+                {totals.volumeDiscount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-green-600 font-medium">Volume Discount</span>
+                    <span className="text-green-600 font-medium">
+                      -${totals.volumeDiscount.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Tax (7.25%)</span>
+                  <span>${totals.tax.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Card Processing (4.5%)</span>
+                  <span>${totals.processingFee.toFixed(2)}</span>
+                </div>
+              </div>
               <Separator />
               <div className="flex justify-between font-bold text-base">
                 <span>Total</span>

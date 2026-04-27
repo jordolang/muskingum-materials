@@ -31,6 +31,49 @@ export const product = defineType({
       validation: (Rule) => Rule.required().min(0),
     }),
     defineField({
+      name: "pricingTiers",
+      title: "Volume Pricing Tiers",
+      type: "array",
+      description: "Optional volume-based pricing tiers for bulk orders",
+      of: [
+        {
+          type: "object",
+          fields: [
+            {
+              name: "minQuantity",
+              type: "number",
+              title: "Minimum Quantity (tons)",
+              validation: (Rule) => Rule.required().min(0),
+            },
+            {
+              name: "maxQuantity",
+              type: "number",
+              title: "Maximum Quantity (tons)",
+              description: "Leave empty for unlimited",
+            },
+            {
+              name: "pricePerTon",
+              type: "number",
+              title: "Price Per Ton ($)",
+              validation: (Rule) => Rule.required().min(0),
+            },
+          ],
+          preview: {
+            select: {
+              min: "minQuantity",
+              max: "maxQuantity",
+              price: "pricePerTon",
+            },
+            prepare({ min, max, price }) {
+              return {
+                title: `${min}${max ? `-${max}` : "+"} tons: $${price}/ton`,
+              };
+            },
+          },
+        },
+      ],
+    }),
+    defineField({
       name: "unit",
       title: "Unit",
       type: "string",
@@ -74,6 +117,26 @@ export const product = defineType({
       title: "Available",
       type: "boolean",
       initialValue: true,
+    }),
+    defineField({
+      name: "stockStatus",
+      title: "Stock Status",
+      type: "string",
+      options: {
+        list: [
+          { title: "In Stock", value: "in_stock" },
+          { title: "Low Stock", value: "low_stock" },
+          { title: "Out of Stock", value: "out_of_stock" },
+          { title: "Seasonal", value: "seasonal" },
+        ],
+      },
+      initialValue: "in_stock",
+    }),
+    defineField({
+      name: "seasonalMessage",
+      title: "Seasonal Message",
+      type: "text",
+      rows: 2,
     }),
     defineField({
       name: "specifications",

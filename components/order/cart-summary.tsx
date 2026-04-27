@@ -15,6 +15,7 @@ interface CartItem {
 
 interface Totals {
   subtotal: number;
+  volumeDiscount: number;
   tax: number;
   processingFee: number;
   total: number;
@@ -71,6 +72,14 @@ export function CartSummary({
             <span className="text-muted-foreground">Subtotal ({totals.totalTons} tons)</span>
             <span>${totals.subtotal.toFixed(2)}</span>
           </div>
+          {totals.volumeDiscount > 0 && (
+            <div className="flex justify-between">
+              <span className="text-green-600 font-medium">Volume Discount</span>
+              <span className="text-green-600 font-medium">
+                -${totals.volumeDiscount.toFixed(2)}
+              </span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span className="text-muted-foreground">Tax (7.25%)</span>
             <span>${totals.tax.toFixed(2)}</span>

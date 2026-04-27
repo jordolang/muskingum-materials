@@ -4,6 +4,8 @@ import { generateText } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { prisma } from "@/lib/prisma";
 import { BUSINESS_INFO, PRODUCTS, SERVICES } from "@/data/business";
+import { logger } from "@/lib/logger";
+import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 
 const chatSchema = z.object({
   message: z.string().min(1).max(5000),
@@ -56,6 +58,52 @@ GUIDELINES:
 
 export async function POST(request: NextRequest) {
   try {
+    // Check rate limit
+    const identifier = getClientIdentifier(request);
+    const rateLimitResult = await checkRateLimit(identifier, "chat");
+
+    logger.info("Chat request rate limit check", {
+      identifier,
+      success: rateLimitResult.success,
+      remaining: rateLimitResult.remaining,
+      limit: rateLimitResult.limit,
+    });
+
+    if (!rateLimitResult.success) {
+      logger.warn("Chat rate limit exceeded", {
+        identifier,
+        limit: rateLimitResult.limit,
+        reset: rateLimitResult.reset,
+      });
+
+      const retryAfter = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
+
+      return NextResponse.json(
+        {
+          error: "Too many requests. Please try again later.",
+          retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": rateLimitResult.limit.toString(),
+            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+            "X-RateLimit-Reset": rateLimitResult.reset.toString(),
+            "Retry-After": retryAfter.toString(),
+          },
+        }
+      );
+    }
+
+    // Warn if approaching rate limit
+    if (rateLimitResult.remaining <= 1) {
+      logger.warn("Chat rate limit approaching", {
+        identifier,
+        remaining: rateLimitResult.remaining,
+        limit: rateLimitResult.limit,
+      });
+    }
+
     const body = await request.json();
     const data = chatSchema.parse(body);
 
@@ -82,8 +130,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Store conversation in database (best-effort)
+    const visitorId = data.visitorId || `anon-${crypto.randomUUID()}`;
     try {
-      const visitorId = data.visitorId || `anon-${crypto.randomUUID()}`;
       const conversation = await prisma.chatConversation.upsert({
         where: { visitorId },
         update: { updatedAt: new Date() },
@@ -107,17 +155,22 @@ export async function POST(request: NextRequest) {
         ],
       });
     } catch (error) {
-      console.error("Chat DB save error:", error);
+      logger.error("Chat DB save error", error, { visitorId });
     }
 
     return NextResponse.json({ reply });
   } catch (error) {
     if (error instanceof z.ZodError) {
+      logger.warn("Chat request validation failed", {
+        errors: error.errors,
+      });
       return NextResponse.json(
         { error: "Invalid request data", details: error.errors },
         { status: 400 }
       );
     }
+
+    logger.error("Chat request processing error", error);
     return NextResponse.json(
       {
         reply:

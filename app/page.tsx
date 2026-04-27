@@ -10,6 +10,7 @@ import {
   Star,
   MapPin,
   Camera,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +20,11 @@ import { HomepageFAQ } from "@/components/home/homepage-faq";
 import { prisma } from "@/lib/prisma";
 import { sanityClient } from "@/lib/sanity/client";
 import { testimonialsQuery } from "@/lib/sanity/queries";
+import { generateLocalBusinessSchema, toJsonLd } from "@/lib/seo/structured-data";
+import { generateHomeMetadata } from "@/lib/seo/metadata";
+
+// Generate SEO metadata with canonical URL, OG images, and Twitter cards
+export const metadata = generateHomeMetadata();
 
 // ISR — rebuild the homepage at most once per minute and let on-demand
 // revalidation refresh it when database content changes.
@@ -113,8 +119,17 @@ export default async function HomePage() {
 
   const testimonials: HomeTestimonial[] = testimonialResult;
 
+  const localBusinessSchema = generateLocalBusinessSchema();
+
+
   return (
     <>
+      {/* Structured Data - LocalBusiness Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(localBusinessSchema) }}
+      />
+
       {/* Hero */}
       <section className="relative min-h-[600px] flex items-center">
         <div className="absolute inset-0 z-0">
@@ -138,6 +153,12 @@ export default async function HomePage() {
               Southeast Ohio since day one.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
+              <Link href="/recommendations">
+                <Button size="lg" className="bg-amber-700 text-white hover:bg-amber-800 font-semibold gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  Find Your Material
+                </Button>
+              </Link>
               <Link href="/products">
                 <Button size="lg" className="bg-white text-amber-800 hover:bg-white/90 font-semibold gap-2">
                   View Products & Pricing

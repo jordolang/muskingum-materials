@@ -51,7 +51,12 @@ ${data.message}
       replyTo: data.email,
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      analytics: {
+        subject: data.subject,
+      },
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -59,7 +64,9 @@ ${data.message}
         { status: 400 }
       );
     }
-    logger.error("Contact API error", error);
+    logger.error("Contact API error", error, {
+      operation: "contact.POST",
+    });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

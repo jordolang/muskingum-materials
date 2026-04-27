@@ -13,18 +13,50 @@ export function GoogleAnalytics() {
 
   return (
     <>
-      <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-        strategy="afterInteractive"
-      />
-      <Script id="google-analytics" strategy="afterInteractive">
+      {/*
+        1. Define dataLayer / gtag, set consent defaults, then configure the tag.
+           All commands are queued into dataLayer BEFORE gtag.js loads (it is
+           async), so the consent defaults are always processed first.
+
+           Consent defaults deny everything. The restore-from-localStorage
+           block immediately issues an update if the visitor previously accepted.
+       */}
+      <Script id="gtag-consent-init" strategy="afterInteractive">
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
+
+          gtag('consent', 'default', {
+            'ad_storage': 'denied',
+            'ad_user_data': 'denied',
+            'ad_personalization': 'denied',
+            'analytics_storage': 'denied'
+          });
+
+          (function(){
+            try {
+              var stored = localStorage.getItem('cookie-consent');
+              if (stored === 'granted') {
+                gtag('consent', 'update', {
+                  'ad_storage': 'granted',
+                  'ad_user_data': 'granted',
+                  'ad_personalization': 'granted',
+                  'analytics_storage': 'granted'
+                });
+              }
+            } catch(e) {}
+          })();
+
           gtag('js', new Date());
           gtag('config', '${gaId}');
         `}
       </Script>
+
+      {/* 2. Load the Google tag (gtag.js) — async, processes the queued commands above. */}
+      <Script
+        src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+        strategy="afterInteractive"
+      />
     </>
   );
 }

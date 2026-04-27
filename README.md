@@ -285,6 +285,66 @@ Set all environment variables in the Vercel dashboard before deploying.
 
 ---
 
+## Analytics
+
+The site uses **Google Analytics 4 (GA4)** for tracking user behavior, conversions, and engagement.
+
+### Setup
+
+Set the `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` environment variable to your GA4 Measurement ID (e.g., `G-XXXXXXXXXX`). When not set, analytics is disabled and no scripts are loaded.
+
+```bash
+# .env.local
+NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX
+```
+
+### Tracked Events
+
+| GA4 Event Name | Description | Location |
+|----------------|-------------|----------|
+| `page_view` | Automatic page view on navigation | `components/analytics/google-analytics.tsx` |
+| `view_item` | Product detail page viewed | `components/analytics/product-view-tracker.tsx` |
+| `add_to_cart` | Product added to order form | `components/order/order-form.tsx` |
+| `begin_checkout` | Checkout process started | `components/order/order-form.tsx` |
+| `purchase` | Order completed | `components/analytics/purchase-tracker.tsx` |
+| `contact_form_submit` | Contact form submitted | `components/contact/contact-form.tsx` |
+| `chat_opened` | AI chat widget opened | `components/chat/chat-widget.tsx` |
+| `generate_lead` | Quote request or lead captured | `lib/analytics.ts` |
+
+### Conversion Goals
+
+Configure these as conversion events in your GA4 property for funnel tracking:
+
+1. **`purchase`** — Completed orders (primary conversion)
+2. **`generate_lead`** — Quote requests and lead captures
+3. **`contact_form_submit`** — Contact form submissions
+4. **`begin_checkout`** — Checkout initiation (micro-conversion)
+
+### Verifying Analytics
+
+1. **Real-time report** — Open [GA4 Real-Time](https://analytics.google.com/) and browse the site to see events appear live
+2. **Browser DevTools** — Open the Network tab and filter for `google-analytics.com` or `gtag` to confirm requests are firing
+3. **GA4 DebugView** — Install the [Google Analytics Debugger](https://chrome.google.com/webstore/detail/google-analytics-debugger/) Chrome extension and enable DebugView in GA4 to inspect each event and its parameters
+4. **Development** — Analytics only loads when `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` is set, so omit it in development to avoid polluting production data
+
+### Architecture
+
+```
+Google Analytics (components/analytics/google-analytics.tsx)
+  ├─► gtag.js loaded via next/script (afterInteractive)
+  ├─► Automatic page views on route changes
+  └─► Event helpers in lib/analytics.ts
+        ├─► trackProductView()   → view_item
+        ├─► trackAddToCart()     → add_to_cart
+        ├─► trackBeginCheckout() → begin_checkout
+        ├─► trackPurchase()      → purchase
+        ├─► trackLead()          → generate_lead
+        ├─► trackContact()       → contact_form_submit
+        └─► trackChatOpened()    → chat_opened
+```
+
+---
+
 ## Business Information
 
 | | |

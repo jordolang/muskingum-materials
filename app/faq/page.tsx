@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,16 +8,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { generateFAQPageSchema, toJsonLd } from "@/lib/seo/structured-data";
+import { generateFAQMetadata } from "@/lib/seo/metadata";
 import { sanityClient } from "@/lib/sanity/client";
 import { faqQuery, siteSettingsQuery } from "@/lib/sanity/queries";
 
 export const revalidate = 3600; // Revalidate every hour (ISR)
 
-export const metadata: Metadata = {
-  title: "FAQ",
-  description:
-    "Frequently asked questions about Muskingum Materials products, pricing, delivery, and more.",
-};
+export const metadata = generateFAQMetadata();
 
 interface FAQ {
   _id: string;
@@ -67,8 +64,18 @@ export default async function FAQPage() {
     },
     {} as Record<string, FAQ[]>
   );
+
+  // Structured data from whichever FAQs we actually have (Sanity, or empty).
+  const faqSchema = generateFAQPageSchema(
+    faqs.map((f) => ({ question: f.question, answer: f.answer })),
+  );
+
   return (
     <div className="py-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(faqSchema) }}
+      />
       <div className="container max-w-3xl">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold font-heading mb-3">

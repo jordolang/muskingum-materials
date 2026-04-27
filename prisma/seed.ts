@@ -1552,6 +1552,380 @@ const SERVICES_DATA = [
   },
 ];
 
+const EMAIL_TEMPLATES_DATA = [
+  {
+    name: "Welcome - Newsletter Subscriber",
+    subject: "Welcome to Muskingum Materials Updates",
+    category: "transactional",
+    htmlContent: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background-color: #f8f9fa; padding: 30px; border-radius: 8px; margin-bottom: 20px;">
+    <h1 style="color: #2563eb; margin-top: 0;">Welcome to Muskingum Materials!</h1>
+    <p>Thank you for subscribing to our newsletter. You'll now receive updates about:</p>
+    <ul style="line-height: 2;">
+      <li>Seasonal promotions and special offers</li>
+      <li>New product arrivals</li>
+      <li>Project tips and material guides</li>
+      <li>Industry news and updates</li>
+    </ul>
+    <p>We're committed to providing quality materials and excellent service to Southeast Ohio.</p>
+  </div>
+  <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280;">
+    <p>Muskingum Materials | Southeast Ohio</p>
+    <p><a href="{{unsubscribe_url}}" style="color: #2563eb;">Unsubscribe</a> from these emails</p>
+  </div>
+</body>
+</html>`,
+    textContent: `Welcome to Muskingum Materials!
+
+Thank you for subscribing to our newsletter. You'll now receive updates about:
+
+- Seasonal promotions and special offers
+- New product arrivals
+- Project tips and material guides
+- Industry news and updates
+
+We're committed to providing quality materials and excellent service to Southeast Ohio.
+
+---
+Muskingum Materials | Southeast Ohio
+Unsubscribe: {{unsubscribe_url}}`,
+    active: true,
+  },
+  {
+    name: "Seasonal Promotion",
+    subject: "Spring Into Your Projects - Special Offers Inside",
+    category: "marketing",
+    htmlContent: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); color: white; padding: 40px; border-radius: 8px; margin-bottom: 20px;">
+    <h1 style="margin-top: 0; font-size: 32px;">{{season}} Promotion</h1>
+    <p style="font-size: 18px; margin-bottom: 0;">{{promotion_headline}}</p>
+  </div>
+
+  <div style="background-color: #f8f9fa; padding: 30px; border-radius: 8px; margin-bottom: 20px;">
+    <h2 style="color: #2563eb; margin-top: 0;">Featured Products</h2>
+    {{product_section}}
+
+    <div style="margin-top: 30px; text-align: center;">
+      <a href="{{cta_url}}" style="display: inline-block; background-color: #2563eb; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Shop Now</a>
+    </div>
+  </div>
+
+  <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280;">
+    <p>Muskingum Materials | Southeast Ohio</p>
+    <p><a href="{{unsubscribe_url}}" style="color: #2563eb;">Unsubscribe</a> from these emails</p>
+  </div>
+</body>
+</html>`,
+    textContent: `{{season}} PROMOTION
+
+{{promotion_headline}}
+
+FEATURED PRODUCTS
+{{product_section_text}}
+
+Shop now: {{cta_url}}
+
+---
+Muskingum Materials | Southeast Ohio
+Unsubscribe: {{unsubscribe_url}}`,
+    active: true,
+  },
+  {
+    name: "New Product Announcement",
+    subject: "Now Available: {{product_name}}",
+    category: "marketing",
+    htmlContent: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background-color: #10b981; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+    <span style="font-size: 14px; font-weight: bold; text-transform: uppercase;">New Product</span>
+  </div>
+
+  <div style="background-color: #f8f9fa; padding: 30px; border-radius: 8px; margin-bottom: 20px;">
+    <h1 style="color: #2563eb; margin-top: 0;">{{product_name}}</h1>
+
+    {{product_image}}
+
+    <p style="font-size: 18px; color: #4b5563;">{{product_description}}</p>
+
+    <h3 style="color: #2563eb;">Perfect For:</h3>
+    <ul style="line-height: 2;">
+      {{benefits_list}}
+    </ul>
+
+    <div style="background-color: white; padding: 20px; border-radius: 5px; margin: 20px 0;">
+      <p style="font-size: 24px; color: #2563eb; font-weight: bold; margin: 0;">{{pricing}}</p>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px;">
+      <a href="{{product_url}}" style="display: inline-block; background-color: #2563eb; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Learn More</a>
+    </div>
+  </div>
+
+  <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280;">
+    <p>Muskingum Materials | Southeast Ohio</p>
+    <p><a href="{{unsubscribe_url}}" style="color: #2563eb;">Unsubscribe</a> from these emails</p>
+  </div>
+</body>
+</html>`,
+    textContent: `NEW PRODUCT AVAILABLE
+
+{{product_name}}
+
+{{product_description}}
+
+Perfect For:
+{{benefits_list_text}}
+
+Pricing: {{pricing}}
+
+Learn more: {{product_url}}
+
+---
+Muskingum Materials | Southeast Ohio
+Unsubscribe: {{unsubscribe_url}}`,
+    active: true,
+  },
+  {
+    name: "General Newsletter",
+    subject: "{{newsletter_title}}",
+    category: "marketing",
+    htmlContent: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background-color: #2563eb; color: white; padding: 30px; border-radius: 8px; margin-bottom: 20px;">
+    <h1 style="margin-top: 0;">{{newsletter_title}}</h1>
+    <p style="font-size: 14px; margin-bottom: 0;">{{newsletter_date}}</p>
+  </div>
+
+  <div style="background-color: #f8f9fa; padding: 30px; border-radius: 8px; margin-bottom: 20px;">
+    {{main_content}}
+  </div>
+
+  <div style="background-color: #fff7ed; padding: 20px; border-left: 4px solid #f59e0b; margin-bottom: 20px;">
+    <h3 style="color: #f59e0b; margin-top: 0;">Project Tip</h3>
+    {{project_tip}}
+  </div>
+
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="{{cta_url}}" style="display: inline-block; background-color: #2563eb; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">{{cta_text}}</a>
+  </div>
+
+  <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280;">
+    <p>Muskingum Materials | Southeast Ohio</p>
+    <p><a href="{{unsubscribe_url}}" style="color: #2563eb;">Unsubscribe</a> from these emails</p>
+  </div>
+</body>
+</html>`,
+    textContent: `{{newsletter_title}}
+{{newsletter_date}}
+
+{{main_content_text}}
+
+PROJECT TIP
+{{project_tip_text}}
+
+{{cta_text}}: {{cta_url}}
+
+---
+Muskingum Materials | Southeast Ohio
+Unsubscribe: {{unsubscribe_url}}`,
+    active: true,
+  },
+  {
+    name: "Order Confirmation",
+    subject: "Order Confirmation - #{{order_number}}",
+    category: "transactional",
+    htmlContent: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background-color: #10b981; color: white; padding: 30px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+    <h1 style="margin: 0; font-size: 28px;">Order Confirmed!</h1>
+    <p style="margin: 10px 0 0 0; font-size: 18px;">Order #{{order_number}}</p>
+  </div>
+
+  <div style="background-color: #f8f9fa; padding: 30px; border-radius: 8px; margin-bottom: 20px;">
+    <h2 style="color: #2563eb; margin-top: 0;">Order Details</h2>
+
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+      <thead>
+        <tr style="border-bottom: 2px solid #e5e7eb;">
+          <th style="text-align: left; padding: 10px 0;">Item</th>
+          <th style="text-align: right; padding: 10px 0;">Quantity</th>
+          <th style="text-align: right; padding: 10px 0;">Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{order_items}}
+      </tbody>
+    </table>
+
+    <div style="border-top: 2px solid #e5e7eb; padding-top: 15px;">
+      <table style="width: 100%; font-size: 16px;">
+        <tr>
+          <td style="padding: 5px 0;">Subtotal:</td>
+          <td style="text-align: right; padding: 5px 0;">\${{subtotal}}</td>
+        </tr>
+        <tr>
+          <td style="padding: 5px 0;">Tax:</td>
+          <td style="text-align: right; padding: 5px 0;">\${{tax}}</td>
+        </tr>
+        <tr>
+          <td style="padding: 5px 0;">Delivery Fee:</td>
+          <td style="text-align: right; padding: 5px 0;">\${{delivery_fee}}</td>
+        </tr>
+        <tr style="font-weight: bold; font-size: 18px; border-top: 2px solid #e5e7eb;">
+          <td style="padding: 15px 0 0 0;">Total:</td>
+          <td style="text-align: right; padding: 15px 0 0 0;">\${{total}}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="margin-top: 30px;">
+      <h3 style="color: #2563eb;">{{delivery_or_pickup}}</h3>
+      <p>{{delivery_details}}</p>
+    </div>
+  </div>
+
+  <div style="text-align: center; margin: 30px 0;">
+    <p>Questions about your order?</p>
+    <a href="{{contact_url}}" style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Contact Us</a>
+  </div>
+
+  <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; text-align: center;">
+    <p>Muskingum Materials | Southeast Ohio</p>
+  </div>
+</body>
+</html>`,
+    textContent: `ORDER CONFIRMED!
+Order #{{order_number}}
+
+ORDER DETAILS
+{{order_items_text}}
+
+Subtotal: \${{subtotal}}
+Tax: \${{tax}}
+Delivery Fee: \${{delivery_fee}}
+---
+Total: \${{total}}
+
+{{delivery_or_pickup}}
+{{delivery_details}}
+
+Questions about your order?
+Contact us: {{contact_url}}
+
+---
+Muskingum Materials | Southeast Ohio`,
+    active: true,
+  },
+  {
+    name: "Quote Request Confirmation",
+    subject: "Quote Request Received - We'll Be In Touch Soon",
+    category: "transactional",
+    htmlContent: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background-color: #2563eb; color: white; padding: 30px; border-radius: 8px; margin-bottom: 20px;">
+    <h1 style="margin-top: 0;">Quote Request Received</h1>
+    <p style="margin-bottom: 0;">We'll review your request and get back to you within 24 hours.</p>
+  </div>
+
+  <div style="background-color: #f8f9fa; padding: 30px; border-radius: 8px; margin-bottom: 20px;">
+    <h2 style="color: #2563eb; margin-top: 0;">Your Request</h2>
+
+    <table style="width: 100%; margin-bottom: 20px;">
+      <tr>
+        <td style="padding: 8px 0; color: #6b7280;">Name:</td>
+        <td style="padding: 8px 0; font-weight: 500;">{{customer_name}}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 0; color: #6b7280;">Email:</td>
+        <td style="padding: 8px 0; font-weight: 500;">{{customer_email}}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 0; color: #6b7280;">Phone:</td>
+        <td style="padding: 8px 0; font-weight: 500;">{{customer_phone}}</td>
+      </tr>
+    </table>
+
+    <h3 style="color: #2563eb;">Requested Materials</h3>
+    {{requested_products}}
+
+    <div style="background-color: white; padding: 15px; border-radius: 5px; margin-top: 20px;">
+      <p style="margin: 0; color: #6b7280; font-size: 14px;">Additional Notes:</p>
+      <p style="margin: 10px 0 0 0;">{{customer_notes}}</p>
+    </div>
+  </div>
+
+  <div style="background-color: #eff6ff; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+    <h3 style="color: #2563eb; margin-top: 0;">What Happens Next?</h3>
+    <ol style="line-height: 2; margin: 0; padding-left: 20px;">
+      <li>We'll review your request and check current inventory</li>
+      <li>We'll prepare a detailed quote with pricing and availability</li>
+      <li>A team member will contact you within 24 hours</li>
+    </ol>
+  </div>
+
+  <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; text-align: center;">
+    <p>Muskingum Materials | Southeast Ohio</p>
+  </div>
+</body>
+</html>`,
+    textContent: `QUOTE REQUEST RECEIVED
+
+We'll review your request and get back to you within 24 hours.
+
+YOUR REQUEST
+Name: {{customer_name}}
+Email: {{customer_email}}
+Phone: {{customer_phone}}
+
+REQUESTED MATERIALS
+{{requested_products_text}}
+
+Additional Notes:
+{{customer_notes}}
+
+WHAT HAPPENS NEXT?
+1. We'll review your request and check current inventory
+2. We'll prepare a detailed quote with pricing and availability
+3. A team member will contact you within 24 hours
+
+---
+Muskingum Materials | Southeast Ohio`,
+    active: true,
+  },
+];
+
 async function main() {
   // Clear existing data
   await prisma.productComparison.deleteMany();
@@ -1575,6 +1949,12 @@ async function main() {
       create: service,
       update: service,
     });
+  }
+
+  // Seed email templates
+  await prisma.emailTemplate.deleteMany();
+  for (const template of EMAIL_TEMPLATES_DATA) {
+    await prisma.emailTemplate.create({ data: template });
   }
 
   // Create comparisons between related products
@@ -1662,8 +2042,9 @@ async function main() {
   const guideCount = await prisma.costGuide.count();
   const compCount = await prisma.productComparison.count();
   const serviceCount = await prisma.service.count();
+  const templateCount = await prisma.emailTemplate.count();
   process.stdout.write(
-    `Seeded ${productCount} products, ${guideCount} cost guides, ${compCount} comparisons, ${serviceCount} services\n`
+    `Seeded ${productCount} products, ${guideCount} cost guides, ${compCount} comparisons, ${serviceCount} services, ${templateCount} email templates\n`
   );
 }
 
