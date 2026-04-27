@@ -9,6 +9,7 @@ import { OrderConfirmation } from "./order-confirmation";
 import { ProductCatalog } from "./product-catalog";
 import { CartSummary } from "./cart-summary";
 import { CheckoutForm } from "./checkout-form";
+import { useToast } from "@/hooks/use-toast";
 
 type OrderableProduct = (typeof PRODUCTS)[number];
 
@@ -35,6 +36,7 @@ export function OrderForm() {
   const [step, setStep] = useState<"products" | "checkout" | "complete">("products");
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
+  const { toast } = useToast();
 
   const {
     register,
@@ -131,11 +133,13 @@ export function OrderForm() {
         throw new Error(result.error || "Checkout failed");
       }
     } catch (error) {
-      alert(
-        error instanceof Error
+      toast({
+        variant: "destructive",
+        title: "Checkout Error",
+        description: error instanceof Error
           ? error.message
-          : "Something went wrong. Please call (740) 319-0183 to place your order."
-      );
+          : "Something went wrong. Please call (740) 319-0183 to place your order.",
+      });
     } finally {
       setIsProcessing(false);
     }
