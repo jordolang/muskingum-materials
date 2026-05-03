@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getProductsWithFilters } from "@/lib/products";
+import type { Product } from "@prisma/client";
 import { BUSINESS_INFO } from "@/data/business";
 import { CatalogControls } from "@/components/catalog/catalog-controls";
 
@@ -21,11 +22,16 @@ export default async function CatalogPage({
   searchParams: Promise<{ q?: string; category?: string; sort?: string }>;
 }) {
   const params = await searchParams;
-  const products = await getProductsWithFilters({
-    search: params.q,
-    category: params.category,
-    sortBy: params.sort as "name-asc" | "name-desc" | "price-asc" | "price-desc" | undefined,
-  });
+  let products: Product[] = [];
+  try {
+    products = await getProductsWithFilters({
+      search: params.q,
+      category: params.category,
+      sortBy: params.sort as "name-asc" | "name-desc" | "price-asc" | "price-desc" | undefined,
+    });
+  } catch (error) {
+    console.warn("Unable to fetch products for catalog:", error);
+  }
 
   return (
     <div className="py-12">
