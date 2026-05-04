@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -39,6 +40,32 @@ export function OrderForm() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
   const { toast } = useToast();
+
+  const searchParams = useSearchParams();
+  const productParam = searchParams.get("product");
+  const handledProductParamRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!productParam) return;
+    if (handledProductParamRef.current === productParam) return;
+    handledProductParamRef.current = productParam;
+
+    const match = PRODUCTS.find(
+      (p) => p.name.toLowerCase() === productParam.toLowerCase() && p.price > 0
+    );
+    if (!match) return;
+
+    const alreadyInCart = useCartStore
+      .getState()
+      .items.some((item) => item.name === match.name);
+    if (!alreadyInCart) {
+      addToCart({ name: match.name, price: match.price, unit: match.unit });
+      toast({
+        title: "Added to your order",
+        description: `${match.name} is ready to customize below.`,
+      });
+    }
+  }, [productParam, addToCart, toast]);
 
   const {
     register,

@@ -215,24 +215,31 @@ export default async function HomePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredProducts.map((product) => (
-              <Card key={product._id} className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 bg-card">
-                <div className="relative h-48 w-full">
-                  <Image
-                    src={product.imageUrl || "/images/photos/piles.jpg"}
-                    alt={product.imageAlt || product.name}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute top-3 right-3 bg-amber-600 text-white px-3 py-1.5 rounded-lg shadow-md">
-                    <span className="text-lg font-bold">${product.pricePerTon.toFixed(2)}</span>
-                    <span className="text-xs opacity-90">/{product.unit}</span>
+              <Link
+                key={product._id}
+                href={`/order?product=${encodeURIComponent(product.name)}`}
+                aria-label={`Order ${product.name}`}
+                className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-xl"
+              >
+                <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 bg-card cursor-pointer h-full">
+                  <div className="relative h-48 w-full">
+                    <Image
+                      src={product.imageUrl || "/images/photos/piles.jpg"}
+                      alt={product.imageAlt || product.name}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute top-3 right-3 bg-amber-600 text-white px-3 py-1.5 rounded-lg shadow-md">
+                      <span className="text-lg font-bold">${product.pricePerTon.toFixed(2)}</span>
+                      <span className="text-xs opacity-90">/{product.unit}</span>
+                    </div>
                   </div>
-                </div>
-                <CardContent className="p-5">
-                  <h3 className="font-bold text-lg mb-1.5">{product.name}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
-                </CardContent>
-              </Card>
+                  <CardContent className="p-5">
+                    <h3 className="font-bold text-lg mb-1.5">{product.name}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
 

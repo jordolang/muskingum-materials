@@ -47,37 +47,6 @@ const NAV_ITEMS: NavItem[] = [
       },
     ],
   },
-  {
-    href: "/calculators",
-    label: "Calculators",
-    children: [
-      {
-        href: "/calculators",
-        label: "All Calculators",
-        description: "View all gravel calculators",
-      },
-      {
-        href: "/calculators/gravel-calculator",
-        label: "Gravel Calculator",
-        description: "Calculate tons, yards, and cost",
-      },
-      {
-        href: "/calculators/tons-to-yards",
-        label: "Tons ↔ Yards Converter",
-        description: "Convert between tons and cubic yards",
-      },
-      {
-        href: "/calculators/coverage-chart",
-        label: "Coverage Chart",
-        description: "Coverage at different depths",
-      },
-      {
-        href: "/planner",
-        label: "Gravel Planner",
-        description: "Draw on satellite map for exact estimates",
-      },
-    ],
-  },
   { href: "/order", label: "Order Online" },
   { href: "/services", label: "Services" },
   { href: "/contact", label: "Contact" },
