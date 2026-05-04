@@ -34,11 +34,15 @@ interface RecurringOrderFormProps {
 const PRODUCTS = [
   { id: "bank-run", name: "Bank Run", unit: "ton" },
   { id: "fill-dirt", name: "Fill Dirt", unit: "ton" },
-  { id: "fill-sand", name: "Fill Sand", unit: "ton" },
-  { id: "topsoil", name: "Topsoil", unit: "ton" },
-  { id: "gravel-8", name: "#8 Gravel", unit: "ton" },
-  { id: "gravel-57", name: "#57 Gravel", unit: "ton" },
-  { id: "gravel-304", name: "#304 Gravel", unit: "ton" },
+  { id: "fill-sand-washed", name: "Fill Sand (Washed)", unit: "ton" },
+  { id: "topsoil-unprocessed", name: "Topsoil (Unprocessed)", unit: "ton" },
+  { id: "4-fractured-gravel-washed", name: "#4 Fractured Gravel (Washed)", unit: "ton" },
+  { id: "9-gravel-washed", name: "#9 Gravel (Washed)", unit: "ton" },
+  { id: "8-gravel-washed", name: "#8 Gravel (Washed)", unit: "ton" },
+  { id: "57-gravel-washed", name: "#57 Gravel (Washed)", unit: "ton" },
+  { id: "304-crushed-gravel", name: "#304 Crushed Gravel", unit: "ton" },
+  { id: "oversized-gravel-washed", name: "Oversized Gravel (Washed)", unit: "ton" },
+  { id: "57-limestone", name: "#57 Limestone", unit: "ton" },
 ];
 
 export function RecurringOrderForm({ order, onClose, onSuccess }: RecurringOrderFormProps) {

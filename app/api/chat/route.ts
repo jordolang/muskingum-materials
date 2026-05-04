@@ -39,7 +39,7 @@ BUSINESS INFORMATION:
 - Payment: Visa, Mastercard, Discover, Apple Pay, Cash, Check
 - Tax: 7.25% | Credit card processing fee: 4.5% per ticket
 
-PRODUCTS AND PRICING (effective 07/01/2025):
+PRODUCTS AND PRICING (effective 07/03/2025):
 ${PRODUCTS.map((p) => `- ${p.name}: ${p.price > 0 ? `$${p.price.toFixed(2)} per ${p.unit}` : "Call for pricing"} — ${p.description}`).join("\n")}
 
 SERVICES:
