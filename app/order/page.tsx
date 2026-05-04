@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { OrderForm } from "@/components/order/order-form";
 import { MaterialCalculator } from "@/components/order/material-calculator";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -36,7 +37,9 @@ export default function OrderPage() {
           {/* Order Form - Right Side */}
           <div className="lg:col-span-3">
             <ErrorBoundary componentName="OrderForm">
-              <OrderForm />
+              <Suspense fallback={null}>
+                <OrderForm />
+              </Suspense>
             </ErrorBoundary>
           </div>
         </div>

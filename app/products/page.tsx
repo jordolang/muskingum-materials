@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -95,27 +96,44 @@ export default async function ProductsPage() {
                 </tr>
               </thead>
               <tbody>
-                {products.map((product, i) => (
-                  <tr
-                    key={product._id}
-                    className={`border-b ${i % 2 === 0 ? "bg-background" : "bg-muted/30"}`}
-                  >
-                    <td className="px-4 py-3 font-medium">{product.name}</td>
-                    <td className="px-4 py-3">
-                      <Badge variant="secondary" className="capitalize">
-                        {product.category}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-right font-semibold text-primary">
-                      {product.pricePerTon > 0
-                        ? `$${product.pricePerTon.toFixed(2)}`
-                        : "Call for Pricing"}
-                    </td>
-                    <td className="px-4 py-3 text-right text-muted-foreground capitalize">
-                      {product.unit === "call" ? "—" : `Per ${product.unit}`}
-                    </td>
-                  </tr>
-                ))}
+                {products.map((product, i) => {
+                  const orderable = product.pricePerTon > 0;
+                  const rowClass = `border-b ${i % 2 === 0 ? "bg-background" : "bg-muted/30"} ${orderable ? "hover:bg-amber-50 cursor-pointer" : ""}`;
+                  const cells = (
+                    <>
+                      <td className="px-4 py-3 font-medium">
+                        {orderable ? (
+                          <Link
+                            href={`/order?product=${encodeURIComponent(product.name)}`}
+                            className="text-primary hover:underline"
+                          >
+                            {product.name}
+                          </Link>
+                        ) : (
+                          product.name
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant="secondary" className="capitalize">
+                          {product.category}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold text-primary">
+                        {orderable
+                          ? `$${product.pricePerTon.toFixed(2)}`
+                          : "Call for Pricing"}
+                      </td>
+                      <td className="px-4 py-3 text-right text-muted-foreground capitalize">
+                        {product.unit === "call" ? "—" : `Per ${product.unit}`}
+                      </td>
+                    </>
+                  );
+                  return (
+                    <tr key={product._id} className={rowClass}>
+                      {cells}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -128,32 +146,46 @@ export default async function ProductsPage() {
               {category}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.map((product) => (
-                <Card key={product._id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="font-semibold text-lg leading-tight">
-                        {product.name}
-                      </h3>
-                      <div className="text-right shrink-0 ml-3">
-                        {product.pricePerTon > 0 ? (
-                          <span className="text-xl font-bold text-primary">
-                            ${product.pricePerTon.toFixed(2)}
-                            <span className="text-xs text-muted-foreground font-normal block">
-                              per {product.unit}
+              {products.map((product) => {
+                const card = (
+                  <Card className="hover:shadow-md transition-shadow h-full">
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="font-semibold text-lg leading-tight">
+                          {product.name}
+                        </h3>
+                        <div className="text-right shrink-0 ml-3">
+                          {product.pricePerTon > 0 ? (
+                            <span className="text-xl font-bold text-primary">
+                              ${product.pricePerTon.toFixed(2)}
+                              <span className="text-xs text-muted-foreground font-normal block">
+                                per {product.unit}
+                              </span>
                             </span>
-                          </span>
-                        ) : (
-                          <Badge>Call for Price</Badge>
-                        )}
+                          ) : (
+                            <Badge>Call for Price</Badge>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {product.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
+                      <p className="text-sm text-muted-foreground">
+                        {product.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                );
+                return product.pricePerTon > 0 ? (
+                  <Link
+                    key={product._id}
+                    href={`/order?product=${encodeURIComponent(product.name)}`}
+                    aria-label={`Order ${product.name}`}
+                    className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-lg"
+                  >
+                    {card}
+                  </Link>
+                ) : (
+                  <div key={product._id}>{card}</div>
+                );
+              })}
             </div>
           </div>
         ))}
