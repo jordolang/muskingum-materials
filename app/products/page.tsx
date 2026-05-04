@@ -98,14 +98,14 @@ export default async function ProductsPage() {
               <tbody>
                 {products.map((product, i) => {
                   const orderable = product.pricePerTon > 0;
-                  const rowClass = `border-b ${i % 2 === 0 ? "bg-background" : "bg-muted/30"} ${orderable ? "hover:bg-amber-50 cursor-pointer" : ""}`;
+                  const rowClass = `border-b ${i % 2 === 0 ? "bg-background" : "bg-muted/30"}`;
                   const cells = (
                     <>
-                      <td className="px-4 py-3 font-medium">
+                      <td className={`px-4 py-3 font-medium ${orderable ? "hover:bg-amber-50 cursor-pointer" : ""}`}>
                         {orderable ? (
                           <Link
                             href={`/order?product=${encodeURIComponent(product.name)}`}
-                            className="text-primary hover:underline"
+                            className="text-primary hover:underline block"
                           >
                             {product.name}
                           </Link>
