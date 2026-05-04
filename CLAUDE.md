@@ -16,7 +16,11 @@ npm run db:seed      # Run prisma/seed.ts via tsx
 
 `postinstall` runs `prisma generate`, so a fresh `npm install` produces a usable client.
 
-There is no test runner wired into `package.json`. Ad-hoc verification scripts at the repo root (`test-order-number.js`, `test-protected-routes.sh`, `test-rate-limits.sh`) are manual probes — run them directly with `node` / `bash`, not via npm.
+There is no test runner wired into `package.json`. Ad-hoc verification scripts at the repo root are manual probes — run them directly with `node` / `bash`, not via npm:
+
+- `test-order-number.js` — Order number generation verification
+- `test-protected-routes.sh` — Auth route protection verification
+- `test-rate-limits.sh` — Rate limiting verification (tests all public API endpoints, 429 response headers, and per-IP isolation)
 
 Sanity Studio is embedded at `/studio` (App Router catch-all at `app/studio/[[...tool]]`), not a separate process. There is also `sanity.cli.ts` for `npx sanity` commands.
 
@@ -39,9 +43,9 @@ Note that `product` and `service` exist in **both** systems. Prisma is what the 
 
 1. **Rate limiting** for public API endpoints. Tiers in `lib/rate-limit.ts`:
    - `chat`: 5 / minute (`/api/chat`)
-   - `contact-quote`: 10 / hour (`/api/contact`, `/api/quote`)
+   - `contact-quote`: 10 / hour (`/api/contact`, `/api/quote`, `/api/orders/checkout`)
    - `leads-newsletter`: 20 / hour (`/api/leads`, `/api/newsletter`)
-   Uses Upstash Redis when `UPSTASH_REDIS_REST_URL`/`_TOKEN` are set, otherwise an in-memory `Map` fallback (per-instance, not shared across serverless invocations).
+   Uses Upstash Redis when `UPSTASH_REDIS_REST_URL`/`_TOKEN` are set, otherwise an in-memory `Map` fallback (per-instance, not shared across serverless invocations). Rate-limited responses return 429 with `Retry-After` and `X-RateLimit-*` headers.
 2. **Clerk auth** — only loaded if `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` is set and not the placeholder. Imported dynamically so the build doesn't fail without Clerk creds.
 
 When adding a new public API route that accepts user input, register it in `rateLimitedEndpoints` in `middleware.ts`.
