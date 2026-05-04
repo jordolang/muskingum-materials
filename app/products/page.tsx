@@ -4,7 +4,7 @@ import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PRODUCTS, BUSINESS_INFO } from "@/data/business";
+import { BUSINESS_INFO } from "@/data/business";
 import { prisma } from "@/lib/prisma";
 import { generateProductSchema, toJsonLd } from "@/lib/seo/structured-data";
 import { generateProductsMetadata } from "@/lib/seo/metadata";
@@ -60,12 +60,19 @@ export default async function ProductsPage() {
   return (
     <>
       {/* Product Structured Data */}
-      {PRODUCTS.map((product) => (
+      {products.map((product) => (
         <script
-          key={product.name}
+          key={product._id}
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: toJsonLd(generateProductSchema(product)),
+            __html: toJsonLd(
+              generateProductSchema({
+                name: product.name,
+                description: product.description,
+                price: product.pricePerTon,
+                unit: product.unit,
+              })
+            ),
           }}
         />
       ))}

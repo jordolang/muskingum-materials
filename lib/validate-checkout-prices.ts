@@ -1,6 +1,7 @@
 import { sanityClient } from "@/lib/sanity/client";
 import { productsQuery } from "@/lib/sanity/queries";
-import { BUSINESS_INFO, PRODUCTS } from "@/data/business";
+import { BUSINESS_INFO } from "@/data/business";
+import { prisma } from "@/lib/prisma";
 import { calculatePrice } from "@/lib/pricing-calculator";
 
 interface CheckoutItem {
@@ -38,9 +39,22 @@ interface Product {
   pricingTiers?: PricingTier[];
 }
 
+async function loadCatalogFromPrisma(): Promise<Product[]> {
+  const rows = await prisma.product.findMany({
+    where: { active: true },
+    select: { name: true, price: true, unit: true },
+  });
+  return rows.map((r) => ({
+    name: r.name,
+    pricePerTon: r.price ?? 0,
+    unit: r.unit,
+  }));
+}
+
 /**
  * Validates checkout prices against product catalog and recalculates totals.
- * Fetches products from Sanity with fallback to hardcoded data.
+ * Sanity (marketing) is preferred when populated; otherwise the Prisma catalog
+ * is the source of truth.
  *
  * @param data - Checkout data with items and claimed prices
  * @param contractorDiscountPercent - Optional contractor discount percentage (0-100)
@@ -51,27 +65,16 @@ export async function validateCheckoutPrices(
   data: CheckoutData,
   contractorDiscountPercent?: number
 ): Promise<ValidatedPrices> {
-  // Fetch products from Sanity, fallback to hardcoded PRODUCTS
   let products: Product[];
   try {
     const sanityProducts = await sanityClient.fetch<Product[]>(productsQuery);
     if (sanityProducts && sanityProducts.length > 0) {
       products = sanityProducts;
     } else {
-      // Fallback to hardcoded products
-      products = PRODUCTS.map((p) => ({
-        name: p.name,
-        pricePerTon: p.price,
-        unit: p.unit,
-      }));
+      products = await loadCatalogFromPrisma();
     }
   } catch {
-    // Fallback to hardcoded products if Sanity fetch fails
-    products = PRODUCTS.map((p) => ({
-      name: p.name,
-      pricePerTon: p.price,
-      unit: p.unit,
-    }));
+    products = await loadCatalogFromPrisma();
   }
 
   // Create a lookup map for quick price validation

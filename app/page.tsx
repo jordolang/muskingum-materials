@@ -34,7 +34,7 @@ interface HomeProduct {
   _id: string;
   name: string;
   description: string;
-  pricePerTon: number;
+  pricePerTon: number | null;
   unit: string;
   imageUrl?: string;
   imageAlt?: string;
@@ -62,9 +62,8 @@ export default async function HomePage() {
   // ReviewsCarousel server component when empty.
   const [productRows, serviceRows, testimonialResult] = await Promise.all([
     prisma.product.findMany({
-      where: { active: true, price: { gt: 0 } },
-      orderBy: [{ featured: "desc" }, { sortOrder: "asc" }],
-      take: 6,
+      where: { active: true },
+      orderBy: [{ sortOrder: "asc" }],
       select: {
         id: true,
         name: true,
@@ -103,7 +102,7 @@ export default async function HomePage() {
     _id: row.id,
     name: row.name,
     description: row.shortDescription ?? row.description,
-    pricePerTon: row.price ?? 0,
+    pricePerTon: row.price,
     unit: row.unit,
     imageUrl: row.imageUrl ?? undefined,
     imageAlt: row.imageAlt ?? undefined,
@@ -214,13 +213,9 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredProducts.map((product) => (
-              <Link
-                key={product._id}
-                href={`/order?product=${encodeURIComponent(product.name)}`}
-                aria-label={`Order ${product.name}`}
-                className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-xl"
-              >
+            {featuredProducts.map((product) => {
+              const orderable = product.pricePerTon != null && product.pricePerTon > 0;
+              const card = (
                 <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 bg-card cursor-pointer h-full">
                   <div className="relative h-48 w-full">
                     <Image
@@ -230,8 +225,14 @@ export default async function HomePage() {
                       className="object-cover"
                     />
                     <div className="absolute top-3 right-3 bg-amber-600 text-white px-3 py-1.5 rounded-lg shadow-md">
-                      <span className="text-lg font-bold">${product.pricePerTon.toFixed(2)}</span>
-                      <span className="text-xs opacity-90">/{product.unit}</span>
+                      {orderable ? (
+                        <>
+                          <span className="text-lg font-bold">${product.pricePerTon!.toFixed(2)}</span>
+                          <span className="text-xs opacity-90">/{product.unit}</span>
+                        </>
+                      ) : (
+                        <span className="text-sm font-bold">Call for Pricing</span>
+                      )}
                     </div>
                   </div>
                   <CardContent className="p-5">
@@ -239,8 +240,20 @@ export default async function HomePage() {
                     <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
                   </CardContent>
                 </Card>
-              </Link>
-            ))}
+              );
+              return orderable ? (
+                <Link
+                  key={product._id}
+                  href={`/order?product=${encodeURIComponent(product.name)}`}
+                  aria-label={`Order ${product.name}`}
+                  className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-xl"
+                >
+                  {card}
+                </Link>
+              ) : (
+                <div key={product._id}>{card}</div>
+              );
+            })}
           </div>
 
           <div className="text-center mt-8">
