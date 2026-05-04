@@ -5,8 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { PRODUCTS, BUSINESS_INFO } from "@/data/business";
-import { checkoutFormSchema, type CheckoutFormData } from "@/lib/schemas";
+import { BUSINESS_INFO } from "@/data/business";
 import { useToast } from "@/lib/use-toast";
 import { useCartStore } from "@/lib/store";
 import { OrderConfirmation } from "./order-confirmation";
@@ -14,7 +13,15 @@ import { ProductCatalog } from "./product-catalog";
 import { CartSummary } from "./cart-summary";
 import { CheckoutForm } from "./checkout-form";
 
-type OrderableProduct = (typeof PRODUCTS)[number];
+export interface OrderableProduct {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  unit: string;
+  imageUrl?: string;
+  imageAlt?: string;
+}
 
 export const checkoutSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -28,7 +35,11 @@ export const checkoutSchema = z.object({
 
 export type CheckoutData = z.infer<typeof checkoutSchema>;
 
-export function OrderForm() {
+interface OrderFormProps {
+  products: OrderableProduct[];
+}
+
+export function OrderForm({ products }: OrderFormProps) {
   const cart = useCartStore((state) => state.items);
   const addToCart = useCartStore((state) => state.addToCart);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
@@ -50,7 +61,7 @@ export function OrderForm() {
     if (handledProductParamRef.current === productParam) return;
     handledProductParamRef.current = productParam;
 
-    const match = PRODUCTS.find(
+    const match = products.find(
       (p) => p.name.toLowerCase() === productParam.toLowerCase() && p.price > 0
     );
     if (!match) return;
@@ -65,7 +76,7 @@ export function OrderForm() {
         description: `${match.name} is ready to customize below.`,
       });
     }
-  }, [productParam, addToCart, toast]);
+  }, [productParam, addToCart, toast, products]);
 
   const {
     register,
@@ -79,31 +90,11 @@ export function OrderForm() {
 
   const totals = useMemo(() => {
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-    // Calculate volume discount based on pricing tiers
-    const volumeDiscount = cart.reduce((totalDiscount, item) => {
-      const product = PRODUCTS.find((p) => p.name === item.name);
-      if (!product || !('pricingTiers' in product) || !product.pricingTiers) return totalDiscount;
-
-      // Find the highest applicable tier based on quantity
-      const applicableTier = product.pricingTiers
-        .filter((tier) => item.quantity >= tier.minQuantity)
-        .sort((a, b) => b.minQuantity - a.minQuantity)[0];
-
-      if (applicableTier) {
-        const discount = (item.price - applicableTier.pricePerTon) * item.quantity;
-        return totalDiscount + discount;
-      }
-
-      return totalDiscount;
-    }, 0);
-
-    const discountedSubtotal = subtotal - volumeDiscount;
-    const tax = discountedSubtotal * BUSINESS_INFO.taxRate;
-    const processingFee = discountedSubtotal * BUSINESS_INFO.creditProcessingFee;
-    const total = discountedSubtotal + tax + processingFee;
+    const tax = subtotal * BUSINESS_INFO.taxRate;
+    const processingFee = subtotal * BUSINESS_INFO.creditProcessingFee;
+    const total = subtotal + tax + processingFee;
     const totalTons = cart.reduce((sum, item) => sum + item.quantity, 0);
-    return { subtotal, volumeDiscount, tax, processingFee, total, totalTons };
+    return { subtotal, volumeDiscount: 0, tax, processingFee, total, totalTons };
   }, [cart]);
 
   async function onCheckout(data: CheckoutData) {
@@ -165,6 +156,7 @@ export function OrderForm() {
       {step === "products" && (
         <>
           <ProductCatalog
+            products={products}
             cart={cart}
             onAddToCart={addToCart}
             onUpdateQuantity={updateQuantity}

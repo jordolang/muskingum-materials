@@ -3,7 +3,7 @@ import Link from "next/link";
 import { CheckCircle, Phone, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { SERVICES, BUSINESS_INFO } from "@/data/business";
+import { BUSINESS_INFO } from "@/data/business";
 import { getServices } from "@/lib/products";
 import { generateServicesMetadata } from "@/lib/seo/metadata";
 
