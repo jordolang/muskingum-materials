@@ -2,12 +2,16 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// Catalog of products sold at the Zanesville yard. The 11 entries below match
-// the printed price list distributed at the office (effective 07/03/2025).
+// Catalog of products sold at the Zanesville yard. Entries below match the
+// printed price list distributed at the office (effective 01/14/2026).
 // This array is the single source of truth seeded into Postgres — every page,
 // API route, calculator, and chat prompt resolves products from the database
 // at runtime, not from this file. Update prices here and re-run `npm run db:seed`
 // to roll them out.
+//
+// Per business policy, every gravel and limestone aggregate is washed — no
+// exceptions. Non-aggregate items (Bank Run, Fill Dirt, Topsoil, Asphalt
+// Millings) are sold in their natural / unprocessed state by definition.
 const PRODUCTS_DATA = [
   {
     slug: "bank-run",
@@ -17,9 +21,10 @@ const PRODUCTS_DATA = [
       "Natural unprocessed mix of sand, gravel, and soil pulled directly from the bank. Economical fill material for grading, building pads, and rough base where compaction matters more than appearance.",
     shortDescription:
       "Natural sand-gravel-soil mix. Economical fill and base material.",
-    imageUrl: "/images/products/bank-run.jpg",
-    imageAlt: "Pile of bank run material at the Muskingum Materials yard",
-    price: 13.0,
+    imageUrl:
+      "https://images.unsplash.com/photo-1587582345426-bf6fdf6c79bd?auto=format&fit=crop&w=1200&q=80",
+    imageAlt: "Pile of bank run material — natural sand, gravel, and soil mix",
+    price: 13.5,
     unit: "ton",
     sizeDescription: "Variable — natural mix of sand, gravel, and soil",
     colorDescription: "Brown to tan",
@@ -42,9 +47,10 @@ const PRODUCTS_DATA = [
       "Clean fill dirt for grading, backfill, and structural fill. Free of organic matter so it compacts firmly and stays in place — not for growing plants.",
     shortDescription:
       "Clean fill for grading, backfill, and structural fill.",
-    imageUrl: "/images/products/fill-dirt.jpg",
-    imageAlt: "Pile of clean fill dirt",
-    price: 7.0,
+    imageUrl:
+      "https://images.unsplash.com/photo-1416163255955-3ee24a5cd362?auto=format&fit=crop&w=1200&q=80",
+    imageAlt: "Pile of clean brown fill dirt",
+    price: 7.5,
     unit: "ton",
     sizeDescription: "Sub-soil, screened of debris",
     colorDescription: "Brown",
@@ -64,12 +70,13 @@ const PRODUCTS_DATA = [
     name: "Fill Sand (Washed)",
     category: "sand",
     description:
-      "Washed fill sand for construction backfill, paver bedding, and bedding for utility trenches. Drains well and compacts uniformly.",
+      "Washed fill sand for construction backfill, paver bedding, and utility trench bedding. Rinsed clean of silt and clay so it drains uniformly and compacts evenly under load.",
     shortDescription:
-      "Washed sand for backfill, paver bedding, and trenches.",
-    imageUrl: "/images/products/fill-sand.jpg",
-    imageAlt: "Washed fill sand pile",
-    price: 4.0,
+      "Washed sand for backfill, paver bedding, and trench bedding.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1564154792818-cf4ed7b4b16d?auto=format&fit=crop&w=1200&q=80",
+    imageAlt: "Pile of washed tan-colored fill sand",
+    price: 4.5,
     unit: "ton",
     sizeDescription: "Fine washed sand",
     colorDescription: "Tan to light brown",
@@ -78,7 +85,7 @@ const PRODUCTS_DATA = [
     bestFor: ["Backfill", "Paver bedding", "Pipe bedding"],
     notFor: ["Concrete mix (use mason sand)", "Decorative use"],
     commonUses: ["Trench backfill", "Paver setting bed", "Construction fill"],
-    pros: ["Drains well", "Compacts uniformly", "Inexpensive"],
+    pros: ["Washed clean", "Drains well", "Compacts uniformly"],
     cons: ["Shifts under load without confinement"],
     altNames: ["Construction sand"],
     featured: false,
@@ -92,9 +99,10 @@ const PRODUCTS_DATA = [
       "Natural unprocessed topsoil straight from the field. Rich in organic matter for landscaping, gardening, and lawn establishment. May contain rocks, roots, or clumps — call ahead if you need screened topsoil for finish work.",
     shortDescription:
       "Natural topsoil for landscaping, gardens, and lawn establishment.",
-    imageUrl: "/images/products/topsoil.jpg",
-    imageAlt: "Pile of unprocessed topsoil",
-    price: 10.0,
+    imageUrl:
+      "https://images.unsplash.com/photo-1466692476868-9ee5a3a3e93b?auto=format&fit=crop&w=1200&q=80",
+    imageAlt: "Pile of dark brown unprocessed topsoil",
+    price: 10.5,
     unit: "ton",
     sizeDescription: "Unscreened — may contain rocks and organic matter",
     colorDescription: "Dark brown",
@@ -110,27 +118,28 @@ const PRODUCTS_DATA = [
     sortOrder: 4,
   },
   {
-    slug: "4-fractured-gravel-washed",
-    name: "#4 Fractured Gravel (Washed)",
+    slug: "4-river-gravel-washed",
+    name: "#4 River Gravel (Washed)",
     category: "gravel",
     description:
-      "Washed #4 fractured stone — angular crushed gravel approximately 1.5 to 2.5 inches. Ideal for heavy drainage, base under driveways, and any application that needs both bulk and locking edges.",
+      "Washed #4 river gravel — large rounded stones approximately 1.5 to 2.5 inches. All Muskingum Materials gravel is washed, no exceptions. Ideal for heavy drainage, French drains, base under driveways, and any application that needs bulk and free flow.",
     shortDescription:
-      "Washed 1.5\"–2.5\" fractured stone for heavy drainage and base.",
-    imageUrl: "/images/products/fractured-gravel.jpg",
-    imageAlt: "Washed #4 fractured gravel",
-    price: 28.0,
+      "Washed 1.5\"–2.5\" river gravel for heavy drainage and base.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1582211765858-cc8a3c92db78?auto=format&fit=crop&w=1200&q=80",
+    imageAlt: "Pile of washed #4 river gravel — 1.5 to 2.5 inch rounded stones",
+    price: 28.5,
     unit: "ton",
-    sizeDescription: "1.5\" to 2.5\" angular crushed stone",
-    colorDescription: "Gray",
+    sizeDescription: "1.5\" to 2.5\" washed river gravel",
+    colorDescription: "Gray, tan, and brown river stone",
     densityLow: 1.4,
     densityHigh: 1.55,
     bestFor: ["Heavy drainage", "Driveway base", "Erosion control"],
     notFor: ["Walking surfaces", "Decorative landscaping"],
     commonUses: ["French drains", "Driveway base", "Stabilization"],
-    pros: ["Excellent drainage", "Angular edges lock together", "Heavy duty"],
+    pros: ["Washed clean", "Excellent drainage", "Heavy duty"],
     cons: ["Too coarse to walk on", "Requires top dressing for driveways"],
-    altNames: ["#4 stone"],
+    altNames: ["#4 stone", "#4 gravel"],
     featured: true,
     sortOrder: 5,
   },
@@ -139,12 +148,13 @@ const PRODUCTS_DATA = [
     name: "#9 Gravel (Washed)",
     category: "gravel",
     description:
-      "Fine washed gravel, roughly 1/8 to 3/8 inch. Ideal for pipe bedding, drainage layers, and as a leveling course under pavers.",
+      "Fine washed gravel, roughly 1/8 to 3/8 inch. All Muskingum Materials gravel is washed, no exceptions. Ideal for pipe bedding, drainage layers, and as a leveling course under pavers.",
     shortDescription:
       "Fine 1/8\"–3/8\" washed gravel. Pipe bedding and drainage layers.",
-    imageUrl: "/images/products/fine-gravel.jpg",
-    imageAlt: "Fine washed #9 gravel",
-    price: 9.0,
+    imageUrl:
+      "https://images.unsplash.com/photo-1628126235206-5260b9ea6441?auto=format&fit=crop&w=1200&q=80",
+    imageAlt: "Pile of fine washed #9 gravel",
+    price: 9.5,
     unit: "ton",
     sizeDescription: "1/8\" to 3/8\" washed crushed stone",
     colorDescription: "Gray",
@@ -153,7 +163,7 @@ const PRODUCTS_DATA = [
     bestFor: ["Pipe bedding", "Drainage layers", "Paver leveling"],
     notFor: ["Driveway top course", "Heavy traffic surfaces"],
     commonUses: ["Pipe bedding", "Underdrains", "Paver setting bed"],
-    pros: ["Smooth fine size", "Drains well", "Easy to spread"],
+    pros: ["Washed clean", "Smooth fine size", "Drains well"],
     cons: ["Too small for surface use", "Washes out without confinement"],
     altNames: ["#9 stone"],
     featured: false,
@@ -164,12 +174,13 @@ const PRODUCTS_DATA = [
     name: "#8 Gravel (Washed)",
     category: "gravel",
     description:
-      "Washed 3/8 inch crushed stone. A favorite for concrete mix, drainage chips, and decorative applications where a clean uniform stone is needed.",
+      "Washed 3/8 inch crushed stone. All Muskingum Materials gravel is washed, no exceptions. A favorite for concrete mix, drainage chips, and decorative applications where a clean uniform stone is needed.",
     shortDescription:
       "Washed 3/8\" crushed stone for concrete, drainage, and decoration.",
-    imageUrl: "/images/photos/stone-close-up.jpg",
-    imageAlt: "Washed #8 gravel close up",
-    price: 15.0,
+    imageUrl:
+      "https://images.unsplash.com/photo-1581094288338-2314dddb7ece?auto=format&fit=crop&w=1200&q=80",
+    imageAlt: "Close-up of washed #8 gravel — 3/8 inch angular crushed stone",
+    price: 15.5,
     unit: "ton",
     sizeDescription: "3/8\" angular crushed stone",
     colorDescription: "Gray",
@@ -178,7 +189,7 @@ const PRODUCTS_DATA = [
     bestFor: ["Concrete mix", "Drainage chips", "Decorative paths"],
     notFor: ["Heavy structural fill"],
     commonUses: ["Concrete production", "Decorative", "Drainage"],
-    pros: ["Clean uniform size", "Versatile", "Visually clean"],
+    pros: ["Washed clean", "Uniform size", "Versatile"],
     cons: ["Shifts under heavy traffic"],
     altNames: ["#8 stone"],
     featured: false,
@@ -189,12 +200,13 @@ const PRODUCTS_DATA = [
     name: "#57 Gravel (Washed)",
     category: "gravel",
     description:
-      "Washed 3/4 to 1 inch crushed stone — the most versatile aggregate we sell. Excellent for driveways, drainage trenches, foundation backfill, and concrete production.",
+      "Washed 3/4 to 1 inch crushed stone — the most versatile aggregate we sell. All Muskingum Materials gravel is washed, no exceptions. Excellent for driveways, drainage trenches, foundation backfill, and concrete production.",
     shortDescription:
       "Washed 3/4\"–1\" crushed stone. Driveways, drainage, and concrete.",
-    imageUrl: "/images/photos/piles-close-up.jpg",
-    imageAlt: "Pile of washed #57 gravel",
-    price: 19.5,
+    imageUrl:
+      "https://images.unsplash.com/photo-1604147495798-57beb5d6af73?auto=format&fit=crop&w=1200&q=80",
+    imageAlt: "Pile of washed #57 gravel — 3/4 to 1 inch angular crushed stone",
+    price: 20.0,
     unit: "ton",
     sizeDescription: "3/4\" to 1\" angular crushed stone",
     colorDescription: "Gray",
@@ -203,34 +215,35 @@ const PRODUCTS_DATA = [
     bestFor: ["Driveways", "Drainage", "Concrete mix", "Foundation backfill"],
     notFor: ["Walking surfaces (too coarse)"],
     commonUses: ["Driveways", "French drains", "Concrete", "Pipe bedding"],
-    pros: ["Most versatile aggregate", "Excellent drainage", "Widely used"],
+    pros: ["Washed clean", "Most versatile aggregate", "Excellent drainage"],
     cons: ["Sharp edges", "Shifts without edging"],
     altNames: ["#57 stone"],
     featured: true,
     sortOrder: 8,
   },
   {
-    slug: "304-crushed-gravel",
-    name: "#304 Crushed Gravel",
+    slug: "304-river-gravel-washed",
+    name: "#304 River Gravel (Washed)",
     category: "gravel",
     description:
-      "Dense-graded crushed gravel blending stone and fines. Compacts into a hard, smooth driving surface — the standard choice for finished gravel driveways and parking areas.",
+      "Dense-graded washed river gravel blending crushed stone with rounded river fines. All Muskingum Materials gravel is washed, no exceptions. Compacts into a hard, smooth driving surface — the standard choice for finished gravel driveways and parking areas.",
     shortDescription:
-      "Dense-graded gravel that compacts into a hard driveway surface.",
-    imageUrl: "/images/photos/piles-7.jpg",
-    imageAlt: "Pile of #304 crushed gravel",
-    price: 20.0,
+      "Washed dense-graded river gravel that compacts into a hard driveway surface.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1591381687659-7e9aaab9c1c7?auto=format&fit=crop&w=1200&q=80",
+    imageAlt: "Pile of washed #304 river gravel — dense-graded driveway aggregate",
+    price: 20.5,
     unit: "ton",
-    sizeDescription: "Blend of crushed stone up to 1\" with fines",
-    colorDescription: "Gray",
+    sizeDescription: "Blend of washed crushed and river stone up to 1\" with fines",
+    colorDescription: "Gray with tan accents",
     densityLow: 1.4,
     densityHigh: 1.6,
     bestFor: ["Driveways", "Parking areas", "Compacted base"],
     notFor: ["Drainage applications", "Decorative use"],
     commonUses: ["Driveways", "Road base", "Paver base"],
-    pros: ["Compacts hard", "Smooth driving surface", "Cost effective"],
+    pros: ["Washed clean", "Compacts hard", "Smooth driving surface"],
     cons: ["Dusty when dry", "Poor drainage"],
-    altNames: ["304 limestone", "Crusher run"],
+    altNames: ["304 river", "Crusher run river gravel"],
     featured: true,
     sortOrder: 9,
   },
@@ -239,12 +252,13 @@ const PRODUCTS_DATA = [
     name: "Oversized Gravel (Washed)",
     category: "gravel",
     description:
-      "Large washed stone, generally 2 inches and up. Used for erosion control, decorative water features, and drainage in high-flow areas.",
+      "Large washed stone, generally 2 inches and up. All Muskingum Materials gravel is washed, no exceptions. Used for erosion control, decorative water features, and drainage in high-flow areas.",
     shortDescription:
       "Large 2\"+ washed stone for erosion control and decorative drainage.",
-    imageUrl: "/images/photos/stone-hand.jpg",
-    imageAlt: "Hand holding oversized washed gravel",
-    price: 28.0,
+    imageUrl:
+      "https://images.unsplash.com/photo-1557005075-ee5fdb0d80f6?auto=format&fit=crop&w=1200&q=80",
+    imageAlt: "Pile of large washed oversized gravel — 2 inch and up river stone",
+    price: 28.5,
     unit: "ton",
     sizeDescription: "2\"+ washed stone",
     colorDescription: "Gray to brown",
@@ -253,23 +267,24 @@ const PRODUCTS_DATA = [
     bestFor: ["Erosion control", "Decorative drainage", "Slope stabilization"],
     notFor: ["Driveways", "Walking surfaces"],
     commonUses: ["Channel armor", "Decorative borders", "Heavy drainage"],
-    pros: ["Heavy and stable", "Decorative", "Resists movement"],
+    pros: ["Washed clean", "Heavy and stable", "Decorative"],
     cons: ["Too large for most surfaces"],
     altNames: [],
     featured: false,
     sortOrder: 10,
   },
   {
-    slug: "57-limestone",
-    name: "#57 Limestone",
+    slug: "57-limestone-washed",
+    name: "#57 Limestone (Washed)",
     category: "stone",
     description:
-      "Premium washed limestone aggregate, 3/4 to 1 inch. Bright color and clean appearance make it a favorite for high-end driveways, landscape borders, and exposed aggregate finishes.",
+      "Premium washed limestone aggregate, 3/4 to 1 inch. All Muskingum Materials limestone is washed, no exceptions. Bright color and clean appearance make it a favorite for high-end driveways, landscape borders, and exposed aggregate finishes.",
     shortDescription:
       "Washed limestone aggregate for premium driveways and landscaping.",
-    imageUrl: "/images/photos/boulders.jpg",
-    imageAlt: "Pile of #57 limestone",
-    price: 38.0,
+    imageUrl:
+      "https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=1200&q=80",
+    imageAlt: "Pile of bright white washed #57 limestone aggregate",
+    price: 38.5,
     unit: "ton",
     sizeDescription: "3/4\" to 1\" washed limestone",
     colorDescription: "Light gray to white",
@@ -278,11 +293,63 @@ const PRODUCTS_DATA = [
     bestFor: ["Premium driveways", "Landscape borders", "Exposed aggregate"],
     notFor: ["Heavy structural fill"],
     commonUses: ["Driveways", "Landscape", "Decorative aggregate"],
-    pros: ["Bright clean color", "Compacts well", "Naturally suppresses weeds"],
+    pros: ["Washed clean", "Bright color", "Naturally suppresses weeds"],
     cons: ["Higher price than standard gravel"],
     altNames: ["57 lime", "Washed limestone"],
     featured: true,
     sortOrder: 11,
+  },
+  {
+    slug: "304-limestone-washed",
+    name: "#304 Limestone (Washed)",
+    category: "stone",
+    description:
+      "Dense-graded washed limestone — a blend of crushed limestone and limestone fines up to 1 inch. All Muskingum Materials limestone is washed, no exceptions. Compacts into a hard, smooth surface for premium driveways, road base, and structural pads.",
+    shortDescription:
+      "Washed dense-graded limestone for driveways, road base, and pads.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1597007029837-5c63b2b1e1d3?auto=format&fit=crop&w=1200&q=80",
+    imageAlt: "Pile of washed #304 limestone — dense-graded crushed limestone",
+    price: 38.0,
+    unit: "ton",
+    sizeDescription: "Crushed limestone up to 1\" with fines",
+    colorDescription: "Light gray to white",
+    densityLow: 1.4,
+    densityHigh: 1.6,
+    bestFor: ["Driveways", "Road base", "Structural pads"],
+    notFor: ["Drainage applications", "Decorative top course"],
+    commonUses: ["Driveways", "Road base", "Building pads"],
+    pros: ["Washed clean", "Compacts hard", "Bright finish"],
+    cons: ["Dusty when dry", "Poor drainage"],
+    altNames: ["304 lime", "Crushed limestone base"],
+    featured: false,
+    sortOrder: 12,
+  },
+  {
+    slug: "unprocessed-asphalt-millings",
+    name: "Unprocessed Asphalt Millings",
+    category: "asphalt",
+    description:
+      "Reclaimed asphalt millings — recycled crushed asphalt left in its unprocessed state. An economical alternative to gravel for driveways, parking areas, and access roads. Compacts and binds in the sun for a hard, low-dust surface.",
+    shortDescription:
+      "Recycled crushed asphalt — economical driveway and parking surface.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80",
+    imageAlt: "Pile of dark unprocessed asphalt millings — recycled crushed asphalt",
+    price: 15.5,
+    unit: "ton",
+    sizeDescription: "Variable — recycled crushed asphalt, unprocessed",
+    colorDescription: "Black to dark gray",
+    densityLow: 1.4,
+    densityHigh: 1.6,
+    bestFor: ["Driveways", "Parking areas", "Access roads"],
+    notFor: ["Drainage applications", "Decorative landscaping"],
+    commonUses: ["Driveway resurface", "Farm lanes", "Parking areas"],
+    pros: ["Inexpensive", "Binds in sun", "Low dust once compacted"],
+    cons: ["Unprocessed — variable size", "Tracks when soft in heat"],
+    altNames: ["RAP", "Recycled asphalt", "Asphalt grindings"],
+    featured: false,
+    sortOrder: 13,
   },
 ];
 
@@ -939,31 +1006,43 @@ async function main() {
       a: "8-gravel-washed",
       b: "57-gravel-washed",
       summary:
-        "#8 (3/8\") is smaller and more comfortable for walking and decorative paths. #57 (3/4\"-1\") is larger and excels at drainage and driveway base.",
+        "#8 (3/8\") is smaller and more comfortable for walking and decorative paths. #57 (3/4\"-1\") is larger and excels at drainage and driveway base. Both are washed.",
     },
     {
       a: "9-gravel-washed",
       b: "8-gravel-washed",
       summary:
-        "#9 is a fine 1/8\"–3/8\" stone for pipe bedding and paver leveling. #8 is a uniform 3/8\" stone for concrete mix and decorative chips.",
+        "#9 is a fine 1/8\"–3/8\" stone for pipe bedding and paver leveling. #8 is a uniform 3/8\" stone for concrete mix and decorative chips. Both are washed.",
     },
     {
-      a: "304-crushed-gravel",
+      a: "304-river-gravel-washed",
       b: "57-gravel-washed",
       summary:
-        "#304 contains fines that compact into a hard driveway surface. #57 is washed clean for drainage. Most driveways use #304 on top of a #57 base.",
+        "Both are washed. #304 river gravel contains fines that compact into a hard driveway surface. #57 is the open-graded drainage stone. Most driveways use #304 on top of a #57 base.",
     },
     {
-      a: "4-fractured-gravel-washed",
+      a: "4-river-gravel-washed",
       b: "oversized-gravel-washed",
       summary:
-        "#4 fractured (1.5\"–2.5\") is angular and locks together — ideal for heavy drainage and stabilized base. Oversized (2\"+) is larger and used for erosion control and high-flow drainage.",
+        "#4 river gravel (1.5\"–2.5\") is great for heavy drainage and stabilized base. Oversized (2\"+) is larger and used for erosion control and high-flow drainage. Both are washed.",
     },
     {
       a: "57-gravel-washed",
-      b: "57-limestone",
+      b: "57-limestone-washed",
       summary:
-        "#57 gravel and #57 limestone share the same 3/4\"–1\" size, but limestone is brighter and lighter — preferred for premium driveways and decorative finishes at a higher price point.",
+        "Washed #57 gravel and washed #57 limestone share the same 3/4\"–1\" size, but limestone is brighter and lighter — preferred for premium driveways and decorative finishes at a higher price point.",
+    },
+    {
+      a: "304-river-gravel-washed",
+      b: "304-limestone-washed",
+      summary:
+        "Both are washed dense-graded driveway aggregates. #304 river gravel is a gray-and-tan blend at a lower price point; #304 limestone is brighter and stays cleaner-looking but costs more.",
+    },
+    {
+      a: "304-river-gravel-washed",
+      b: "unprocessed-asphalt-millings",
+      summary:
+        "#304 river gravel is washed and ideal for clean driveways. Unprocessed asphalt millings are a recycled, lower-cost alternative that binds in the sun — great for farm lanes and budget driveways.",
     },
   ];
 

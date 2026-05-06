@@ -45,7 +45,7 @@ export const PROJECT_TYPE_MAPPINGS: ProjectTypeMapping[] = [
     estimatedDepth: "4-6 inches",
     recommendations: [
       {
-        productSlug: "304-crushed-gravel",
+        productSlug: "304-river-gravel-washed",
         priority: 1,
         reasoning: "Best for driveways - compacts well, provides stable base, excellent drainage",
         idealFor: ["Base layer", "All-weather access", "Heavy vehicle traffic"],
@@ -61,7 +61,7 @@ export const PROJECT_TYPE_MAPPINGS: ProjectTypeMapping[] = [
         minQuantity: 2,
       },
       {
-        productSlug: "4-fractured-gravel-washed",
+        productSlug: "4-river-gravel-washed",
         priority: 3,
         reasoning: "Smaller stones create smoother surface, locks together well",
         idealFor: ["Finished surface", "Smooth driving surface", "Walkable"],
@@ -86,7 +86,7 @@ export const PROJECT_TYPE_MAPPINGS: ProjectTypeMapping[] = [
         minQuantity: 1,
       },
       {
-        productSlug: "57-limestone",
+        productSlug: "57-limestone-washed",
         priority: 2,
         reasoning: "Bright washed limestone - decorative and naturally suppresses weeds",
         idealFor: ["Decorative borders", "Ground cover", "Low maintenance"],
@@ -176,7 +176,7 @@ export const PROJECT_TYPE_MAPPINGS: ProjectTypeMapping[] = [
     estimatedDepth: "4-6 inches base + 1 inch leveling",
     recommendations: [
       {
-        productSlug: "304-crushed-gravel",
+        productSlug: "304-river-gravel-washed",
         priority: 1,
         reasoning: "Excellent base material - compacts solid and stays level",
         idealFor: ["Paver base", "Patio foundation", "Stable surface"],
@@ -209,7 +209,7 @@ export const PROJECT_TYPE_MAPPINGS: ProjectTypeMapping[] = [
     estimatedDepth: "2-4 inches",
     recommendations: [
       {
-        productSlug: "4-fractured-gravel-washed",
+        productSlug: "4-river-gravel-washed",
         priority: 1,
         reasoning: "Comfortable walking surface - locks together, won't roll underfoot",
         idealFor: ["Garden paths", "Walking trails", "Smooth surface"],
@@ -225,7 +225,7 @@ export const PROJECT_TYPE_MAPPINGS: ProjectTypeMapping[] = [
         minQuantity: 1,
       },
       {
-        productSlug: "304-crushed-gravel",
+        productSlug: "304-river-gravel-washed",
         priority: 3,
         reasoning: "Dense-graded gravel that compacts into a firm walking surface",
         idealFor: ["Formal paths", "Wheelchair accessible", "Compact surface"],
@@ -291,7 +291,7 @@ export const PROJECT_TYPE_MAPPINGS: ProjectTypeMapping[] = [
         minQuantity: 2,
       },
       {
-        productSlug: "57-limestone",
+        productSlug: "57-limestone-washed",
         priority: 3,
         reasoning: "Bright washed limestone - decorative and weed suppressing on light slopes",
         idealFor: ["Decorative slopes", "Garden areas", "Light erosion"],
@@ -307,7 +307,7 @@ export const PROJECT_TYPE_MAPPINGS: ProjectTypeMapping[] = [
     estimatedDepth: "2-4 inches",
     recommendations: [
       {
-        productSlug: "57-limestone",
+        productSlug: "57-limestone-washed",
         priority: 1,
         reasoning: "Premium washed limestone — bright decorative finish for gardens and borders",
         idealFor: ["Rock gardens", "Water features", "Decorative borders"],
@@ -322,7 +322,7 @@ export const PROJECT_TYPE_MAPPINGS: ProjectTypeMapping[] = [
         minQuantity: 1,
       },
       {
-        productSlug: "4-fractured-gravel-washed",
+        productSlug: "4-river-gravel-washed",
         priority: 3,
         reasoning: "Clean, uniform appearance for refined landscapes",
         idealFor: ["Modern landscapes", "Clean lines", "Minimalist design"],
