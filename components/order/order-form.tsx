@@ -136,7 +136,12 @@ export function OrderForm({ products }: OrderFormProps) {
       0,
     );
     const tax = subtotal * BUSINESS_INFO.taxRate;
-    const processingFee = subtotal * BUSINESS_INFO.creditProcessingFee;
+    // The card-processing fee runs through the merchant on the full
+    // amount Stripe charges (subtotal + tax). Keep this in lockstep with
+    // lib/validate-checkout-prices.ts so the server-side validation
+    // doesn't reject the order with a "Processing fee mismatch".
+    const processingFee =
+      (subtotal + tax) * BUSINESS_INFO.creditProcessingFee;
     const total = subtotal + tax + processingFee;
     const totalTons = cart.reduce((sum, item) => sum + item.quantity, 0);
     return { subtotal, volumeDiscount: 0, tax, processingFee, total, totalTons };
