@@ -5,7 +5,15 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ShoppingCart, Sparkles, ClipboardList, CreditCard, Trash2 } from "lucide-react";
+import {
+  ShoppingCart,
+  Sparkles,
+  ClipboardList,
+  CreditCard,
+  Minus,
+  Plus,
+  X,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -301,7 +309,12 @@ export function OrderForm({ products }: OrderFormProps) {
             ) : undefined
           }
         >
-          <CartReview cart={cart} totals={totals} onRemove={removeFromCart} />
+          <CartReview
+            cart={cart}
+            totals={totals}
+            onRemove={removeFromCart}
+            onUpdateQuantity={updateQuantity}
+          />
           <Separator />
           <FulfillmentSection
             register={register}
@@ -359,14 +372,27 @@ interface CartReviewProps {
     totalTons: number;
   };
   onRemove: (name: string) => void;
+  onUpdateQuantity: (name: string, delta: number) => void;
 }
 
-function CartReview({ cart, totals, onRemove }: CartReviewProps) {
+function CartReview({
+  cart,
+  totals,
+  onRemove,
+  onUpdateQuantity,
+}: CartReviewProps) {
   return (
     <div className="space-y-3 p-5">
-      <div className="flex items-center gap-2 text-sm font-semibold">
-        <ClipboardList className="h-4 w-4 text-amber-600" />
-        Order Summary
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <ClipboardList className="h-4 w-4 text-amber-600" />
+          Order Summary
+        </div>
+        {cart.length > 0 && (
+          <p className="text-[11px] text-muted-foreground">
+            Hover any line to remove · use ± to adjust
+          </p>
+        )}
       </div>
 
       {cart.length === 0 ? (
@@ -374,30 +400,63 @@ function CartReview({ cart, totals, onRemove }: CartReviewProps) {
           Your cart is empty.
         </Card>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1">
           {cart.map((item) => (
             <div
               key={item.name}
-              className="flex items-center justify-between text-sm"
+              className="group relative flex items-center gap-3 rounded-md py-2 px-2 -mx-2 text-sm transition-colors hover:bg-muted/50"
             >
-              <div className="flex items-center gap-2">
+              {/* Item name + per-unit price */}
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate">{item.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  ${item.price.toFixed(2)} per {item.unit}
+                </p>
+              </div>
+
+              {/* Quantity stepper */}
+              <div className="flex items-center gap-1 shrink-0">
                 <button
                   type="button"
-                  onClick={() => onRemove(item.name)}
-                  className="text-muted-foreground hover:text-destructive transition-colors"
-                  aria-label={`Remove ${item.name}`}
+                  onClick={() => onUpdateQuantity(item.name, -1)}
+                  className="h-7 w-7 inline-flex items-center justify-center rounded-md border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+                  aria-label={`Decrease ${item.name}`}
+                  disabled={item.quantity <= 1}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Minus className="h-3 w-3" />
                 </button>
-                <span className="font-medium">{item.name}</span>
-                <Badge variant="secondary" className="text-xs">
+                <Badge
+                  variant="secondary"
+                  className="min-w-[3.5rem] justify-center font-mono"
+                >
                   {item.quantity} {item.unit}
                   {item.quantity !== 1 ? "s" : ""}
                 </Badge>
+                <button
+                  type="button"
+                  onClick={() => onUpdateQuantity(item.name, 1)}
+                  className="h-7 w-7 inline-flex items-center justify-center rounded-md border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  aria-label={`Increase ${item.name}`}
+                >
+                  <Plus className="h-3 w-3" />
+                </button>
               </div>
-              <span className="font-semibold tabular-nums">
+
+              {/* Line total */}
+              <span className="font-semibold tabular-nums w-20 text-right shrink-0">
                 ${(item.price * item.quantity).toFixed(2)}
               </span>
+
+              {/* Hover-reveal on desktop, always visible on touch devices */}
+              <button
+                type="button"
+                onClick={() => onRemove(item.name)}
+                className="shrink-0 inline-flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-destructive/50 md:opacity-0 md:group-hover:opacity-100"
+                aria-label={`Remove ${item.name} from order`}
+                title={`Remove ${item.name}`}
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
           ))}
 
