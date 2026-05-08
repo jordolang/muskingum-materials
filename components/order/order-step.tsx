@@ -92,10 +92,7 @@ export function OrderStep({
             {lockedMessage ?? "Complete the previous step to unlock."}
           </div>
         ) : (
-          <div
-            key={status}
-            className="animate-in fade-in slide-in-from-top-2 duration-500"
-          >
+          <div className="animate-in fade-in slide-in-from-top-2 duration-500">
             {children}
           </div>
         )}
