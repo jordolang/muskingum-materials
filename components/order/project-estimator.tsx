@@ -32,7 +32,10 @@ declare global {
 }
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
-const US_CENTER = { lat: 39.8283, lng: -98.5795 };
+// Default the satellite view to the Muskingum Materials yard in Zanesville
+// so the map looks useful before the customer enters an address.
+const DEFAULT_CENTER = { lat: 39.9614, lng: -81.9956 };
+const DEFAULT_ZOOM = 12;
 
 const DEPTH_OPTIONS = [
   { label: '2" — Light coverage', value: 2 },
@@ -301,8 +304,8 @@ export function ProjectEstimator({
     if (!mapsScriptLoaded || !mapContainerRef.current || mapRef.current) return;
 
     const map = new google.maps.Map(mapContainerRef.current, {
-      center: addressLocation ?? US_CENTER,
-      zoom: addressLocation ? 20 : 5,
+      center: addressLocation ?? DEFAULT_CENTER,
+      zoom: addressLocation ? 20 : DEFAULT_ZOOM,
       mapTypeId: "satellite",
       tilt: 0,
       disableDefaultUI: true,
@@ -394,16 +397,8 @@ export function ProjectEstimator({
         </p>
       </div>
 
-      {/* Mode selector — animated reveal once address is entered */}
-      <div
-        className={cn(
-          "transition-all duration-500 overflow-hidden",
-          address.length > 0
-            ? "opacity-100 max-h-[3000px]"
-            : "opacity-0 max-h-0 pointer-events-none",
-        )}
-      >
-        <div className="space-y-5 pt-1 animate-in fade-in slide-in-from-top-2 duration-500">
+      {/* Estimator: map + alternative sizing tools — always visible. */}
+      <div className="space-y-5 pt-1">
           <div>
             <p className="text-sm font-semibold mb-2 flex items-center gap-1.5">
               <Sparkles className="h-4 w-4 text-amber-600" />
@@ -591,7 +586,7 @@ export function ProjectEstimator({
 
                 <div
                   ref={mapContainerRef}
-                  className="h-[360px] w-full bg-stone-200"
+                  className="h-[450px] w-full bg-stone-200"
                 />
 
                 {!mapsScriptLoaded && (
@@ -670,7 +665,6 @@ export function ProjectEstimator({
                 : "Pick a project or enter dimensions to see your estimate."}
             </div>
           )}
-        </div>
       </div>
     </div>
   );
