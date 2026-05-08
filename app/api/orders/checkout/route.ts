@@ -7,6 +7,7 @@ import { validateCheckoutPrices } from "@/lib/validate-checkout-prices";
 import { sendEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
 import { addBreadcrumb, startTransaction } from "@/lib/monitoring";
+import { buildSatelliteMapUrl } from "@/lib/static-map";
 
 function generateOrderNumber(): string {
   const now = new Date();
@@ -86,6 +87,19 @@ async function handleCheckout(request: NextRequest) {
 
     const orderNumber = generateOrderNumber();
 
+    // Build a Static Maps satellite snapshot URL from the project-site data
+    // the customer captured in the estimator. This URL is what the order
+    // confirmation page, the admin order detail page, the printable
+    // receipt, and the email to Muskingum Materials all render.
+    const site = data.projectSite ?? null;
+    const projectMapImageUrl = site?.location || (site?.polygons?.length ?? 0) > 0
+      ? buildSatelliteMapUrl({
+          center: site?.location ?? null,
+          zoom: site?.polygons && site.polygons.length > 0 ? undefined : 19,
+          polygons: site?.polygons ?? [],
+        })
+      : null;
+
     // Create order in database
     let order;
     try {
@@ -107,6 +121,16 @@ async function handleCheckout(request: NextRequest) {
           smsOptIn: data.smsOptIn || false,
           status: "pending",
           paymentStatus: "unpaid",
+          projectAddress: site?.address || null,
+          projectLat: site?.location?.lat ?? null,
+          projectLng: site?.location?.lng ?? null,
+          projectAreaSqFt: site?.totalAreaSqFt ?? null,
+          projectDepthInches: site?.depthInches ?? null,
+          projectEstimateTons: site?.estimate?.tons ?? null,
+          projectEstimateCubicYards: site?.estimate?.cubicYards ?? null,
+          projectEstimateSource: site?.mode ?? null,
+          projectPolygons: site?.polygons?.length ? site.polygons : undefined,
+          projectMapImageUrl,
         },
       });
 
@@ -264,6 +288,66 @@ async function handleCheckout(request: NextRequest) {
       .map((i) => `  - ${i.name}: ${i.quantity} ${i.unit}(s) @ $${i.price.toFixed(2)} = $${(i.price * i.quantity).toFixed(2)}`)
       .join("\n");
 
+    const siteSummaryLines: string[] = [];
+    if (site) {
+      if (site.address) {
+        siteSummaryLines.push(`Project address: ${site.address}`);
+      }
+      if (site.estimate) {
+        siteSummaryLines.push(
+          `Estimate: ${site.estimate.tons.toFixed(1)} tons (${site.estimate.cubicYards.toFixed(1)} cu yd) over ${site.totalAreaSqFt?.toFixed(0) ?? "?"} sq ft @ ${site.depthInches ?? "?"}" depth — source: ${site.mode}`,
+        );
+      }
+      if (projectMapImageUrl) {
+        siteSummaryLines.push(`Satellite outline: ${projectMapImageUrl}`);
+      }
+    }
+    const siteSummaryText = siteSummaryLines.length
+      ? `\n\nProject site:\n${siteSummaryLines.join("\n")}`
+      : "";
+
+    const htmlBody = `
+<!DOCTYPE html>
+<html><body style="font-family: system-ui, -apple-system, sans-serif; color: #1f2937;">
+<h2>New online order received</h2>
+<p><strong>Order #:</strong> ${orderNumber}<br>
+<strong>Customer:</strong> ${data.name}<br>
+<strong>Email:</strong> ${data.email}<br>
+<strong>Phone:</strong> ${data.phone}<br>
+<strong>Fulfillment:</strong> ${data.fulfillment === "pickup" ? "Pickup at yard" : "Delivery"}</p>
+${data.deliveryAddress ? `<p><strong>Delivery Address:</strong><br>${data.deliveryAddress}</p>` : ""}
+${data.deliveryNotes ? `<p><strong>Notes:</strong> ${data.deliveryNotes}</p>` : ""}
+${
+  site
+    ? `
+<h3>Project site (customer-captured)</h3>
+${site.address ? `<p><strong>Address:</strong> ${site.address}</p>` : ""}
+${
+  site.estimate
+    ? `<p><strong>Estimate:</strong> ${site.estimate.tons.toFixed(1)} tons (${site.estimate.cubicYards.toFixed(1)} cu yd) over ${site.totalAreaSqFt?.toFixed(0) ?? "?"} sq ft @ ${site.depthInches ?? "?"}" depth<br>
+<em>This is a customer self-estimate, not survey data.</em></p>`
+    : ""
+}
+${
+  projectMapImageUrl
+    ? `<p><img src="${projectMapImageUrl}" alt="Project area outlined on satellite map" style="max-width:640px;border:1px solid #d1d5db;border-radius:8px"></p>`
+    : ""
+}
+`
+    : ""
+}
+<h3>Items</h3>
+<pre style="font-family:ui-monospace,Menlo,monospace;background:#f9fafb;padding:12px;border-radius:8px">${itemsList}</pre>
+<p>
+Subtotal: $${validatedPrices.subtotal.toFixed(2)}<br>
+Tax (7.25%): $${validatedPrices.tax.toFixed(2)}<br>
+Processing Fee (4.5%): $${validatedPrices.processingFee.toFixed(2)}<br>
+<strong>Total: $${validatedPrices.total.toFixed(2)}</strong>
+</p>
+<p style="color:#6b7280;font-size:12px">Payment: Pending — Stripe not configured, customer will pay on pickup/delivery.</p>
+</body></html>
+    `.trim();
+
     await sendEmail({
       to: "sales@muskingummaterials.com",
       subject: `New Online Order ${orderNumber} from ${data.name}`,
@@ -276,7 +360,7 @@ Email: ${data.email}
 Phone: ${data.phone}
 Fulfillment: ${data.fulfillment === "pickup" ? "Pickup at yard" : "Delivery"}
 ${data.deliveryAddress ? `Delivery Address: ${data.deliveryAddress}` : ""}
-${data.deliveryNotes ? `Notes: ${data.deliveryNotes}` : ""}
+${data.deliveryNotes ? `Notes: ${data.deliveryNotes}` : ""}${siteSummaryText}
 
 Items:
 ${itemsList}
@@ -288,6 +372,7 @@ Total: $${validatedPrices.total.toFixed(2)}
 
 Payment: Pending — Stripe not configured, customer will pay on pickup/delivery.
       `.trim(),
+      htmlBody,
       replyTo: data.email,
     });
 

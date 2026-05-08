@@ -70,9 +70,20 @@ interface EstimateResult {
   source: "map" | "dimensions";
 }
 
+export interface ProjectSiteData {
+  address: string;
+  location: { lat: number; lng: number } | null;
+  mode: EstimatorMode;
+  depthInches: number;
+  lengthFt: number | null;
+  widthFt: number | null;
+  totalAreaSqFt: number;
+  polygons: Array<Array<{ lat: number; lng: number }>>;
+  estimate: EstimateResult | null;
+}
+
 interface ProjectEstimatorProps {
-  onAddressChange: (address: string) => void;
-  onEstimateChange: (estimate: EstimateResult | null) => void;
+  onSiteDataChange: (data: ProjectSiteData) => void;
 }
 
 function calculateFromArea(areaSqFt: number, depthIn: number): EstimateResult {
@@ -95,8 +106,7 @@ function calculateFromDimensions(
 }
 
 export function ProjectEstimator({
-  onAddressChange,
-  onEstimateChange,
+  onSiteDataChange,
 }: ProjectEstimatorProps) {
   // Address state
   const [address, setAddress] = useState("");
@@ -122,6 +132,12 @@ export function ProjectEstimator({
   const [isDrawing, setIsDrawing] = useState(false);
   const [polygonCount, setPolygonCount] = useState(0);
   const [drawnAreaSqFt, setDrawnAreaSqFt] = useState(0);
+  // GPS paths of every drawn polygon — kept in state (not just refs) so
+  // they can flow into the checkout payload, the static-map URL, and
+  // both the customer and admin order surfaces.
+  const [polygonPaths, setPolygonPaths] = useState<
+    Array<Array<{ lat: number; lng: number }>>
+  >([]);
 
   // Dimensions state
   const [length, setLength] = useState("");
@@ -142,15 +158,39 @@ export function ProjectEstimator({
     return null;
   }, [mode, drawnAreaSqFt, depth, length, width]);
 
-  // Bubble estimate up
+  // Bubble the full site snapshot up so the parent can include it on the
+  // checkout payload and on every order-receipt surface.
   useEffect(() => {
-    onEstimateChange(estimate);
-  }, [estimate, onEstimateChange]);
-
-  // Bubble address up
-  useEffect(() => {
-    onAddressChange(address);
-  }, [address, onAddressChange]);
+    const lengthNum = parseFloat(length);
+    const widthNum = parseFloat(width);
+    onSiteDataChange({
+      address,
+      location: addressLocation,
+      mode,
+      depthInches: depth,
+      lengthFt: Number.isFinite(lengthNum) && lengthNum > 0 ? lengthNum : null,
+      widthFt: Number.isFinite(widthNum) && widthNum > 0 ? widthNum : null,
+      totalAreaSqFt:
+        mode === "map"
+          ? drawnAreaSqFt
+          : Number.isFinite(lengthNum) && Number.isFinite(widthNum)
+            ? lengthNum * widthNum
+            : 0,
+      polygons: polygonPaths,
+      estimate,
+    });
+  }, [
+    address,
+    addressLocation,
+    mode,
+    depth,
+    length,
+    width,
+    drawnAreaSqFt,
+    polygonPaths,
+    estimate,
+    onSiteDataChange,
+  ]);
 
   // Apply a project preset to dimension fields
   function applyPreset(preset: (typeof PROJECT_PRESETS)[number]) {
@@ -234,6 +274,16 @@ export function ProjectEstimator({
     setDrawnAreaSqFt(total);
   }, []);
 
+  const syncPolygonPaths = useCallback(() => {
+    const paths = polygonsRef.current.map((data) =>
+      data.polygon
+        .getPath()
+        .getArray()
+        .map((point) => ({ lat: point.lat(), lng: point.lng() })),
+    );
+    setPolygonPaths(paths);
+  }, []);
+
   function updatePolygonLabel(data: PolygonData) {
     const path = data.polygon.getPath();
     if (!path || path.getLength() < 3) return;
@@ -272,7 +322,8 @@ export function ProjectEstimator({
     }
     setPolygonCount(polygonsRef.current.length);
     recalcDrawnArea();
-  }, [recalcDrawnArea]);
+    syncPolygonPaths();
+  }, [recalcDrawnArea, syncPolygonPaths]);
 
   const clearAll = useCallback(() => {
     for (const data of polygonsRef.current) {
@@ -283,6 +334,7 @@ export function ProjectEstimator({
     selectedRef.current = -1;
     setPolygonCount(0);
     setDrawnAreaSqFt(0);
+    setPolygonPaths([]);
   }, []);
 
   // ---------- Map: clear cached ref / polygons when leaving map mode so we re-init cleanly on return ----------
@@ -294,6 +346,7 @@ export function ProjectEstimator({
       selectedRef.current = -1;
       setPolygonCount(0);
       setDrawnAreaSqFt(0);
+      setPolygonPaths([]);
       setIsDrawing(false);
     }
   }, [mode]);
@@ -351,6 +404,7 @@ export function ProjectEstimator({
         polygonsRef.current.push(data);
         setPolygonCount(polygonsRef.current.length);
         recalcDrawnArea();
+        syncPolygonPaths();
 
         polygon.addListener("click", () => {
           selectedRef.current = idx;
@@ -360,6 +414,7 @@ export function ProjectEstimator({
         const recalc = () => {
           updatePolygonLabel(data);
           recalcDrawnArea();
+          syncPolygonPaths();
         };
         google.maps.event.addListener(path, "set_at", recalc);
         google.maps.event.addListener(path, "insert_at", recalc);
@@ -367,7 +422,7 @@ export function ProjectEstimator({
       },
     );
 
-  }, [mode, mapsScriptLoaded, recalcDrawnArea, addressLocation]);
+  }, [mode, mapsScriptLoaded, recalcDrawnArea, syncPolygonPaths, addressLocation]);
 
   return (
     <div className="space-y-6 p-5">

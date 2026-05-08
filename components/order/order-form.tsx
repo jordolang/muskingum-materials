@@ -15,7 +15,10 @@ import { useCartStore } from "@/lib/store";
 import { OrderConfirmation } from "./order-confirmation";
 import { ProductCatalog } from "./product-catalog";
 import { OrderStep, type OrderStepStatus } from "./order-step";
-import { ProjectEstimator, type EstimateResult } from "./project-estimator";
+import {
+  ProjectEstimator,
+  type ProjectSiteData,
+} from "./project-estimator";
 import { FulfillmentSection } from "./fulfillment-section";
 import { ContactSection } from "./contact-section";
 
@@ -63,8 +66,9 @@ export function OrderForm({ products }: OrderFormProps) {
   const removeFromCart = useCartStore((state) => state.removeFromCart);
   const clearCart = useCartStore((state) => state.clearCart);
 
-  const [projectAddress, setProjectAddress] = useState("");
-  const [estimate, setEstimate] = useState<EstimateResult | null>(null);
+  const [siteData, setSiteData] = useState<ProjectSiteData | null>(null);
+  const projectAddress = siteData?.address ?? "";
+  const estimate = siteData?.estimate ?? null;
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
   const [view, setView] = useState<"flow" | "complete">("flow");
@@ -99,12 +103,8 @@ export function OrderForm({ products }: OrderFormProps) {
     }
   }, [productParam, addToCart, toast, products]);
 
-  const handleAddressChange = useCallback((addr: string) => {
-    setProjectAddress(addr);
-  }, []);
-
-  const handleEstimateChange = useCallback((est: EstimateResult | null) => {
-    setEstimate(est);
+  const handleSiteDataChange = useCallback((data: ProjectSiteData) => {
+    setSiteData(data);
   }, []);
 
   const {
@@ -189,6 +189,7 @@ export function OrderForm({ products }: OrderFormProps) {
           tax: totals.tax,
           processingFee: totals.processingFee,
           total: totals.total,
+          projectSite: siteData ?? undefined,
         }),
       });
       const result = await response.json();
@@ -241,10 +242,7 @@ export function OrderForm({ products }: OrderFormProps) {
             ) : undefined
           }
         >
-          <ProjectEstimator
-            onAddressChange={handleAddressChange}
-            onEstimateChange={handleEstimateChange}
-          />
+          <ProjectEstimator onSiteDataChange={handleSiteDataChange} />
         </OrderStep>
       </div>
 

@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Package, MapPin, Truck, Phone, Mail } from "lucide-react";
+import { ArrowLeft, Package, MapPin, Truck, Mail, Map as MapIcon, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -138,6 +138,84 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
         </CardContent>
       </Card>
 
+      {/* Project site (customer-captured satellite outline) */}
+      {(order.projectMapImageUrl ||
+        order.projectAddress ||
+        order.projectEstimateTons) && (
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <MapIcon className="h-5 w-5" />
+              Project site (customer-captured)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {order.projectAddress && (
+              <p className="text-sm">
+                <span className="text-muted-foreground">Address: </span>
+                <span className="font-medium">{order.projectAddress}</span>
+              </p>
+            )}
+            {order.projectMapImageUrl && (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={order.projectMapImageUrl}
+                alt="Project area outlined on satellite imagery"
+                className="w-full max-w-xl rounded-lg border"
+              />
+            )}
+            {(order.projectEstimateTons != null ||
+              order.projectAreaSqFt != null) && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {order.projectEstimateTons != null && (
+                  <AdminStat
+                    label="Tons (est.)"
+                    value={order.projectEstimateTons.toFixed(1)}
+                  />
+                )}
+                {order.projectEstimateCubicYards != null && (
+                  <AdminStat
+                    label="Cubic yards"
+                    value={order.projectEstimateCubicYards.toFixed(1)}
+                  />
+                )}
+                {order.projectAreaSqFt != null && (
+                  <AdminStat
+                    label="Area (sq ft)"
+                    value={Math.round(order.projectAreaSqFt).toLocaleString()}
+                  />
+                )}
+                {order.projectDepthInches != null && (
+                  <AdminStat
+                    label="Depth"
+                    value={`${order.projectDepthInches}"`}
+                  />
+                )}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Source:{" "}
+              <span className="font-medium">
+                {order.projectEstimateSource ?? "—"}
+              </span>{" "}
+              · Customer self-estimate, not survey data. Verify before
+              dispatching.
+            </p>
+            <div>
+              <Link
+                href={`/order/${order.orderNumber}/receipt`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                <Printer className="h-3.5 w-3.5" />
+                Open printable receipt
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Order Items */}
         <div className="lg:col-span-2">
@@ -251,6 +329,17 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           </Card>
         </div>
       </div>
+    </div>
+  );
+}
+
+function AdminStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border bg-muted/30 p-3 text-center">
+      <p className="text-xl font-bold tabular-nums">{value}</p>
+      <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold mt-0.5">
+        {label}
+      </p>
     </div>
   );
 }
