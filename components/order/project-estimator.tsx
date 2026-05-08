@@ -111,7 +111,6 @@ export function ProjectEstimator({
   const selectedRef = useRef<number>(-1);
 
   const [mapsScriptLoaded, setMapsScriptLoaded] = useState(false);
-  const [mapsLoading, setMapsLoading] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [polygonCount, setPolygonCount] = useState(0);
   const [drawnAreaSqFt, setDrawnAreaSqFt] = useState(0);
@@ -154,18 +153,19 @@ export function ProjectEstimator({
   }
 
   // ---------- Map: load script ----------
+  // NOTE: deliberately runs once with `[]` deps. The global `initEstimatorMap`
+  // callback must survive React re-renders until Google's bootstrap fetches
+  // and invokes it; reactive deps + cleanup would delete the callback before
+  // the script fires (TypeError, map never loads in production).
   useEffect(() => {
     if (!GOOGLE_MAPS_API_KEY) return;
     if (typeof google !== "undefined" && google.maps) {
       setMapsScriptLoaded(true);
       return;
     }
-    if (mapsScriptLoaded || mapsLoading) return;
 
-    setMapsLoading(true);
     window.initEstimatorMap = () => {
       setMapsScriptLoaded(true);
-      setMapsLoading(false);
     };
 
     const existing = document.querySelector<HTMLScriptElement>(
@@ -182,11 +182,10 @@ export function ProjectEstimator({
     script.defer = true;
     script.dataset.estimatorMaps = "true";
     document.head.appendChild(script);
-
-    return () => {
-      delete window.initEstimatorMap;
-    };
-  }, [mapsScriptLoaded, mapsLoading]);
+    // Intentionally no cleanup that deletes window.initEstimatorMap —
+    // the script is loaded asynchronously and needs the global to remain.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ---------- Map: address autocomplete (always wired so address can flow even before opening map) ----------
   useEffect(() => {
@@ -359,12 +358,16 @@ export function ProjectEstimator({
     <div className="space-y-6 p-5">
       {/* Address */}
       <div>
-        <label className="text-sm font-semibold mb-1.5 block flex items-center gap-1.5">
+        <label
+          htmlFor="estimator-address"
+          className="text-sm font-semibold mb-1.5 block flex items-center gap-1.5"
+        >
           <MapPin className="h-4 w-4 text-amber-600" />
           Project Address
           <span className="text-destructive">*</span>
         </label>
         <Input
+          id="estimator-address"
           ref={addressInputRef}
           type="text"
           placeholder="Start typing your project address..."
@@ -424,14 +427,17 @@ export function ProjectEstimator({
 
           {/* Depth (always available once a mode is selected) */}
           <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">
+            <label
+              htmlFor="estimator-depth"
+              className="text-xs font-medium text-muted-foreground block mb-1"
+            >
               Depth of material
             </label>
             <Select
               value={String(depth)}
               onValueChange={(val) => setDepth(Number(val))}
             >
-              <SelectTrigger className="h-10">
+              <SelectTrigger id="estimator-depth" className="h-10">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -491,10 +497,14 @@ export function ProjectEstimator({
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground block mb-1">
+                  <label
+                    htmlFor="estimator-length"
+                    className="text-xs font-medium text-muted-foreground block mb-1"
+                  >
                     Length (feet)
                   </label>
                   <Input
+                    id="estimator-length"
                     type="number"
                     placeholder="20"
                     value={length}
@@ -504,10 +514,14 @@ export function ProjectEstimator({
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground block mb-1">
+                  <label
+                    htmlFor="estimator-width"
+                    className="text-xs font-medium text-muted-foreground block mb-1"
+                  >
                     Width (feet)
                   </label>
                   <Input
+                    id="estimator-width"
                     type="number"
                     placeholder="10"
                     value={width}

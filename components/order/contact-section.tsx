@@ -28,8 +28,15 @@ export function ContactSection({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-sm font-medium mb-1 block">Name *</label>
-          <Input placeholder="Your full name" {...register("name")} />
+          <label htmlFor="contact-name" className="text-sm font-medium mb-1 block">
+            Name *
+          </label>
+          <Input
+            id="contact-name"
+            placeholder="Your full name"
+            autoComplete="name"
+            {...register("name")}
+          />
           {errors.name && (
             <p className="text-xs text-destructive mt-1">
               {errors.name.message}
@@ -37,8 +44,16 @@ export function ContactSection({
           )}
         </div>
         <div>
-          <label className="text-sm font-medium mb-1 block">Phone *</label>
-          <Input placeholder="(740) 555-0123" {...register("phone")} />
+          <label htmlFor="contact-phone" className="text-sm font-medium mb-1 block">
+            Phone *
+          </label>
+          <Input
+            id="contact-phone"
+            type="tel"
+            placeholder="(740) 555-0123"
+            autoComplete="tel"
+            {...register("phone")}
+          />
           {errors.phone && (
             <p className="text-xs text-destructive mt-1">
               {errors.phone.message}
@@ -48,10 +63,14 @@ export function ContactSection({
       </div>
 
       <div>
-        <label className="text-sm font-medium mb-1 block">Email *</label>
+        <label htmlFor="contact-email" className="text-sm font-medium mb-1 block">
+          Email *
+        </label>
         <Input
+          id="contact-email"
           type="email"
           placeholder="your@email.com"
+          autoComplete="email"
           {...register("email")}
         />
         {errors.email && (
@@ -61,8 +80,8 @@ export function ContactSection({
         )}
       </div>
 
-      <label className="flex items-start gap-3 cursor-pointer">
-        <Checkbox {...register("smsOptIn")} className="mt-1" />
+      <label htmlFor="contact-sms-opt-in" className="flex items-start gap-3 cursor-pointer">
+        <Checkbox id="contact-sms-opt-in" {...register("smsOptIn")} className="mt-1" />
         <div className="space-y-1">
           <p className="text-sm font-medium">
             Send me SMS order updates (optional)

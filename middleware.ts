@@ -20,6 +20,17 @@ const rateLimitedEndpoints: Record<string, RateLimitTier> = {
   "/api/newsletter": "leads-newsletter",
 };
 
+// FNV-1a hash so we never log raw client IPs to monitoring (PII).
+// Stable per-IP for correlation, irreversible.
+function hashIdentifier(id: string): string {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i++) {
+    h ^= id.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(16).padStart(8, "0");
+}
+
 export default async function middleware(request: NextRequest) {
   const startTime = Date.now();
   const { pathname } = request.nextUrl;
@@ -31,41 +42,60 @@ export default async function middleware(request: NextRequest) {
   const rateLimitTier = rateLimitedEndpoints[pathname];
   if (rateLimitTier) {
     const identifier = getClientIdentifier(request);
-    const result = await checkRateLimit(identifier, rateLimitTier);
 
-    if (!result.success) {
-      logger.error("Rate limit exceeded", new Error("Rate limit violation"), {
+    // When proxy headers are missing, every caller would share the literal
+    // "unknown" bucket and a few abusers could 429 every legitimate buyer.
+    // Skip rate limiting in that degenerate case but log a warning so ops
+    // can investigate the missing-header configuration.
+    if (identifier === "unknown") {
+      logger.warn("Rate limit skipped: client identifier unavailable", {
         endpoint: pathname,
-        identifier,
         tier: rateLimitTier,
-        limit: result.limit,
-        resetAt: new Date(result.reset).toISOString(),
       });
+    } else {
+      const result = await checkRateLimit(identifier, rateLimitTier);
 
-      // Calculate Retry-After in seconds
-      const retryAfter = Math.ceil((result.reset - Date.now()) / 1000);
+      if (!result.success) {
+        // Hash the identifier so we don't ship raw IPs to monitoring (PII).
+        // Use warn (not error) — 429s are expected abuse-prevention signals,
+        // not exceptions, and shouldn't drown out real failures in Sentry.
+        logger.warn("Rate limit exceeded", {
+          endpoint: pathname,
+          identifierHash: hashIdentifier(identifier),
+          tier: rateLimitTier,
+          limit: result.limit,
+          resetAt: new Date(result.reset).toISOString(),
+        });
 
-      const response = new NextResponse(
-        JSON.stringify({
-          error: "Too many requests",
-          message: "Rate limit exceeded. Please try again later.",
-        }),
-        {
-          status: 429,
-          headers: {
-            "Content-Type": "application/json",
-            "Retry-After": retryAfter.toString(),
-            "X-RateLimit-Limit": result.limit.toString(),
-            "X-RateLimit-Remaining": result.remaining.toString(),
-            "X-RateLimit-Reset": result.reset.toString(),
-          },
-        }
-      );
+        // Clamp to >= 1s — clock skew or processing delay can otherwise
+        // surface 0 or negative values that some clients mishandle.
+        const retryAfter = Math.max(
+          1,
+          Math.ceil((result.reset - Date.now()) / 1000),
+        );
 
-      const duration = Date.now() - startTime;
-      logResponse(request, response, duration, { rateLimited: true });
+        const response = new NextResponse(
+          JSON.stringify({
+            error: "Too many requests",
+            message: "Rate limit exceeded. Please try again later.",
+          }),
+          {
+            status: 429,
+            headers: {
+              "Content-Type": "application/json",
+              "Retry-After": retryAfter.toString(),
+              "X-RateLimit-Limit": result.limit.toString(),
+              "X-RateLimit-Remaining": result.remaining.toString(),
+              "X-RateLimit-Reset": result.reset.toString(),
+            },
+          }
+        );
 
-      return response;
+        const duration = Date.now() - startTime;
+        logResponse(request, response, duration, { rateLimited: true });
+
+        return response;
+      }
     }
   }
 

@@ -137,14 +137,17 @@ export function FulfillmentSection({
         <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-300">
           {isLoaded && user && savedAddresses.length > 0 && (
             <div>
-              <label className="text-sm font-medium mb-1 block">
+              <label
+                htmlFor="fulfillment-saved-address"
+                className="text-sm font-medium mb-1 block"
+              >
                 Saved Addresses
               </label>
               <Select
                 value={selectedAddressId}
                 onValueChange={handleAddressSelect}
               >
-                <SelectTrigger>
+                <SelectTrigger id="fulfillment-saved-address">
                   <SelectValue placeholder="Select a saved address or enter manually" />
                 </SelectTrigger>
                 <SelectContent>
@@ -160,11 +163,16 @@ export function FulfillmentSection({
           )}
 
           <div>
-            <label className="text-sm font-medium mb-1 block">
+            <label
+              htmlFor="fulfillment-delivery-address"
+              className="text-sm font-medium mb-1 block"
+            >
               Delivery Address *
             </label>
             <Textarea
+              id="fulfillment-delivery-address"
               placeholder="Street address, city, state, zip"
+              autoComplete="street-address"
               {...register("deliveryAddress")}
               ref={(e) => {
                 register("deliveryAddress").ref(e);
@@ -184,10 +192,14 @@ export function FulfillmentSection({
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-1 block">
+            <label
+              htmlFor="fulfillment-delivery-notes"
+              className="text-sm font-medium mb-1 block"
+            >
               Delivery Notes
             </label>
             <Textarea
+              id="fulfillment-delivery-notes"
               placeholder="Gate code, site instructions, where to dump, etc."
               rows={2}
               {...register("deliveryNotes")}
