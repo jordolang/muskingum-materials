@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -8,7 +9,7 @@ import { ShoppingCart, Sparkles, ClipboardList, CreditCard, Trash2 } from "lucid
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { PRODUCTS, BUSINESS_INFO } from "@/data/business";
+import { BUSINESS_INFO } from "@/data/business";
 import { useToast } from "@/lib/use-toast";
 import { useCartStore } from "@/lib/store";
 import { OrderConfirmation } from "./order-confirmation";
@@ -17,6 +18,16 @@ import { OrderStep, type OrderStepStatus } from "./order-step";
 import { ProjectEstimator, type EstimateResult } from "./project-estimator";
 import { FulfillmentSection } from "./fulfillment-section";
 import { ContactSection } from "./contact-section";
+
+export interface OrderableProduct {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  unit: string;
+  imageUrl?: string;
+  imageAlt?: string;
+}
 
 export const checkoutSchema = z
   .object({
@@ -40,7 +51,11 @@ export const checkoutSchema = z
 
 export type CheckoutData = z.infer<typeof checkoutSchema>;
 
-export function OrderForm() {
+interface OrderFormProps {
+  products: OrderableProduct[];
+}
+
+export function OrderForm({ products }: OrderFormProps) {
   const cart = useCartStore((state) => state.items);
   const addToCart = useCartStore((state) => state.addToCart);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
@@ -54,6 +69,35 @@ export function OrderForm() {
   const [orderNumber, setOrderNumber] = useState("");
   const [view, setView] = useState<"flow" | "complete">("flow");
   const { toast } = useToast();
+
+  // Honor `?product=<name>` deep-links from the catalog so jumping straight
+  // to /order with a preselected product still drops it in the cart and
+  // surfaces a confirmation toast.
+  const searchParams = useSearchParams();
+  const productParam = searchParams.get("product");
+  const handledProductParamRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!productParam) return;
+    if (handledProductParamRef.current === productParam) return;
+    handledProductParamRef.current = productParam;
+
+    const match = products.find(
+      (p) => p.name.toLowerCase() === productParam.toLowerCase() && p.price > 0,
+    );
+    if (!match) return;
+
+    const alreadyInCart = useCartStore
+      .getState()
+      .items.some((item) => item.name === match.name);
+    if (!alreadyInCart) {
+      addToCart({ name: match.name, price: match.price, unit: match.unit });
+      toast({
+        title: "Added to your order",
+        description: `${match.name} is ready to customize below.`,
+      });
+    }
+  }, [productParam, addToCart, toast, products]);
 
   const handleAddressChange = useCallback((addr: string) => {
     setProjectAddress(addr);
@@ -83,30 +127,11 @@ export function OrderForm() {
       (sum, item) => sum + item.price * item.quantity,
       0,
     );
-
-    const volumeDiscount = cart.reduce((totalDiscount, item) => {
-      const product = PRODUCTS.find((p) => p.name === item.name);
-      if (!product || !("pricingTiers" in product) || !product.pricingTiers) {
-        return totalDiscount;
-      }
-      const applicableTier = product.pricingTiers
-        .filter((tier) => item.quantity >= tier.minQuantity)
-        .sort((a, b) => b.minQuantity - a.minQuantity)[0];
-
-      if (applicableTier) {
-        const discount =
-          (item.price - applicableTier.pricePerTon) * item.quantity;
-        return totalDiscount + discount;
-      }
-      return totalDiscount;
-    }, 0);
-
-    const discountedSubtotal = subtotal - volumeDiscount;
-    const tax = discountedSubtotal * BUSINESS_INFO.taxRate;
-    const processingFee = discountedSubtotal * BUSINESS_INFO.creditProcessingFee;
-    const total = discountedSubtotal + tax + processingFee;
+    const tax = subtotal * BUSINESS_INFO.taxRate;
+    const processingFee = subtotal * BUSINESS_INFO.creditProcessingFee;
+    const total = subtotal + tax + processingFee;
     const totalTons = cart.reduce((sum, item) => sum + item.quantity, 0);
-    return { subtotal, volumeDiscount, tax, processingFee, total, totalTons };
+    return { subtotal, volumeDiscount: 0, tax, processingFee, total, totalTons };
   }, [cart]);
 
   // Step status flags
@@ -116,9 +141,7 @@ export function OrderForm() {
     fulfillment === "pickup" ||
     (fulfillment === "delivery" && (deliveryAddress?.trim().length ?? 0) > 5);
 
-  const stepStatus = (
-    n: 1 | 2 | 3 | 4,
-  ): OrderStepStatus => {
+  const stepStatus = (n: 1 | 2 | 3 | 4): OrderStepStatus => {
     if (n === 1) return hasAddress ? "complete" : "active";
     if (n === 2) {
       if (!hasAddress) return "locked";
@@ -144,7 +167,6 @@ export function OrderForm() {
       lastActiveStepRef.current = next;
       const el = document.getElementById(`order-step-${next}`);
       if (el && next > 1) {
-        // Slightly delay so the unlock animation has a frame
         requestAnimationFrame(() => {
           el.scrollIntoView({ behavior: "smooth", block: "start" });
         });
@@ -255,6 +277,7 @@ export function OrderForm() {
           )}
           <div className="p-5 pt-3">
             <ProductCatalog
+              products={products}
               cart={cart}
               onAddToCart={addToCart}
               onUpdateQuantity={updateQuantity}
@@ -280,11 +303,7 @@ export function OrderForm() {
             ) : undefined
           }
         >
-          <CartReview
-            cart={cart}
-            totals={totals}
-            onRemove={removeFromCart}
-          />
+          <CartReview cart={cart} totals={totals} onRemove={removeFromCart} />
           <Separator />
           <FulfillmentSection
             register={register}
@@ -423,7 +442,9 @@ function Row({
   const isPositive = accent === "positive";
   return (
     <div className="flex justify-between">
-      <span className={isPositive ? "text-green-600 font-medium" : "text-muted-foreground"}>
+      <span
+        className={isPositive ? "text-green-600 font-medium" : "text-muted-foreground"}
+      >
         {label}
       </span>
       <span

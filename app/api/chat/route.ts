@@ -3,7 +3,7 @@ import { z } from "zod";
 import { generateText } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { prisma } from "@/lib/prisma";
-import { BUSINESS_INFO, PRODUCTS, SERVICES } from "@/data/business";
+import { BUSINESS_INFO } from "@/data/business";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 
@@ -22,7 +22,57 @@ const chatSchema = z.object({
     .default([]),
 });
 
-const SYSTEM_PROMPT = `You are a friendly, knowledgeable customer service assistant for Muskingum Materials, a family-owned sand, soil, and gravel company in Zanesville, Ohio.
+async function buildSystemPrompt(): Promise<string> {
+  // Pull catalog from the database so the chat answers stay in sync with what
+  // customers see on the website. If the DB is unreachable we fall through
+  // with empty lists — the static keyword responder takes over below.
+  let products: Array<{ name: string; price: number | null; unit: string; description: string }> = [];
+  let services: Array<{ title: string; description: string }> = [];
+
+  try {
+    const [productRows, serviceRows] = await Promise.all([
+      prisma.product.findMany({
+        where: { active: true },
+        orderBy: { sortOrder: "asc" },
+        select: {
+          name: true,
+          price: true,
+          unit: true,
+          shortDescription: true,
+          description: true,
+        },
+      }),
+      prisma.service.findMany({
+        where: { active: true },
+        orderBy: { sortOrder: "asc" },
+        select: { title: true, description: true },
+      }),
+    ]);
+    products = productRows.map((p) => ({
+      name: p.name,
+      price: p.price,
+      unit: p.unit,
+      description: p.shortDescription ?? p.description,
+    }));
+    services = serviceRows;
+  } catch (error) {
+    logger.error("Chat catalog fetch failed", error);
+  }
+
+  const productList = products.length
+    ? products
+        .map(
+          (p) =>
+            `- ${p.name}: ${p.price && p.price > 0 ? `$${p.price.toFixed(2)} per ${p.unit}` : "Call for pricing"} — ${p.description}`
+        )
+        .join("\n")
+    : "(catalog temporarily unavailable — direct customers to call for pricing)";
+
+  const serviceList = services.length
+    ? services.map((s) => `- ${s.title}: ${s.description}`).join("\n")
+    : "(services temporarily unavailable)";
+
+  return `You are a friendly, knowledgeable customer service assistant for Muskingum Materials, a family-owned sand, soil, and gravel company in Zanesville, Ohio.
 
 BUSINESS INFORMATION:
 - Name: ${BUSINESS_INFO.name}
@@ -39,11 +89,11 @@ BUSINESS INFORMATION:
 - Payment: Visa, Mastercard, Discover, Apple Pay, Cash, Check
 - Tax: 7.25% | Credit card processing fee: 4.5% per ticket
 
-PRODUCTS AND PRICING (effective 07/01/2025):
-${PRODUCTS.map((p) => `- ${p.name}: ${p.price > 0 ? `$${p.price.toFixed(2)} per ${p.unit}` : "Call for pricing"} — ${p.description}`).join("\n")}
+PRODUCTS AND PRICING (live from catalog):
+${productList}
 
 SERVICES:
-${SERVICES.map((s) => `- ${s.title}: ${s.description}`).join("\n")}
+${serviceList}
 
 GUIDELINES:
 - Be friendly, helpful, and concise
@@ -55,6 +105,7 @@ GUIDELINES:
 - If you don't know something, say so and direct them to call or email
 - Keep responses brief and helpful — 2-3 sentences max unless they need detailed info
 - Never make up information not provided above`;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -118,15 +169,16 @@ export async function POST(request: NextRequest) {
     let reply: string;
 
     if (process.env.ANTHROPIC_API_KEY) {
+      const systemPrompt = await buildSystemPrompt();
       const result = await generateText({
         model: anthropic("claude-haiku-4-5-20251001"),
-        system: SYSTEM_PROMPT,
+        system: systemPrompt,
         messages,
         maxOutputTokens: 500,
       });
       reply = result.text;
     } else {
-      reply = getStaticResponse(data.message);
+      reply = await getStaticResponse(data.message);
     }
 
     // Store conversation in database (best-effort)
@@ -181,11 +233,27 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function getStaticResponse(message: string): string {
+async function getStaticResponse(message: string): Promise<string> {
   const lower = message.toLowerCase();
 
   if (lower.includes("price") || lower.includes("cost") || lower.includes("how much")) {
-    return `Here are some of our popular products:\n\n- Bank Run: $2.00/ton\n- Fill Dirt: $2.00/ton\n- Fill Sand: $4.00/ton\n- #57 Gravel (Washed): $15.00/ton\n- 304 Crushed Gravel: $20.00/ton\n\nPrices effective 07/01/2025. Tax of 7.25% applies. Call (740) 319-0183 for the most current pricing and volume discounts!`;
+    let pricingLines = "Call (740) 319-0183 for current product pricing.";
+    try {
+      const featured = await prisma.product.findMany({
+        where: { active: true, price: { gt: 0 } },
+        orderBy: [{ featured: "desc" }, { sortOrder: "asc" }],
+        take: 5,
+        select: { name: true, price: true, unit: true },
+      });
+      if (featured.length > 0) {
+        pricingLines = featured
+          .map((p) => `- ${p.name}: $${(p.price ?? 0).toFixed(2)}/${p.unit}`)
+          .join("\n");
+      }
+    } catch (error) {
+      logger.error("Static chat pricing fetch failed", error);
+    }
+    return `Here are some of our popular products:\n\n${pricingLines}\n\nTax of 7.25% applies. Call (740) 319-0183 for the most current pricing and volume discounts!`;
   }
 
   if (lower.includes("hour") || lower.includes("open") || lower.includes("close")) {

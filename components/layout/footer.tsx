@@ -40,7 +40,7 @@ export function Footer() {
   return (
     <footer className="bg-stone-900 text-stone-300">
       <div className="container py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           <div>
             <Link href="/" className="inline-block mb-4">
               <Image
@@ -83,6 +83,17 @@ export function Footer() {
               <li><Link href="/about" className="hover:text-amber-500 transition-colors">About Us</Link></li>
               <li><Link href="/contact" className="hover:text-amber-500 transition-colors">Contact</Link></li>
               <li><Link href="/faq" className="hover:text-amber-500 transition-colors">FAQ</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-white font-semibold mb-4">Calculators</h3>
+            <ul className="space-y-2 text-sm">
+              <li><Link href="/calculators" className="hover:text-amber-500 transition-colors">All Calculators</Link></li>
+              <li><Link href="/calculators/gravel-calculator" className="hover:text-amber-500 transition-colors">Gravel Calculator</Link></li>
+              <li><Link href="/calculators/tons-to-yards" className="hover:text-amber-500 transition-colors">Tons ↔ Yards Converter</Link></li>
+              <li><Link href="/calculators/coverage-chart" className="hover:text-amber-500 transition-colors">Coverage Chart</Link></li>
+              <li><Link href="/planner" className="hover:text-amber-500 transition-colors">Gravel Planner</Link></li>
             </ul>
           </div>
 
