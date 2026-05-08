@@ -97,10 +97,15 @@ export function ProjectEstimator({
 }: ProjectEstimatorProps) {
   // Address state
   const [address, setAddress] = useState("");
+  const [addressLocation, setAddressLocation] =
+    useState<google.maps.LatLngLiteral | null>(null);
   const addressInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Mode tabs
-  const [mode, setMode] = useState<EstimatorMode>("preset");
+  // Mode tabs — default to map when Maps API is available so the satellite
+  // view appears as soon as an address is entered.
+  const [mode, setMode] = useState<EstimatorMode>(
+    GOOGLE_MAPS_API_KEY ? "map" : "preset",
+  );
   const [depth, setDepth] = useState(4);
 
   // Map state
@@ -202,9 +207,16 @@ export function ProjectEstimator({
       if (place.formatted_address) {
         setAddress(place.formatted_address);
       }
-      if (place.geometry?.location && mapRef.current) {
-        mapRef.current.panTo(place.geometry.location);
-        mapRef.current.setZoom(20);
+      if (place.geometry?.location) {
+        const loc = {
+          lat: place.geometry.location.lat(),
+          lng: place.geometry.location.lng(),
+        };
+        setAddressLocation(loc);
+        if (mapRef.current) {
+          mapRef.current.panTo(loc);
+          mapRef.current.setZoom(20);
+        }
       }
     });
 
@@ -289,8 +301,8 @@ export function ProjectEstimator({
     if (!mapsScriptLoaded || !mapContainerRef.current || mapRef.current) return;
 
     const map = new google.maps.Map(mapContainerRef.current, {
-      center: US_CENTER,
-      zoom: 5,
+      center: addressLocation ?? US_CENTER,
+      zoom: addressLocation ? 20 : 5,
       mapTypeId: "satellite",
       tilt: 0,
       disableDefaultUI: true,
@@ -352,7 +364,7 @@ export function ProjectEstimator({
       },
     );
 
-  }, [mode, mapsScriptLoaded, recalcDrawnArea]);
+  }, [mode, mapsScriptLoaded, recalcDrawnArea, addressLocation]);
 
   return (
     <div className="space-y-6 p-5">
@@ -399,10 +411,11 @@ export function ProjectEstimator({
             </p>
             <div className="grid grid-cols-3 gap-2">
               <ModeButton
-                active={mode === "preset"}
-                onClick={() => setMode("preset")}
-                icon={<LayoutGrid className="h-4 w-4" />}
-                label="Common project"
+                active={mode === "map"}
+                onClick={() => setMode("map")}
+                icon={<MapIcon className="h-4 w-4" />}
+                label="Outline on map"
+                disabled={!GOOGLE_MAPS_API_KEY}
               />
               <ModeButton
                 active={mode === "dimensions"}
@@ -411,11 +424,10 @@ export function ProjectEstimator({
                 label="Enter dimensions"
               />
               <ModeButton
-                active={mode === "map"}
-                onClick={() => setMode("map")}
-                icon={<MapIcon className="h-4 w-4" />}
-                label="Draw on map"
-                disabled={!GOOGLE_MAPS_API_KEY}
+                active={mode === "preset"}
+                onClick={() => setMode("preset")}
+                icon={<LayoutGrid className="h-4 w-4" />}
+                label="Common project"
               />
             </div>
             {mode === "map" && !GOOGLE_MAPS_API_KEY && (
