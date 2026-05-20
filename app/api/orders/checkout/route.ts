@@ -119,6 +119,7 @@ async function handleCheckout(request: NextRequest) {
           deliveryAddress: data.deliveryAddress || null,
           deliveryNotes: data.deliveryNotes || null,
           smsOptIn: data.smsOptIn || false,
+          termsAcceptedAt: data.termsAccepted ? new Date() : null,
           status: "pending",
           paymentStatus: "unpaid",
           projectAddress: site?.address || null,

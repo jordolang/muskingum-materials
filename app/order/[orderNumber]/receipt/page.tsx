@@ -243,6 +243,19 @@ export default async function OrderReceiptPage({ params }: ReceiptPageProps) {
               Status: <span className="font-medium">{order.status}</span> ·
               Payment:{" "}
               <span className="font-medium">{order.paymentStatus}</span>
+              {order.invoiceUrl && (
+                <>
+                  {" "}·{" "}
+                  <a
+                    href={order.invoiceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:no-underline print:hidden"
+                  >
+                    View Stripe receipt
+                  </a>
+                </>
+              )}
             </p>
           </section>
 

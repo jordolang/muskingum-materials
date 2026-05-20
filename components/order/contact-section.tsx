@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Loader2, CreditCard } from "lucide-react";
 import { UseFormRegister, FieldErrors } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -93,6 +94,32 @@ export function ContactSection({
           </p>
         </div>
       </label>
+
+      <label htmlFor="contact-terms" className="flex items-start gap-3 cursor-pointer">
+        <Checkbox id="contact-terms" {...register("termsAccepted")} className="mt-1" />
+        <div className="space-y-1">
+          <p className="text-sm font-medium">
+            I agree to the{" "}
+            <Link
+              href="/terms"
+              target="_blank"
+              className="text-primary underline hover:no-underline"
+            >
+              Terms of Service &amp; Delivery Agreement
+            </Link>{" "}
+            *
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Required. Includes the delivery access requirements, surface-damage
+            waiver, weight tolerance, and cancellation policy.
+          </p>
+        </div>
+      </label>
+      {errors.termsAccepted && (
+        <p className="text-xs text-destructive -mt-2">
+          {errors.termsAccepted.message}
+        </p>
+      )}
 
       <Button
         type="submit"

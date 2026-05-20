@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { prisma } from "@/lib/prisma";
 import { StatusUpdater } from "@/components/admin/status-updater";
+import { RefundButton } from "@/components/admin/refund-button";
 import { requireAdmin } from "@/lib/admin-auth";
 
 interface OrderDetailPageProps {
@@ -118,9 +119,20 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
       </div>
 
       {/* Status Badges */}
-      <div className="flex gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <StatusBadge status={order.status} />
         <PaymentBadge status={order.paymentStatus} />
+        {order.invoiceUrl && (
+          <a
+            href={order.invoiceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-primary underline underline-offset-2 hover:no-underline"
+          >
+            <Printer className="h-3 w-3" />
+            Stripe receipt
+          </a>
+        )}
       </div>
 
       {/* Status Updater */}
@@ -201,7 +213,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
               · Customer self-estimate, not survey data. Verify before
               dispatching.
             </p>
-            <div>
+            <div className="flex flex-wrap gap-4">
               <Link
                 href={`/order/${order.orderNumber}/receipt`}
                 target="_blank"
@@ -211,6 +223,17 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                 <Printer className="h-3.5 w-3.5" />
                 Open printable receipt
               </Link>
+              {order.invoiceUrl && (
+                <a
+                  href={order.invoiceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                >
+                  <Printer className="h-3.5 w-3.5" />
+                  Stripe receipt
+                </a>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -327,6 +350,22 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
               )}
             </CardContent>
           </Card>
+
+          {/* Refund — only for paid Stripe orders */}
+          {order.paymentStatus === "paid" && order.stripePaymentId && (
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-lg">Refund</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RefundButton
+                  orderId={order.id}
+                  orderNumber={order.orderNumber}
+                  orderTotal={order.total}
+                />
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

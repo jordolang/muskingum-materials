@@ -50,6 +50,24 @@ export async function POST(request: NextRequest) {
         const orderNumber = session.metadata?.orderNumber;
 
         if (orderNumber) {
+          // Fetch Stripe receipt URL from the payment intent charges
+          let receiptUrl: string | null = null;
+          try {
+            if (session.payment_intent) {
+              const paymentIntent = await stripeClient.paymentIntents.retrieve(
+                session.payment_intent as string,
+                { expand: ["latest_charge"] }
+              );
+              const charge = paymentIntent.latest_charge as import("stripe").Stripe.Charge | null;
+              receiptUrl = charge?.receipt_url ?? null;
+            }
+          } catch (receiptErr) {
+            logger.warn("Could not retrieve Stripe receipt URL", {
+              orderNumber,
+              error: receiptErr instanceof Error ? receiptErr.message : String(receiptErr),
+            });
+          }
+
           // Update order status
           const order = await prisma.order.update({
             where: { orderNumber },
@@ -57,6 +75,7 @@ export async function POST(request: NextRequest) {
               paymentStatus: "paid",
               status: "confirmed",
               stripePaymentId: session.payment_intent as string,
+              invoiceUrl: receiptUrl,
             },
           });
 

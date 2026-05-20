@@ -110,6 +110,7 @@ model Order {
   stripePaymentId  String?
   invoiceUrl       String?
   smsOptIn         Boolean           @default(false)
+  termsAcceptedAt  DateTime?
   completedAt      DateTime?
 
   // Project site capture from the on-site map estimator. These fields exist

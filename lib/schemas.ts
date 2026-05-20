@@ -18,6 +18,11 @@ export const checkoutFormSchema = z.object({
   deliveryAddress: z.string().optional(),
   deliveryNotes: z.string().optional(),
   smsOptIn: z.boolean().optional(),
+  termsAccepted: z.literal(true, {
+    errorMap: () => ({
+      message: "You must accept the Terms of Service to proceed",
+    }),
+  }),
 });
 
 // Project site data schema — captures the customer's outline, address,

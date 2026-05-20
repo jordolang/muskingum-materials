@@ -46,6 +46,11 @@ export const checkoutSchema = z
     email: z.string().email("Valid email is required"),
     phone: z.string().min(10, "Phone number is required"),
     smsOptIn: z.boolean().optional(),
+    termsAccepted: z.literal(true, {
+      errorMap: () => ({
+        message: "You must accept the Terms of Service to proceed",
+      }),
+    }),
     fulfillment: z.enum(["pickup", "delivery"]),
     deliveryAddress: z.string().optional(),
     deliveryNotes: z.string().optional(),
