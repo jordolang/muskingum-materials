@@ -57,6 +57,11 @@ export const metadata: Metadata = {
     locale: "en_US",
     type: "website",
   },
+  ...(process.env.NEXT_PUBLIC_GSC_VERIFICATION && {
+    verification: {
+      google: process.env.NEXT_PUBLIC_GSC_VERIFICATION,
+    },
+  }),
 };
 
 export default function RootLayout({
