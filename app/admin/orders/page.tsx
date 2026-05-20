@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Package, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, Package, ChevronLeft, ChevronRight, Phone } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -102,6 +102,12 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
             View and manage all customer orders
           </p>
         </div>
+        <Link href="/admin/orders/new">
+          <Button className="gap-2">
+            <Phone className="h-4 w-4" />
+            New Phone Order
+          </Button>
+        </Link>
       </div>
 
       {/* Search and Filter Controls */}
