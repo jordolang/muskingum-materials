@@ -33,10 +33,7 @@ import {
   type ProjectType,
   type AreaSize,
 } from "@/data/recommendation-mapping";
-import {
-  getCompleteRecommendations,
-  type ProjectRecommendationResult,
-} from "@/lib/recommendations";
+import type { ProjectRecommendationResult } from "@/lib/recommendations";
 
 const PROJECT_TYPE_ICONS: Record<string, typeof Car> = {
   car: Car,
@@ -119,12 +116,18 @@ export function MaterialWizard({ onComplete }: MaterialWizardProps) {
 
     setIsLoading(true);
     try {
-      const result = await getCompleteRecommendations(
-        state.projectType,
-        state.areaSize
-      );
+      const params = new URLSearchParams({
+        projectType: state.projectType,
+        areaSize: state.areaSize,
+      });
+      const response = await fetch(`/api/recommendations?${params}`);
+      const json = await response.json();
+      if (!response.ok || !json.success) {
+        throw new Error(json.error ?? "Failed to load recommendations");
+      }
+      const result: ProjectRecommendationResult = json.data;
       setRecommendations(result);
-      if (result && onComplete) {
+      if (onComplete) {
         onComplete(result);
       }
     } catch (error) {
