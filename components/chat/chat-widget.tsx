@@ -29,6 +29,13 @@ export function ChatWidget() {
   }, [messages]);
 
   useEffect(() => {
+    if (isOpen && !prevIsOpenRef.current) {
+      trackChatOpened({ visitorId });
+    }
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen, visitorId]);
+
+  useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
     }
@@ -43,13 +50,6 @@ export function ChatWidget() {
       });
     }
   }, [isOpen, messages.length, addMessage]);
-
-  useEffect(() => {
-    if (isOpen && !prevIsOpenRef.current) {
-      trackChatOpened({ visitorId });
-    }
-    prevIsOpenRef.current = isOpen;
-  }, [isOpen, visitorId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
