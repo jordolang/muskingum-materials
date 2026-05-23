@@ -1,5 +1,14 @@
+/**
+ * Sanity GROQ query definitions for fetching CMS content
+ * All queries use the GROQ query language for Sanity.io
+ */
+
 import { groq } from "next-sanity";
 
+/**
+ * Fetches all products from Sanity CMS ordered by sortOrder
+ * Returns product catalog with pricing, categories, and availability
+ */
 export const productsQuery = groq`
   *[_type == "product"] | order(sortOrder asc) {
     _id,
@@ -17,6 +26,11 @@ export const productsQuery = groq`
   }
 `;
 
+/**
+ * Fetches a single product by its slug
+ * @param $slug - The product slug (passed as query parameter)
+ * Returns detailed product information including specifications
+ */
 export const productBySlugQuery = groq`
   *[_type == "product" && slug.current == $slug][0] {
     _id,
@@ -33,6 +47,10 @@ export const productBySlugQuery = groq`
   }
 `;
 
+/**
+ * Fetches all services from Sanity CMS ordered by sortOrder
+ * Returns service listings with descriptions, icons, and features
+ */
 export const servicesQuery = groq`
   *[_type == "service"] | order(sortOrder asc) {
     _id,
@@ -46,6 +64,11 @@ export const servicesQuery = groq`
   }
 `;
 
+/**
+ * Fetches approved testimonials ordered by creation date (newest first)
+ * Only returns testimonials where approved is true
+ * Returns customer feedback with ratings and company information
+ */
 export const testimonialsQuery = groq`
   *[_type == "testimonial" && approved == true] | order(_createdAt desc) {
     _id,
@@ -57,6 +80,10 @@ export const testimonialsQuery = groq`
   }
 `;
 
+/**
+ * Fetches all frequently asked questions ordered by sortOrder
+ * Returns questions, answers, and category groupings
+ */
 export const faqQuery = groq`
   *[_type == "faq"] | order(sortOrder asc) {
     _id,
@@ -67,6 +94,10 @@ export const faqQuery = groq`
   }
 `;
 
+/**
+ * Fetches all gallery images ordered by sortOrder
+ * Returns project images with titles, categories, and descriptions
+ */
 export const galleryQuery = groq`
   *[_type == "galleryImage"] | order(sortOrder asc) {
     _id,
@@ -78,6 +109,11 @@ export const galleryQuery = groq`
   }
 `;
 
+/**
+ * Fetches site-wide settings from Sanity CMS
+ * Returns singleton configuration including contact info, branding, and social links
+ * Used for site header, footer, and meta information
+ */
 export const siteSettingsQuery = groq`
   *[_type == "siteSettings"][0] {
     title,
@@ -101,6 +137,11 @@ export const siteSettingsQuery = groq`
   }
 `;
 
+/**
+ * Fetches a single page by its slug
+ * @param $slug - The page slug (passed as query parameter)
+ * Returns page content with SEO metadata for dynamic CMS pages
+ */
 export const pageQuery = groq`
   *[_type == "page" && slug.current == $slug][0] {
     _id,
