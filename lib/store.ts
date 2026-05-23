@@ -1,16 +1,37 @@
+/**
+ * Zustand state management stores for client-side application state
+ * Provides chat, quote, and shopping cart functionality with localStorage persistence
+ */
+
 import { create } from "zustand";
 
+/**
+ * State shape for the chat widget
+ */
 interface ChatState {
+  /** Whether the chat widget is currently open */
   isOpen: boolean;
+  /** Array of chat messages exchanged with the assistant */
   messages: Array<{ role: "user" | "assistant"; content: string }>;
+  /** Unique identifier for this visitor, persisted across sessions */
   visitorId: string;
+  /** Opens the chat widget */
   openChat: () => void;
+  /** Closes the chat widget */
   closeChat: () => void;
+  /** Toggles the chat widget open/closed state */
   toggleChat: () => void;
+  /** Adds a new message to the conversation */
   addMessage: (message: { role: "user" | "assistant"; content: string }) => void;
+  /** Clears all messages from the conversation */
   clearMessages: () => void;
 }
 
+/**
+ * Generates or retrieves a unique visitor identifier
+ * The ID is persisted in localStorage to maintain visitor identity across sessions
+ * @returns The visitor's unique identifier, or "server" if running server-side
+ */
 function generateVisitorId(): string {
   if (typeof window !== "undefined") {
     const stored = localStorage.getItem("mm-visitor-id");
@@ -22,6 +43,10 @@ function generateVisitorId(): string {
   return "server";
 }
 
+/**
+ * Zustand store for managing chat widget state and conversation history
+ * Handles opening/closing the widget, message management, and visitor identification
+ */
 export const useChatStore = create<ChatState>((set) => ({
   isOpen: false,
   messages: [],
@@ -34,13 +59,24 @@ export const useChatStore = create<ChatState>((set) => ({
   clearMessages: () => set({ messages: [] }),
 }));
 
+/**
+ * State shape for the quote request form
+ */
 interface QuoteState {
+  /** Array of items being quoted with product names and quantities */
   items: Array<{ productName: string; quantity: string }>;
+  /** Adds a new item to the quote request */
   addItem: (item: { productName: string; quantity: string }) => void;
+  /** Removes an item from the quote request by index */
   removeItem: (index: number) => void;
+  /** Clears all items from the quote request */
   clearItems: () => void;
 }
 
+/**
+ * Zustand store for managing quote request items
+ * Allows building a list of products and quantities before submitting a quote request
+ */
 export const useQuoteStore = create<QuoteState>((set) => ({
   items: [],
   addItem: (item) =>
@@ -52,22 +88,43 @@ export const useQuoteStore = create<QuoteState>((set) => ({
   clearItems: () => set({ items: [] }),
 }));
 
+/**
+ * Represents a single item in the shopping cart
+ */
 interface CartItem {
+  /** Product name */
   name: string;
+  /** Price per unit in dollars */
   price: number;
+  /** Unit of measurement (e.g., "ton", "yard") */
   unit: string;
+  /** Quantity of this item in the cart */
   quantity: number;
 }
 
+/**
+ * State shape for the shopping cart
+ */
 interface CartState {
+  /** Array of items currently in the cart */
   items: CartItem[];
+  /** Adds a product to the cart or increments quantity if already present */
   addToCart: (product: { name: string; price: number; unit: string }) => void;
+  /** Updates quantity by a delta value (can be positive or negative) */
   updateQuantity: (name: string, delta: number) => void;
+  /** Sets the exact quantity for an item, removes if quantity is 0 or less */
   setQuantity: (name: string, qty: number) => void;
+  /** Removes a specific item from the cart by name */
   removeFromCart: (name: string) => void;
+  /** Clears all items from the cart */
   clearCart: () => void;
 }
 
+/**
+ * Loads cart items from localStorage
+ * Handles parsing errors gracefully by returning an empty array
+ * @returns Array of cart items from localStorage, or empty array if none found or on error
+ */
 function loadCartFromStorage(): CartItem[] {
   if (typeof window !== "undefined") {
     try {
@@ -82,6 +139,11 @@ function loadCartFromStorage(): CartItem[] {
   return [];
 }
 
+/**
+ * Persists cart items to localStorage
+ * Silently handles storage errors to prevent cart operations from failing
+ * @param items - Array of cart items to persist
+ */
 function saveCartToStorage(items: CartItem[]): void {
   if (typeof window !== "undefined") {
     try {
@@ -92,6 +154,11 @@ function saveCartToStorage(items: CartItem[]): void {
   }
 }
 
+/**
+ * Zustand store for managing shopping cart state with localStorage persistence
+ * Automatically syncs cart state to localStorage on every change
+ * Supports adding items, updating quantities, and clearing the cart
+ */
 export const useCartStore = create<CartState>((set) => ({
   items: typeof window !== "undefined" ? loadCartFromStorage() : [],
   addToCart: (product) =>
