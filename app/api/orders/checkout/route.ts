@@ -5,6 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { checkoutSchema } from "@/lib/schemas";
 import { validateCheckoutPrices } from "@/lib/validate-checkout-prices";
 import { sendEmail } from "@/lib/email";
+import { logger } from "@/lib/logger";
+import { addBreadcrumb, startTransaction } from "@/lib/monitoring";
+import { buildSatelliteMapUrl } from "@/lib/static-map";
 
 function generateOrderNumber(): string {
   const now = new Date();
@@ -14,18 +17,68 @@ function generateOrderNumber(): string {
 }
 
 export async function POST(request: NextRequest) {
+  return startTransaction('checkout', 'http.request', () => {
+    return handleCheckout(request);
+  });
+}
+
+async function handleCheckout(request: NextRequest) {
   try {
     const body = await request.json();
     const data = checkoutSchema.parse(body);
 
+    logger.info('Checkout started', {
+      itemCount: data.items.length,
+      fulfillment: data.fulfillment,
+      email: data.email,
+    });
+
+    addBreadcrumb('Checkout request received', 'checkout', {
+      itemCount: data.items.length,
+      fulfillment: data.fulfillment,
+    });
+
+    // Get authenticated user if available
+    let userId: string | null = null;
+    let contractorDiscount: number | undefined;
+    try {
+      const session = await auth();
+      userId = session?.userId ?? null;
+
+      // Fetch contractor status and discount if authenticated
+      if (userId) {
+        const profile = await prisma.userProfile.findUnique({
+          where: { userId },
+          select: { isContractor: true, contractorDiscount: true },
+        });
+
+        if (profile?.isContractor && profile.contractorDiscount) {
+          contractorDiscount = profile.contractorDiscount;
+        }
+      }
+    } catch {
+      // Not authenticated - that's fine for guest checkout
+    }
+
     // Validate prices against product catalog
     let validatedPrices;
     try {
-      validatedPrices = await validateCheckoutPrices(data);
+      validatedPrices = await validateCheckoutPrices(data, contractorDiscount);
+
+      addBreadcrumb('Price validation successful', 'checkout', {
+        subtotal: validatedPrices.subtotal,
+        total: validatedPrices.total,
+      });
     } catch (validationError) {
       const errorMessage = validationError instanceof Error
         ? validationError.message
         : "Price validation failed";
+
+      logger.warn('Price validation failed', {
+        error: errorMessage,
+        itemCount: data.items.length,
+      });
+
       return NextResponse.json(
         { error: errorMessage },
         { status: 400 }
@@ -34,14 +87,18 @@ export async function POST(request: NextRequest) {
 
     const orderNumber = generateOrderNumber();
 
-    // Get authenticated user if available
-    let userId: string | null = null;
-    try {
-      const session = await auth();
-      userId = session?.userId ?? null;
-    } catch {
-      // Not authenticated - that's fine for guest checkout
-    }
+    // Build a Static Maps satellite snapshot URL from the project-site data
+    // the customer captured in the estimator. This URL is what the order
+    // confirmation page, the admin order detail page, the printable
+    // receipt, and the email to Muskingum Materials all render.
+    const site = data.projectSite ?? null;
+    const projectMapImageUrl = site?.location || (site?.polygons?.length ?? 0) > 0
+      ? buildSatelliteMapUrl({
+          center: site?.location ?? null,
+          zoom: site?.polygons && site.polygons.length > 0 ? undefined : 19,
+          polygons: site?.polygons ?? [],
+        })
+      : null;
 
     // Create order in database
     let order;
@@ -61,12 +118,43 @@ export async function POST(request: NextRequest) {
           pickupOrDeliver: data.fulfillment,
           deliveryAddress: data.deliveryAddress || null,
           deliveryNotes: data.deliveryNotes || null,
+          smsOptIn: data.smsOptIn || false,
+          termsAcceptedAt: data.termsAccepted ? new Date() : null,
           status: "pending",
           paymentStatus: "unpaid",
+          projectAddress: site?.address || null,
+          projectLat: site?.location?.lat ?? null,
+          projectLng: site?.location?.lng ?? null,
+          projectAreaSqFt: site?.totalAreaSqFt ?? null,
+          projectDepthInches: site?.depthInches ?? null,
+          projectEstimateTons: site?.estimate?.tons ?? null,
+          projectEstimateCubicYards: site?.estimate?.cubicYards ?? null,
+          projectEstimateSource: site?.mode ?? null,
+          projectPolygons: site?.polygons?.length ? site.polygons : undefined,
+          projectMapImageUrl,
         },
       });
+
+      logger.info('Order created successfully', {
+        orderNumber,
+        userId,
+        total: validatedPrices.total,
+        fulfillment: data.fulfillment,
+        itemCount: data.items.length,
+      });
+
+      addBreadcrumb('Order created in database', 'database', {
+        orderNumber,
+        orderId: order.id,
+      });
     } catch (error) {
-      console.error("Order creation error:", error);
+      logger.error('Order creation failed', error, {
+        orderNumber,
+        userId,
+        email: data.email,
+        total: validatedPrices.total,
+      });
+
       return NextResponse.json(
         { error: "Failed to create order. Please try again or call (740) 319-0183." },
         { status: 500 }
@@ -132,6 +220,17 @@ export async function POST(request: NextRequest) {
           },
         });
 
+        logger.info('Stripe checkout session created', {
+          orderNumber,
+          sessionId: session.id,
+          total: validatedPrices.total,
+        });
+
+        addBreadcrumb('Stripe session created', 'payment', {
+          orderNumber,
+          sessionId: session.id,
+        });
+
         // Update order with Stripe session ID
         if (order) {
           try {
@@ -139,24 +238,116 @@ export async function POST(request: NextRequest) {
               where: { id: order.id },
               data: { stripeSessionId: session.id },
             });
+
+            addBreadcrumb('Order updated with Stripe session ID', 'database', {
+              orderId: order.id,
+              sessionId: session.id,
+            });
           } catch (error) {
-            console.error("Order update error (Stripe session ID):", error);
+            logger.error('Failed to update order with Stripe session ID', error, {
+              orderId: order.id,
+              orderNumber,
+              sessionId: session.id,
+            });
             // Continue anyway - Stripe session was created successfully
           }
         }
 
-        return NextResponse.json({ url: session.url });
+        return NextResponse.json({
+          url: session.url,
+          analytics: {
+            orderNumber,
+            subtotal: data.subtotal,
+            tax: data.tax,
+            total: data.total,
+            items: data.items.map((item) => ({
+              id: item.name.toLowerCase().replace(/\s+/g, "-"),
+              name: item.name,
+              price: item.price,
+              quantity: item.quantity,
+            })),
+          },
+        });
       } catch (stripeError) {
-        console.error("Stripe error:", stripeError);
+        logger.error('Stripe checkout session creation failed', stripeError, {
+          orderNumber,
+          total: validatedPrices.total,
+          email: data.email,
+        });
         // Fall through to non-Stripe flow
       }
     }
 
     // Non-Stripe fallback: just save the order
+    logger.info('Using non-Stripe checkout flow', {
+      orderNumber,
+      reason: process.env.STRIPE_SECRET_KEY ? 'stripe_error' : 'stripe_not_configured',
+    });
+
     // Send email notification
     const itemsList = data.items
       .map((i) => `  - ${i.name}: ${i.quantity} ${i.unit}(s) @ $${i.price.toFixed(2)} = $${(i.price * i.quantity).toFixed(2)}`)
       .join("\n");
+
+    const siteSummaryLines: string[] = [];
+    if (site) {
+      if (site.address) {
+        siteSummaryLines.push(`Project address: ${site.address}`);
+      }
+      if (site.estimate) {
+        siteSummaryLines.push(
+          `Estimate: ${site.estimate.tons.toFixed(1)} tons (${site.estimate.cubicYards.toFixed(1)} cu yd) over ${site.totalAreaSqFt?.toFixed(0) ?? "?"} sq ft @ ${site.depthInches ?? "?"}" depth — source: ${site.mode}`,
+        );
+      }
+      if (projectMapImageUrl) {
+        siteSummaryLines.push(`Satellite outline: ${projectMapImageUrl}`);
+      }
+    }
+    const siteSummaryText = siteSummaryLines.length
+      ? `\n\nProject site:\n${siteSummaryLines.join("\n")}`
+      : "";
+
+    const htmlBody = `
+<!DOCTYPE html>
+<html><body style="font-family: system-ui, -apple-system, sans-serif; color: #1f2937;">
+<h2>New online order received</h2>
+<p><strong>Order #:</strong> ${orderNumber}<br>
+<strong>Customer:</strong> ${data.name}<br>
+<strong>Email:</strong> ${data.email}<br>
+<strong>Phone:</strong> ${data.phone}<br>
+<strong>Fulfillment:</strong> ${data.fulfillment === "pickup" ? "Pickup at yard" : "Delivery"}</p>
+${data.deliveryAddress ? `<p><strong>Delivery Address:</strong><br>${data.deliveryAddress}</p>` : ""}
+${data.deliveryNotes ? `<p><strong>Notes:</strong> ${data.deliveryNotes}</p>` : ""}
+${
+  site
+    ? `
+<h3>Project site (customer-captured)</h3>
+${site.address ? `<p><strong>Address:</strong> ${site.address}</p>` : ""}
+${
+  site.estimate
+    ? `<p><strong>Estimate:</strong> ${site.estimate.tons.toFixed(1)} tons (${site.estimate.cubicYards.toFixed(1)} cu yd) over ${site.totalAreaSqFt?.toFixed(0) ?? "?"} sq ft @ ${site.depthInches ?? "?"}" depth<br>
+<em>This is a customer self-estimate, not survey data.</em></p>`
+    : ""
+}
+${
+  projectMapImageUrl
+    ? `<p><img src="${projectMapImageUrl}" alt="Project area outlined on satellite map" style="max-width:640px;border:1px solid #d1d5db;border-radius:8px"></p>`
+    : ""
+}
+`
+    : ""
+}
+<h3>Items</h3>
+<pre style="font-family:ui-monospace,Menlo,monospace;background:#f9fafb;padding:12px;border-radius:8px">${itemsList}</pre>
+<p>
+Subtotal: $${validatedPrices.subtotal.toFixed(2)}<br>
+Tax (7.25%): $${validatedPrices.tax.toFixed(2)}<br>
+Processing Fee (4.5%): $${validatedPrices.processingFee.toFixed(2)}<br>
+<strong>Total: $${validatedPrices.total.toFixed(2)}</strong>
+</p>
+<p style="color:#6b7280;font-size:12px">Payment: Pending — Stripe not configured, customer will pay on pickup/delivery.</p>
+</body></html>
+    `.trim();
 
     await sendEmail({
       to: "sales@muskingummaterials.com",
@@ -170,7 +361,7 @@ Email: ${data.email}
 Phone: ${data.phone}
 Fulfillment: ${data.fulfillment === "pickup" ? "Pickup at yard" : "Delivery"}
 ${data.deliveryAddress ? `Delivery Address: ${data.deliveryAddress}` : ""}
-${data.deliveryNotes ? `Notes: ${data.deliveryNotes}` : ""}
+${data.deliveryNotes ? `Notes: ${data.deliveryNotes}` : ""}${siteSummaryText}
 
 Items:
 ${itemsList}
@@ -182,18 +373,56 @@ Total: $${validatedPrices.total.toFixed(2)}
 
 Payment: Pending — Stripe not configured, customer will pay on pickup/delivery.
       `.trim(),
+      htmlBody,
       replyTo: data.email,
     });
 
-    return NextResponse.json({ orderNumber });
+    logger.info('Order notification email sent', {
+      orderNumber,
+      recipient: 'sales@muskingummaterials.com',
+    });
+
+    addBreadcrumb('Email notification sent', 'email', {
+      orderNumber,
+    });
+
+    logger.info('Checkout completed successfully', {
+      orderNumber,
+      total: validatedPrices.total,
+      paymentMethod: 'pay_on_pickup',
+    });
+
+    return NextResponse.json({
+      orderNumber,
+      analytics: {
+        orderNumber,
+        subtotal: data.subtotal,
+        tax: data.tax,
+        total: data.total,
+        items: data.items.map((item) => ({
+          id: item.name.toLowerCase().replace(/\s+/g, "-"),
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+        })),
+      },
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
+      logger.warn('Invalid checkout data received', {
+        errors: error.errors,
+      });
+
       return NextResponse.json(
         { error: "Invalid order data", details: error.errors },
         { status: 400 }
       );
     }
-    console.error("Checkout error:", error);
+
+    logger.error('Checkout failed with unexpected error', error, {
+      email: (error as { email?: string })?.email,
+    });
+
     return NextResponse.json(
       { error: "Checkout failed. Please call (740) 319-0183." },
       { status: 500 }

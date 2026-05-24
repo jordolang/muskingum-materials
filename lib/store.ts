@@ -51,3 +51,96 @@ export const useQuoteStore = create<QuoteState>((set) => ({
     })),
   clearItems: () => set({ items: [] }),
 }));
+
+interface CartItem {
+  name: string;
+  price: number;
+  unit: string;
+  quantity: number;
+}
+
+interface CartState {
+  items: CartItem[];
+  addToCart: (product: { name: string; price: number; unit: string }) => void;
+  updateQuantity: (name: string, delta: number) => void;
+  setQuantity: (name: string, qty: number) => void;
+  removeFromCart: (name: string) => void;
+  clearCart: () => void;
+}
+
+function loadCartFromStorage(): CartItem[] {
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("mm-cart");
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error("Failed to load cart from localStorage:", error);
+    }
+  }
+  return [];
+}
+
+function saveCartToStorage(items: CartItem[]): void {
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem("mm-cart", JSON.stringify(items));
+    } catch (error) {
+      console.error("Failed to save cart to localStorage:", error);
+    }
+  }
+}
+
+export const useCartStore = create<CartState>((set) => ({
+  items: typeof window !== "undefined" ? loadCartFromStorage() : [],
+  addToCart: (product) =>
+    set((state) => {
+      const existing = state.items.find((item) => item.name === product.name);
+      const newItems = existing
+        ? state.items.map((item) =>
+            item.name === product.name
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          )
+        : [
+            ...state.items,
+            { name: product.name, price: product.price, unit: product.unit, quantity: 1 },
+          ];
+      saveCartToStorage(newItems);
+      return { items: newItems };
+    }),
+  updateQuantity: (name, delta) =>
+    set((state) => {
+      const newItems = state.items
+        .map((item) =>
+          item.name === name
+            ? { ...item, quantity: Math.max(0, item.quantity + delta) }
+            : item
+        )
+        .filter((item) => item.quantity > 0);
+      saveCartToStorage(newItems);
+      return { items: newItems };
+    }),
+  setQuantity: (name, qty) =>
+    set((state) => {
+      const newItems =
+        qty <= 0
+          ? state.items.filter((item) => item.name !== name)
+          : state.items.map((item) =>
+              item.name === name ? { ...item, quantity: qty } : item
+            );
+      saveCartToStorage(newItems);
+      return { items: newItems };
+    }),
+  removeFromCart: (name) =>
+    set((state) => {
+      const newItems = state.items.filter((item) => item.name !== name);
+      saveCartToStorage(newItems);
+      return { items: newItems };
+    }),
+  clearCart: () => {
+    saveCartToStorage([]);
+    set({ items: [] });
+  },
+}));

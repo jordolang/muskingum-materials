@@ -9,18 +9,20 @@ interface SendEmailParams {
   to: string;
   subject: string;
   textBody: string;
+  htmlBody?: string;
   replyTo?: string;
 }
 
 /**
  * Sends an email using Postmark
- * @param params - Email parameters (to, subject, textBody, replyTo)
+ * @param params - Email parameters (to, subject, textBody, htmlBody, replyTo)
  * @returns true on success, false on failure or if Postmark is not configured
  */
 export async function sendEmail({
   to,
   subject,
   textBody,
+  htmlBody,
   replyTo,
 }: SendEmailParams): Promise<boolean> {
   // Check if Postmark is configured
@@ -39,6 +41,7 @@ export async function sendEmail({
       To: to,
       Subject: subject,
       TextBody: textBody,
+      HtmlBody: htmlBody,
       ReplyTo: replyTo,
     });
 

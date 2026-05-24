@@ -5,6 +5,9 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ChatWidgetLoader } from "@/components/chat/chat-widget-loader";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { Toaster } from "@/components/ui/toaster";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { CookieConsent } from "@/components/analytics/cookie-consent";
 import "./globals.css";
 
 // Preview Vercel builds don't have NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY set,
@@ -54,6 +57,11 @@ export const metadata: Metadata = {
     locale: "en_US",
     type: "website",
   },
+  ...(process.env.NEXT_PUBLIC_GSC_VERIFICATION && {
+    verification: {
+      google: process.env.NEXT_PUBLIC_GSC_VERIFICATION,
+    },
+  }),
 };
 
 export default function RootLayout({
@@ -65,11 +73,21 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${fontSans.variable} ${fontHeading.variable} font-sans antialiased`}>
         <div className="flex min-h-screen flex-col">
-          <Navbar />
+          <div className="print:hidden">
+            <Navbar />
+          </div>
           <main className="flex-1">{children}</main>
-          <Footer />
+          <div className="print:hidden">
+            <Footer />
+          </div>
         </div>
-        <ChatWidgetLoader />
+        <div className="print:hidden">
+          <ErrorBoundary componentName="ChatWidget">
+            <ChatWidgetLoader />
+          </ErrorBoundary>
+          <Toaster />
+          <CookieConsent />
+        </div>
         <GoogleAnalytics />
       </body>
     </html>

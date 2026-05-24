@@ -40,7 +40,7 @@ export function Footer() {
   return (
     <footer className="bg-stone-900 text-stone-300">
       <div className="container py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           <div>
             <Link href="/" className="inline-block mb-4">
               <Image
@@ -83,6 +83,21 @@ export function Footer() {
               <li><Link href="/about" className="hover:text-amber-500 transition-colors">About Us</Link></li>
               <li><Link href="/contact" className="hover:text-amber-500 transition-colors">Contact</Link></li>
               <li><Link href="/faq" className="hover:text-amber-500 transition-colors">FAQ</Link></li>
+              <li className="pt-2 border-t border-stone-800 mt-2">
+                <Link href="/privacy" className="hover:text-amber-500 transition-colors">Privacy Policy</Link>
+              </li>
+              <li><Link href="/terms" className="hover:text-amber-500 transition-colors">Terms of Service</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-white font-semibold mb-4">Calculators</h3>
+            <ul className="space-y-2 text-sm">
+              <li><Link href="/calculators" className="hover:text-amber-500 transition-colors">All Calculators</Link></li>
+              <li><Link href="/calculators/gravel-calculator" className="hover:text-amber-500 transition-colors">Gravel Calculator</Link></li>
+              <li><Link href="/calculators/tons-to-yards" className="hover:text-amber-500 transition-colors">Tons ↔ Yards Converter</Link></li>
+              <li><Link href="/calculators/coverage-chart" className="hover:text-amber-500 transition-colors">Coverage Chart</Link></li>
+              <li><Link href="/planner" className="hover:text-amber-500 transition-colors">Gravel Planner</Link></li>
             </ul>
           </div>
 
@@ -167,22 +182,32 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-stone-800 mt-8 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500">
-          <p>&copy; {new Date().getFullYear()} Muskingum Materials. All rights reserved.</p>
-          <div className="flex items-center gap-4">
-            {SOCIAL_LINKS.map((social) => (
-              <a
-                key={social.name}
-                href={social.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`text-stone-500 ${social.hoverColor} transition-colors`}
-                aria-label={social.name}
-              >
-                <social.icon className="h-4 w-4" />
-              </a>
-            ))}
+        <div className="border-t border-stone-800 mt-8 pt-8 space-y-3 text-xs text-stone-500">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>&copy; {new Date().getFullYear()} Muskingum Materials. All rights reserved.</p>
+            <div className="flex items-center gap-4">
+              <Link href="/privacy" className="hover:text-stone-300 transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-stone-300 transition-colors">Terms of Service</Link>
+              {SOCIAL_LINKS.map((social) => (
+                <a
+                  key={social.name}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`text-stone-500 ${social.hoverColor} transition-colors`}
+                  aria-label={social.name}
+                >
+                  <social.icon className="h-4 w-4" />
+                </a>
+              ))}
+            </div>
           </div>
+          <p className="text-center text-stone-600">
+            Designed &amp; built by{" "}
+            <Link href="/developer" className="hover:text-stone-400 transition-colors underline underline-offset-2">
+              JLang Development
+            </Link>
+          </p>
         </div>
       </div>
     </footer>
