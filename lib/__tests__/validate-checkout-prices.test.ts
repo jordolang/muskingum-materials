@@ -9,6 +9,12 @@ vi.mock("@/lib/sanity/client", () => ({
   },
 }));
 
+// Cast to avoid RawQuerylessQueryResponse type mismatch in Sanity SDK v3
+const fetchMock = sanityClient.fetch as unknown as {
+  mockResolvedValue: (v: unknown) => void;
+  mockRejectedValue: (e: unknown) => void;
+};
+
 describe("validateCheckoutPrices", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -21,7 +27,7 @@ describe("validateCheckoutPrices", () => {
         { name: "Fill Sand", pricePerTon: 4.0, unit: "ton" },
       ];
 
-      vi.mocked(sanityClient.fetch).mockResolvedValue(mockProducts);
+      fetchMock.mockResolvedValue(mockProducts);
 
       const checkoutData = {
         items: [
@@ -47,7 +53,7 @@ describe("validateCheckoutPrices", () => {
         { name: "Fill Dirt", pricePerTon: 2.0, unit: "ton" },
       ];
 
-      vi.mocked(sanityClient.fetch).mockResolvedValue(mockProducts);
+      fetchMock.mockResolvedValue(mockProducts);
 
       const checkoutData = {
         items: [{ name: "fill dirt", price: 2.0, unit: "ton", quantity: 1 }],
@@ -67,7 +73,7 @@ describe("validateCheckoutPrices", () => {
         { name: "Fill Dirt", pricePerTon: 2.0, unit: "ton" },
       ];
 
-      vi.mocked(sanityClient.fetch).mockResolvedValue(mockProducts);
+      fetchMock.mockResolvedValue(mockProducts);
 
       const checkoutData = {
         items: [
@@ -87,7 +93,7 @@ describe("validateCheckoutPrices", () => {
 
   describe("fallback to hardcoded products", () => {
     it("should use hardcoded products when Sanity returns empty array", async () => {
-      vi.mocked(sanityClient.fetch).mockResolvedValue([]);
+      fetchMock.mockResolvedValue([]);
 
       const checkoutData = {
         items: [{ name: "Fill Dirt", price: 2.0, unit: "ton", quantity: 1 }],
@@ -103,7 +109,7 @@ describe("validateCheckoutPrices", () => {
     });
 
     it("should use hardcoded products when Sanity fetch fails", async () => {
-      vi.mocked(sanityClient.fetch).mockRejectedValue(
+      fetchMock.mockRejectedValue(
         new Error("Sanity unavailable")
       );
 
@@ -121,7 +127,7 @@ describe("validateCheckoutPrices", () => {
     });
 
     it("should use hardcoded products when Sanity returns null", async () => {
-      vi.mocked(sanityClient.fetch).mockResolvedValue(null);
+      fetchMock.mockResolvedValue(null);
 
       const checkoutData = {
         items: [{ name: "Fill Dirt", price: 2.0, unit: "ton", quantity: 1 }],
@@ -139,7 +145,7 @@ describe("validateCheckoutPrices", () => {
 
   describe("product validation errors", () => {
     it("should reject product not in catalog", async () => {
-      vi.mocked(sanityClient.fetch).mockResolvedValue([
+      fetchMock.mockResolvedValue([
         { name: "Fill Dirt", pricePerTon: 2.0, unit: "ton" },
       ]);
 
@@ -159,7 +165,7 @@ describe("validateCheckoutPrices", () => {
     });
 
     it("should reject 'call' pricing items", async () => {
-      vi.mocked(sanityClient.fetch).mockResolvedValue([
+      fetchMock.mockResolvedValue([
         { name: "Sand (Washed)", pricePerTon: 0, unit: "call" },
       ]);
 
@@ -179,7 +185,7 @@ describe("validateCheckoutPrices", () => {
     });
 
     it("should reject price mismatch beyond tolerance", async () => {
-      vi.mocked(sanityClient.fetch).mockResolvedValue([
+      fetchMock.mockResolvedValue([
         { name: "Fill Dirt", pricePerTon: 2.0, unit: "ton" },
       ]);
 
@@ -199,7 +205,7 @@ describe("validateCheckoutPrices", () => {
     });
 
     it("should reject unit mismatch", async () => {
-      vi.mocked(sanityClient.fetch).mockResolvedValue([
+      fetchMock.mockResolvedValue([
         { name: "Fill Dirt", pricePerTon: 2.0, unit: "ton" },
       ]);
 
@@ -221,7 +227,7 @@ describe("validateCheckoutPrices", () => {
 
   describe("calculation validation errors", () => {
     it("should reject incorrect subtotal", async () => {
-      vi.mocked(sanityClient.fetch).mockResolvedValue([
+      fetchMock.mockResolvedValue([
         { name: "Fill Dirt", pricePerTon: 2.0, unit: "ton" },
       ]);
 
@@ -239,7 +245,7 @@ describe("validateCheckoutPrices", () => {
     });
 
     it("should reject incorrect tax calculation", async () => {
-      vi.mocked(sanityClient.fetch).mockResolvedValue([
+      fetchMock.mockResolvedValue([
         { name: "Fill Dirt", pricePerTon: 2.0, unit: "ton" },
       ]);
 
@@ -257,7 +263,7 @@ describe("validateCheckoutPrices", () => {
     });
 
     it("should reject incorrect processing fee", async () => {
-      vi.mocked(sanityClient.fetch).mockResolvedValue([
+      fetchMock.mockResolvedValue([
         { name: "Fill Dirt", pricePerTon: 2.0, unit: "ton" },
       ]);
 
@@ -275,7 +281,7 @@ describe("validateCheckoutPrices", () => {
     });
 
     it("should reject incorrect total", async () => {
-      vi.mocked(sanityClient.fetch).mockResolvedValue([
+      fetchMock.mockResolvedValue([
         { name: "Fill Dirt", pricePerTon: 2.0, unit: "ton" },
       ]);
 
@@ -295,7 +301,7 @@ describe("validateCheckoutPrices", () => {
 
   describe("edge cases", () => {
     it("should handle multiple items with different prices", async () => {
-      vi.mocked(sanityClient.fetch).mockResolvedValue([
+      fetchMock.mockResolvedValue([
         { name: "Fill Dirt", pricePerTon: 2.0, unit: "ton" },
         { name: "Fill Sand", pricePerTon: 4.0, unit: "ton" },
         { name: "#57 Gravel (Washed)", pricePerTon: 15.0, unit: "ton" },
@@ -327,7 +333,7 @@ describe("validateCheckoutPrices", () => {
     });
 
     it("should handle single item with quantity 1", async () => {
-      vi.mocked(sanityClient.fetch).mockResolvedValue([
+      fetchMock.mockResolvedValue([
         { name: "Fill Dirt", pricePerTon: 2.0, unit: "ton" },
       ]);
 
@@ -348,7 +354,7 @@ describe("validateCheckoutPrices", () => {
     });
 
     it("should handle large quantities", async () => {
-      vi.mocked(sanityClient.fetch).mockResolvedValue([
+      fetchMock.mockResolvedValue([
         { name: "Fill Dirt", pricePerTon: 2.0, unit: "ton" },
       ]);
 
@@ -374,7 +380,7 @@ describe("validateCheckoutPrices", () => {
     });
 
     it("should use server-calculated values even when client values are within tolerance", async () => {
-      vi.mocked(sanityClient.fetch).mockResolvedValue([
+      fetchMock.mockResolvedValue([
         { name: "Fill Dirt", pricePerTon: 2.0, unit: "ton" },
       ]);
 
@@ -398,7 +404,7 @@ describe("validateCheckoutPrices", () => {
 
   describe("rounding tolerance", () => {
     it("should accept cumulative rounding within 2 cent tolerance for total", async () => {
-      vi.mocked(sanityClient.fetch).mockResolvedValue([
+      fetchMock.mockResolvedValue([
         { name: "Fill Dirt", pricePerTon: 2.0, unit: "ton" },
       ]);
 
@@ -417,7 +423,7 @@ describe("validateCheckoutPrices", () => {
     });
 
     it("should reject cumulative rounding beyond 2 cent tolerance", async () => {
-      vi.mocked(sanityClient.fetch).mockResolvedValue([
+      fetchMock.mockResolvedValue([
         { name: "Fill Dirt", pricePerTon: 2.0, unit: "ton" },
       ]);
 

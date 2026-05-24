@@ -18,7 +18,43 @@ export const checkoutFormSchema = z.object({
   deliveryAddress: z.string().optional(),
   deliveryNotes: z.string().optional(),
   smsOptIn: z.boolean().optional(),
+  termsAccepted: z.literal(true, {
+    errorMap: () => ({
+      message: "You must accept the Terms of Service to proceed",
+    }),
+  }),
 });
+
+// Project site data schema — captures the customer's outline, address,
+// and material estimate from the on-site map estimator so the same data
+// flows onto the order receipt and to Muskingum Materials.
+export const projectSiteSchema = z
+  .object({
+    address: z.string().optional(),
+    location: z
+      .object({ lat: z.number(), lng: z.number() })
+      .nullable()
+      .optional(),
+    mode: z.enum(["map", "dimensions", "preset"]).optional(),
+    depthInches: z.number().nonnegative().optional(),
+    lengthFt: z.number().nonnegative().nullable().optional(),
+    widthFt: z.number().nonnegative().nullable().optional(),
+    totalAreaSqFt: z.number().nonnegative().optional(),
+    polygons: z
+      .array(z.array(z.object({ lat: z.number(), lng: z.number() })))
+      .optional(),
+    estimate: z
+      .object({
+        cubicFeet: z.number(),
+        cubicYards: z.number(),
+        tons: z.number(),
+        truckloads: z.number(),
+        source: z.enum(["map", "dimensions"]),
+      })
+      .nullable()
+      .optional(),
+  })
+  .optional();
 
 // Checkout schema (API-side with order details)
 export const checkoutSchema = checkoutFormSchema.extend({
@@ -37,6 +73,7 @@ export const checkoutSchema = checkoutFormSchema.extend({
   contractorId: z.string().optional(),
   contractorDiscountRate: z.number().optional(),
   contractorDiscount: z.number().optional(),
+  projectSite: projectSiteSchema,
 });
 
 // Address schema
