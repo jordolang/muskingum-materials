@@ -1,10 +1,8 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { Mail, ChevronLeft, ChevronRight, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 
 const SUBSCRIBERS_PER_PAGE = 20;
@@ -14,16 +12,9 @@ interface SubscribersPageProps {
 }
 
 export default async function SubscribersPage({ searchParams }: SubscribersPageProps) {
-  const user = await currentUser();
-
-  // Check if user is admin
-  if (!user || user.publicMetadata.role !== "admin") {
-    redirect("/account");
-  }
-
   const params = await searchParams;
   const currentPage = Math.max(1, parseInt(params.page || "1", 10));
-  const filter = params.filter || "all"; // all, active, unsubscribed
+  const filter = params.filter || "all";
 
   let subscribers: Array<{
     id: string;
@@ -39,12 +30,12 @@ export default async function SubscribersPage({ searchParams }: SubscribersPageP
   try {
     const skip = (currentPage - 1) * SUBSCRIBERS_PER_PAGE;
 
-    // Build where clause based on filter
-    const whereClause = filter === "active"
-      ? { active: true }
-      : filter === "unsubscribed"
-      ? { active: false }
-      : {};
+    const whereClause =
+      filter === "active"
+        ? { active: true }
+        : filter === "unsubscribed"
+        ? { active: false }
+        : {};
 
     [subscribers, totalSubscribers, activeCount, inactiveCount] = await Promise.all([
       prisma.newsletterSubscriber.findMany({
@@ -52,13 +43,7 @@ export default async function SubscribersPage({ searchParams }: SubscribersPageP
         orderBy: { createdAt: "desc" },
         take: SUBSCRIBERS_PER_PAGE,
         skip,
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          active: true,
-          createdAt: true,
-        },
+        select: { id: true, email: true, name: true, active: true, createdAt: true },
       }),
       prisma.newsletterSubscriber.count({ where: whereClause }),
       prisma.newsletterSubscriber.count({ where: { active: true } }),
@@ -74,36 +59,23 @@ export default async function SubscribersPage({ searchParams }: SubscribersPageP
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold font-heading">Newsletter Subscribers</h1>
-          <p className="text-sm text-muted-foreground">
-            View and manage your email subscribers
-          </p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold font-heading">Newsletter Subscribers</h1>
+        <p className="text-sm text-muted-foreground">View and manage your email subscribers</p>
       </div>
 
-      {/* Filter tabs */}
       <div className="flex gap-2 border-b">
-        <Link href="/account/admin/subscribers?filter=all">
-          <Button
-            variant={filter === "all" ? "default" : "ghost"}
-            size="sm"
-            className="rounded-b-none"
-          >
+        <Link href="/admin/subscribers?filter=all">
+          <Button variant={filter === "all" ? "default" : "ghost"} size="sm" className="rounded-b-none">
             All ({activeCount + inactiveCount})
           </Button>
         </Link>
-        <Link href="/account/admin/subscribers?filter=active">
-          <Button
-            variant={filter === "active" ? "default" : "ghost"}
-            size="sm"
-            className="rounded-b-none"
-          >
+        <Link href="/admin/subscribers?filter=active">
+          <Button variant={filter === "active" ? "default" : "ghost"} size="sm" className="rounded-b-none">
             Active ({activeCount})
           </Button>
         </Link>
-        <Link href="/account/admin/subscribers?filter=unsubscribed">
+        <Link href="/admin/subscribers?filter=unsubscribed">
           <Button
             variant={filter === "unsubscribed" ? "default" : "ghost"}
             size="sm"
@@ -137,54 +109,50 @@ export default async function SubscribersPage({ searchParams }: SubscribersPageP
       ) : (
         <>
           <div className="space-y-3">
-            {subscribers.map((subscriber) => {
-              return (
-                <Card key={subscriber.id} className="border-0 shadow-md">
-                  <CardContent className="p-5">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <p className="font-bold text-sm">
-                            {subscriber.email}
-                          </p>
-                          <StatusBadge active={subscriber.active} />
-                        </div>
-                        {subscriber.name && (
-                          <p className="text-sm text-muted-foreground mb-1 ml-6">
-                            {subscriber.name}
-                          </p>
-                        )}
-                        <p className="text-xs text-muted-foreground ml-6">
-                          Subscribed {new Date(subscriber.createdAt).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })}
-                        </p>
+            {subscribers.map((subscriber) => (
+              <Card key={subscriber.id} className="border-0 shadow-md">
+                <CardContent className="p-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <p className="font-bold text-sm">{subscriber.email}</p>
+                        <StatusBadge active={subscriber.active} />
                       </div>
+                      {subscriber.name && (
+                        <p className="text-sm text-muted-foreground mb-1 ml-6">
+                          {subscriber.name}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground ml-6">
+                        Subscribed{" "}
+                        {new Date(subscriber.createdAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-4">
               <p className="text-sm text-muted-foreground">
-                Showing {((currentPage - 1) * SUBSCRIBERS_PER_PAGE) + 1} to {Math.min(currentPage * SUBSCRIBERS_PER_PAGE, totalSubscribers)} of {totalSubscribers} subscribers
+                Showing {(currentPage - 1) * SUBSCRIBERS_PER_PAGE + 1} to{" "}
+                {Math.min(currentPage * SUBSCRIBERS_PER_PAGE, totalSubscribers)} of{" "}
+                {totalSubscribers} subscribers
               </p>
               <div className="flex gap-2">
-                <Link href={`/account/admin/subscribers?page=${currentPage - 1}${filter !== "all" ? `&filter=${filter}` : ""}`}>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={!hasPrevPage}
-                    className="gap-1"
-                  >
+                <Link
+                  href={`/admin/subscribers?page=${currentPage - 1}${filter !== "all" ? `&filter=${filter}` : ""}`}
+                >
+                  <Button variant="outline" size="sm" disabled={!hasPrevPage} className="gap-1">
                     <ChevronLeft className="h-4 w-4" />
                     Previous
                   </Button>
@@ -194,13 +162,10 @@ export default async function SubscribersPage({ searchParams }: SubscribersPageP
                     Page {currentPage} of {totalPages}
                   </span>
                 </div>
-                <Link href={`/account/admin/subscribers?page=${currentPage + 1}${filter !== "all" ? `&filter=${filter}` : ""}`}>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={!hasNextPage}
-                    className="gap-1"
-                  >
+                <Link
+                  href={`/admin/subscribers?page=${currentPage + 1}${filter !== "all" ? `&filter=${filter}` : ""}`}
+                >
+                  <Button variant="outline" size="sm" disabled={!hasNextPage} className="gap-1">
                     Next
                     <ChevronRight className="h-4 w-4" />
                   </Button>

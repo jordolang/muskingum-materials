@@ -57,6 +57,11 @@ export const metadata: Metadata = {
     locale: "en_US",
     type: "website",
   },
+  ...(process.env.NEXT_PUBLIC_GSC_VERIFICATION && {
+    verification: {
+      google: process.env.NEXT_PUBLIC_GSC_VERIFICATION,
+    },
+  }),
 };
 
 export default function RootLayout({
@@ -68,16 +73,22 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${fontSans.variable} ${fontHeading.variable} font-sans antialiased`}>
         <div className="flex min-h-screen flex-col">
-          <Navbar />
+          <div className="print:hidden">
+            <Navbar />
+          </div>
           <main className="flex-1">{children}</main>
-          <Footer />
+          <div className="print:hidden">
+            <Footer />
+          </div>
         </div>
-        <ErrorBoundary componentName="ChatWidget">
-          <ChatWidgetLoader />
-        </ErrorBoundary>
+        <div className="print:hidden">
+          <ErrorBoundary componentName="ChatWidget">
+            <ChatWidgetLoader />
+          </ErrorBoundary>
+          <Toaster />
+          <CookieConsent />
+        </div>
         <GoogleAnalytics />
-        <Toaster />
-        <CookieConsent />
       </body>
     </html>
   );

@@ -61,7 +61,7 @@ export const PROJECT_TYPE_MAPPINGS: ProjectTypeMapping[] = [
         minQuantity: 2,
       },
       {
-        productSlug: "8-fractured-gravel-washed",
+        productSlug: "4-fractured-gravel-washed",
         priority: 3,
         reasoning: "Smaller stones create smoother surface, locks together well",
         idealFor: ["Finished surface", "Smooth driving surface", "Walkable"],
@@ -86,9 +86,9 @@ export const PROJECT_TYPE_MAPPINGS: ProjectTypeMapping[] = [
         minQuantity: 1,
       },
       {
-        productSlug: "landscape-rock",
+        productSlug: "57-limestone",
         priority: 2,
-        reasoning: "Decorative finish - reduces weeds and retains moisture",
+        reasoning: "Bright washed limestone - decorative and naturally suppresses weeds",
         idealFor: ["Decorative borders", "Ground cover", "Low maintenance"],
         minQuantity: 1,
       },
@@ -159,7 +159,7 @@ export const PROJECT_TYPE_MAPPINGS: ProjectTypeMapping[] = [
         minQuantity: 3,
       },
       {
-        productSlug: "fill-sand",
+        productSlug: "fill-sand-washed",
         priority: 3,
         reasoning: "Quality fill sand for construction and backfill",
         idealFor: ["Backfill", "Construction base", "Compaction"],
@@ -184,9 +184,9 @@ export const PROJECT_TYPE_MAPPINGS: ProjectTypeMapping[] = [
         minQuantity: 2,
       },
       {
-        productSlug: "screenings",
+        productSlug: "9-gravel-washed",
         priority: 2,
-        reasoning: "Fine crushed stone dust - perfect for final leveling layer",
+        reasoning: "Fine washed gravel - ideal leveling course under pavers",
         idealFor: ["Leveling layer", "Between pavers", "Final grade"],
         quantityFactor: 0.002,
         minQuantity: 0.5,
@@ -209,7 +209,7 @@ export const PROJECT_TYPE_MAPPINGS: ProjectTypeMapping[] = [
     estimatedDepth: "2-4 inches",
     recommendations: [
       {
-        productSlug: "8-fractured-gravel-washed",
+        productSlug: "4-fractured-gravel-washed",
         priority: 1,
         reasoning: "Comfortable walking surface - locks together, won't roll underfoot",
         idealFor: ["Garden paths", "Walking trails", "Smooth surface"],
@@ -225,9 +225,9 @@ export const PROJECT_TYPE_MAPPINGS: ProjectTypeMapping[] = [
         minQuantity: 1,
       },
       {
-        productSlug: "screenings",
+        productSlug: "304-crushed-gravel",
         priority: 3,
-        reasoning: "Creates firm, compact walking surface",
+        reasoning: "Dense-graded gravel that compacts into a firm walking surface",
         idealFor: ["Formal paths", "Wheelchair accessible", "Compact surface"],
         quantityFactor: 0.004,
         minQuantity: 0.5,
@@ -291,9 +291,9 @@ export const PROJECT_TYPE_MAPPINGS: ProjectTypeMapping[] = [
         minQuantity: 2,
       },
       {
-        productSlug: "landscape-rock",
+        productSlug: "57-limestone",
         priority: 3,
-        reasoning: "Decorative erosion control - functional and attractive",
+        reasoning: "Bright washed limestone - decorative and weed suppressing on light slopes",
         idealFor: ["Decorative slopes", "Garden areas", "Light erosion"],
         minQuantity: 2,
       },
@@ -307,9 +307,9 @@ export const PROJECT_TYPE_MAPPINGS: ProjectTypeMapping[] = [
     estimatedDepth: "2-4 inches",
     recommendations: [
       {
-        productSlug: "landscape-rock",
+        productSlug: "57-limestone",
         priority: 1,
-        reasoning: "Beautiful decorative stone for visual impact",
+        reasoning: "Premium washed limestone — bright decorative finish for gardens and borders",
         idealFor: ["Rock gardens", "Water features", "Decorative borders"],
         minQuantity: 1,
       },
@@ -322,7 +322,7 @@ export const PROJECT_TYPE_MAPPINGS: ProjectTypeMapping[] = [
         minQuantity: 1,
       },
       {
-        productSlug: "8-fractured-gravel-washed",
+        productSlug: "4-fractured-gravel-washed",
         priority: 3,
         reasoning: "Clean, uniform appearance for refined landscapes",
         idealFor: ["Modern landscapes", "Clean lines", "Minimalist design"],

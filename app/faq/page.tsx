@@ -42,10 +42,12 @@ export default async function FAQPage() {
   let siteSettings: SiteSettings | null = null;
 
   try {
-    [faqs, siteSettings] = await Promise.all([
+    const [fetchedFaqs, fetchedSettings] = await Promise.all([
       sanityClient.fetch<FAQ[]>(faqQuery, {}, { next: { tags: ['faq'] } }),
       sanityClient.fetch<SiteSettings>(siteSettingsQuery, {}, { next: { tags: ['site-settings'] } }),
     ]);
+    faqs = fetchedFaqs ?? [];
+    siteSettings = fetchedSettings ?? null;
   } catch (error) {
     console.error("Failed to fetch FAQs/settings from Sanity:", error);
   }

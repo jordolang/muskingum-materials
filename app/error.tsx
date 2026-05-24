@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { logger } from "@/lib/logger";
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -11,12 +12,7 @@ interface ErrorProps {
 
 export default function Error({ error, reset }: ErrorProps) {
   useEffect(() => {
-    // Log error to console with context for debugging
-    console.error("Route error:", {
-      message: error.message,
-      digest: error.digest,
-      stack: error.stack,
-    });
+    logger.error("Route error", error, { digest: error.digest });
   }, [error]);
 
   return (
