@@ -33,21 +33,18 @@ interface Estimate {
 
 const DEPTH_PRESETS = [2, 3, 4, 6];
 const COMPACTION_MAP: Record<string, number> = {
-  "crusher-run": 15,
-  "recycled-asphalt": 20,
-  "crushed-stone": 10,
-  "crushed-limestone": 10,
-  "411-gravel": 10,
-  "decomposed-granite": 8,
+  "bank-run": 15,
+  "304-crushed-gravel": 15,
   "fill-dirt": 10,
-  "construction-gravel": 10,
+  "topsoil-unprocessed": 10,
+  "fill-sand-washed": 8,
 };
 
 export function GravelPlanner({ materials }: GravelPlannerProps) {
 
   const [totalArea, setTotalArea] = useState(0);
   const [selectedMaterial, setSelectedMaterial] = useState(
-    materials.find((m) => m.slug === "crushed-stone")?.slug ??
+    materials.find((m) => m.slug === "57-gravel-washed")?.slug ??
       materials[0]?.slug ??
       "",
   );
