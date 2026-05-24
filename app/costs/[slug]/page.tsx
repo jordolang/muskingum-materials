@@ -13,9 +13,15 @@ interface CostGuidePageProps {
 }
 
 export async function generateStaticParams() {
-  const guides = await getCostGuides();
-  type Guide = Awaited<ReturnType<typeof getCostGuides>>[number];
-  return guides.map((g: Guide) => ({ slug: g.slug }));
+  try {
+    const guides = await getCostGuides();
+    return guides.map((g) => ({ slug: g.slug }));
+  } catch (error) {
+    // During build, if database is unavailable, return empty array
+    // Pages will be generated on-demand instead of at build time
+    console.warn('Unable to fetch cost guides for static generation:', error);
+    return [];
+  }
 }
 
 export async function generateMetadata({

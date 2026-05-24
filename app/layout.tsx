@@ -5,7 +5,20 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ChatWidgetLoader } from "@/components/chat/chat-widget-loader";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { Toaster } from "@/components/ui/toaster";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { CookieConsent } from "@/components/analytics/cookie-consent";
 import "./globals.css";
+
+// Preview Vercel builds don't have NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY set,
+// and ClerkProvider throws "Missing publishableKey" during _not-found
+// prerender. Match the middleware's existing pattern of only engaging
+// Clerk when a real publishable key is present.
+const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const hasClerk = Boolean(
+  clerkPublishableKey &&
+    clerkPublishableKey !== "your_clerk_publishable_key",
+);
 
 const fontSans = Inter({
   subsets: ["latin"],
@@ -44,6 +57,11 @@ export const metadata: Metadata = {
     locale: "en_US",
     type: "website",
   },
+  ...(process.env.NEXT_PUBLIC_GSC_VERIFICATION && {
+    verification: {
+      google: process.env.NEXT_PUBLIC_GSC_VERIFICATION,
+    },
+  }),
 };
 
 export default function RootLayout({
@@ -51,19 +69,29 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
-        <body className={`${fontSans.variable} ${fontHeading.variable} font-sans antialiased`}>
-          <div className="flex min-h-screen flex-col">
+  const tree = (
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${fontSans.variable} ${fontHeading.variable} font-sans antialiased`}>
+        <div className="flex min-h-screen flex-col">
+          <div className="print:hidden">
             <Navbar />
-            <main className="flex-1">{children}</main>
+          </div>
+          <main className="flex-1">{children}</main>
+          <div className="print:hidden">
             <Footer />
           </div>
-          <ChatWidgetLoader />
-          <GoogleAnalytics />
-        </body>
-      </html>
-    </ClerkProvider>
+        </div>
+        <div className="print:hidden">
+          <ErrorBoundary componentName="ChatWidget">
+            <ChatWidgetLoader />
+          </ErrorBoundary>
+          <Toaster />
+          <CookieConsent />
+        </div>
+        <GoogleAnalytics />
+      </body>
+    </html>
   );
+
+  return hasClerk ? <ClerkProvider>{tree}</ClerkProvider> : tree;
 }

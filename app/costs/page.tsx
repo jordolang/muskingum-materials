@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Truck, Route, Cuboid, Weight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { getCostGuides } from "@/lib/products";
+import type { CostGuide } from "@prisma/client";
 
 export const metadata: Metadata = {
   title: "Gravel Costs",
@@ -18,8 +19,12 @@ const ICON_MAP: Record<string, typeof Truck> = {
 };
 
 export default async function CostsPage() {
-  const guides = await getCostGuides();
-  type Guide = Awaited<ReturnType<typeof getCostGuides>>[number];
+  let guides: CostGuide[] = [];
+  try {
+    guides = await getCostGuides();
+  } catch (error) {
+    console.warn('Unable to fetch cost guides:', error);
+  }
 
   return (
     <div className="py-12">
@@ -36,7 +41,7 @@ export default async function CostsPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          {guides.map((guide: Guide) => {
+          {guides.map((guide) => {
             const Icon = ICON_MAP[guide.icon ?? "cube"] ?? Cuboid;
             return (
               <Link key={guide.slug} href={`/costs/${guide.slug}`}>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { TonsToYardsConverter } from "@/components/calculators/tons-to-yards-converter";
 import { getProducts } from "@/lib/products";
+import type { Product } from "@prisma/client";
 
 export const metadata: Metadata = {
   title: "Tons to Cubic Yards Converter",
@@ -9,9 +10,14 @@ export const metadata: Metadata = {
 };
 
 export default async function TonsToYardsPage() {
-  const products = await getProducts();
-  type Product = Awaited<ReturnType<typeof getProducts>>[number];
-  const gravelProducts = products.map((p: Product) => ({
+  let products: Product[] = [];
+  try {
+    products = await getProducts();
+  } catch (error) {
+    console.warn('Unable to fetch products for converter:', error);
+  }
+
+  const gravelProducts = products.map((p) => ({
     slug: p.slug,
     name: p.name,
     densityLow: p.densityLow ?? 1.4,

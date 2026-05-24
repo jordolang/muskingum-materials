@@ -10,6 +10,7 @@ import {
   Star,
   MapPin,
   Camera,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +20,11 @@ import { HomepageFAQ } from "@/components/home/homepage-faq";
 import { prisma } from "@/lib/prisma";
 import { sanityClient } from "@/lib/sanity/client";
 import { testimonialsQuery } from "@/lib/sanity/queries";
+import { generateLocalBusinessSchema, toJsonLd } from "@/lib/seo/structured-data";
+import { generateHomeMetadata } from "@/lib/seo/metadata";
+
+// Generate SEO metadata with canonical URL, OG images, and Twitter cards
+export const metadata = generateHomeMetadata();
 
 // ISR — rebuild the homepage at most once per minute and let on-demand
 // revalidation refresh it when database content changes.
@@ -28,7 +34,7 @@ interface HomeProduct {
   _id: string;
   name: string;
   description: string;
-  pricePerTon: number;
+  pricePerTon: number | null;
   unit: string;
   imageUrl?: string;
   imageAlt?: string;
@@ -56,9 +62,8 @@ export default async function HomePage() {
   // ReviewsCarousel server component when empty.
   const [productRows, serviceRows, testimonialResult] = await Promise.all([
     prisma.product.findMany({
-      where: { active: true, price: { gt: 0 } },
-      orderBy: [{ featured: "desc" }, { sortOrder: "asc" }],
-      take: 6,
+      where: { active: true },
+      orderBy: [{ sortOrder: "asc" }],
       select: {
         id: true,
         name: true,
@@ -100,7 +105,7 @@ export default async function HomePage() {
     _id: row.id,
     name: row.name,
     description: row.shortDescription ?? row.description,
-    pricePerTon: row.price ?? 0,
+    pricePerTon: row.price,
     unit: row.unit,
     imageUrl: row.imageUrl ?? undefined,
     imageAlt: row.imageAlt ?? undefined,
@@ -116,8 +121,17 @@ export default async function HomePage() {
 
   const testimonials: HomeTestimonial[] = testimonialResult;
 
+  const localBusinessSchema = generateLocalBusinessSchema();
+
+
   return (
     <>
+      {/* Structured Data - LocalBusiness Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(localBusinessSchema) }}
+      />
+
       {/* Hero */}
       <section className="relative min-h-[600px] flex items-center">
         <div className="absolute inset-0 z-0">
@@ -141,6 +155,12 @@ export default async function HomePage() {
               Southeast Ohio since day one.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
+              <Link href="/recommendations">
+                <Button size="lg" className="bg-amber-700 text-white hover:bg-amber-800 font-semibold gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  Find Your Material
+                </Button>
+              </Link>
               <Link href="/products">
                 <Button size="lg" className="bg-white text-amber-800 hover:bg-white/90 font-semibold gap-2">
                   View Products & Pricing
@@ -196,26 +216,47 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredProducts.map((product) => (
-              <Card key={product._id} className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 bg-card">
-                <div className="relative h-48 w-full">
-                  <Image
-                    src={product.imageUrl || "/images/photos/piles.jpg"}
-                    alt={product.imageAlt || product.name}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute top-3 right-3 bg-amber-600 text-white px-3 py-1.5 rounded-lg shadow-md">
-                    <span className="text-lg font-bold">${product.pricePerTon.toFixed(2)}</span>
-                    <span className="text-xs opacity-90">/{product.unit}</span>
+            {featuredProducts.map((product) => {
+              const orderable = product.pricePerTon != null && product.pricePerTon > 0;
+              const card = (
+                <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 bg-card cursor-pointer h-full">
+                  <div className="relative h-48 w-full">
+                    <Image
+                      src={product.imageUrl || "/images/photos/piles.jpg"}
+                      alt={product.imageAlt || product.name}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute top-3 right-3 bg-amber-600 text-white px-3 py-1.5 rounded-lg shadow-md">
+                      {orderable ? (
+                        <>
+                          <span className="text-lg font-bold">${product.pricePerTon!.toFixed(2)}</span>
+                          <span className="text-xs opacity-90">/{product.unit}</span>
+                        </>
+                      ) : (
+                        <span className="text-sm font-bold">Call for Pricing</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <CardContent className="p-5">
-                  <h3 className="font-bold text-lg mb-1.5">{product.name}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+                  <CardContent className="p-5">
+                    <h3 className="font-bold text-lg mb-1.5">{product.name}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
+                  </CardContent>
+                </Card>
+              );
+              return orderable ? (
+                <Link
+                  key={product._id}
+                  href={`/order?product=${encodeURIComponent(product.name)}`}
+                  aria-label={`Order ${product.name}`}
+                  className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-xl"
+                >
+                  {card}
+                </Link>
+              ) : (
+                <div key={product._id}>{card}</div>
+              );
+            })}
           </div>
 
           <div className="text-center mt-8">

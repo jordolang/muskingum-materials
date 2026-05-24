@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GravelCalculator } from "@/components/calculators/gravel-calculator";
 import { getProducts } from "@/lib/products";
+import type { Product } from "@prisma/client";
 
 export const metadata: Metadata = {
   title: "Gravel Calculator",
@@ -9,9 +10,14 @@ export const metadata: Metadata = {
 };
 
 export default async function GravelCalculatorPage() {
-  const products = await getProducts();
-  type Product = Awaited<ReturnType<typeof getProducts>>[number];
-  const gravelProducts = products.map((p: Product) => ({
+  let products: Product[] = [];
+  try {
+    products = await getProducts();
+  } catch (error) {
+    console.warn('Unable to fetch products for calculator:', error);
+  }
+
+  const gravelProducts = products.map((p) => ({
     slug: p.slug,
     name: p.name,
     densityLow: p.densityLow ?? 1.4,
