@@ -357,10 +357,10 @@ Here's how each optional service degrades:
 
 ### Authentication (Clerk)
 
-- **Middleware** (`middleware.ts` lines 8-11): Checks if `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+- **Middleware** (`middleware.ts`, Clerk dynamic-import guard): Checks if `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
   is set and not the placeholder `"your_clerk_publishable_key"`. If missing,
   skips Clerk entirely.
-- **Layout** (`app/layout.tsx` lines 17-21): Same check before wrapping app in `ClerkProvider`.
+- **Layout** (`app/layout.tsx`, `ClerkProvider` conditional): Same check before wrapping app in `ClerkProvider`.
 - **Result:** Guest checkout works, but no user accounts, no `/account` dashboard,
   no loyalty program.
 
@@ -373,7 +373,7 @@ Here's how each optional service degrades:
 
 ### Rate Limiting (Upstash Redis)
 
-- **Library** (`lib/rate-limit.ts` lines 57-63): Checks if `UPSTASH_REDIS_REST_URL`
+- **Library** (`lib/rate-limit.ts`, store-factory function): Checks if `UPSTASH_REDIS_REST_URL`
   and `UPSTASH_REDIS_REST_TOKEN` are set. If missing, uses `InMemoryStore` class.
 - **Result:** Rate limiting works per-instance. In serverless environments
   (Vercel, AWS Lambda), each invocation gets its own instance, so limits are
@@ -497,16 +497,7 @@ If something isn't working:
 
 ## Quick Reference: Env Vars by Feature
 
-| Feature | Required Env Vars |
-| --- | --- |
-| **Database** | `DATABASE_URL`, `DIRECT_URL` |
-| **Auth** | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` |
-| **Payments** | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` |
-| **AI Chat** | `ANTHROPIC_API_KEY` |
-| **Email** | `POSTMARK_API_TOKEN`, `POSTMARK_FROM_EMAIL`, `POSTMARK_TO_EMAIL` |
-| **SMS** | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` |
-| **Rate Limiting** | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` |
-| **CMS** | `NEXT_PUBLIC_SANITY_PROJECT_ID`, `NEXT_PUBLIC_SANITY_DATASET`, `SANITY_API_TOKEN` |
-| **Maps** | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` |
-| **Analytics** | `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` |
-| **Error Tracking** | `NEXT_PUBLIC_SENTRY_DSN` |
+See [`.env.local.example`](../.env.local.example) for the full, annotated list of
+every environment variable grouped by feature. That file is the single source of
+truth for variable names, placeholder values, and where to obtain credentials.
+Copy it to `.env.local` to get started.
