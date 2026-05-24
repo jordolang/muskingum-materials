@@ -110,7 +110,7 @@ Order Form → POST /api/orders/checkout
 - When `STRIPE_SECRET_KEY` is missing, checkout returns 503
 - Order form still renders; users can request quotes instead
 
-[→ Detailed Stripe Integration Docs](./stripe-integration.md) *(pending)*
+[→ Detailed Stripe Integration Docs](./external-services.md#1-stripe---payment-processing)
 
 ---
 
@@ -146,7 +146,7 @@ NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 - `UserProfile` Prisma model synced via Clerk webhooks
 - `userId` foreign key on `Order`, `ChatConversation`, `Lead`, etc.
 
-[→ Detailed Clerk Integration Docs](./clerk-integration.md) *(pending)*
+[→ Detailed Clerk Integration Docs](./authentication.md)
 
 ---
 
@@ -188,7 +188,7 @@ SANITY_API_TOKEN                     # Required for mutations
 - `next.config.ts` allowlists `*.sanity.io`, `*.sanity.network`, Sanity CDN
 - `frame-ancestors` allows Sanity hosts for visual editing
 
-[→ Detailed Sanity Integration Docs](./sanity-integration.md) *(pending)*
+[→ Detailed Sanity Integration Docs](./cms-integration.md)
 
 ---
 
@@ -220,7 +220,7 @@ POSTMARK_FROM_EMAIL                  # Required (e.g. orders@muskingummaterials.
 - When `POSTMARK_API_TOKEN` is missing, email functions return early with a warning log
 - Orders still process; users notified via SMS (if Twilio configured) or UI only
 
-[→ Detailed Email Integration Docs](./email-integration.md) *(pending)*
+[→ Detailed Email Integration Docs](./external-services.md#4-postmark---transactional-email)
 
 ---
 
@@ -264,7 +264,7 @@ User Message → POST /api/chat
 - When `ANTHROPIC_API_KEY` is missing, falls back to keyword-matched static responses
 - Chat UI still works; responses are rule-based instead of AI-generated
 
-[→ Detailed AI Chat Integration Docs](./ai-chat-integration.md) *(pending)*
+[→ Detailed AI Chat Integration Docs](./chat-system.md)
 
 ---
 
@@ -310,7 +310,7 @@ User Message → POST /api/chat
          └─► SMS notifications sent on status changes (if opted in)
 ```
 
-[→ Detailed Order Flow Docs](./order-flow.md) *(pending)*
+[→ Detailed Order Flow Docs](./order-flow.md)
 
 ---
 
@@ -343,7 +343,7 @@ User Message → POST /api/chat
          └─► View all conversations, leads captured
 ```
 
-[→ Detailed AI Chat Flow Docs](./ai-chat-flow.md) *(pending)*
+[→ Detailed AI Chat Flow Docs](./chat-system.md)
 
 ---
 
@@ -376,7 +376,7 @@ User Message → POST /api/chat
                      └─► 403 Forbidden
 ```
 
-[→ Detailed Authentication Flow Docs](./authentication-flow.md) *(pending)*
+[→ Detailed Authentication Flow Docs](./authentication.md)
 
 ---
 
@@ -550,18 +550,17 @@ Every API route validates input with Zod:
 
 ## Detailed Documentation
 
-The following detailed documentation files are planned:
+### Data Flows
+- [Order Flow](./order-flow.md) — Cart → Checkout → Stripe → Webhook → Email/SMS (9 steps)
+- [AI Chat System](./chat-system.md) — User message → API → Anthropic/Fallback → DB → Leads
 
-- [Stripe Integration](./stripe-integration.md) *(pending subtask-2-1)*
-- [Clerk Authentication](./clerk-integration.md) *(pending subtask-3-1)*
-- [Sanity CMS](./sanity-integration.md) *(pending subtask-4-1)*
-- [Email Integration (Postmark)](./email-integration.md) *(pending subtask-5-1)*
-- [AI Chat (Anthropic)](./ai-chat-integration.md) *(pending subtask-6-1)*
-- [Order Flow](./order-flow.md) *(pending subtask-2-1)*
-- [AI Chat Flow](./ai-chat-flow.md) *(pending subtask-6-1)*
-- [Authentication Flow](./authentication-flow.md) *(pending subtask-3-1)*
-- [Database Schema](./database-schema.md) *(pending subtask-7-1)*
-- [Middleware & Security](./middleware-security.md) *(pending subtask-8-1)*
+### Service Integrations
+- [External Services](./external-services.md) — Stripe, Postmark, Twilio, Anthropic, Upstash, Neon, Sentry
+- [Authentication & Middleware](./authentication.md) — Clerk integration, rate limiting, protected routes
+- [Sanity CMS](./cms-integration.md) — Content management, GROQ queries, bundle isolation
+
+### Infrastructure
+- [Database Schema](./database-schema.md) — 23 Prisma models, relationships, indexes
 
 ---
 
