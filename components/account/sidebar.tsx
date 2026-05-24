@@ -13,10 +13,6 @@ import {
   Repeat,
   Award,
   Shield,
-  Mail,
-  Users,
-  BarChart,
-  Settings,
 } from "lucide-react";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
@@ -34,11 +30,7 @@ const NAV_ITEMS = [
 ];
 
 const ADMIN_NAV_ITEMS = [
-  { href: "/account/admin", label: "Admin Dashboard", icon: Shield },
-  { href: "/account/admin/campaigns", label: "Email Campaigns", icon: Mail },
-  { href: "/account/admin/subscribers", label: "Subscribers", icon: Users },
-  { href: "/account/admin/analytics", label: "Analytics", icon: BarChart },
-  { href: "/account/admin/settings", label: "Settings", icon: Settings },
+  { href: "/admin", label: "Admin Dashboard", icon: Shield },
 ];
 
 export function AccountSidebar() {

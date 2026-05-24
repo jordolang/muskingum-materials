@@ -1,4 +1,3 @@
-import { product } from "./product";
 import { service } from "./service";
 import { testimonial } from "./testimonial";
 import { faq } from "./faq";
@@ -8,7 +7,6 @@ import { page } from "./page";
 import { postType } from "./postType";
 
 export const schemaTypes = [
-  product,
   service,
   testimonial,
   faq,
