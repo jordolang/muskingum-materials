@@ -1,6 +1,8 @@
 import { sanityClient } from "@/lib/sanity/client";
 import { productsQuery } from "@/lib/sanity/queries";
-import { BUSINESS_INFO, PRODUCTS } from "@/data/business";
+import { BUSINESS_INFO } from "@/data/business";
+import { prisma } from "@/lib/prisma";
+import { calculatePrice } from "@/lib/pricing-calculator";
 
 interface CheckoutItem {
   name: string;
@@ -24,44 +26,55 @@ interface ValidatedPrices {
   total: number;
 }
 
+interface PricingTier {
+  minQuantity: number;
+  maxQuantity?: number;
+  pricePerTon: number;
+}
+
 interface Product {
   name: string;
   pricePerTon: number;
   unit: string;
+  pricingTiers?: PricingTier[];
+}
+
+async function loadCatalogFromPrisma(): Promise<Product[]> {
+  const rows = await prisma.product.findMany({
+    where: { active: true },
+    select: { name: true, price: true, unit: true },
+  });
+  return rows.map((r) => ({
+    name: r.name,
+    pricePerTon: r.price ?? 0,
+    unit: r.unit,
+  }));
 }
 
 /**
  * Validates checkout prices against product catalog and recalculates totals.
- * Fetches products from Sanity with fallback to hardcoded data.
+ * Sanity (marketing) is preferred when populated; otherwise the Prisma catalog
+ * is the source of truth.
  *
  * @param data - Checkout data with items and claimed prices
+ * @param contractorDiscountPercent - Optional contractor discount percentage (0-100)
  * @returns Validated and recalculated prices
  * @throws Error if prices don't match catalog or calculations are incorrect
  */
 export async function validateCheckoutPrices(
-  data: CheckoutData
+  data: CheckoutData,
+  contractorDiscountPercent?: number
 ): Promise<ValidatedPrices> {
-  // Fetch products from Sanity, fallback to hardcoded PRODUCTS
   let products: Product[];
   try {
     const sanityProducts = await sanityClient.fetch<Product[]>(productsQuery);
     if (sanityProducts && sanityProducts.length > 0) {
       products = sanityProducts;
     } else {
-      // Fallback to hardcoded products
-      products = PRODUCTS.map((p) => ({
-        name: p.name,
-        pricePerTon: p.price,
-        unit: p.unit,
-      }));
+      products = await loadCatalogFromPrisma();
     }
   } catch {
-    // Fallback to hardcoded products if Sanity fetch fails
-    products = PRODUCTS.map((p) => ({
-      name: p.name,
-      pricePerTon: p.price,
-      unit: p.unit,
-    }));
+    products = await loadCatalogFromPrisma();
   }
 
   // Create a lookup map for quick price validation
@@ -86,13 +99,18 @@ export async function validateCheckoutPrices(
       );
     }
 
-    // Validate price matches catalog
-    const catalogPrice = catalogProduct.pricePerTon;
+    // Calculate the correct price based on quantity and volume tiers
+    const priceCalculation = calculatePrice(
+      catalogProduct,
+      item.quantity,
+      contractorDiscountPercent
+    );
+    const expectedPrice = priceCalculation.finalPrice;
     const tolerance = 0.01; // Allow 1 cent tolerance for rounding
 
-    if (Math.abs(item.price - catalogPrice) > tolerance) {
+    if (Math.abs(item.price - expectedPrice) > tolerance) {
       throw new Error(
-        `Price mismatch for "${item.name}": expected $${catalogPrice.toFixed(2)}, received $${item.price.toFixed(2)}`
+        `Price mismatch for "${item.name}": expected $${expectedPrice.toFixed(2)}, received $${item.price.toFixed(2)}`
       );
     }
 

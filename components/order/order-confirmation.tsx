@@ -1,6 +1,7 @@
 "use client";
 
-import { CheckCircle } from "lucide-react";
+import Link from "next/link";
+import { CheckCircle, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -21,11 +22,18 @@ export function OrderConfirmation({ orderNumber, onReset }: OrderConfirmationPro
         </p>
         <p className="text-sm text-muted-foreground mb-6">
           We&apos;ll review your order and contact you to confirm. Payment will
-          be processed when your order is ready.
+          be processed when your order is ready. Your project outline and
+          material estimate are attached to the order receipt.
         </p>
-        <Button onClick={onReset}>
-          Place Another Order
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link href={`/order/${orderNumber}/receipt`}>
+            <Button variant="outline" className="gap-2">
+              <Printer className="h-4 w-4" />
+              View receipt / Save as PDF
+            </Button>
+          </Link>
+          <Button onClick={onReset}>Place Another Order</Button>
+        </div>
       </CardContent>
     </Card>
   );
