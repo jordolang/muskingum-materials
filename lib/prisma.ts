@@ -17,6 +17,14 @@ const globalForPrisma = globalThis as unknown as {
  * Singleton Prisma database client
  * - In development: reuses cached instance from globalThis to prevent connection exhaustion
  * - In production: creates new instance (safe as module is only imported once)
+ * @example
+ * ```ts
+ * import { prisma } from "@/lib/prisma";
+ *
+ * // Query the database
+ * const users = await prisma.user.findMany();
+ * const product = await prisma.product.findUnique({ where: { id: "123" } });
+ * ```
  */
 export const prisma = globalForPrisma.prisma ?? new PrismaClient();
 

@@ -46,6 +46,21 @@ function generateVisitorId(): string {
 /**
  * Zustand store for managing chat widget state and conversation history
  * Handles opening/closing the widget, message management, and visitor identification
+ * @example
+ * ```tsx
+ * import { useChatStore } from "@/lib/store";
+ *
+ * function ChatWidget() {
+ *   const { isOpen, messages, openChat, closeChat, addMessage } = useChatStore();
+ *
+ *   return (
+ *     <div>
+ *       {isOpen && <ChatBox messages={messages} />}
+ *       <button onClick={openChat}>Open Chat</button>
+ *     </div>
+ *   );
+ * }
+ * ```
  */
 export const useChatStore = create<ChatState>((set) => ({
   isOpen: false,

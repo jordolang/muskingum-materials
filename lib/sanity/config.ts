@@ -45,6 +45,14 @@ const isValidDataset =
  *
  * This prevents module load errors during build time while ensuring runtime
  * queries fail visibly if credentials are misconfigured.
+ * @example
+ * ```ts
+ * import { sanityConfig } from "@/lib/sanity/config";
+ *
+ * console.log(sanityConfig.projectId); // "your-project-id"
+ * console.log(sanityConfig.dataset);   // "production"
+ * console.log(sanityConfig.useCdn);    // true in production, false in dev
+ * ```
  */
 export const sanityConfig = {
   projectId: isValidProjectId ? rawProjectId : "placeholder",

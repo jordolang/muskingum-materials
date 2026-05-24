@@ -11,6 +11,14 @@ import { twMerge } from "tailwind-merge";
  * Handles conditional classes and resolves Tailwind CSS conflicts
  * @param inputs - Class values to merge (strings, objects, arrays)
  * @returns Merged className string with Tailwind conflicts resolved
+ * @example
+ * ```ts
+ * cn("text-base", condition && "font-bold", ["flex", "items-center"])
+ * // Returns: "text-base font-bold flex items-center"
+ *
+ * cn("px-2 py-1", "px-4") // Tailwind conflict resolved
+ * // Returns: "py-1 px-4"
+ * ```
  */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

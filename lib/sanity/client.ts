@@ -64,6 +64,14 @@ function safeCreateClient(
  * - Uses CDN for fast, cached responses
  * - Includes stega encoding for visual editing in draft mode
  * - Use this for all public-facing content queries
+ * @example
+ * ```ts
+ * import { sanityClient } from "@/lib/sanity/client";
+ * import { productsQuery } from "@/lib/sanity/queries";
+ *
+ * // Fetch all products (CDN-cached)
+ * const products = await sanityClient.fetch(productsQuery);
+ * ```
  */
 export const sanityClient = safeCreateClient({
   ...sanityConfig,

@@ -30,6 +30,16 @@ export const productsQuery = groq`
  * Fetches a single product by its slug
  * @param $slug - The product slug (passed as query parameter)
  * Returns detailed product information including specifications
+ * @example
+ * ```ts
+ * import { sanityClient } from "@/lib/sanity/client";
+ * import { productBySlugQuery } from "@/lib/sanity/queries";
+ *
+ * // Fetch product by slug
+ * const product = await sanityClient.fetch(productBySlugQuery, {
+ *   slug: "gravel"
+ * });
+ * ```
  */
 export const productBySlugQuery = groq`
   *[_type == "product" && slug.current == $slug][0] {
