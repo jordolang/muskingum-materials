@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { Menu, X, Phone, User, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -46,43 +47,13 @@ const NAV_ITEMS: NavItem[] = [
       },
     ],
   },
-  {
-    href: "/calculators",
-    label: "Calculators",
-    children: [
-      {
-        href: "/calculators",
-        label: "All Calculators",
-        description: "View all gravel calculators",
-      },
-      {
-        href: "/calculators/gravel-calculator",
-        label: "Gravel Calculator",
-        description: "Calculate tons, yards, and cost",
-      },
-      {
-        href: "/calculators/tons-to-yards",
-        label: "Tons ↔ Yards Converter",
-        description: "Convert between tons and cubic yards",
-      },
-      {
-        href: "/calculators/coverage-chart",
-        label: "Coverage Chart",
-        description: "Coverage at different depths",
-      },
-      {
-        href: "/planner",
-        label: "Gravel Planner",
-        description: "Draw on satellite map for exact estimates",
-      },
-    ],
-  },
   { href: "/order", label: "Order Online" },
   { href: "/services", label: "Services" },
   { href: "/contact", label: "Contact" },
 ];
 
 function DesktopDropdown({ item }: { item: NavItem }) {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -101,11 +72,23 @@ function DesktopDropdown({ item }: { item: NavItem }) {
     };
   }, []);
 
+  // Determine if this item or any of its children are active
+  const isActive = item.children
+    ? item.children.some((child) => pathname === child.href) ||
+      (item.href === "/" ? pathname === "/" : pathname.startsWith(item.href))
+    : item.href === "/"
+      ? pathname === "/"
+      : pathname.startsWith(item.href);
+
   if (!item.children) {
     return (
       <Link
         href={item.href}
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+        className={`text-sm font-medium transition-colors ${
+          isActive
+            ? "text-primary"
+            : "text-muted-foreground hover:text-primary"
+        }`}
       >
         {item.label}
       </Link>
@@ -121,7 +104,11 @@ function DesktopDropdown({ item }: { item: NavItem }) {
       <Button
         variant="ghost"
         size="sm"
-        className="flex items-center gap-1 text-muted-foreground hover:text-primary px-2"
+        className={`flex items-center gap-1 px-2 ${
+          isActive
+            ? "text-primary"
+            : "text-muted-foreground hover:text-primary"
+        }`}
         onClick={() => setOpen((prev) => !prev)}
       >
         {item.label}
@@ -133,21 +120,28 @@ function DesktopDropdown({ item }: { item: NavItem }) {
       {open && (
         <div className="absolute top-full left-0 pt-2 z-50">
           <div className="w-72 rounded-lg border bg-background shadow-lg p-2">
-            {item.children.map((child) => (
-              <Link
-                key={child.href}
-                href={child.href}
-                className="block rounded-md px-3 py-2.5 hover:bg-muted transition-colors"
-                onClick={() => setOpen(false)}
-              >
-                <div className="text-sm font-medium">{child.label}</div>
-                {child.description && (
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    {child.description}
-                  </div>
-                )}
-              </Link>
-            ))}
+            {item.children.map((child) => {
+              const isChildActive = pathname === child.href;
+              return (
+                <Link
+                  key={child.href}
+                  href={child.href}
+                  className={`block rounded-md px-3 py-2.5 transition-colors ${
+                    isChildActive
+                      ? "bg-amber-100 text-amber-900"
+                      : "hover:bg-muted"
+                  }`}
+                  onClick={() => setOpen(false)}
+                >
+                  <div className="text-sm font-medium">{child.label}</div>
+                  {child.description && (
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {child.description}
+                    </div>
+                  )}
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}
@@ -162,13 +156,26 @@ function MobileNavItem({
   item: NavItem;
   onClose: () => void;
 }) {
+  const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
+
+  // Determine if this item or any of its children are active
+  const isActive = item.children
+    ? item.children.some((child) => pathname === child.href) ||
+      (item.href === "/" ? pathname === "/" : pathname.startsWith(item.href))
+    : item.href === "/"
+      ? pathname === "/"
+      : pathname.startsWith(item.href);
 
   if (!item.children) {
     return (
       <Link
         href={item.href}
-        className="text-sm font-medium py-2 text-muted-foreground hover:text-primary"
+        className={`text-sm font-medium py-2 transition-colors ${
+          isActive
+            ? "text-primary"
+            : "text-muted-foreground hover:text-primary"
+        }`}
         onClick={onClose}
       >
         {item.label}
@@ -180,7 +187,11 @@ function MobileNavItem({
     <div>
       <Button
         variant="ghost"
-        className="flex items-center justify-between w-full text-sm font-medium text-muted-foreground hover:text-primary px-0"
+        className={`flex items-center justify-between w-full text-sm font-medium px-0 transition-colors ${
+          isActive
+            ? "text-primary"
+            : "text-muted-foreground hover:text-primary"
+        }`}
         onClick={() => setExpanded((prev) => !prev)}
       >
         {item.label}
@@ -190,16 +201,23 @@ function MobileNavItem({
       </Button>
       {expanded && (
         <div className="pl-4 pb-2 space-y-1">
-          {item.children.map((child) => (
-            <Link
-              key={child.href}
-              href={child.href}
-              className="block py-1.5 text-sm text-muted-foreground hover:text-primary"
-              onClick={onClose}
-            >
-              {child.label}
-            </Link>
-          ))}
+          {item.children.map((child) => {
+            const isChildActive = pathname === child.href;
+            return (
+              <Link
+                key={child.href}
+                href={child.href}
+                className={`block py-1.5 px-2 rounded-md text-sm transition-colors ${
+                  isChildActive
+                    ? "bg-amber-100 text-amber-900"
+                    : "text-muted-foreground hover:text-primary"
+                }`}
+                onClick={onClose}
+              >
+                {child.label}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>
@@ -207,6 +225,7 @@ function MobileNavItem({
 }
 
 export function Navbar() {
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (

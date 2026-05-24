@@ -18,31 +18,55 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getProductBySlug, getProducts } from "@/lib/products";
 import { BUSINESS_INFO } from "@/data/business";
+import { StockBadge, type StockStatus } from "@/components/catalog/StockBadge";
+import { RestockNotifyButton } from "@/components/catalog/RestockNotifyButton";
+import { ProductViewTracker } from "@/components/analytics/product-view-tracker";
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
 }
 
 export async function generateStaticParams() {
-  const products = await getProducts();
-  return products.map((p) => ({ slug: p.slug }));
+  try {
+    const products = await getProducts();
+    return products.map((p) => ({ slug: p.slug }));
+  } catch (error) {
+    // During build, if database is unavailable, return empty array
+    // Pages will be generated on-demand instead of at build time
+    console.warn('Unable to fetch products for static generation:', error);
+    return [];
+  }
 }
 
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
-  if (!product) return {};
-  return {
-    title: product.metaTitle ?? product.name,
-    description: product.metaDescription ?? product.shortDescription ?? product.description,
-  };
+  try {
+    const product = await getProductBySlug(slug);
+    if (!product) return {};
+    return {
+      title: product.metaTitle ?? product.name,
+      description: product.metaDescription ?? product.shortDescription ?? product.description,
+    };
+  } catch (error) {
+    console.warn("Unable to fetch product metadata:", error);
+    return {};
+  }
+}
+
+function convertStockStatus(status: string): StockStatus {
+  return status.toLowerCase() as StockStatus;
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  let product: Awaited<ReturnType<typeof getProductBySlug>> = null;
+  try {
+    product = await getProductBySlug(slug);
+  } catch (error) {
+    console.warn("Unable to fetch product:", error);
+  }
   if (!product) notFound();
 
   const allComparisons = [
@@ -58,6 +82,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <div className="py-12">
+      <ProductViewTracker
+        itemId={product.id}
+        itemName={product.name}
+        price={product.price ?? 0}
+        category={product.category}
+      />
       <div className="container max-w-4xl">
         <Link
           href="/catalog"
@@ -86,6 +116,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               <Badge variant="secondary" className="capitalize">
                 {product.category}
               </Badge>
+              <StockBadge status={convertStockStatus(product.stockStatus)} />
               {product.altNames.length > 0 && (
                 <span className="text-xs text-muted-foreground">
                   Also known as: {product.altNames.join(", ")}
@@ -98,6 +129,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <p className="text-lg text-muted-foreground mb-4">
               {product.description}
             </p>
+
+            {/* Seasonal Message */}
+            {product.stockStatus.toLowerCase() === 'seasonal' && product.seasonalMessage && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-amber-900">{product.seasonalMessage}</p>
+              </div>
+            )}
 
             {/* Pricing */}
             <div className="flex flex-wrap gap-3">
@@ -132,6 +170,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 </div>
               )}
             </div>
+
+            {/* Out of Stock Notification */}
+            {product.stockStatus.toLowerCase() === 'out_of_stock' && (
+              <RestockNotifyButton
+                productId={product.id}
+                productName={product.name}
+              />
+            )}
           </div>
         </div>
 
