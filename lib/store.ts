@@ -5,9 +5,6 @@
 
 import { create } from "zustand";
 
-/**
- * State shape for the chat widget
- */
 interface ChatState {
   /** Whether the chat widget is currently open */
   isOpen: boolean;
@@ -74,9 +71,6 @@ export const useChatStore = create<ChatState>((set) => ({
   clearMessages: () => set({ messages: [] }),
 }));
 
-/**
- * State shape for the quote request form
- */
 interface QuoteState {
   /** Array of items being quoted with product names and quantities */
   items: Array<{ productName: string; quantity: string }>;
@@ -103,23 +97,14 @@ export const useQuoteStore = create<QuoteState>((set) => ({
   clearItems: () => set({ items: [] }),
 }));
 
-/**
- * Represents a single item in the shopping cart
- */
 interface CartItem {
-  /** Product name */
   name: string;
-  /** Price per unit in dollars */
   price: number;
   /** Unit of measurement (e.g., "ton", "yard") */
   unit: string;
-  /** Quantity of this item in the cart */
   quantity: number;
 }
 
-/**
- * State shape for the shopping cart
- */
 interface CartState {
   /** Array of items currently in the cart */
   items: CartItem[];

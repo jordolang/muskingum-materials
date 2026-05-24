@@ -28,17 +28,14 @@ export const productsQuery = groq`
 
 /**
  * Fetches a single product by its slug
- * @param $slug - The product slug (passed as query parameter)
- * Returns detailed product information including specifications
+ * Pass `{ slug: "gravel" }` as the params argument to `sanityClient.fetch`.
+ * Returns detailed product information including specifications.
  * @example
  * ```ts
  * import { sanityClient } from "@/lib/sanity/client";
  * import { productBySlugQuery } from "@/lib/sanity/queries";
  *
- * // Fetch product by slug
- * const product = await sanityClient.fetch(productBySlugQuery, {
- *   slug: "gravel"
- * });
+ * const product = await sanityClient.fetch(productBySlugQuery, { slug: "gravel" });
  * ```
  */
 export const productBySlugQuery = groq`
@@ -149,8 +146,8 @@ export const siteSettingsQuery = groq`
 
 /**
  * Fetches a single page by its slug
- * @param $slug - The page slug (passed as query parameter)
- * Returns page content with SEO metadata for dynamic CMS pages
+ * Pass `{ slug: "about" }` as the params argument to `sanityClient.fetch`.
+ * Returns page content with SEO metadata for dynamic CMS pages.
  */
 export const pageQuery = groq`
   *[_type == "page" && slug.current == $slug][0] {
