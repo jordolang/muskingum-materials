@@ -1,5 +1,4 @@
-import { currentUser } from "@clerk/nextjs/server";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -22,13 +21,6 @@ export default async function CampaignDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const user = await currentUser();
-
-  // Check if user is admin
-  if (!user || user.publicMetadata.role !== "admin") {
-    redirect("/account");
-  }
-
   const { id } = await params;
 
   let campaign;
@@ -36,12 +28,7 @@ export default async function CampaignDetailPage({
     campaign = await prisma.campaign.findUnique({
       where: { id },
       include: {
-        template: {
-          select: {
-            name: true,
-            category: true,
-          },
-        },
+        template: { select: { name: true, category: true } },
       },
     });
   } catch {
@@ -65,14 +52,12 @@ export default async function CampaignDetailPage({
       <div className="flex items-center justify-between">
         <div>
           <Link
-            href="/account/admin/campaigns"
+            href="/admin/campaigns"
             className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mb-2"
           >
             <ArrowLeft className="h-3 w-3" /> Back to Campaigns
           </Link>
-          <h1 className="text-2xl font-bold font-heading">
-            {campaign.name}
-          </h1>
+          <h1 className="text-2xl font-bold font-heading">{campaign.name}</h1>
           <p className="text-sm text-muted-foreground">
             Created on{" "}
             {new Date(campaign.createdAt).toLocaleDateString("en-US", {
@@ -85,25 +70,21 @@ export default async function CampaignDetailPage({
             })}
           </p>
         </div>
-        <div className="flex gap-2">
-          {canSend && (
-            <form action={`/api/admin/campaigns/${campaign.id}/send`} method="POST">
-              <Button className="gap-1">
-                <Send className="h-4 w-4" />
-                Send Campaign
-              </Button>
-            </form>
-          )}
-        </div>
+        {canSend && (
+          <form action={`/api/admin/campaigns/${campaign.id}/send`} method="POST">
+            <Button className="gap-1">
+              <Send className="h-4 w-4" />
+              Send Campaign
+            </Button>
+          </form>
+        )}
       </div>
 
-      {/* Status */}
       <div className="flex gap-3">
         <StatusBadge status={campaign.status} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Campaign Details */}
         <div className="lg:col-span-2">
           <Card className="border-0 shadow-lg">
             <CardHeader className="bg-stone-800 text-white rounded-t-lg">
@@ -115,7 +96,6 @@ export default async function CampaignDetailPage({
               </div>
             </CardHeader>
             <CardContent className="p-6">
-              {/* Subject */}
               <div className="mb-6">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
                   Subject Line
@@ -123,7 +103,6 @@ export default async function CampaignDetailPage({
                 <p className="font-semibold">{campaign.subject}</p>
               </div>
 
-              {/* Template */}
               {campaign.template && (
                 <div className="mb-6">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
@@ -131,14 +110,11 @@ export default async function CampaignDetailPage({
                   </p>
                   <p className="text-sm">
                     {campaign.template.name}{" "}
-                    <span className="text-muted-foreground">
-                      ({campaign.template.category})
-                    </span>
+                    <span className="text-muted-foreground">({campaign.template.category})</span>
                   </p>
                 </div>
               )}
 
-              {/* Content */}
               <div className="mb-6">
                 <EmailPreview
                   subject={campaign.subject}
@@ -147,7 +123,6 @@ export default async function CampaignDetailPage({
                 />
               </div>
 
-              {/* Metrics for sent campaigns */}
               {isSent && metrics && (
                 <>
                   <Separator className="my-6" />
@@ -162,9 +137,7 @@ export default async function CampaignDetailPage({
                           <p className="text-sm font-medium">
                             {metrics.successCount || 0} Delivered
                           </p>
-                          <p className="text-xs text-muted-foreground">
-                            Successfully sent
-                          </p>
+                          <p className="text-xs text-muted-foreground">Successfully sent</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -173,17 +146,13 @@ export default async function CampaignDetailPage({
                           <p className="text-sm font-medium">
                             {metrics.failureCount || 0} Failed
                           </p>
-                          <p className="text-xs text-muted-foreground">
-                            Delivery errors
-                          </p>
+                          <p className="text-xs text-muted-foreground">Delivery errors</p>
                         </div>
                       </div>
                     </div>
                     {metrics.errors && metrics.errors.length > 0 && (
                       <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                        <p className="text-xs font-medium text-red-800 mb-2">
-                          Errors:
-                        </p>
+                        <p className="text-xs font-medium text-red-800 mb-2">Errors:</p>
                         <ul className="text-xs text-red-700 space-y-1">
                           {metrics.errors.slice(0, 5).map((error, i) => (
                             <li key={i}>• {error}</li>
@@ -203,9 +172,7 @@ export default async function CampaignDetailPage({
           </Card>
         </div>
 
-        {/* Sidebar */}
         <div className="space-y-4">
-          {/* Status Info */}
           <Card className="border-0 shadow-md">
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2">
@@ -221,9 +188,7 @@ export default async function CampaignDetailPage({
 
               {campaign.scheduledAt && (
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">
-                    Scheduled For
-                  </p>
+                  <p className="text-xs text-muted-foreground mb-1">Scheduled For</p>
                   <div className="flex items-center gap-1 text-foreground">
                     <Clock className="h-3 w-3" />
                     <span className="text-sm">
@@ -259,7 +224,6 @@ export default async function CampaignDetailPage({
             </CardContent>
           </Card>
 
-          {/* Recipients */}
           <Card className="border-0 shadow-md">
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2">
@@ -269,9 +233,7 @@ export default async function CampaignDetailPage({
             </CardHeader>
             <CardContent className="text-sm">
               <div className="text-center">
-                <p className="text-3xl font-bold text-foreground">
-                  {campaign.recipientCount}
-                </p>
+                <p className="text-3xl font-bold text-foreground">{campaign.recipientCount}</p>
                 <p className="text-xs text-muted-foreground">
                   {campaign.recipientCount === 1 ? "Recipient" : "Recipients"}
                 </p>
@@ -279,14 +241,13 @@ export default async function CampaignDetailPage({
             </CardContent>
           </Card>
 
-          {/* Actions */}
           {canEdit && (
             <Card className="border-0 shadow-md">
               <CardHeader>
                 <CardTitle className="text-sm">Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Link href={`/account/admin/campaigns/${campaign.id}/edit`}>
+                <Link href={`/admin/campaigns/${campaign.id}/edit`}>
                   <Button variant="outline" className="w-full gap-2">
                     <Calendar className="h-4 w-4" />
                     Edit Campaign

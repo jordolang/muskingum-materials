@@ -83,6 +83,10 @@ export function Footer() {
               <li><Link href="/about" className="hover:text-amber-500 transition-colors">About Us</Link></li>
               <li><Link href="/contact" className="hover:text-amber-500 transition-colors">Contact</Link></li>
               <li><Link href="/faq" className="hover:text-amber-500 transition-colors">FAQ</Link></li>
+              <li className="pt-2 border-t border-stone-800 mt-2">
+                <Link href="/privacy" className="hover:text-amber-500 transition-colors">Privacy Policy</Link>
+              </li>
+              <li><Link href="/terms" className="hover:text-amber-500 transition-colors">Terms of Service</Link></li>
             </ul>
           </div>
 
@@ -178,22 +182,32 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-stone-800 mt-8 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500">
-          <p>&copy; {new Date().getFullYear()} Muskingum Materials. All rights reserved.</p>
-          <div className="flex items-center gap-4">
-            {SOCIAL_LINKS.map((social) => (
-              <a
-                key={social.name}
-                href={social.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`text-stone-500 ${social.hoverColor} transition-colors`}
-                aria-label={social.name}
-              >
-                <social.icon className="h-4 w-4" />
-              </a>
-            ))}
+        <div className="border-t border-stone-800 mt-8 pt-8 space-y-3 text-xs text-stone-500">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>&copy; {new Date().getFullYear()} Muskingum Materials. All rights reserved.</p>
+            <div className="flex items-center gap-4">
+              <Link href="/privacy" className="hover:text-stone-300 transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-stone-300 transition-colors">Terms of Service</Link>
+              {SOCIAL_LINKS.map((social) => (
+                <a
+                  key={social.name}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`text-stone-500 ${social.hoverColor} transition-colors`}
+                  aria-label={social.name}
+                >
+                  <social.icon className="h-4 w-4" />
+                </a>
+              ))}
+            </div>
           </div>
+          <p className="text-center text-stone-600">
+            Designed &amp; built by{" "}
+            <Link href="/developer" className="hover:text-stone-400 transition-colors underline underline-offset-2">
+              JLang Development
+            </Link>
+          </p>
         </div>
       </div>
     </footer>

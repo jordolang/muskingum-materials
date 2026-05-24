@@ -31,23 +31,39 @@ interface RecurringOrderFormProps {
   onSuccess: () => void;
 }
 
-const PRODUCTS = [
-  { id: "bank-run", name: "Bank Run", unit: "ton" },
-  { id: "fill-dirt", name: "Fill Dirt", unit: "ton" },
-  { id: "fill-sand-washed", name: "Fill Sand (Washed)", unit: "ton" },
-  { id: "topsoil-unprocessed", name: "Topsoil (Unprocessed)", unit: "ton" },
-  { id: "4-fractured-gravel-washed", name: "#4 Fractured Gravel (Washed)", unit: "ton" },
-  { id: "9-gravel-washed", name: "#9 Gravel (Washed)", unit: "ton" },
-  { id: "8-gravel-washed", name: "#8 Gravel (Washed)", unit: "ton" },
-  { id: "57-gravel-washed", name: "#57 Gravel (Washed)", unit: "ton" },
-  { id: "304-crushed-gravel", name: "#304 Crushed Gravel", unit: "ton" },
-  { id: "oversized-gravel-washed", name: "Oversized Gravel (Washed)", unit: "ton" },
-  { id: "57-limestone", name: "#57 Limestone", unit: "ton" },
-];
+interface CatalogProduct {
+  id: string;
+  name: string;
+  unit: string;
+}
 
 export function RecurringOrderForm({ order, onClose, onSuccess }: RecurringOrderFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [products, setProducts] = useState<CatalogProduct[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/products")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelled && Array.isArray(data?.products)) {
+          setProducts(
+            data.products.map((p: { id: string; slug: string; name: string; unit: string }) => ({
+              id: p.slug,
+              name: p.name,
+              unit: p.unit,
+            }))
+          );
+        }
+      })
+      .catch(() => {
+        // Leave products empty; the user can re-open the dialog to retry.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const isEditing = !!order;
 
@@ -87,13 +103,13 @@ export function RecurringOrderForm({ order, onClose, onSuccess }: RecurringOrder
 
   useEffect(() => {
     if (selectedProductId) {
-      const product = PRODUCTS.find((p) => p.id === selectedProductId);
+      const product = products.find((p) => p.id === selectedProductId);
       if (product) {
         setValue("productName", product.name);
         setValue("unit", product.unit);
       }
     }
-  }, [selectedProductId, setValue]);
+  }, [selectedProductId, setValue, products]);
 
   async function onSubmit(data: RecurringOrderFormData) {
     setIsSubmitting(true);
@@ -235,7 +251,7 @@ export function RecurringOrderForm({ order, onClose, onSuccess }: RecurringOrder
                 className="w-full px-3 py-2 border rounded-md"
               >
                 <option value="">Select a product</option>
-                {PRODUCTS.map((product) => (
+                {products.map((product) => (
                   <option key={product.id} value={product.id}>
                     {product.name}
                   </option>

@@ -110,7 +110,24 @@ model Order {
   stripePaymentId  String?
   invoiceUrl       String?
   smsOptIn         Boolean           @default(false)
+  termsAcceptedAt  DateTime?
   completedAt      DateTime?
+
+  // Project site capture from the on-site map estimator. These fields exist
+  // so every residential order without a survey carries the customer's own
+  // satellite outline, dimensions, and material estimate — visible to the
+  // customer and to Muskingum Materials staff.
+  projectAddress         String?  @db.Text
+  projectLat             Float?
+  projectLng             Float?
+  projectAreaSqFt        Float?
+  projectDepthInches     Float?
+  projectEstimateTons    Float?
+  projectEstimateCubicYards Float?
+  projectEstimateSource  String?  // "map" | "dimensions" | "preset"
+  projectPolygons        Json?    // Array<Array<{ lat: number; lng: number }>>
+  projectMapImageUrl     String?  @db.Text
+
   statusHistory    OrderStatusHistory[]
   smsNotifications SmsNotification[]
   createdAt        DateTime          @default(now())
