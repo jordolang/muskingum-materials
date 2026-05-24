@@ -19,7 +19,7 @@
 
   <p>
     <a href="https://muskingummaterials.com">Live Site</a> ·
-    <a href="https://www.facebook.com/profile.php?id=61566390498498">Facebook</a> ·
+    <a href="https://www.facebook.com/61584706747584/">Facebook</a> ·
     <a href="#-getting-started">Getting Started</a> ·
     <a href="#-tech-stack">Tech Stack</a>
   </p>
@@ -30,48 +30,55 @@
 
 ## Overview
 
-**Muskingum Materials** is a modern, full-featured business website for a family-owned sand, soil, and gravel operation in Zanesville, Ohio. It delivers a clean, easy-to-navigate storefront with a complete product catalog, real-time AI-powered customer chat, lead capture system, and an enterprise-grade content management backend powered by Sanity Studio.
+**Muskingum Materials** is a full-stack e-commerce and operations platform for a family-owned sand, soil, and gravel business in Zanesville, Ohio. It is substantially more than a marketing site: it includes live Stripe Checkout, a complete admin back office, AI-powered chat with conversation persistence, customer accounts with a loyalty program, Postmark transactional email, Twilio SMS notifications, Upstash-backed rate limiting, Sentry error tracking, and a Sanity Studio CMS embedded at `/studio`.
 
-Built on **Next.js 15** with the App Router, the site is designed to help customers quickly find products, get pricing, and connect with the business — while giving the owners full control over their content through Sanity Studio.
+Built on **Next.js 15** (App Router + Turbopack) with **23 Prisma models** backed by Neon Postgres.
 
-> **Location:** 1133 Ellis Dam Rd, Zanesville, OH 43701
-> **Phone:** (740) 319-0183 · (740) 453-3063
+> **Location:** 1133 Ellis Dam Rd, Zanesville, OH 43701  
+> **Phone:** (740) 319-0183 · (740) 453-3063  
 > **Hours:** Monday – Friday, 7:30 AM – 4:00 PM
 
 ---
 
 ## Features
 
-### Customer-Facing
-- **Product Catalog** — 15+ sand, gravel, soil, and stone products with current pricing table
-- **AI Chat Agent** — Live chat widget trained on all business data (pricing, products, hours, services, location) powered by Claude
-- **Contact System** — Contact form, quote request builder, and newsletter signup — all with email notifications
-- **Gallery** — 23 photos and 3 videos showcasing facility, equipment, and materials
-- **FAQ Section** — Organized by category with accordion navigation
-- **Google Maps** — Embedded location map on the contact page
-- **Social Media** — Facebook integration and links throughout the site
-- **Responsive Design** — Mobile-first, fully accessible UI
+### E-Commerce & Ordering
+- **Online ordering** — Shopping cart with material calculator, volume-discount badges, and per-product pricing tiers
+- **Stripe Checkout** — Full session creation with server-side price validation (`lib/validate-checkout-prices.ts` — never trust client prices)
+- **Stripe webhook fulfillment** — `checkout.session.completed` marks orders paid, awards loyalty points, sends SMS confirmation
+- **Google Maps satellite estimator** — Step 1 of the order form lets customers outline their project site; polygon, area, depth, and tonnage estimate are persisted on the `Order` row
+- **Terms acceptance** — Required checkbox at checkout writes `Order.termsAcceptedAt`
+- **Recurring orders** — Full schema, API, and UI (`/account/recurring-orders`)
+- **Saved orders / reorder** — Full schema, API, and UI (`/account/saved-orders`)
+- **Guest and authenticated checkout** both supported
 
-### Lead Generation & Marketing
-- **Automatic Lead Capture** — All chat conversations stored in PostgreSQL regardless of opt-in
-- **Contact Info Collection** — In-chat prompt for name, email, phone after 4+ messages
-- **Form Submissions** — Contact form and quote requests saved to database with Postmark email notifications
-- **Newsletter Subscriptions** — Email collection for future marketing campaigns
+### Customer Accounts
+- Clerk authentication (Google, GitHub, Apple, Facebook SSO)
+- Account dashboard at `/account`: orders, saved orders, recurring orders, rewards, profile, addresses
+- **Loyalty program** — Bronze/silver/gold tiers, points per dollar, $5/100-point redemption, tier benefits
+- Contractor pricing flag and per-customer discount rate
+- Multiple shipping addresses per user
 
-### Content Management (Sanity Studio)
-- **7 Document Schemas** — Products, Services, Testimonials, FAQs, Gallery, Pages, Site Settings
-- **Singleton Settings** — Single source of truth for business info, hours, contact, and social links
-- **GROQ Queries** — Pre-built queries for all content types
-- **Image Pipeline** — Sanity CDN with hotspot cropping and responsive transforms
-- **Visual Editing** — Stega-enabled for live preview and click-to-edit
+### Admin Back Office
+- **`/admin`** — Orders (status, history, detail), leads, quotes, chat conversations, dashboard KPIs, email campaigns, subscriber management
 
-### Platform & Infrastructure
-- **Authentication** — Clerk with Google, GitHub, Apple, and Facebook SSO
-- **Payments** — Stripe integration ready for future e-commerce features
-- **Email** — Postmark transactional email on all form submissions
-- **Analytics** — Google Analytics integration
-- **AI** — Vercel AI SDK with Anthropic Claude (Haiku) for cost-effective chat
-- **Database** — Neon serverless PostgreSQL with Prisma ORM
+### Communication
+- **AI chat agent** — Vercel AI SDK + Anthropic Claude Haiku; full business context from `data/business.ts`; Postgres-backed conversation history; keyword-match fallback when API key absent
+- **Postmark transactional email** — Order confirmations, quote notifications, contact form, newsletter
+- **Twilio SMS** — Order confirmations and status updates; opt-in tracked on `Order.smsOptIn`; STOP webhook at `/api/sms/webhook`
+- **Restock notifications** — Email customers when an out-of-stock product returns
+
+### Content Management (Sanity Studio at `/studio`)
+- **7 schemas** — Service, Testimonial, FAQ, Gallery Image, Site Settings (singleton), Page, Post
+- Products and services are Prisma-authoritative at runtime; Sanity handles marketing content only
+- GROQ queries in `lib/sanity/queries.ts`; Sanity CDN with hotspot cropping; stega-enabled visual editing
+
+### Infrastructure
+- **Rate limiting** — Upstash Redis (in-memory fallback); tiers: chat 5/min, checkout 10/hr, leads/newsletter 20/hr
+- **Strict CSP** — `next.config.ts` allowlists Clerk, Stripe, Sanity, Google, GTM, Unsplash. **Any new third-party host requires a CSP update.**
+- **Error tracking** — Sentry integration via `lib/monitoring.ts`
+- **Structured logging** — `lib/logger.ts` (JSON output + Sentry breadcrumbs)
+- **Middleware** — Rate limiting + optional Clerk auth on every non-static request
 
 ---
 
@@ -83,68 +90,20 @@ Built on **Next.js 15** with the App Router, the site is designed to help custom
 | **Language** | TypeScript |
 | **Styling** | Tailwind CSS + Shadcn UI (Radix UI) |
 | **Animations** | Framer Motion |
-| **CMS** | Sanity Studio v3 |
-| **Database** | PostgreSQL (Neon) via Prisma ORM |
+| **CMS** | Sanity Studio v3 (embedded at `/studio`) |
+| **Database** | PostgreSQL (Neon) via Prisma ORM — 23 models |
 | **Auth** | Clerk (Google, GitHub, Apple, Facebook SSO) |
-| **Payments** | Stripe |
-| **AI Chat** | Vercel AI SDK + Anthropic Claude |
+| **Payments** | Stripe Checkout + webhooks |
+| **AI Chat** | Vercel AI SDK + Anthropic Claude Haiku |
+| **Email** | Postmark |
+| **SMS** | Twilio (email fallback) |
+| **Rate limiting** | Upstash Redis (in-memory fallback) |
+| **Error tracking** | Sentry |
 | **State** | Zustand |
 | **Forms** | React Hook Form + Zod |
-| **Email** | Postmark |
-| **Analytics** | Google Analytics |
-| **Maps** | Google Maps Embed API |
+| **Analytics** | Google Analytics 4 |
+| **Maps** | Google Maps (satellite estimator + embed) |
 | **Deployment** | Vercel |
-
----
-
-## Project Structure
-
-```
-muskingum-materials/
-├── app/                          # Next.js App Router
-│   ├── page.tsx                 # Homepage (hero, products, services, gallery, CTA)
-│   ├── products/                # Product catalog with pricing table
-│   ├── services/                # Service descriptions and features
-│   ├── gallery/                 # Photo gallery + video showcase
-│   ├── about/                   # Company info and values
-│   ├── contact/                 # Contact form, map, business info
-│   ├── faq/                     # FAQ accordion by category
-│   ├── studio/[[...tool]]/      # Sanity Studio CMS
-│   ├── sign-in/                 # Clerk authentication
-│   ├── sign-up/                 # Clerk registration
-│   └── api/                     # API routes
-│       ├── chat/                # AI chat agent endpoint
-│       ├── contact/             # Contact form handler
-│       ├── leads/               # Lead capture from chat
-│       ├── quote/               # Quote request handler
-│       └── newsletter/          # Newsletter subscription
-│
-├── components/                   # React components
-│   ├── ui/                      # Shadcn UI primitives
-│   ├── layout/                  # Navbar, Footer
-│   ├── chat/                    # AI chat widget
-│   ├── contact/                 # Contact form
-│   ├── analytics/               # Google Analytics
-│   └── providers/               # Clerk wrapper
-│
-├── data/                         # Static business data
-│   └── business.ts              # Products, pricing, services, company info
-│
-├── lib/                          # Utilities and clients
-│   ├── prisma.ts                # Prisma client
-│   ├── store.ts                 # Zustand stores
-│   ├── utils.ts                 # Helper functions
-│   └── sanity/                  # Sanity config, client, queries
-│
-├── sanity/                       # Sanity schema definitions
-│   └── schema/                  # 7 document type schemas
-│
-├── prisma/                       # Database
-│   └── schema.prisma            # 6 models (Lead, Contact, Chat, Quote, Newsletter)
-│
-└── public/                       # Static assets
-    └── images/                  # 23 photos + 3 videos
-```
 
 ---
 
@@ -166,7 +125,7 @@ muskingum-materials/
 git clone https://github.com/jordolang/muskingum-materials.git
 cd muskingum-materials
 
-# 2. Install dependencies
+# 2. Install dependencies (also runs prisma generate via postinstall)
 npm install
 
 # 3. Configure environment variables
@@ -174,31 +133,48 @@ cp .env.local.example .env.local
 # Fill in the required values (see Environment Variables below)
 
 # 4. Push database schema to Neon
-npx prisma db push
+npm run db:push
 
-# 5. Start the development server
+# 5. Seed initial product and service data
+npm run db:seed
+
+# 6. Start the development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — the site should be running.
-
-> **Sanity Studio:** Access the CMS at [http://localhost:3000/studio](http://localhost:3000/studio)
+Open [http://localhost:3000](http://localhost:3000). Sanity Studio is at [http://localhost:3000/studio](http://localhost:3000/studio).
 
 ### Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
+| `DATABASE_URL` | Yes | Neon pooled connection string |
+| `DIRECT_URL` | Yes | Neon direct connection string (for migrations) |
 | `NEXT_PUBLIC_SANITY_PROJECT_ID` | Yes | Sanity project ID |
 | `NEXT_PUBLIC_SANITY_DATASET` | Yes | Sanity dataset (default: `production`) |
-| `DATABASE_URL` | Yes | Neon pooled connection string |
-| `DIRECT_URL` | Yes | Neon direct connection string |
+| `SANITY_API_TOKEN` | Yes | Sanity write token (for mutations) |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Yes | Clerk publishable key |
 | `CLERK_SECRET_KEY` | Yes | Clerk secret key |
-| `ANTHROPIC_API_KEY` | No | Enables AI chat (falls back to static responses) |
-| `POSTMARK_API_TOKEN` | No | Enables email notifications |
-| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | No | Enables map on contact page |
-| `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` | No | Enables Google Analytics |
-| `STRIPE_SECRET_KEY` | No | Enables payment features |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Yes | `/sign-in` |
+| `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Yes | `/sign-up` |
+| `NEXT_PUBLIC_SITE_URL` | Yes | Full origin, e.g. `https://muskingummaterials.com` |
+| `STRIPE_SECRET_KEY` | No | Enables Stripe Checkout |
+| `STRIPE_WEBHOOK_SECRET` | No | Required for webhook signature verification |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | No | Stripe public key |
+| `POSTMARK_API_TOKEN` | No | Enables transactional email |
+| `POSTMARK_FROM_EMAIL` | No | Sender address, e.g. `orders@muskingummaterials.com` |
+| `ANTHROPIC_API_KEY` | No | Enables AI chat (falls back to keyword responses) |
+| `UPSTASH_REDIS_REST_URL` | No | Enables distributed rate limiting |
+| `UPSTASH_REDIS_REST_TOKEN` | No | Upstash auth token |
+| `TWILIO_ACCOUNT_SID` | No | Enables SMS notifications |
+| `TWILIO_AUTH_TOKEN` | No | Twilio auth |
+| `TWILIO_PHONE_NUMBER` | No | Twilio sending number |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | No | Enables satellite map estimator + contact embed |
+| `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` | No | GA4 Measurement ID (e.g. `G-XXXXXXXXXX`) |
+| `NEXT_PUBLIC_GSC_VERIFICATION` | No | Google Search Console verification meta tag value |
+| `SENTRY_DSN` | No | Enables Sentry error tracking |
+
+All optional integrations degrade gracefully when their env vars are absent.
 
 ---
 
@@ -206,161 +182,100 @@ Open [http://localhost:3000](http://localhost:3000) — the site should be runni
 
 ```bash
 # Development
-npm run dev              # Start dev server (Turbopack)
+npm run dev              # Start dev server with Turbopack (http://localhost:3000)
 npm run build            # Production build
-npm run start            # Serve production build
-npm run lint             # Run ESLint
+npm run lint             # ESLint (next/core-web-vitals + next/typescript)
 
 # Database
-npm run db:push          # Push schema to Neon
+npm run db:push          # Push schema changes to Neon
 npm run db:studio        # Open Prisma Studio
-npm run db:seed          # Seed initial data
+npm run db:seed          # Seed products, cost guides, services, email templates
+
+# Ad-hoc verification (run directly, not via npm)
+node test-order-number.js          # Order number generation
+bash test-protected-routes.sh      # Auth route protection
+bash test-rate-limits.sh           # Rate limiting (429 headers, per-IP isolation)
 ```
 
 ---
 
-## AI Chat Agent
+## Architecture Notes
 
-The chat widget is trained on all Muskingum Materials business data and can answer questions about:
+### Two data stores — know which is authoritative
 
-- **Product pricing** — All 15+ products with per-ton and per-load pricing
-- **Business hours** — Monday–Friday, 7:30 AM – 4:00 PM
-- **Location & directions** — 1133 Ellis Dam Rd, Zanesville, OH 43701
-- **Services** — Material sales, delivery, large project pricing, on-site loading
-- **Payment methods** — Visa, Mastercard, Discover, Apple Pay, cash, check
-- **Tax & fees** — 7.25% tax, 4.5% credit card processing fee
+| Store | Authoritative for |
+|-------|------------------|
+| **Prisma / Neon Postgres** | Products, Services, CostGuides, and all transactional models (Order, Lead, etc.) |
+| **Sanity Studio** | Marketing content — testimonials, FAQs, gallery images, pages, posts, site settings |
 
-### Architecture
+Products and services exist **only in Prisma** at runtime. Sanity's `product` schema was removed; Prisma is the sole catalog authority.
+
+### Order flow
 
 ```
-Chat Widget (client)
-  └─► POST /api/chat
-        ├─► Vercel AI SDK → Anthropic Claude Haiku
-        │     └─► System prompt with full business data
-        └─► Prisma → PostgreSQL (conversation + messages stored)
+Order Form (client)
+  └─► POST /api/orders/checkout
+        ├─► Zod validation (lib/schemas.ts checkoutSchema)
+        ├─► lib/validate-checkout-prices.ts  ← trust boundary, never use client prices
+        ├─► prisma.order.create()
+        └─► stripeClient.checkout.sessions.create()
+              └─► /order/success (redirect)
+                    └─► Stripe webhook → /api/orders/webhook
+                          ├─► Mark order paid
+                          ├─► Award loyalty points
+                          └─► Send SMS confirmation
 ```
 
-When no `ANTHROPIC_API_KEY` is configured, the chat falls back to keyword-based static responses covering pricing, hours, delivery, location, and payment info.
+### Middleware
+
+`middleware.ts` runs on every non-static request in this order:
+1. **Rate limiting** — Upstash Redis (or in-memory fallback). Tiers: `chat` 5/min, `contact-quote` 10/hr, `leads-newsletter` 20/hr.
+2. **Clerk auth** — Only if `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` is set and not a placeholder.
+
+When adding a new public API route that accepts user input, register it in `rateLimitedEndpoints` in `middleware.ts`.
+
+### CSP
+
+`next.config.ts` defines a strict Content-Security-Policy. **Adding any new third-party script, iframe, image host, or WebSocket connection requires updating this CSP** or it will be silently blocked in production.
+
+### Path aliases
+
+- `@/*` → repo root (`tsconfig.json`)
+- `tsconfig.json` **excludes** `skills/`, `.auto-claude/`, and `src/` — don't import from them
 
 ---
 
-## Content Management
+## Content Management (Sanity Studio)
 
-Sanity Studio is embedded at `/studio` and provides full content management:
+Sanity Studio is embedded at `/studio`. Current schemas:
 
 | Schema | Purpose |
 |--------|---------|
-| **Product** | Name, price, unit, category, description, image, specs |
-| **Service** | Title, description, icon, features list |
+| **Service** | Delivery, loading, large-project pricing descriptions |
 | **Testimonial** | Customer reviews with approval workflow |
 | **FAQ** | Questions organized by category |
 | **Gallery Image** | Photos with category tags |
+| **Site Settings** | Singleton — business info, hours, social links |
 | **Page** | Rich text pages with Portable Text |
-| **Site Settings** | Singleton for business info, hours, social links |
+| **Post** | Blog/news posts |
 
 ---
 
 ## Deployment
 
-This project is configured for **Vercel** with automatic deployments on push to `main`.
-
-| Service | Purpose |
-|---------|---------|
-| **Vercel** | Hosting + serverless functions |
-| **Neon** | PostgreSQL database |
-| **Sanity** | Content management + CDN |
-| **Clerk** | Authentication |
-| **Stripe** | Payment processing |
-| **Postmark** | Transactional email |
+Deployed on **Vercel** with automatic deployments on push to `main`.
 
 ```bash
-# Deploy to Vercel
-vercel
-
-# Deploy to production
 vercel --prod
 ```
 
-Set all environment variables in the Vercel dashboard before deploying.
-
----
-
-## Analytics
-
-The site uses **Google Analytics 4 (GA4)** for tracking user behavior, conversions, and engagement.
-
-### Setup
-
-Set the `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` environment variable to your GA4 Measurement ID (e.g., `G-XXXXXXXXXX`). When not set, analytics is disabled and no scripts are loaded.
-
-```bash
-# .env.local
-NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX
-```
-
-### Tracked Events
-
-| GA4 Event Name | Description | Location |
-|----------------|-------------|----------|
-| `page_view` | Automatic page view on navigation | `components/analytics/google-analytics.tsx` |
-| `view_item` | Product detail page viewed | `components/analytics/product-view-tracker.tsx` |
-| `add_to_cart` | Product added to order form | `components/order/order-form.tsx` |
-| `begin_checkout` | Checkout process started | `components/order/order-form.tsx` |
-| `purchase` | Order completed | `components/analytics/purchase-tracker.tsx` |
-| `contact_form_submit` | Contact form submitted | `components/contact/contact-form.tsx` |
-| `chat_opened` | AI chat widget opened | `components/chat/chat-widget.tsx` |
-| `generate_lead` | Quote request or lead captured | `lib/analytics.ts` |
-
-### Conversion Goals
-
-Configure these as conversion events in your GA4 property for funnel tracking:
-
-1. **`purchase`** — Completed orders (primary conversion)
-2. **`generate_lead`** — Quote requests and lead captures
-3. **`contact_form_submit`** — Contact form submissions
-4. **`begin_checkout`** — Checkout initiation (micro-conversion)
-
-### Verifying Analytics
-
-1. **Real-time report** — Open [GA4 Real-Time](https://analytics.google.com/) and browse the site to see events appear live
-2. **Browser DevTools** — Open the Network tab and filter for `google-analytics.com` or `gtag` to confirm requests are firing
-3. **GA4 DebugView** — Install the [Google Analytics Debugger](https://chrome.google.com/webstore/detail/google-analytics-debugger/) Chrome extension and enable DebugView in GA4 to inspect each event and its parameters
-4. **Development** — Analytics only loads when `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` is set, so omit it in development to avoid polluting production data
-
-### Architecture
-
-```
-Google Analytics (components/analytics/google-analytics.tsx)
-  ├─► gtag.js loaded via next/script (afterInteractive)
-  ├─► Automatic page views on route changes
-  └─► Event helpers in lib/analytics.ts
-        ├─► trackProductView()   → view_item
-        ├─► trackAddToCart()     → add_to_cart
-        ├─► trackBeginCheckout() → begin_checkout
-        ├─► trackPurchase()      → purchase
-        ├─► trackLead()          → generate_lead
-        ├─► trackContact()       → contact_form_submit
-        └─► trackChatOpened()    → chat_opened
-```
-
----
-
-## Business Information
-
-| | |
-|---|---|
-| **Company** | Muskingum Materials |
-| **Address** | 1133 Ellis Dam Rd, Zanesville, OH 43701 |
-| **Phone** | (740) 319-0183 · (740) 453-3063 |
-| **Email** | sales@muskingummaterials.com |
-| **Hours** | Monday – Friday, 7:30 AM – 4:00 PM |
-| **Facebook** | [Muskingum Materials](https://www.facebook.com/profile.php?id=61566390498498) |
+Set all environment variables in the Vercel dashboard. The `STRIPE_WEBHOOK_SECRET` must be set to the signing secret from the Stripe Dashboard → Webhooks → your endpoint.
 
 ---
 
 ## License
 
-Private — All rights reserved. &copy; 2025 Muskingum Materials.
+Private — All rights reserved. &copy; 2026 Muskingum Materials.
 
 ---
 
@@ -374,6 +289,6 @@ Private — All rights reserved. &copy; 2025 Muskingum Materials.
     <a href="tel:7403190183">(740) 319-0183</a> · <a href="mailto:sales@muskingummaterials.com">sales@muskingummaterials.com</a>
   </p>
 
-  <sub>Built with Next.js, TypeScript, Sanity, and Tailwind CSS</sub>
+  <sub>Built with Next.js 15, TypeScript, Prisma, Sanity, Stripe, Clerk, and Tailwind CSS</sub>
 
 </div>

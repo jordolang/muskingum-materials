@@ -42,12 +42,17 @@ export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
-  if (!product) return {};
-  return {
-    title: product.metaTitle ?? product.name,
-    description: product.metaDescription ?? product.shortDescription ?? product.description,
-  };
+  try {
+    const product = await getProductBySlug(slug);
+    if (!product) return {};
+    return {
+      title: product.metaTitle ?? product.name,
+      description: product.metaDescription ?? product.shortDescription ?? product.description,
+    };
+  } catch (error) {
+    console.warn("Unable to fetch product metadata:", error);
+    return {};
+  }
 }
 
 function convertStockStatus(status: string): StockStatus {
@@ -56,7 +61,12 @@ function convertStockStatus(status: string): StockStatus {
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  let product: Awaited<ReturnType<typeof getProductBySlug>> = null;
+  try {
+    product = await getProductBySlug(slug);
+  } catch (error) {
+    console.warn("Unable to fetch product:", error);
+  }
   if (!product) notFound();
 
   const allComparisons = [
