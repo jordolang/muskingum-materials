@@ -171,7 +171,7 @@ const result = await generateText({
 ```
 
 **Conversation Context:**
-- Last 10 messages from history (client-side limited)
+- All history entries forwarded from the client request
 - Current user message
 - System prompt with live catalog data
 
@@ -582,7 +582,7 @@ setInterval(() => inMemoryStore.cleanup(), 60000);
 ### Input Validation
 
 **Zod Schema Enforcement:**
-- Maximum message length (5000 chars) prevents prompt injection attacks
+- Maximum message length (5000 chars) limits resource abuse (not a prompt injection prevention control)
 - History size limit (50 messages) prevents memory exhaustion
 - Visitor ID validation prevents injection
 
@@ -690,5 +690,5 @@ setInterval(() => inMemoryStore.cleanup(), 60000);
 ## Related Documentation
 
 - [Order Flow Architecture](./order-flow.md) - Complete order processing system
-- [Project README](../README.md) - Setup and deployment instructions
-- [CLAUDE.md](../CLAUDE.md) - Development guidelines and architecture overview
+- [Project README](../../README.md) - Setup and deployment instructions
+- [CLAUDE.md](../../CLAUDE.md) - Development guidelines and architecture overview

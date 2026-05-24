@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Muskingum Materials is a full-stack e-commerce platform built on **Next.js 15** (App Router) with **23 Prisma models** backed by Neon Postgres. It integrates **5 external services** (Stripe, Clerk, Sanity, Postmark, Anthropic) with complex data flows spanning authentication, payments, content management, transactional email, and AI-powered chat.
+Muskingum Materials is a full-stack e-commerce platform built on **Next.js 15** (App Router) with **23 Prisma models** backed by Neon Postgres. It integrates **8 external services** (Stripe, Clerk, Sanity, Postmark, Anthropic, Twilio, Upstash, Sentry) with complex data flows spanning authentication, payments, content management, transactional email, and AI-powered chat.
 
 **Key architectural principles:**
 - **Two parallel data stores** — Prisma for catalog/transactional data, Sanity for marketing content
@@ -244,7 +244,7 @@ ANTHROPIC_API_KEY                    # Optional
 **Data Flow:**
 ```
 User Message → POST /api/chat
-  ├─► Zod validation (chatMessageSchema)
+  ├─► Zod validation (chatSchema)
   ├─► Load system prompt from data/business.ts
   ├─► if ANTHROPIC_API_KEY exists:
   │     └─► generateText({ model: 'claude-haiku', ... })

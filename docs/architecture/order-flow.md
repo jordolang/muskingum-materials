@@ -1245,7 +1245,7 @@ echo $TWILIO_PHONE_NUMBER
 
 - [Architecture Overview](./README.md) — High-level system architecture
 - [Database Schema](./database-schema.md) *(pending subtask-1-6)* — Prisma models and relationships
-- [Middleware & Security](./middleware-security.md) *(pending)* — Rate limiting, auth, CSP
+- [Authentication & Security](./authentication.md) — Rate limiting, auth, CSP
 - [External Services](./external-services.md) *(pending subtask-1-7)* — Stripe, Postmark, Twilio integration details
 - [CLAUDE.md](../../CLAUDE.md) — Development conventions
 

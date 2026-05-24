@@ -494,7 +494,7 @@ export const myNewType = defineType({
 });
 ```
 
-2. Register in `sanity/schemaTypes/index.ts`:
+1. Register in `sanity/schemaTypes/index.ts`:
 
 ```typescript
 import { myNewType } from "./myNewType";
@@ -505,13 +505,13 @@ export const schemaTypes = [
 ];
 ```
 
-3. Add to Studio structure in `sanity.config.ts`:
+1. Add to Studio structure in `sanity.config.ts`:
 
 ```typescript
 S.documentTypeListItem("myNewType").title("My New Type"),
 ```
 
-4. Define a GROQ query in `lib/sanity/queries.ts`:
+1. Define a GROQ query in `lib/sanity/queries.ts`:
 
 ```typescript
 export const myNewTypeQuery = groq`
@@ -523,7 +523,7 @@ export const myNewTypeQuery = groq`
 `;
 ```
 
-5. Deploy the schema:
+1. Deploy the schema:
 
 ```bash
 npx sanity deploy

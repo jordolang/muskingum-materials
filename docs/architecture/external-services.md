@@ -189,7 +189,7 @@ Uses Clerk's `auth()` helper to enforce authentication:
 ### Purpose
 Sanity Studio provides a headless CMS for marketing content, embedded at `/studio`. It holds testimonials, FAQs, gallery images, blog posts, site settings (singleton), and marketing-focused product/service descriptions.
 
-**Important:** Products and services exist in **both** Sanity (editable marketing content) and Prisma (runtime catalog source). Prisma is authoritative for pricing and availability.
+**Important:** Prisma is the sole runtime catalog authority for products and services. Sanity hosts only marketing content: testimonials, FAQs, gallery images, blog posts, and site settings.
 
 ### Environment Variables
 
@@ -986,7 +986,7 @@ The following is the complete Content Security Policy configuration. **Any new t
 
 ### Required for Production
 
-- [ ] **Stripe:** All 3 env vars set, webhook registered, sender domain verified
+- [ ] **Stripe:** All 3 env vars set, webhook registered
 - [ ] **Clerk:** Both env vars set, SSO providers configured, redirect URLs whitelisted
 - [ ] **Sanity:** All 3 env vars set, dataset exists, API token has read permissions
 - [ ] **Neon:** Both `DATABASE_URL` and `DIRECT_URL` set, schema pushed
