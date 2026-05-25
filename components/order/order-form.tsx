@@ -17,6 +17,15 @@ import {
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { BUSINESS_INFO } from "@/data/business";
 import { useToast } from "@/lib/use-toast";
 import { useCartStore } from "@/lib/store";
@@ -85,6 +94,8 @@ export function OrderForm({ products }: OrderFormProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
   const [view, setView] = useState<"flow" | "complete">("flow");
+  const [showDeliveryDialog, setShowDeliveryDialog] = useState(false);
+  const [pendingCheckoutData, setPendingCheckoutData] = useState<CheckoutData | null>(null);
   const { toast } = useToast();
 
   // Honor `?product=<name>` deep-links from the catalog so jumping straight
@@ -192,7 +203,7 @@ export function OrderForm({ products }: OrderFormProps) {
     }
   }, [hasAddress, hasCart, fulfillmentSelected]);
 
-  async function onCheckout(data: CheckoutData) {
+  async function submitCheckout(data: CheckoutData) {
     if (cart.length === 0) return;
     setIsProcessing(true);
     try {
@@ -231,6 +242,28 @@ export function OrderForm({ products }: OrderFormProps) {
     }
   }
 
+  function onCheckout(data: CheckoutData) {
+    if (data.fulfillment === "delivery") {
+      setPendingCheckoutData(data);
+      setShowDeliveryDialog(true);
+    } else {
+      submitCheckout(data);
+    }
+  }
+
+  function handleDeliveryAccept() {
+    setShowDeliveryDialog(false);
+    if (pendingCheckoutData) {
+      submitCheckout(pendingCheckoutData);
+      setPendingCheckoutData(null);
+    }
+  }
+
+  function handleDeliveryCancel() {
+    setShowDeliveryDialog(false);
+    setPendingCheckoutData(null);
+  }
+
   function handleReset() {
     clearCart();
     setView("flow");
@@ -241,6 +274,42 @@ export function OrderForm({ products }: OrderFormProps) {
   }
 
   return (
+    <>
+    <Dialog open={showDeliveryDialog} onOpenChange={setShowDeliveryDialog}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Delivery Fee Acknowledgment</DialogTitle>
+          <DialogDescription asChild>
+            <div className="text-sm text-foreground space-y-2 pt-1">
+              <p>
+                By submitting this payment, I acknowledge that I am aware that I still owe{" "}
+                <strong>Delivery Fees</strong> which shall be assessed upon Delivery.
+              </p>
+              <p className="text-muted-foreground text-xs">
+                Delivery charges are collected separately by the driver at the time of
+                delivery and are not included in your online payment.
+              </p>
+            </div>
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button
+            variant="outline"
+            onClick={handleDeliveryCancel}
+            className="w-full sm:w-auto"
+          >
+            Cancel My Order
+          </Button>
+          <Button
+            onClick={handleDeliveryAccept}
+            disabled={isProcessing}
+            className="w-full sm:w-auto"
+          >
+            I Accept
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     <form onSubmit={handleSubmit(onCheckout)} className="space-y-6">
       {/* STEP 1 — PROJECT ESTIMATE */}
       <div id="order-step-1" className="scroll-mt-20">
@@ -359,6 +428,7 @@ export function OrderForm({ products }: OrderFormProps) {
         </OrderStep>
       </div>
     </form>
+    </>
   );
 }
 
