@@ -34,10 +34,19 @@ interface Estimate {
 const DEPTH_PRESETS = [2, 3, 4, 6];
 const COMPACTION_MAP: Record<string, number> = {
   "bank-run": 15,
-  "304-crushed-gravel": 15,
   "fill-dirt": 10,
-  "topsoil-unprocessed": 10,
   "fill-sand-washed": 8,
+  "asphalt-millings": 20,
+  "topsoil-unprocessed": 10,
+  "9-gravel-washed": 5,
+  "8-gravel-washed": 5,
+  "57-gravel-washed": 5,
+  "304-crushed-gravel": 12,
+  "4-crushed-gravel": 12,
+  "oversized-gravel-washed": 5,
+  "304-limestone": 12,
+  "57-limestone": 5,
+  "crushed-concrete": 15,
 };
 
 export function GravelPlanner({ materials }: GravelPlannerProps) {

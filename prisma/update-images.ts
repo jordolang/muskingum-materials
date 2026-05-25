@@ -19,9 +19,9 @@ const IMAGE_MAP: Record<string, { url: string; alt: string }> = {
     url: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80&auto=format&fit=crop",
     alt: "Rich dark brown unprocessed topsoil for landscaping",
   },
-  "4-fractured-gravel-washed": {
-    url: "https://images.unsplash.com/photo-1631407251568-1d7d46fefe08?w=800&q=80&auto=format&fit=crop",
-    alt: "Large washed fractured #4 gravel, 1.5 to 2.5 inches",
+  "asphalt-millings": {
+    url: "https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=800&q=80&auto=format&fit=crop",
+    alt: "Dark gray asphalt millings recycled pavement material",
   },
   "9-gravel-washed": {
     url: "https://images.unsplash.com/photo-1559621768-63898afd1de8?w=800&q=80&auto=format&fit=crop",
@@ -37,15 +37,27 @@ const IMAGE_MAP: Record<string, { url: string; alt: string }> = {
   },
   "304-crushed-gravel": {
     url: "https://images.unsplash.com/photo-1632787955081-7b2b401f0d45?w=800&q=80&auto=format&fit=crop",
-    alt: "Crushed #304 limestone aggregate that compacts solid",
+    alt: "Crushed 304s gravel aggregate that compacts solid",
+  },
+  "4-crushed-gravel": {
+    url: "https://images.unsplash.com/photo-1631407251568-1d7d46fefe08?w=800&q=80&auto=format&fit=crop",
+    alt: "Crushed #4 gravel, 1.5 to 2.5 inches angular stone",
   },
   "oversized-gravel-washed": {
     url: "https://images.unsplash.com/photo-1700758193234-7cc3ded52ff8?w=800&q=80&auto=format&fit=crop",
     alt: "Large oversized washed gravel stones for drainage and erosion control",
   },
+  "304-limestone": {
+    url: "https://images.unsplash.com/photo-1601274173564-4fc9c4f31f80?w=800&q=80&auto=format&fit=crop",
+    alt: "Crushed #304 limestone aggregate for driveways and road base",
+  },
   "57-limestone": {
     url: "https://images.unsplash.com/photo-1601274173564-4fc9c4f31f80?w=800&q=80&auto=format&fit=crop",
     alt: "Premium #57 crushed limestone aggregate",
+  },
+  "crushed-concrete": {
+    url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80&auto=format&fit=crop",
+    alt: "Recycled crushed concrete aggregate for base material and road fill",
   },
 };
 
