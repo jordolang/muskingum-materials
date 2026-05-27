@@ -265,8 +265,11 @@ function FulfillmentOption({
   register,
   value,
 }: FulfillmentOptionProps) {
+  const inputId = `fulfillment-${value}`;
+
   return (
     <label
+      htmlFor={inputId}
       className={cn(
         "flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-colors",
         selected
@@ -275,6 +278,7 @@ function FulfillmentOption({
       )}
     >
       <input
+        id={inputId}
         type="radio"
         value={value}
         {...register("fulfillment")}
