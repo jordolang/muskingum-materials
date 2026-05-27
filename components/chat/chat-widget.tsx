@@ -7,14 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useChatStore } from "@/lib/store";
 import { useToast } from "@/lib/use-toast";
-
-/**
- * Minimum number of chat messages before prompting the user to optionally
- * provide contact information for follow-up. This ensures the user has
- * engaged enough to potentially benefit from sales follow-up without being
- * too intrusive early in the conversation.
- */
-const CONTACT_FORM_MESSAGE_THRESHOLD = 4;
+import { CHAT_CONTACT_THRESHOLD } from "@/lib/constants/business-rules";
 
 export function ChatWidget() {
   const { isOpen, messages, toggleChat, addMessage, visitorId } = useChatStore();
@@ -74,7 +67,7 @@ export function ChatWidget() {
       const data = await response.json();
       addMessage({ role: "assistant", content: data.reply });
 
-      if (messages.length >= CONTACT_FORM_MESSAGE_THRESHOLD && !contactSubmitted && !showContactForm) {
+      if (messages.length >= CHAT_CONTACT_THRESHOLD && !contactSubmitted && !showContactForm) {
         setShowContactForm(true);
       }
     } catch {
