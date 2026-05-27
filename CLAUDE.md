@@ -63,6 +63,7 @@ The webhook payload includes `_type` and `slug.current` (or similar identifier),
    - `contact-quote`: 10 / hour (`/api/contact`, `/api/quote`, `/api/orders/checkout`)
    - `leads-newsletter`: 20 / hour (`/api/leads`, `/api/newsletter`)
    Uses Upstash Redis when `UPSTASH_REDIS_REST_URL`/`_TOKEN` are set, otherwise an in-memory `Map` fallback (per-instance, not shared across serverless invocations). Rate-limited responses return 429 with `Retry-After` and `X-RateLimit-*` headers.
+   > **Source of truth**: See `rateLimitedEndpoints` in `middleware.ts` for the canonical endpoint→tier mapping.
 2. **Clerk auth** — only loaded if `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` is set and not the placeholder. Imported dynamically so the build doesn't fail without Clerk creds.
 
 When adding a new public API route that accepts user input, register it in `rateLimitedEndpoints` in `middleware.ts`.
