@@ -416,6 +416,12 @@ describe("POST /api/orders/checkout", () => {
 
       expect(response.status).toBe(400);
       expect(data.error).toBe('Price mismatch for "Fill Dirt": expected $2.00, received $3.00');
+      expect(validateCheckoutPrices).toHaveBeenCalledWith(
+        expect.objectContaining({
+          items: validCheckoutData.items,
+          subtotal: validCheckoutData.subtotal,
+        }),
+      );
     });
 
     it("should handle non-Error price validation failures", async () => {
