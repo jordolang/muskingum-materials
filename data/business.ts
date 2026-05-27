@@ -39,7 +39,18 @@ export const BUSINESS_INFO = {
     "Delivery available",
   ],
   paymentMethods: ["Visa", "Mastercard", "Discover", "Apple Pay", "Cash", "Check"],
+  /**
+   * Sales tax rate applied to all taxable purchases in Ohio.
+   * Value: 0.0725 (7.25%)
+   * Applied to the subtotal before credit card processing fees.
+   */
   taxRate: 0.0725,
+  /**
+   * Credit card processing fee applied to credit/debit card transactions.
+   * Value: 0.045 (4.5%)
+   * Applied to the order total (subtotal + tax) when paying by card.
+   * Does not apply to cash or check payments.
+   */
   creditProcessingFee: 0.045,
   social: {
     facebook: "https://www.facebook.com/61584706747584/",
