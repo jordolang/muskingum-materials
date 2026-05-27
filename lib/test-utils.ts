@@ -1,6 +1,7 @@
 import { render, RenderOptions } from "@testing-library/react";
 import { ReactElement } from "react";
 import { vi } from "vitest";
+import * as nextNavigation from "next/navigation";
 
 interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
   clerkUser?: {
@@ -29,9 +30,16 @@ export function renderWithProviders(
 }
 
 /**
- * Mock Next.js router
+ * Configure the Next.js navigation mock (already hoisted in vitest.setup.ts) with
+ * per-test return values. Call this inside beforeEach() or at the top of a test.
  */
-export function mockRouter(overrides?: Partial<typeof import("next/navigation")>) {
+export function mockRouter(overrides?: {
+  push?: ReturnType<typeof vi.fn>;
+  replace?: ReturnType<typeof vi.fn>;
+  prefetch?: ReturnType<typeof vi.fn>;
+  back?: ReturnType<typeof vi.fn>;
+  pathname?: string;
+}) {
   const router = {
     push: vi.fn(),
     replace: vi.fn(),
@@ -44,11 +52,8 @@ export function mockRouter(overrides?: Partial<typeof import("next/navigation")>
     ...overrides,
   };
 
-  vi.mock("next/navigation", () => ({
-    useRouter: () => router,
-    usePathname: () => router.pathname,
-    useSearchParams: () => new URLSearchParams(),
-  }));
+  vi.mocked(nextNavigation.useRouter).mockReturnValue(router as ReturnType<typeof nextNavigation.useRouter>);
+  vi.mocked(nextNavigation.usePathname).mockReturnValue(router.pathname);
 
   return router;
 }
