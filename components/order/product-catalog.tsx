@@ -80,11 +80,10 @@ export function ProductCatalog({
                       <div className="flex items-center gap-1">
                         <Button
                           variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
+                          className="h-11 w-11 min-h-11 min-w-11 p-0 shrink-0"
                           onClick={() => onUpdateQuantity(product.name, -1)}
                         >
-                          <Minus className="h-3 w-3" />
+                          <Minus className="h-4 w-4" />
                         </Button>
                         <Input
                           type="number"
@@ -95,16 +94,15 @@ export function ProductCatalog({
                               parseInt(e.target.value) || 0
                             )
                           }
-                          className="w-16 h-8 text-center text-sm"
+                          className="w-16 h-11 text-center text-sm"
                           min="0"
                         />
                         <Button
                           variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
+                          className="h-11 w-11 min-h-11 min-w-11 p-0 shrink-0"
                           onClick={() => onUpdateQuantity(product.name, 1)}
                         >
-                          <Plus className="h-3 w-3" />
+                          <Plus className="h-4 w-4" />
                         </Button>
                       </div>
                     ) : (
