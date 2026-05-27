@@ -33,10 +33,10 @@ export function ContactSection({
             Name *
           </label>
           <Input
+            id="contact-name"
             placeholder="Your full name"
             autoComplete="name"
             {...register("name")}
-            id="contact-name"
           />
           {errors.name && (
             <p className="text-xs text-destructive mt-1">
@@ -49,11 +49,11 @@ export function ContactSection({
             Phone *
           </label>
           <Input
+            id="contact-phone"
             type="tel"
             placeholder="(740) 555-0123"
             autoComplete="tel"
             {...register("phone")}
-            id="contact-phone"
           />
           {errors.phone && (
             <p className="text-xs text-destructive mt-1">
@@ -68,11 +68,11 @@ export function ContactSection({
           Email *
         </label>
         <Input
+          id="contact-email"
           type="email"
           placeholder="your@email.com"
           autoComplete="email"
           {...register("email")}
-          id="contact-email"
         />
         {errors.email && (
           <p className="text-xs text-destructive mt-1">
@@ -82,7 +82,7 @@ export function ContactSection({
       </div>
 
       <label htmlFor="contact-sms-opt-in" className="flex items-start gap-3 cursor-pointer">
-        <Checkbox {...register("smsOptIn")} className="mt-1" id="contact-sms-opt-in" />
+        <Checkbox id="contact-sms-opt-in" {...register("smsOptIn")} className="mt-1" />
         <div className="space-y-1">
           <p className="text-sm font-medium">
             Send me SMS order updates (optional)
@@ -96,7 +96,7 @@ export function ContactSection({
       </label>
 
       <label htmlFor="contact-terms" className="flex items-start gap-3 cursor-pointer">
-        <Checkbox {...register("termsAccepted")} className="mt-1" id="contact-terms" />
+        <Checkbox id="contact-terms" {...register("termsAccepted")} className="mt-1" />
         <div className="space-y-1">
           <p className="text-sm font-medium">
             I agree to the{" "}
