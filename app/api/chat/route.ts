@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { BUSINESS_INFO } from "@/data/business";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { VISITOR_ID_REGEX } from "@/lib/schemas";
 
 const chatSchema = z.object({
   message: z.string().min(1).max(5000),
@@ -13,7 +14,7 @@ const chatSchema = z.object({
     .string()
     .min(1)
     .max(100)
-    .regex(/^[a-zA-Z0-9_-]+$/, "visitorId must be alphanumeric (letters, numbers, hyphens, underscores only)")
+    .regex(VISITOR_ID_REGEX, "visitorId must be alphanumeric (letters, numbers, hyphens, underscores only)")
     .optional(),
   history: z
     .array(

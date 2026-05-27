@@ -1,5 +1,17 @@
 import { z } from "zod";
 
+/**
+ * Regex for visitorId validation.
+ * Allows only letters, numbers, hyphens, and underscores.
+ *
+ * Note: This is intentionally stricter than prior versions which also permitted
+ * dots (.) and other special characters. The change was made to prevent prompt
+ * injection via crafted visitorId values. Any client generating IDs with dots
+ * or special chars (e.g., "visitor.123") will need to be updated to use only
+ * [a-zA-Z0-9_-] characters.
+ */
+export const VISITOR_ID_REGEX = /^[a-zA-Z0-9_-]+$/;
+
 // Contact form schema
 export const contactSchema = z.object({
   name: z.string().min(2, "Name is required"),
