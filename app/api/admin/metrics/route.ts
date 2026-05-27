@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * GET /api/admin/metrics
+ * Returns comprehensive business metrics and KPI dashboard data
+ * Requires admin role authentication via Clerk publicMetadata
+ * Aggregates data from orders (total/recent/revenue/status), leads, contact submissions,
+ * quote requests, chat conversations, and newsletter subscribers
+ * Response includes total counts, status breakdowns, and 30-day recent metrics
+ */
 export async function GET() {
   try {
     // Check authentication and admin role
