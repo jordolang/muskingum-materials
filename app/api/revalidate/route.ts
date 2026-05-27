@@ -7,6 +7,24 @@ const revalidateSchema = z.object({
   type: z.enum(["products", "services", "faq", "gallery", "testimonials", "site-settings"]),
 });
 
+/**
+ * POST /api/revalidate
+ * Next.js ISR (Incremental Static Regeneration) revalidation webhook
+ *
+ * Integrates with Sanity CMS to trigger cache invalidation when content is updated.
+ * Validates a secret token (REVALIDATE_SECRET) to prevent unauthorized revalidation.
+ * Revalidates cache tags based on content type using Next.js revalidateTag.
+ *
+ * Request body:
+ * - secret: string (matches REVALIDATE_SECRET env var)
+ * - type: "products" | "services" | "faq" | "gallery" | "testimonials" | "site-settings"
+ *
+ * Returns:
+ * - 200: { success: true, revalidated: true, type: string, now: number }
+ * - 400: Invalid request data or malformed JSON
+ * - 401: Invalid secret token
+ * - 500: Server misconfiguration (REVALIDATE_SECRET not set)
+ */
 export async function POST(request: NextRequest) {
   try {
     let body: unknown;
