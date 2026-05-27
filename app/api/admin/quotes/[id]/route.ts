@@ -8,6 +8,13 @@ const quoteUpdateSchema = z.object({
   status: z.enum(["pending", "reviewed", "quoted", "accepted", "declined"]),
 });
 
+/**
+ * PATCH /api/admin/quotes/[id]
+ * Updates quote request status
+ * Requires admin authentication
+ * Body: { status: "pending" | "reviewed" | "quoted" | "accepted" | "declined" }
+ * Response: { quote: QuoteRequest }
+ */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
