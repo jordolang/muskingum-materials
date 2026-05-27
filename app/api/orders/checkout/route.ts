@@ -9,6 +9,7 @@ import { logger } from "@/lib/logger";
 import { addBreadcrumb, startTransaction } from "@/lib/monitoring";
 import { buildSatelliteMapUrl } from "@/lib/static-map";
 import { ORDER_NUMBER_PREFIX } from "@/lib/constants/business-rules";
+import { getAnalyticsItemId } from "@/lib/analytics";
 
 /**
  * Generates a unique order number for a new order.
@@ -46,6 +47,25 @@ function generateOrderNumber(): string {
  * - Email notification to sales@muskingummaterials.com with order details and site map
  * - Fallback to pay-on-pickup flow when Stripe is not configured
  */
+function buildAnalyticsPayload(
+  orderNumber: string,
+  data: { subtotal: number; tax: number; total: number; items: Array<{ name: string; price: number; quantity: number }> }
+) {
+  return {
+    orderNumber,
+    subtotal: data.subtotal,
+    tax: data.tax,
+    total: data.total,
+    items: data.items.map((item) => ({
+      id: getAnalyticsItemId(item.name),
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+    })),
+  };
+}
+
+
 export async function POST(request: NextRequest) {
   return startTransaction('checkout', 'http.request', () => {
     return handleCheckout(request);
@@ -285,18 +305,7 @@ async function handleCheckout(request: NextRequest) {
 
         return NextResponse.json({
           url: session.url,
-          analytics: {
-            orderNumber,
-            subtotal: data.subtotal,
-            tax: data.tax,
-            total: data.total,
-            items: data.items.map((item) => ({
-              id: item.name.toLowerCase().replace(/\s+/g, "-"),
-              name: item.name,
-              price: item.price,
-              quantity: item.quantity,
-            })),
-          },
+          analytics: buildAnalyticsPayload(orderNumber, data),
         });
       } catch (stripeError) {
         logger.error('Stripe checkout session creation failed', stripeError, {
@@ -425,18 +434,7 @@ Payment: Pending — Stripe not configured, customer will pay on pickup/delivery
 
     return NextResponse.json({
       orderNumber,
-      analytics: {
-        orderNumber,
-        subtotal: data.subtotal,
-        tax: data.tax,
-        total: data.total,
-        items: data.items.map((item) => ({
-          id: item.name.toLowerCase().replace(/\s+/g, "-"),
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-        })),
-      },
+      analytics: buildAnalyticsPayload(orderNumber, data),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
