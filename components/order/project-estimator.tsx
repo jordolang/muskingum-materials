@@ -24,6 +24,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import {
+  MATERIAL_DENSITY_AVG,
+  TRUCK_CAPACITY_TONS,
+} from "@/lib/constants/business-rules";
 
 declare global {
   interface Window {
@@ -89,8 +93,8 @@ interface ProjectEstimatorProps {
 function calculateFromArea(areaSqFt: number, depthIn: number): EstimateResult {
   const cubicFeet = areaSqFt * (depthIn / 12);
   const cubicYards = cubicFeet / 27;
-  const tons = cubicYards * 1.4;
-  const truckloads = Math.max(1, Math.ceil(tons / 20));
+  const tons = cubicYards * MATERIAL_DENSITY_AVG;
+  const truckloads = Math.max(1, Math.ceil(tons / TRUCK_CAPACITY_TONS));
   return { cubicFeet, cubicYards, tons, truckloads, source: "map" };
 }
 

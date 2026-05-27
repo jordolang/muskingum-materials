@@ -8,12 +8,29 @@ import { sendEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
 import { addBreadcrumb, startTransaction } from "@/lib/monitoring";
 import { buildSatelliteMapUrl } from "@/lib/static-map";
+import { ORDER_NUMBER_PREFIX } from "@/lib/constants/business-rules";
 
+/**
+ * Generates a unique order number for a new order.
+ *
+ * Order number format: `{ORDER_NUMBER_PREFIX}-YYMMDD-XXXXXXXX`
+ * - `ORDER_NUMBER_PREFIX`: Company identifier (from business-rules.ts)
+ * - `YYMMDD`: Date in YYMMDD format with no dashes (e.g., "260526" for May 26, 2026)
+ * - `XXXXXXXX`: 8-character uppercase hexadecimal random identifier
+ *
+ * Example: `MM-260526-A1B2C3D4`
+ *
+ * The date component provides chronological sorting and human readability,
+ * while the random component ensures uniqueness and prevents collisions
+ * for orders created at the same time.
+ *
+ * @returns A unique order number string
+ */
 function generateOrderNumber(): string {
   const now = new Date();
   const datePart = now.toISOString().slice(2, 10).replace(/-/g, "");
   const randomPart = crypto.randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase();
-  return `MM-${datePart}-${randomPart}`;
+  return `${ORDER_NUMBER_PREFIX}-${datePart}-${randomPart}`;
 }
 
 /**

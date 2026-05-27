@@ -11,6 +11,8 @@ interface Product {
   }>;
 }
 
+import { TAX_RATE, CREDIT_PROCESSING_FEE } from "@/lib/constants/business-rules";
+
 export const BUSINESS_INFO = {
   name: "Muskingum Materials",
   tagline: "Southeast Ohio's Resource for Sand, Soil, and Gravel",
@@ -44,8 +46,19 @@ export const BUSINESS_INFO = {
     "Delivery available",
   ],
   paymentMethods: ["Visa", "Mastercard", "Discover", "Apple Pay", "Cash", "Check"],
-  taxRate: 0.0725,
-  creditProcessingFee: 0.045,
+  /**
+   * Sales tax rate applied to all taxable purchases in Ohio.
+   * Sourced from TAX_RATE in lib/constants/business-rules.ts.
+   * Applied to the subtotal before credit card processing fees.
+   */
+  taxRate: TAX_RATE,
+  /**
+   * Credit card processing fee applied to credit/debit card transactions.
+   * Sourced from CREDIT_PROCESSING_FEE in lib/constants/business-rules.ts.
+   * Applied to the order total (subtotal + tax) when paying by card.
+   * Does not apply to cash or check payments.
+   */
+  creditProcessingFee: CREDIT_PROCESSING_FEE,
   social: {
     facebook: "https://www.facebook.com/61584706747584/",
     facebookAlt: "https://www.facebook.com/61553200424830/",

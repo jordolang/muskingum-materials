@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useChatStore } from "@/lib/store";
 import { useToast } from "@/lib/use-toast";
+import { CHAT_CONTACT_THRESHOLD } from "@/lib/constants/business-rules";
 
 export function ChatWidget() {
   const { isOpen, messages, toggleChat, addMessage, visitorId } = useChatStore();
@@ -66,7 +67,7 @@ export function ChatWidget() {
       const data = await response.json();
       addMessage({ role: "assistant", content: data.reply });
 
-      if (messages.length >= 4 && !contactSubmitted && !showContactForm) {
+      if (messages.length >= CHAT_CONTACT_THRESHOLD && !contactSubmitted && !showContactForm) {
         setShowContactForm(true);
       }
     } catch {
