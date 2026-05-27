@@ -16,6 +16,13 @@ async function checkAdminAuth() {
   return { authorized: true, user };
 }
 
+/**
+ * GET /api/admin/templates
+ * Returns paginated email/SMS template list for admin management
+ * Query params: page (optional, default: 1), limit (optional, default: 20, max: 100)
+ * Requires admin authentication via Clerk publicMetadata role
+ * Response: { templates: EmailTemplate[], total: number, page: number, limit: number, pages: number }
+ */
 export async function GET(request: NextRequest) {
   try {
     const authCheck = await checkAdminAuth();
