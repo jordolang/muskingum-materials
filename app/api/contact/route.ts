@@ -5,6 +5,32 @@ import { contactSchema } from "@/lib/schemas";
 import { logger } from "@/lib/logger";
 import { sendEmail } from "@/lib/email";
 
+/**
+ * POST /api/contact
+ * Handles contact form submissions from the website
+ *
+ * Request body (validated against contactSchema):
+ * - name: string (min 2 chars, required)
+ * - email: string (valid email, required)
+ * - phone: string (optional)
+ * - subject: string (min 2 chars, required)
+ * - message: string (min 10 chars, required)
+ *
+ * Response shapes:
+ * - 200: { success: true, analytics: { subject: string } }
+ * - 400: { error: "Invalid form data", details: ZodError[] } (validation failure)
+ * - 500: { error: "Failed to save contact submission" } (database error)
+ * - 500: { error: "Internal server error" } (other errors)
+ *
+ * Rate limit: 10 requests per hour (contact-quote tier)
+ *
+ * Database operations:
+ * - Creates ContactSubmission record with form data
+ *
+ * Side effects:
+ * - Sends email notification to sales@muskingummaterials.com via Postmark
+ * - Email includes all form data and sets reply-to as customer email
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
