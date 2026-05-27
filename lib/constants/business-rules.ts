@@ -126,12 +126,15 @@ export const ORDER_NUMBER_PREFIX = 'MM';
 
 /**
  * Business rule validation utilities
+ *
+ * @public Can be used to validate config values at runtime or in tests
  */
 
 /**
  * Validates that a tax rate is within reasonable bounds for Ohio
  * @param rate - Tax rate to validate (e.g., 0.0725 for 7.25%)
  * @returns True if rate is valid
+ * @public Can be used to validate config values at runtime or in tests
  */
 export function isValidTaxRate(rate: number): boolean {
   // Ohio sales tax typically ranges from 5.75% to 8%
@@ -142,6 +145,7 @@ export function isValidTaxRate(rate: number): boolean {
  * Validates that a credit processing fee is reasonable
  * @param fee - Fee percentage to validate (e.g., 0.045 for 4.5%)
  * @returns True if fee is valid
+ * @public Can be used to validate config values at runtime or in tests
  */
 export function isValidProcessingFee(fee: number): boolean {
   // Processing fees typically range from 2% to 5%
@@ -152,6 +156,7 @@ export function isValidProcessingFee(fee: number): boolean {
  * Validates that a material density is within physical bounds
  * @param density - Density in tons per cubic yard
  * @returns True if density is valid
+ * @public Can be used to validate config values at runtime or in tests
  */
 export function isValidMaterialDensity(density: number): boolean {
   // Most aggregates and soil range from 1.0 to 2.0 tons/yd³
@@ -162,6 +167,7 @@ export function isValidMaterialDensity(density: number): boolean {
  * Validates that a truck capacity is reasonable
  * @param tons - Capacity in tons
  * @returns True if capacity is valid
+ * @public Can be used to validate config values at runtime or in tests
  */
 export function isValidTruckCapacity(tons: number): boolean {
   // Commercial dump trucks typically range from 10 to 30 tons

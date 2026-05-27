@@ -15,7 +15,7 @@ import { ORDER_NUMBER_PREFIX } from "@/lib/constants/business-rules";
  *
  * Order number format: `{ORDER_NUMBER_PREFIX}-YYMMDD-XXXXXXXX`
  * - `ORDER_NUMBER_PREFIX`: Company identifier (from business-rules.ts)
- * - `YYMMDD`: Date in YY-MM-DD format (e.g., "260526" for May 26, 2026)
+ * - `YYMMDD`: Date in YYMMDD format with no dashes (e.g., "260526" for May 26, 2026)
  * - `XXXXXXXX`: 8-character uppercase hexadecimal random identifier
  *
  * Example: `MM-260526-A1B2C3D4`
