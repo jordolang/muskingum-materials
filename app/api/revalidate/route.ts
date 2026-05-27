@@ -4,7 +4,7 @@ import { z } from "zod";
 
 const revalidateSchema = z.object({
   secret: z.string(),
-  type: z.enum(["products", "services", "faq", "gallery", "testimonials", "site-settings"]),
+  tag: z.enum(["faq", "gallery", "testimonials", "site-settings"]),
 });
 
 export async function POST(request: NextRequest) {
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     const data = revalidateSchema.parse(body);
 
     // Verify secret token
-    const revalidateSecret = process.env.REVALIDATE_SECRET;
+    const revalidateSecret = process.env.SANITY_REVALIDATE_SECRET;
     if (!revalidateSecret) {
       return NextResponse.json(
         { error: "Server misconfiguration" },
@@ -36,12 +36,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Revalidate the cache tag for the specified content type
-    revalidateTag(data.type);
+    revalidateTag(data.tag);
 
     return NextResponse.json({
       success: true,
       revalidated: true,
-      type: data.type,
+      tag: data.tag,
       now: Date.now(),
     });
   } catch (error) {
