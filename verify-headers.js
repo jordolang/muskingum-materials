@@ -2,10 +2,9 @@
  * Verification script for HTTP security headers configuration
  *
  * This script reads next.config.ts and verifies that all required
- * security headers are present by checking for their literal names
- * in the source text. This approach is robust to multi-line values,
- * object formatting changes, and refactors — it simply confirms that
- * each header key string exists somewhere in the file.
+ * security headers are present by looking for `key: "HeaderName"` patterns
+ * within the headers() array. This ensures we're matching actual header
+ * entries, not comments or other string occurrences.
  *
  * To verify headers are actually sent at runtime:
  *   1. Start the dev server: npm run dev
@@ -36,12 +35,12 @@ try {
   let allHeadersPresent = true;
 
   for (const header of requiredHeaders) {
-    // Use a simple substring check — robust to any formatting or multi-line layout.
-    // The header name must appear as a quoted string in the config.
+    // Match `key: "HeaderName"` or `key: 'HeaderName'` to confirm this is an
+    // actual header entry in the headers() array, not a comment or value string.
     const found =
-      configContent.includes(`"${header}"`) ||
-      configContent.includes(`'${header}'`) ||
-      configContent.includes(`\`${header}\``);
+      configContent.includes(`key: "${header}"`) ||
+      configContent.includes(`key: '${header}'`) ||
+      configContent.includes(`key: \`${header}\``);
 
     if (found) {
       console.log(`CONFIGURED: ${header}`);
