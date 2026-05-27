@@ -54,6 +54,20 @@ const PROJECT_PRESETS = [
   { name: "Parking Pad", length: 10, width: 10, depth: 4, icon: "🅿️" },
 ] as const;
 
+/**
+ * Average density of aggregate materials in tons per cubic yard.
+ * Used for material quantity calculations in the project estimator.
+ * Standard industry value for gravel, crushed stone, and similar materials.
+ */
+const MATERIAL_DENSITY_TONS_PER_CUBIC_YARD = 1.4;
+
+/**
+ * Standard truck capacity in tons.
+ * Used to calculate the number of truckloads required for delivery.
+ * Based on typical dump truck specifications for aggregate materials.
+ */
+const TRUCK_CAPACITY_TONS = 20;
+
 type EstimatorMode = "map" | "dimensions" | "preset";
 
 interface PolygonData {
@@ -89,8 +103,8 @@ interface ProjectEstimatorProps {
 function calculateFromArea(areaSqFt: number, depthIn: number): EstimateResult {
   const cubicFeet = areaSqFt * (depthIn / 12);
   const cubicYards = cubicFeet / 27;
-  const tons = cubicYards * 1.4;
-  const truckloads = Math.max(1, Math.ceil(tons / 20));
+  const tons = cubicYards * MATERIAL_DENSITY_TONS_PER_CUBIC_YARD;
+  const truckloads = Math.max(1, Math.ceil(tons / TRUCK_CAPACITY_TONS));
   return { cubicFeet, cubicYards, tons, truckloads, source: "map" };
 }
 
