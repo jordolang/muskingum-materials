@@ -52,7 +52,7 @@ export function mockRouter(overrides?: {
     ...overrides,
   };
 
-  vi.mocked(nextNavigation.useRouter).mockReturnValue(router as ReturnType<typeof nextNavigation.useRouter>);
+  vi.mocked(nextNavigation.useRouter).mockReturnValue(router as unknown as ReturnType<typeof nextNavigation.useRouter>);
   vi.mocked(nextNavigation.usePathname).mockReturnValue(router.pathname);
 
   return router;
