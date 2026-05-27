@@ -5,6 +5,51 @@ import { prisma } from "@/lib/prisma";
 import { addressSchema, addressUpdateSchema } from "@/lib/schemas";
 import { logger } from "@/lib/logger";
 
+/**
+ * GET /api/account/addresses
+ * Returns all saved addresses for the authenticated user
+ * Requires: User authentication via Clerk
+ */
+export async function GET(request: NextRequest) {
+  let session;
+  try {
+    session = await auth();
+    if (!session?.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const profile = await prisma.userProfile.findUnique({
+      where: { userId: session.userId },
+      include: {
+        addresses: {
+          orderBy: [
+            { isDefault: 'desc' },
+            { createdAt: 'desc' }
+          ],
+        },
+      },
+    });
+
+    if (!profile) {
+      return NextResponse.json({ addresses: [] });
+    }
+
+    return NextResponse.json({ addresses: profile.addresses });
+  } catch (error) {
+    logger.error("Failed to fetch addresses", error, {
+      userId: session?.userId,
+    });
+    return NextResponse.json({ error: "Failed to fetch addresses" }, { status: 500 });
+  }
+}
+
+/**
+ * POST /api/account/addresses
+ * Creates a new address for the authenticated user
+ * Requires: User authentication via Clerk
+ * Body: addressSchema (label, street, city, state, zip, isDefault)
+ * Handles default address logic (unsets other defaults if isDefault=true)
+ */
 export async function POST(request: NextRequest) {
   let session;
   try {
@@ -60,9 +105,18 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * PUT /api/account/addresses
+ * Updates an existing address for the authenticated user
+ * Requires: User authentication via Clerk
+ * Body: addressUpdateSchema (id required, other fields optional)
+ * Validates address ownership before updating
+ * Handles default address logic (unsets other defaults if isDefault=true)
+ */
 export async function PUT(request: NextRequest) {
+  let session;
   try {
-    const session = await auth();
+    session = await auth();
     if (!session?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -106,11 +160,20 @@ export async function PUT(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid data", details: error.errors }, { status: 400 });
     }
-    console.error("Address update error:", error);
+    logger.error("Failed to update address", error, {
+      userId: session?.userId,
+    });
     return NextResponse.json({ error: "Failed to update address" }, { status: 500 });
   }
 }
 
+/**
+ * DELETE /api/account/addresses
+ * Deletes an address for the authenticated user
+ * Requires: User authentication via Clerk
+ * Query params: id (required) - Address ID to delete
+ * Validates address ownership before deletion
+ */
 export async function DELETE(request: NextRequest) {
   let session;
   let addressId;
