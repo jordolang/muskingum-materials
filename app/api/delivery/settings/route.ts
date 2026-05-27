@@ -19,6 +19,13 @@ const deliverySettingsQuery = groq`
   }
 `;
 
+/**
+ * GET /api/delivery/settings
+ * Retrieves delivery configuration settings from Sanity CMS
+ * Returns delivery zone radius, base fee, and per-mile rate
+ * Falls back to default settings if not configured in Sanity
+ * Response: { success: boolean, settings: DeliverySettings }
+ */
 export async function GET() {
   try {
     // Fetch delivery settings from Sanity

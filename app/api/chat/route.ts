@@ -112,6 +112,21 @@ GUIDELINES:
 - Never make up information not provided above`;
 }
 
+/**
+ * AI-powered customer service chat endpoint.
+ *
+ * @access public
+ * @param request - Incoming request with body validated against the local `chatSchema`
+ *   (message, visitorId, history). See lib/schemas.ts for shared schema conventions.
+ * @returns 200 `{ reply: string }` with `X-RateLimit-*` headers on success
+ * @returns 429 `{ error: string, retryAfter: number }` when rate limit is exceeded
+ * @throws 400 `{ error: "Invalid request data", details: ZodError[] }` when validation fails
+ * @see rateLimitedEndpoints in middleware.ts — chat tier (5 req/min per IP)
+ * @see RATE_LIMIT_TIERS in lib/rate-limit.ts for tier configuration
+ * @see buildSystemPrompt — dynamic prompt sourced from Prisma Product/Service tables and BUSINESS_INFO
+ * @remarks Falls back to `getStaticResponse` when `ANTHROPIC_API_KEY` is absent.
+ *   DB failures during conversation logging do not fail the request.
+ */
 export async function POST(request: NextRequest) {
   try {
     // Check rate limit

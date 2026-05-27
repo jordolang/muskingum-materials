@@ -4,7 +4,31 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { pointRedemptionSchema } from "@/lib/schemas";
 import { canRedeemPoints, calculateDiscountForPoints } from "@/lib/loyalty";
+import { logger } from "@/lib/logger";
 
+/**
+ * POST /api/account/loyalty/redeem
+ * Redeems loyalty points for a discount amount
+ *
+ * Body validation: pointRedemptionSchema
+ * - points: number (required) - Must be at least 100 and in multiples of 100
+ * - notes: string (optional) - Additional notes for the redemption
+ *
+ * Redemption Rules:
+ * - 100 points = $5 discount
+ * - Minimum redemption: 100 points
+ * - Points must be redeemed in multiples of 100
+ * - User must have sufficient points balance
+ *
+ * Returns:
+ * - success: boolean
+ * - account: Updated LoyaltyAccount with new points balance
+ * - transaction: LoyaltyTransaction record of the redemption
+ * - discountAmount: Dollar value of the discount
+ *
+ * Uses database transaction to ensure atomicity (points deduction + transaction record creation)
+ * Requires authentication via Clerk session
+ */
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -84,7 +108,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    console.error("Point redemption error:", error);
+    logger.error("Point redemption error", error, {
+      operation: "redeemLoyaltyPoints",
+    });
     return NextResponse.json(
       { error: "Failed to redeem points" },
       { status: 500 }

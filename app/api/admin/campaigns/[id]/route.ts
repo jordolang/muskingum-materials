@@ -27,6 +27,12 @@ const updateCampaignSchema = z.object({
   scheduledAt: z.coerce.date().nullable().optional(),
 });
 
+/**
+ * GET /api/admin/campaigns/[id]
+ * Returns a single campaign by ID with template details
+ * Requires: Admin authentication (Clerk role: admin)
+ * Params: id (campaign ID)
+ */
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -61,6 +67,14 @@ export async function GET(
   }
 }
 
+/**
+ * PATCH /api/admin/campaigns/[id]
+ * Updates an existing campaign (draft or scheduled campaigns only)
+ * Requires: Admin authentication (Clerk role: admin)
+ * Validates: updateCampaignSchema (name, subject, htmlContent, textContent, templateId, status, scheduledAt)
+ * Params: id (campaign ID)
+ * Restrictions: Cannot edit campaigns with status "sent"
+ */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -120,6 +134,13 @@ export async function PATCH(
   }
 }
 
+/**
+ * DELETE /api/admin/campaigns/[id]
+ * Deletes a campaign (draft or scheduled campaigns only)
+ * Requires: Admin authentication (Clerk role: admin)
+ * Params: id (campaign ID)
+ * Restrictions: Cannot delete campaigns with status "sent"
+ */
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

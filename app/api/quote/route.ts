@@ -5,6 +5,19 @@ import { quoteSchema } from "@/lib/schemas";
 import { sendEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
 
+/**
+ * Submit a quote request for products and services.
+ *
+ * @access public
+ * @param request - Incoming request with body validated against {@link quoteSchema} in lib/schemas.ts
+ * @returns 200 `{ success: true, analytics: { productCount: number, leadSource: "quote_form" } }`
+ * @throws 400 `{ error: "Invalid data", details: ZodError[] }` when validation fails
+ * @throws 500 `{ error: "Failed to save quote request" }` on database error
+ * @throws 500 `{ error: "Internal server error" }` on unexpected error
+ * @see quoteSchema in lib/schemas.ts for request body shape
+ * @see rateLimitedEndpoints in middleware.ts — contact-quote tier (10 req/hr)
+ * @see {@link https://postmarkapp.com} — email notification sent to sales team on success
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

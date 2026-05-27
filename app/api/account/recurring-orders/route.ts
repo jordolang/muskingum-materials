@@ -4,6 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { createRecurringOrderSchema } from "@/lib/schemas";
 import { z } from "zod";
 
+/**
+ * GET /api/account/recurring-orders
+ * Returns paginated list of recurring order subscriptions for authenticated user
+ * Query params: page (default: 1), limit (default: 20, max: 100)
+ * Recurring orders support frequencies: daily, weekly, biweekly, monthly
+ * Status values: active, paused, cancelled
+ */
 export async function GET(request: Request) {
   try {
     const session = await auth();
@@ -62,6 +69,13 @@ export async function GET(request: Request) {
   }
 }
 
+/**
+ * POST /api/account/recurring-orders
+ * Creates a new recurring order subscription (validated by createRecurringOrderSchema)
+ * Required: name, email, phone, items, deliveryAddress, frequency, nextDeliveryDate
+ * Frequency options: daily, weekly, biweekly, monthly
+ * Status is initialized as 'active'
+ */
 export async function POST(request: Request) {
   try {
     const session = await auth();

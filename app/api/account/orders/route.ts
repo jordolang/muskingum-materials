@@ -3,6 +3,12 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
+/**
+ * GET /api/account/orders
+ * Returns paginated list of orders for the authenticated user
+ * Query params: page (optional, default: 1), limit (optional, default: 20, max: 100)
+ * Response: { orders: Order[], total: number, page: number, limit: number, pages: number }
+ */
 export async function GET(request: Request) {
   let session;
   try {

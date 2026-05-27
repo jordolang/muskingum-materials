@@ -5,6 +5,13 @@ import { prisma } from "@/lib/prisma";
 import { profileUpdateSchema } from "@/lib/schemas";
 import { logger } from "@/lib/logger";
 
+/**
+ * GET /api/account/profile
+ * Fetches the authenticated user's profile including addresses
+ *
+ * Auth: Requires Clerk authentication
+ * Returns: { profile: UserProfile | null } with included addresses sorted by isDefault
+ */
 export async function GET() {
   let session;
   try {
@@ -33,6 +40,16 @@ export async function GET() {
   }
 }
 
+/**
+ * PUT /api/account/profile
+ * Creates or updates the authenticated user's profile
+ *
+ * Auth: Requires Clerk authentication
+ * Request body: profileUpdateSchema (name, email, phone, company, isContractor, contractorDiscount, smsOptIn)
+ * Returns: { profile: UserProfile } with included addresses
+ *
+ * Note: Supports contractor status management via isContractor and contractorDiscount fields
+ */
 export async function PUT(request: NextRequest) {
   let session;
   try {

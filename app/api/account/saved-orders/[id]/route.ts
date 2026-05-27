@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
+/**
+ * PATCH /api/account/saved-orders/[id]
+ * Updates an existing saved order template for the authenticated user
+ * Request body: { name?: string, items?: any, deliveryAddress?: string, pickupOrDeliver?: "pickup" | "deliver" }
+ * Returns: Updated saved order object
+ * Auth: Requires Clerk authentication and order ownership
+ */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -42,10 +50,19 @@ export async function PATCH(
 
     return NextResponse.json({ savedOrder });
   } catch (error) {
+    logger.error("Saved order update error", error, {
+      operation: "updateSavedOrder",
+    });
     return NextResponse.json({ error: "Failed to update saved order" }, { status: 500 });
   }
 }
 
+/**
+ * DELETE /api/account/saved-orders/[id]
+ * Deletes a saved order template for the authenticated user
+ * Returns: { success: true }
+ * Auth: Requires Clerk authentication and order ownership
+ */
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -77,6 +94,9 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    logger.error("Saved order deletion error", error, {
+      operation: "deleteSavedOrder",
+    });
     return NextResponse.json({ error: "Failed to delete saved order" }, { status: 500 });
   }
 }
