@@ -7,7 +7,11 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useChatStore } from "@/lib/store";
 import { useToast } from "@/lib/use-toast";
+<<<<<<< HEAD
 import { CHAT_CONTACT_THRESHOLD } from "@/lib/constants/business-rules";
+=======
+import { trackChatOpened } from "@/lib/analytics";
+>>>>>>> 4a7f9f7 (auto-claude: subtask-4-1 - Add chat widget open event tracking)
 
 export function ChatWidget() {
   const { isOpen, messages, toggleChat, addMessage, visitorId } = useChatStore();
@@ -19,6 +23,7 @@ export function ChatWidget() {
   const [contactSubmitted, setContactSubmitted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const prevIsOpenRef = useRef(false);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -41,6 +46,13 @@ export function ChatWidget() {
       });
     }
   }, [isOpen, messages.length, addMessage]);
+
+  useEffect(() => {
+    if (isOpen && !prevIsOpenRef.current) {
+      trackChatOpened({ visitorId });
+    }
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen, visitorId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -24,9 +24,9 @@ export function GoogleAnalytics() {
       <Script id="gtag-consent-init" strategy="afterInteractive">
         {`
           window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
+          window.gtag = function(){dataLayer.push(arguments);}
 
-          gtag('consent', 'default', {
+          window.gtag('consent', 'default', {
             'ad_storage': 'denied',
             'ad_user_data': 'denied',
             'ad_personalization': 'denied',
@@ -37,7 +37,7 @@ export function GoogleAnalytics() {
             try {
               var stored = localStorage.getItem('cookie-consent');
               if (stored === 'granted') {
-                gtag('consent', 'update', {
+                window.gtag('consent', 'update', {
                   'ad_storage': 'granted',
                   'ad_user_data': 'granted',
                   'ad_personalization': 'granted',
@@ -47,8 +47,8 @@ export function GoogleAnalytics() {
             } catch(e) {}
           })();
 
-          gtag('js', new Date());
-          gtag('config', '${gaId}');
+          window.gtag('js', new Date());
+          window.gtag('config', '${gaId}');
         `}
       </Script>
 

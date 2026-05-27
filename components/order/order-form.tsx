@@ -39,6 +39,7 @@ import {
 } from "./project-estimator";
 import { FulfillmentSection } from "./fulfillment-section";
 import { ContactSection } from "./contact-section";
+import { trackAddToCart, trackBeginCheckout, getAnalyticsItemId } from "@/lib/analytics";
 
 export interface OrderableProduct {
   id: string;
@@ -121,12 +122,33 @@ export function OrderForm({ products }: OrderFormProps) {
       .items.some((item) => item.name === match.name);
     if (!alreadyInCart) {
       addToCart({ name: match.name, price: match.price, unit: match.unit });
+      trackAddToCart({
+        itemId: getAnalyticsItemId(match.name),
+        itemName: match.name,
+        price: match.price,
+        quantity: 1,
+        category: "Bulk Materials",
+      });
       toast({
         title: "Added to your order",
         description: `${match.name} is ready to customize below.`,
       });
     }
   }, [productParam, addToCart, toast, products]);
+
+  const handleAddToCart = useCallback(
+    (product: { name: string; price: number; unit: string }) => {
+      addToCart(product);
+      trackAddToCart({
+        itemId: getAnalyticsItemId(product.name),
+        itemName: product.name,
+        price: product.price,
+        quantity: 1,
+        category: "Bulk Materials",
+      });
+    },
+    [addToCart]
+  );
 
   const handleSiteDataChange = useCallback((data: ProjectSiteData) => {
     setSiteData(data);
@@ -207,6 +229,16 @@ export function OrderForm({ products }: OrderFormProps) {
   async function submitCheckout(data: CheckoutData) {
     if (cart.length === 0) return;
     setIsProcessing(true);
+    trackBeginCheckout({
+      value: totals.total,
+      items: cart.map((item) => ({
+        itemId: getAnalyticsItemId(item.name),
+        itemName: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        category: "Bulk Materials",
+      })),
+    });
     try {
       const response = await fetch("/api/orders/checkout", {
         method: "POST",
@@ -224,8 +256,16 @@ export function OrderForm({ products }: OrderFormProps) {
       });
       const result = await response.json();
       if (result.url) {
+        // Store analytics data for success page tracking before redirect
+        if (result.analytics) {
+          sessionStorage.setItem("orderAnalytics", JSON.stringify(result.analytics));
+        }
         window.location.href = result.url;
       } else if (result.orderNumber) {
+        // Fallback if Stripe not configured — store analytics data for tracking
+        if (result.analytics) {
+          sessionStorage.setItem("orderAnalytics", JSON.stringify(result.analytics));
+        }
         setOrderNumber(result.orderNumber);
         setView("complete");
       } else {
@@ -363,7 +403,7 @@ export function OrderForm({ products }: OrderFormProps) {
             <ProductCatalog
               products={products}
               cart={cart}
-              onAddToCart={addToCart}
+              onAddToCart={handleAddToCart}
               onUpdateQuantity={updateQuantity}
               onSetQuantity={setQuantity}
             />

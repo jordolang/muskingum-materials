@@ -422,6 +422,7 @@ Payment: Pending — Stripe not configured, customer will pay on pickup/delivery
       paymentMethod: 'pay_on_pickup',
     });
 
+
     return NextResponse.json({
       orderNumber,
       analytics: {

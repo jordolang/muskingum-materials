@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { contactSchema, type ContactFormData } from "@/lib/schemas";
 import { useToast } from "@/lib/use-toast";
+import { trackContact } from "@/lib/analytics";
 
 export function ContactForm() {
   const [submitted, setSubmitted] = useState(false);
@@ -32,6 +33,11 @@ export function ContactForm() {
       });
 
       if (!response.ok) throw new Error("Submission failed");
+
+      const result = await response.json();
+
+      // Track contact form submission event
+      trackContact({ subject: (result.analytics?.subject as string | undefined) ?? data.subject });
 
       toast({
         title: "Message sent!",
