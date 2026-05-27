@@ -5,6 +5,42 @@ import { quoteSchema } from "@/lib/schemas";
 import { sendEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
 
+/**
+ * POST /api/quote
+ * Submit a quote request for products and services
+ *
+ * Request body (validated against quoteSchema):
+ * - name: string (min 2 chars, required)
+ * - email: string (valid email, required)
+ * - phone: string (optional)
+ * - company: string (optional)
+ * - products: Array<{ productName: string, quantity: string }> (required)
+ * - deliveryAddr: string (optional)
+ * - notes: string (optional)
+ *
+ * Response (200):
+ * {
+ *   success: true,
+ *   analytics: {
+ *     productCount: number,
+ *     leadSource: "quote_form"
+ *   }
+ * }
+ *
+ * Response (400): Invalid data - returns Zod validation errors
+ * {
+ *   error: "Invalid data",
+ *   details: ZodError[]
+ * }
+ *
+ * Response (500): Database or email error
+ * {
+ *   error: "Failed to save quote request" | "Internal server error"
+ * }
+ *
+ * Rate limit: 10 requests per hour (contact-quote tier)
+ * Side effects: Persists QuoteRequest to database, sends email notification to sales team
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
