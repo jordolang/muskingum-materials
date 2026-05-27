@@ -9,7 +9,12 @@ import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 
 const chatSchema = z.object({
   message: z.string().min(1).max(5000),
-  visitorId: z.string().min(1).max(100).optional(),
+  visitorId: z
+    .string()
+    .min(1)
+    .max(100)
+    .regex(/^[a-zA-Z0-9_-]+$/, "visitorId must be alphanumeric (letters, numbers, hyphens, underscores only)")
+    .optional(),
   history: z
     .array(
       z.object({

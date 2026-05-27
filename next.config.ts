@@ -1,6 +1,26 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  webpack: (config, { isServer }) => {
+    if (process.env.ANALYZE === "true") {
+      try {
+        const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
+        config.plugins.push(
+          new BundleAnalyzerPlugin({
+            analyzerMode: "static",
+            reportFilename: isServer
+              ? "../analyze/server.html"
+              : "./analyze/client.html",
+            openAnalyzer: !process.env.CI,
+          })
+        );
+      } catch (error) {
+        console.warn("webpack-bundle-analyzer not installed. Install it to enable bundle analysis:");
+        console.warn("  npm install --save-dev webpack-bundle-analyzer @next/bundle-analyzer");
+      }
+    }
+    return config;
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "cdn.sanity.io" },
@@ -47,6 +67,10 @@ const nextConfig: NextConfig = {
           {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+          },
+          {
+            key: "X-Frame-Options",
+            value: "SAMEORIGIN",
           },
         ],
       },
