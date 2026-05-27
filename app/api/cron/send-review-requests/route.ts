@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendReviewRequests } from "@/lib/jobs/send-review-requests";
 
+/**
+ * GET /api/cron/send-review-requests
+ * Cron job endpoint that sends automated review requests for completed orders
+ * Requires authorization via Bearer token (CRON_SECRET environment variable)
+ * Filters and processes orders eligible for review requests
+ */
 export async function GET(request: NextRequest) {
   // Verify authorization (Vercel Cron sends a specific header)
   const authHeader = request.headers.get("authorization");
