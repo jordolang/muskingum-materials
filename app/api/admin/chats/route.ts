@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * GET /api/admin/chats
+ * Returns paginated list of chat conversations with message counts
+ * Requires admin authentication via Clerk publicMetadata.role
+ * Query params: page (optional), limit (optional, max 100), status (optional)
+ */
 export async function GET(request: Request) {
   try {
     // Check authentication and admin role

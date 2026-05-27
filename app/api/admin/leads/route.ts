@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * GET /api/admin/leads
+ * Returns paginated list of leads with optional source filtering
+ * Requires admin authentication via Clerk publicMetadata role
+ * Query params: page (optional, default 1), limit (optional, default 20, max 100), source (optional)
+ */
 export async function GET(request: Request) {
   try {
     // Check authentication and admin role

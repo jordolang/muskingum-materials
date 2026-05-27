@@ -4,6 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { updateRecurringOrderSchema } from "@/lib/schemas";
 import { z } from "zod";
 
+/**
+ * GET /api/account/recurring-orders/[id]
+ * Returns a single recurring order subscription by ID for authenticated user
+ * Verifies ownership before returning the order details
+ */
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -33,6 +38,13 @@ export async function GET(
   }
 }
 
+/**
+ * PATCH /api/account/recurring-orders/[id]
+ * Updates a recurring order subscription (validated by updateRecurringOrderSchema)
+ * All fields are optional: name, email, phone, company, items, deliveryAddress, deliveryNotes, frequency, nextDeliveryDate
+ * Status management: can update status to 'active', 'paused', or 'cancelled'
+ * Verifies ownership before allowing update
+ */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -84,6 +96,12 @@ export async function PATCH(
   }
 }
 
+/**
+ * DELETE /api/account/recurring-orders/[id]
+ * Permanently deletes a recurring order subscription (hard delete)
+ * Verifies ownership before allowing deletion
+ * Returns success confirmation on successful deletion
+ */
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -16,6 +16,12 @@ async function checkAdminAuth() {
   return { authorized: true, user };
 }
 
+/**
+ * GET /api/admin/subscribers
+ * Returns paginated list of newsletter subscribers with optional filtering
+ * Requires admin authentication via Clerk publicMetadata role
+ * Query params: page (optional, default: 1), limit (optional, default: 20, max: 100), active (optional, boolean filter)
+ */
 export async function GET(request: NextRequest) {
   try {
     const authCheck = await checkAdminAuth();

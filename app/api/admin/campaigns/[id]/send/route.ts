@@ -18,6 +18,20 @@ async function checkAdminAuth() {
   return { authorized: true, user };
 }
 
+/**
+ * POST /api/admin/campaigns/[id]/send
+ * Sends a campaign to all active newsletter subscribers
+ * Requires: Admin authentication (Clerk role: admin)
+ * Params: id (campaign ID)
+ * Process:
+ *   1. Validates campaign exists and is not already sent/sending
+ *   2. Fetches all active newsletter subscribers
+ *   3. Updates campaign status to "sending"
+ *   4. Sends personalized emails with unsubscribe URLs
+ *   5. Updates campaign with delivery metrics (success/failure counts)
+ * Restrictions: Cannot send campaigns with status "sent" or "sending"
+ * Returns: Campaign with send results (totalRecipients, successCount, failureCount, status)
+ */
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -8,6 +8,11 @@ const chatUpdateSchema = z.object({
   status: z.enum(["active", "closed", "archived"]),
 });
 
+/**
+ * GET /api/admin/chats/[id]
+ * Returns full chat conversation details including all messages
+ * Requires admin authentication
+ */
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -66,6 +71,12 @@ export async function GET(
   }
 }
 
+/**
+ * PATCH /api/admin/chats/[id]
+ * Updates chat conversation status (active, closed, archived)
+ * Requires admin authentication
+ * Request body: { status: "active" | "closed" | "archived" }
+ */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

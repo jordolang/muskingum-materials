@@ -1,3 +1,8 @@
+/**
+ * Sanity CMS client configuration with graceful degradation
+ * Provides two client instances: sanityClient for CDN-cached reads and previewClient for draft content
+ */
+
 import { createClient, type SanityClient } from "next-sanity";
 import { sanityConfig } from "./config";
 
@@ -15,6 +20,10 @@ import { sanityConfig } from "./config";
 // createClient path unchanged.
 const usingPlaceholderConfig = sanityConfig.projectId === "placeholder";
 
+/**
+ * Creates a no-op stub client for graceful degradation when Sanity is not configured
+ * @returns A proxy-based stub that prevents build crashes in preview environments
+ */
 function createStubClient(): SanityClient {
   // SanityClient has a wide surface; we only stub the methods the app
   // actually uses in server components. Everything else is a no-op that
@@ -34,6 +43,11 @@ function createStubClient(): SanityClient {
   }) as unknown as SanityClient;
 }
 
+/**
+ * Safely creates a Sanity client with fallback to stub client on error
+ * @param config - Sanity client configuration
+ * @returns A configured Sanity client or stub client if configuration is invalid
+ */
 function safeCreateClient(
   config: Parameters<typeof createClient>[0],
 ): SanityClient {
@@ -45,11 +59,31 @@ function safeCreateClient(
   }
 }
 
+/**
+ * Standard Sanity client for production reads
+ * - Uses CDN for fast, cached responses
+ * - Includes stega encoding for visual editing in draft mode
+ * - Use this for all public-facing content queries
+ * @example
+ * ```ts
+ * import { sanityClient } from "@/lib/sanity/client";
+ * import { productsQuery } from "@/lib/sanity/queries";
+ *
+ * // Fetch all products (CDN-cached)
+ * const products = await sanityClient.fetch(productsQuery);
+ * ```
+ */
 export const sanityClient = safeCreateClient({
   ...sanityConfig,
   stega: { studioUrl: "/studio" },
 });
 
+/**
+ * Preview client for accessing draft content
+ * - Bypasses CDN to fetch latest unpublished changes
+ * - Requires SANITY_API_TOKEN for authenticated access
+ * - Use this when displaying draft content or in preview mode
+ */
 export const previewClient = safeCreateClient({
   ...sanityConfig,
   useCdn: false,

@@ -4,6 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { newsletterSchema } from "@/lib/schemas";
 import { logger } from "@/lib/logger";
 
+/**
+ * POST /api/newsletter/unsubscribe
+ * Unsubscribes an email from the newsletter
+ * Request body: { email: string, name?: string }
+ * Response: { success: true } | { error: string }
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

@@ -31,6 +31,15 @@ function generateOrderNumber(): string {
   return `MM-${datePart}-${randomPart}`;
 }
 
+/**
+ * POST /api/admin/orders/phone
+ * Admin endpoint - creates an order from a phone call
+ * Requires: Admin authentication via requireAdmin()
+ * Body: { name, email, phone, items[], fulfillment, deliveryAddress?, deliveryNotes?, notes? }
+ * Creates order with "confirmed" status and "unpaid" payment status
+ * Sends email notification to sales@muskingummaterials.com
+ * Returns: { orderNumber, orderId }
+ */
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin();

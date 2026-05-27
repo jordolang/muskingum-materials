@@ -131,6 +131,7 @@ npm install
 # 3. Configure environment variables
 cp .env.local.example .env.local
 # Fill in the required values (see Environment Variables below)
+# For detailed setup instructions and troubleshooting, see docs/DEVELOPER_SETUP.md
 
 # 4. Push database schema to Neon
 npm run db:push
@@ -175,6 +176,8 @@ Open [http://localhost:3000](http://localhost:3000). Sanity Studio is at [http:/
 | `SENTRY_DSN` | No | Enables Sentry error tracking |
 
 All optional integrations degrade gracefully when their env vars are absent.
+
+**For detailed setup instructions, troubleshooting, and service-specific configuration, see [docs/DEVELOPER_SETUP.md](docs/DEVELOPER_SETUP.md).**
 
 ---
 

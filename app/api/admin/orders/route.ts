@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * GET /api/admin/orders
+ * Admin endpoint - lists all orders with pagination
+ * Requires: Clerk authentication with admin role in publicMetadata
+ * Query params: page (default: 1), limit (default: 20, max: 100)
+ * Returns: Paginated order list with total count and page metadata
+ */
 export async function GET(request: Request) {
   try {
     // Check authentication and admin role

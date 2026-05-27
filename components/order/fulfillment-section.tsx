@@ -206,10 +206,42 @@ export function FulfillmentSection({
             />
           </div>
 
-          <p className="rounded-md bg-amber-50 p-2 text-xs text-amber-700">
-            Delivery fees vary by distance. We&apos;ll confirm the final
-            delivery fee and total before processing payment.
-          </p>
+          <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 space-y-2">
+            <p className="font-semibold text-sm">Delivery Notice &amp; Payment Terms</p>
+            <p>
+              By selecting delivery, you acknowledge that you are requesting materials to be
+              delivered to the address and according to the instructions you provide.
+            </p>
+            <p>
+              Please note that delivery fees are <strong>not included</strong> in your online
+              payment and will not be charged at checkout. All product and service charges,
+              excluding delivery fees, must be paid in full at the time the order is submitted
+              to ensure your order can be processed and scheduled.
+            </p>
+            <p>
+              After submitting your order, you will receive a payment confirmation and invoice
+              for the materials purchased. Our staff will then review your order, schedule
+              delivery, and prepare any required service agreements or confirmations. Please
+              allow 24–48 business hours to receive your official service confirmation.
+            </p>
+            <p>
+              <strong>Delivery charges will be assessed separately and collected by the driver
+              at the time of delivery.</strong> Any estimated shipping or delivery amounts
+              shown prior to checkout are for reference only and are not charged to your
+              account during the ordering process.
+            </p>
+            <p>
+              If the individual placing the order will not be present at the delivery location,
+              please include the name and information of the authorized person responsible for
+              receiving the materials, signing delivery documents, and making payment for
+              delivery charges in the Delivery Instructions section above.
+            </p>
+            <p>
+              Neither automated invoices, payment confirmations, digital receipts, nor delivery
+              scheduling confirmations constitute payment of delivery fees unless explicitly
+              stated otherwise.
+            </p>
+          </div>
         </div>
       )}
     </div>
@@ -233,8 +265,11 @@ function FulfillmentOption({
   register,
   value,
 }: FulfillmentOptionProps) {
+  const inputId = `fulfillment-${value}`;
+
   return (
     <label
+      htmlFor={inputId}
       className={cn(
         "flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-colors",
         selected
@@ -243,6 +278,7 @@ function FulfillmentOption({
       )}
     >
       <input
+        id={inputId}
         type="radio"
         value={value}
         {...register("fulfillment")}

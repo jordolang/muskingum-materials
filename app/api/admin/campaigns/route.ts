@@ -18,6 +18,12 @@ async function checkAdminAuth() {
   return { authorized: true, user };
 }
 
+/**
+ * GET /api/admin/campaigns
+ * Returns paginated list of email marketing campaigns
+ * Requires: Admin authentication (Clerk role: admin)
+ * Query params: page (default: 1), limit (default: 20, max: 100)
+ */
 export async function GET(request: NextRequest) {
   try {
     const authCheck = await checkAdminAuth();
@@ -65,6 +71,13 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * POST /api/admin/campaigns
+ * Creates a new email marketing campaign in draft status
+ * Requires: Admin authentication (Clerk role: admin)
+ * Validates: campaignSchema (subject, body, templateId, scheduledFor)
+ * Body: { subject: string, body: string, templateId?: string, scheduledFor?: Date }
+ */
 export async function POST(request: NextRequest) {
   try {
     const authCheck = await checkAdminAuth();

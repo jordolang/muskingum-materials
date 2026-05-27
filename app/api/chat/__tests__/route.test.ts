@@ -23,6 +23,18 @@ vi.mock("@ai-sdk/anthropic", () => ({
   anthropic: vi.fn(() => "mocked-model"),
 }));
 
+vi.mock("@/lib/rate-limit", () => ({
+  checkRateLimit: vi.fn(() =>
+    Promise.resolve({
+      success: true,
+      limit: 5,
+      remaining: 4,
+      reset: Date.now() + 60000,
+    })
+  ),
+  getClientIdentifier: vi.fn(() => "test-client"),
+}));
+
 describe("POST /api/chat", () => {
   const validChatData = {
     message: "What are your hours of operation?",
@@ -622,6 +634,220 @@ describe("POST /api/chat", () => {
 
       expect(response.status).toBe(200);
       expect(data.reply).toContain("I'm having trouble right now");
+    });
+  });
+
+  describe("visitorId format validation", () => {
+    it("should accept valid visitorId with alphanumeric characters", async () => {
+      const mockConversation = {
+        id: "conv_123",
+        visitorId: "visitor123",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      vi.mocked(prisma.chatConversation.upsert).mockResolvedValue(mockConversation as any);
+      vi.mocked(prisma.chatMessage.createMany).mockResolvedValue({ count: 2 } as any);
+
+      const request = new Request("http://localhost:3000/api/chat", {
+        method: "POST",
+        body: JSON.stringify({
+          message: "Hello",
+          visitorId: "visitor123",
+        }),
+      });
+
+      const response = await POST(request as any);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.reply).toBeDefined();
+    });
+
+    it("should accept valid visitorId with hyphens", async () => {
+      const mockConversation = {
+        id: "conv_123",
+        visitorId: "visitor-123-test",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      vi.mocked(prisma.chatConversation.upsert).mockResolvedValue(mockConversation as any);
+      vi.mocked(prisma.chatMessage.createMany).mockResolvedValue({ count: 2 } as any);
+
+      const request = new Request("http://localhost:3000/api/chat", {
+        method: "POST",
+        body: JSON.stringify({
+          message: "Hello",
+          visitorId: "visitor-123-test",
+        }),
+      });
+
+      const response = await POST(request as any);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.reply).toBeDefined();
+    });
+
+    it("should accept valid visitorId with underscores", async () => {
+      const mockConversation = {
+        id: "conv_123",
+        visitorId: "visitor_123_test",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      vi.mocked(prisma.chatConversation.upsert).mockResolvedValue(mockConversation as any);
+      vi.mocked(prisma.chatMessage.createMany).mockResolvedValue({ count: 2 } as any);
+
+      const request = new Request("http://localhost:3000/api/chat", {
+        method: "POST",
+        body: JSON.stringify({
+          message: "Hello",
+          visitorId: "visitor_123_test",
+        }),
+      });
+
+      const response = await POST(request as any);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.reply).toBeDefined();
+    });
+
+    it("should accept valid visitorId with mixed allowed characters", async () => {
+      const mockConversation = {
+        id: "conv_123",
+        visitorId: "Visitor_123-Test",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      vi.mocked(prisma.chatConversation.upsert).mockResolvedValue(mockConversation as any);
+      vi.mocked(prisma.chatMessage.createMany).mockResolvedValue({ count: 2 } as any);
+
+      const request = new Request("http://localhost:3000/api/chat", {
+        method: "POST",
+        body: JSON.stringify({
+          message: "Hello",
+          visitorId: "Visitor_123-Test",
+        }),
+      });
+
+      const response = await POST(request as any);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.reply).toBeDefined();
+    });
+
+    it("should reject visitorId with spaces", async () => {
+      const request = new Request("http://localhost:3000/api/chat", {
+        method: "POST",
+        body: JSON.stringify({
+          message: "Hello",
+          visitorId: "visitor 123",
+        }),
+      });
+
+      const response = await POST(request as any);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe("Invalid request data");
+      expect(data.details).toBeDefined();
+      expect(prisma.chatConversation.upsert).not.toHaveBeenCalled();
+    });
+
+    it("should reject visitorId with special characters", async () => {
+      const request = new Request("http://localhost:3000/api/chat", {
+        method: "POST",
+        body: JSON.stringify({
+          message: "Hello",
+          visitorId: "visitor@123",
+        }),
+      });
+
+      const response = await POST(request as any);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe("Invalid request data");
+      expect(data.details).toBeDefined();
+      expect(prisma.chatConversation.upsert).not.toHaveBeenCalled();
+    });
+
+    it("should reject visitorId with dots", async () => {
+      const request = new Request("http://localhost:3000/api/chat", {
+        method: "POST",
+        body: JSON.stringify({
+          message: "Hello",
+          visitorId: "visitor.123",
+        }),
+      });
+
+      const response = await POST(request as any);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe("Invalid request data");
+      expect(data.details).toBeDefined();
+      expect(prisma.chatConversation.upsert).not.toHaveBeenCalled();
+    });
+
+    it("should reject visitorId with slashes", async () => {
+      const request = new Request("http://localhost:3000/api/chat", {
+        method: "POST",
+        body: JSON.stringify({
+          message: "Hello",
+          visitorId: "visitor/123",
+        }),
+      });
+
+      const response = await POST(request as any);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe("Invalid request data");
+      expect(data.details).toBeDefined();
+      expect(prisma.chatConversation.upsert).not.toHaveBeenCalled();
+    });
+
+    it("should reject visitorId with unicode characters", async () => {
+      const request = new Request("http://localhost:3000/api/chat", {
+        method: "POST",
+        body: JSON.stringify({
+          message: "Hello",
+          visitorId: "visitor_éè",
+        }),
+      });
+
+      const response = await POST(request as any);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe("Invalid request data");
+      expect(data.details).toBeDefined();
+      expect(prisma.chatConversation.upsert).not.toHaveBeenCalled();
+    });
+
+    it("should reject empty visitorId string", async () => {
+      const request = new Request("http://localhost:3000/api/chat", {
+        method: "POST",
+        body: JSON.stringify({
+          message: "Hello",
+          visitorId: "",
+        }),
+      });
+
+      const response = await POST(request as any);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe("Invalid request data");
+      expect(data.details).toBeDefined();
+      expect(prisma.chatConversation.upsert).not.toHaveBeenCalled();
     });
   });
 

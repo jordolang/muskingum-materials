@@ -21,6 +21,7 @@ const SERVICE_FALLBACK_IMAGES = [
 
 export default async function ServicesPage() {
   const services = await getServices();
+  type Service = Awaited<ReturnType<typeof getServices>>[number];
   const phone = BUSINESS_INFO.phone;
 
   return (
@@ -41,7 +42,7 @@ export default async function ServicesPage() {
           </p>
         ) : (
           <div className="space-y-12">
-            {services.map((service, i) => {
+            {services.map((service: Service, i: number) => {
               const imageSrc =
                 SERVICE_FALLBACK_IMAGES[i % SERVICE_FALLBACK_IMAGES.length];
               const isReversed = i % 2 === 1;
@@ -70,7 +71,7 @@ export default async function ServicesPage() {
                       {service.description}
                     </p>
                     <ul className="space-y-2">
-                      {service.features.map((feature) => (
+                      {service.features.map((feature: string) => (
                         <li
                           key={feature}
                           className="flex items-center gap-2 text-sm"

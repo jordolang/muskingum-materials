@@ -6,6 +6,12 @@ import { previewClient } from "@/lib/sanity/client";
 import { reviewSchema } from "@/lib/schemas";
 import { logger } from "@/lib/logger";
 
+/**
+ * POST /api/reviews
+ * Accepts customer review submissions with reviewSchema validation
+ * Request body: name, email (optional), rating (1-5), text, projectType (driveway|patio|landscaping|commercial|other), orderNumber (optional)
+ * Creates testimonial in Sanity (approved: false), tracks submission in database, sends notification email
+ */
 export async function POST(request: NextRequest) {
   try {
     // Get authenticated user ID if available (optional for guest submissions)

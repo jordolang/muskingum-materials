@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
+/**
+ * GET /api/account/saved-orders
+ * Retrieves all saved order templates for the authenticated user
+ * Returns: Array of saved orders with items, delivery info, and metadata
+ * Auth: Requires Clerk authentication
+ */
 export async function GET() {
   try {
     const session = await auth();
@@ -26,11 +33,20 @@ export async function GET() {
 
     return NextResponse.json({ savedOrders });
   } catch (error) {
-    console.error("Saved orders fetch error:", error);
+    logger.error("Saved orders fetch error", error, {
+      operation: "getSavedOrders",
+    });
     return NextResponse.json({ error: "Failed to fetch saved orders" }, { status: 500 });
   }
 }
 
+/**
+ * POST /api/account/saved-orders
+ * Creates a new saved order template for the authenticated user
+ * Request body: { name: string, items: any, deliveryAddress?: string, pickupOrDeliver?: "pickup" | "deliver" }
+ * Returns: Created saved order object
+ * Auth: Requires Clerk authentication
+ */
 export async function POST(request: Request) {
   try {
     const session = await auth();
@@ -60,7 +76,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ savedOrder }, { status: 201 });
   } catch (error) {
-    console.error("Saved order creation error:", error);
+    logger.error("Saved order creation error", error, {
+      operation: "createSavedOrder",
+    });
     return NextResponse.json({ error: "Failed to create saved order" }, { status: 500 });
   }
 }

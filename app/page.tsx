@@ -98,7 +98,10 @@ export default async function HomePage() {
       }),
   ]);
 
-  const featuredProducts: HomeProduct[] = productRows.map((row) => ({
+  type ProductRow = typeof productRows[number];
+  type ServiceRow = typeof serviceRows[number];
+
+  const featuredProducts: HomeProduct[] = productRows.map((row: ProductRow) => ({
     _id: row.id,
     name: row.name,
     description: row.shortDescription ?? row.description,
@@ -108,7 +111,7 @@ export default async function HomePage() {
     imageAlt: row.imageAlt ?? undefined,
   }));
 
-  const services: HomeService[] = serviceRows.map((row) => ({
+  const services: HomeService[] = serviceRows.map((row: ServiceRow) => ({
     _id: row.id,
     title: row.title,
     description: row.description,
@@ -326,7 +329,7 @@ export default async function HomePage() {
               { img: "stone-hand", label: "Product Quality", desc: "Hand-inspected gravel" },
               { img: "feeder", label: "Processing", desc: "Sorting & washing systems" },
             ].map((item) => (
-              <div key={item.img} className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer">
+              <Link key={item.img} href="/gallery" className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer block">
                 <Image
                   src={`/images/photos/${item.img}.jpg`}
                   alt={item.label}
@@ -349,7 +352,7 @@ export default async function HomePage() {
                 </div>
                 {/* Hover border glow */}
                 <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-amber-400/50 transition-colors duration-300" />
-              </div>
+              </Link>
             ))}
           </div>
           <div className="text-center mt-8">
