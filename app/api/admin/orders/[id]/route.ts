@@ -8,6 +8,13 @@ const orderUpdateSchema = z.object({
   status: z.enum(["pending", "confirmed", "processing", "ready", "completed", "canceled"]),
 });
 
+/**
+ * PATCH /api/admin/orders/[id]
+ * Admin endpoint - updates order status
+ * Requires: Admin authentication via requireAdmin()
+ * Body: { status } - validated via orderUpdateSchema (see also orderStatusUpdateSchema in lib/schemas.ts)
+ * Returns: Updated order with full details
+ */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
