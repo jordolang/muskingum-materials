@@ -498,11 +498,11 @@ function CartReview({
                 <button
                   type="button"
                   onClick={() => onUpdateQuantity(item.name, -1)}
-                  className="h-7 w-7 inline-flex items-center justify-center rounded-md border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+                  className="h-11 w-11 inline-flex items-center justify-center rounded-md border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50 shrink-0"
                   aria-label={`Decrease ${item.name}`}
                   disabled={item.quantity <= 1}
                 >
-                  <Minus className="h-3 w-3" />
+                  <Minus className="h-4 w-4" />
                 </button>
                 <Badge
                   variant="secondary"
@@ -514,10 +514,10 @@ function CartReview({
                 <button
                   type="button"
                   onClick={() => onUpdateQuantity(item.name, 1)}
-                  className="h-7 w-7 inline-flex items-center justify-center rounded-md border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="h-11 w-11 inline-flex items-center justify-center rounded-md border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground shrink-0"
                   aria-label={`Increase ${item.name}`}
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-4 w-4" />
                 </button>
               </div>
 
