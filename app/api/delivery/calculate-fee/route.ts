@@ -29,6 +29,11 @@ const deliverySettingsQuery = groq`
   }
 `;
 
+/**
+ * Geocodes an address using Google Maps API
+ * Returns latitude/longitude coordinates or null if geocoding fails
+ * Requires NEXT_PUBLIC_GOOGLE_MAPS_API_KEY environment variable
+ */
 async function geocodeAddress(address: string): Promise<Coordinates | null> {
   if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
     throw new Error("Google Maps API key not configured");
@@ -56,6 +61,14 @@ async function geocodeAddress(address: string): Promise<Coordinates | null> {
   }
 }
 
+/**
+ * POST /api/delivery/calculate-fee
+ * Calculates delivery fee for a given address
+ * Request body: { address: string }
+ * Geocodes the address via Google Maps API, calculates distance from business location,
+ * and computes fee based on delivery settings (base fee + per-mile rate)
+ * Response: { success: boolean, address: string, withinZone: boolean, distance: number, fee: number, breakdown: object, settings: DeliverySettings }
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

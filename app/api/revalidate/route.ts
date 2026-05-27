@@ -4,9 +4,27 @@ import { z } from "zod";
 
 const revalidateSchema = z.object({
   secret: z.string(),
-  type: z.enum(["products", "services", "faq", "gallery", "testimonials", "site-settings"]),
+  tag: z.enum(["faq", "gallery", "testimonials", "site-settings"]),
 });
 
+/**
+ * POST /api/revalidate
+ * Next.js ISR (Incremental Static Regeneration) revalidation webhook
+ *
+ * Integrates with Sanity CMS to trigger cache invalidation when content is updated.
+ * Validates a secret token (REVALIDATE_SECRET) to prevent unauthorized revalidation.
+ * Revalidates cache tags based on content type using Next.js revalidateTag.
+ *
+ * Request body:
+ * - secret: string (matches REVALIDATE_SECRET env var)
+ * - type: "products" | "services" | "faq" | "gallery" | "testimonials" | "site-settings"
+ *
+ * Returns:
+ * - 200: { success: true, revalidated: true, type: string, now: number }
+ * - 400: Invalid request data or malformed JSON
+ * - 401: Invalid secret token
+ * - 500: Server misconfiguration (REVALIDATE_SECRET not set)
+ */
 export async function POST(request: NextRequest) {
   try {
     let body: unknown;
@@ -21,7 +39,7 @@ export async function POST(request: NextRequest) {
     const data = revalidateSchema.parse(body);
 
     // Verify secret token
-    const revalidateSecret = process.env.REVALIDATE_SECRET;
+    const revalidateSecret = process.env.SANITY_REVALIDATE_SECRET;
     if (!revalidateSecret) {
       return NextResponse.json(
         { error: "Server misconfiguration" },
@@ -36,12 +54,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Revalidate the cache tag for the specified content type
-    revalidateTag(data.type);
+    revalidateTag(data.tag);
 
     return NextResponse.json({
       success: true,
       revalidated: true,
-      type: data.type,
+      tag: data.tag,
       now: Date.now(),
     });
   } catch (error) {

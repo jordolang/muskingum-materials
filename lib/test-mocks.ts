@@ -189,6 +189,10 @@ export const createMockPrisma = () => {
       delete: vi.fn(),
     },
     $disconnect: vi.fn(),
+    // $transaction is cast via `as unknown as PrismaClient` because building a full
+    // DeepMockProxy<PrismaClient> requires jest-mock-extended; this partial mock is
+    // sufficient for the unit tests that use it. Add model-specific fns above as needed.
+    $transaction: vi.fn(),
   } as unknown as PrismaClient;
 
   return mockPrisma;
@@ -203,7 +207,7 @@ export const mockStripePaymentIntent = {
   amount: 4470,
   currency: "usd",
   status: "succeeded" as const,
-  client_secret: "pi_123abc_secret_xyz",
+  client_secret: "sk_test_fake_key_for_testing_only_not_real",
   metadata: {
     orderId: "order_123",
   },

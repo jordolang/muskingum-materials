@@ -5,7 +5,7 @@
 **Minimum required:** Neon Postgres database (`DATABASE_URL` + `DIRECT_URL`).
 Everything else is optional and degrades gracefully.
 
-For full-feature local development, add Clerk (auth) and Sanity (CMS).
+For full-featured local development, add Clerk (auth) and Sanity (CMS).
 For minimal testing, just set up the database and start coding.
 
 Copy `.env.local.example` to `.env.local`, fill in required database credentials,

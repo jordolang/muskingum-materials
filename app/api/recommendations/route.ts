@@ -8,6 +8,13 @@ const querySchema = z.object({
   areaSize: z.string().min(1),
 });
 
+/**
+ * GET /api/recommendations
+ * Returns product and service recommendations based on project type and area size
+ * Uses an algorithm to match project requirements with appropriate products and services
+ * Query params: projectType (required), areaSize (required)
+ * Response: { success: boolean, data?: { products: Product[], services: Service[], ... }, error?: string }
+ */
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const parsed = querySchema.safeParse({

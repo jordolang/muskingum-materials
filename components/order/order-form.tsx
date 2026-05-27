@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { BUSINESS_INFO } from "@/data/business";
 import { useToast } from "@/lib/use-toast";
+import { logger } from "@/lib/logger";
 import { useCartStore } from "@/lib/store";
 import { OrderConfirmation } from "./order-confirmation";
 import { ProductCatalog } from "./product-catalog";
@@ -231,11 +232,11 @@ export function OrderForm({ products }: OrderFormProps) {
         throw new Error(result.error || "Checkout failed");
       }
     } catch (error) {
-      console.error("Checkout error:", error);
+      logger.error("Checkout error:", error);
       toast({
         variant: "destructive",
         title: "Checkout Error",
-        description: `Something went wrong. Please try again or call us at ${BUSINESS_INFO.phone} to place your order.`,
+        description: error instanceof Error ? error.message : `Something went wrong. Please try again or call us at ${BUSINESS_INFO.phone} to place your order.`,
       });
     } finally {
       setIsProcessing(false);

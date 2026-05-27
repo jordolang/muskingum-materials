@@ -5,6 +5,11 @@ import { prisma } from "@/lib/prisma";
 import { orderStatusUpdateSchema } from "@/lib/schemas";
 import { sendOrderStatusEmail, type OrderEmailData, type OrderStatus } from "@/lib/email/order-notifications";
 
+/**
+ * GET /api/account/orders/[orderNumber]
+ * Retrieves a specific order by order number for the authenticated user
+ * Response: { order: Order }
+ */
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ orderNumber: string }> }
@@ -34,6 +39,13 @@ export async function GET(
   }
 }
 
+/**
+ * PUT /api/account/orders/[orderNumber]
+ * Updates order status (admin only)
+ * Request body: { status: OrderStatus, statusNotes?: string }
+ * Creates status history entry and sends email notification
+ * Response: { order: Order }
+ */
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ orderNumber: string }> }

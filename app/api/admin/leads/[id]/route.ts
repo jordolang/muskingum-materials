@@ -8,6 +8,12 @@ const leadUpdateSchema = z.object({
   status: z.enum(["new", "contacted", "qualified", "converted", "closed"]),
 });
 
+/**
+ * PATCH /api/admin/leads/[id]
+ * Updates lead status for the specified lead ID
+ * Requires admin authentication
+ * Request body: { status: "new" | "contacted" | "qualified" | "converted" | "closed" }
+ */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

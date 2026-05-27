@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 const restockNotifySchema = z.object({
   email: z.string().email(),
   productId: z.string().min(1),
 });
 
+/**
+ * POST /api/restock-notify
+ * Creates a restock notification subscription for a product
+ * Request body: { email: string, productId: string }
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -28,8 +34,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log database errors for monitoring
-    console.error('[restock-notify] Database error:', error);
+    logger.error("Restock notification error", error, {
+      operation: "createRestockNotification",
+    });
 
     return NextResponse.json(
       { error: "Failed to save notification request. Please try again." },

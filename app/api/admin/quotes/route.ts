@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * GET /api/admin/quotes
+ * Returns paginated list of quote requests with filtering
+ * Query params: page (optional, default 1), limit (optional, default 20, max 100), status (optional)
+ * Response: { quotes: QuoteRequest[], total: number, page: number, limit: number, pages: number }
+ */
 export async function GET(request: Request) {
   try {
     // Check authentication and admin role

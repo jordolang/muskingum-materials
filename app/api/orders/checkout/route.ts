@@ -16,6 +16,19 @@ function generateOrderNumber(): string {
   return `MM-${datePart}-${randomPart}`;
 }
 
+/**
+ * Checkout endpoint for processing customer orders with Stripe payment integration
+ * Handles:
+ * - checkoutSchema validation (name, email, phone, items, fulfillment, project site data)
+ * - Order number generation in format MM-YYMMDD-XXXXXXXX
+ * - Authenticated user detection and contractor discount application
+ * - Price validation against product catalog (prevents client-side price manipulation)
+ * - Project site data capture with satellite map URL generation for estimator-drawn polygons
+ * - Database order creation with full project details and calculated totals
+ * - Stripe Checkout Session creation with line items for products, tax, and processing fee
+ * - Email notification to sales@muskingummaterials.com with order details and site map
+ * - Fallback to pay-on-pickup flow when Stripe is not configured
+ */
 export async function POST(request: NextRequest) {
   return startTransaction('checkout', 'http.request', () => {
     return handleCheckout(request);

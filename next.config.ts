@@ -69,6 +69,10 @@ const nextConfig: NextConfig = {
             value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
           },
           {
+            // Both CSP `frame-ancestors` and X-Frame-Options are intentionally set.
+            // Modern browsers (Chrome 40+, Firefox 33+, Safari 10+) enforce frame-ancestors
+            // from the CSP header; older browsers fall back to X-Frame-Options: SAMEORIGIN.
+            // Setting both provides maximum browser compatibility without redundancy.
             key: "X-Frame-Options",
             value: "SAMEORIGIN",
           },

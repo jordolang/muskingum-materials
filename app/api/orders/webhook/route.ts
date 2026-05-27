@@ -6,6 +6,22 @@ import { logger } from "@/lib/logger";
 import { addBreadcrumb } from "@/lib/monitoring";
 import * as Sentry from "@sentry/nextjs";
 
+/**
+ * Stripe webhook endpoint for payment and order status updates
+ *
+ * Handles:
+ * - checkout.session.completed: Confirms payment, updates order status to paid/confirmed,
+ *   retrieves Stripe receipt URL, awards loyalty points for logged-in customers,
+ *   and sends SMS notifications for opted-in customers
+ * - checkout.session.expired: Marks order as expired/canceled and logs payment failure
+ * - order.completed: Custom event to mark order as completed with timestamp
+ *
+ * Security:
+ * - Validates Stripe webhook signature using STRIPE_WEBHOOK_SECRET
+ * - Rejects requests without valid signature (400 Bad Request)
+ * - Uses secure webhook event construction to prevent tampering
+ * - Logs all webhook events and failures for audit trail
+ */
 export async function POST(request: NextRequest) {
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
     logger.error(

@@ -10,6 +10,16 @@ const refundSchema = z.object({
   reason: z.string().min(1).max(500),
 });
 
+/**
+ * POST /api/admin/orders/[id]/refund
+ * Admin endpoint - processes full or partial refund via Stripe
+ * Requires: Admin authentication via requireAdmin()
+ * Body: { amount, reason }
+ * Validates: Order exists, is paid, has Stripe payment ID, amount <= total
+ * Creates Stripe refund, updates order paymentStatus (refunded or partially_refunded)
+ * Records status history and sends email notification to customer
+ * Returns: { success, refundId, newPaymentStatus }
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
