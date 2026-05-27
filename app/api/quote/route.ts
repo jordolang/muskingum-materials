@@ -6,40 +6,17 @@ import { sendEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
 
 /**
- * POST /api/quote
- * Submit a quote request for products and services
+ * Submit a quote request for products and services.
  *
- * Request body (validated against quoteSchema):
- * - name: string (min 2 chars, required)
- * - email: string (valid email, required)
- * - phone: string (optional)
- * - company: string (optional)
- * - products: Array<{ productName: string, quantity: string }> (required)
- * - deliveryAddr: string (optional)
- * - notes: string (optional)
- *
- * Response (200):
- * {
- *   success: true,
- *   analytics: {
- *     productCount: number,
- *     leadSource: "quote_form"
- *   }
- * }
- *
- * Response (400): Invalid data - returns Zod validation errors
- * {
- *   error: "Invalid data",
- *   details: ZodError[]
- * }
- *
- * Response (500): Database or email error
- * {
- *   error: "Failed to save quote request" | "Internal server error"
- * }
- *
- * Rate limit: 10 requests per hour (contact-quote tier)
- * Side effects: Persists QuoteRequest to database, sends email notification to sales team
+ * @access public
+ * @param request - Incoming request with body validated against {@link quoteSchema} in lib/schemas.ts
+ * @returns 200 `{ success: true, analytics: { productCount: number, leadSource: "quote_form" } }`
+ * @throws 400 `{ error: "Invalid data", details: ZodError[] }` when validation fails
+ * @throws 500 `{ error: "Failed to save quote request" }` on database error
+ * @throws 500 `{ error: "Internal server error" }` on unexpected error
+ * @see quoteSchema in lib/schemas.ts for request body shape
+ * @see rateLimitedEndpoints in middleware.ts — contact-quote tier (10 req/hr)
+ * @see {@link https://postmarkapp.com} — email notification sent to sales team on success
  */
 export async function POST(request: NextRequest) {
   try {

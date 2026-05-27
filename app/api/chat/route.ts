@@ -108,32 +108,19 @@ GUIDELINES:
 }
 
 /**
- * POST /api/chat - AI-powered customer service chat endpoint
+ * AI-powered customer service chat endpoint.
  *
- * Handles conversational support using Claude AI with dynamic system prompts built from:
- * - Live product catalog (Prisma Product table)
- * - Live services catalog (Prisma Service table)
- * - Business info (hours, contact, payment methods)
- *
- * Request body (chatSchema):
- * - message: string (1-5000 chars)
- * - visitorId: optional string for conversation continuity
- * - history: optional array of {role, content} for context (max 50 messages)
- *
- * Response:
- * - { reply: string, conversationId?: string, messageId?: string }
- * - Rate limit headers (X-RateLimit-*)
- *
- * Rate limit: 5 requests per minute per IP (tier: "chat")
- *
- * Fallback behavior:
- * - If ANTHROPIC_API_KEY missing → keyword-matched static responses (getStaticResponse)
- * - If catalog fetch fails → system prompt notes unavailable, directs to phone
- *
- * Database logging (best-effort):
- * - Creates/updates ChatConversation by visitorId
- * - Stores user message and assistant reply as ChatMessage records
- * - DB failures do not fail the request (logged only)
+ * @access public
+ * @param request - Incoming request with body validated against the local `chatSchema`
+ *   (message, visitorId, history). See lib/schemas.ts for shared schema conventions.
+ * @returns 200 `{ reply: string }` with `X-RateLimit-*` headers on success
+ * @returns 429 `{ error: string, retryAfter: number }` when rate limit is exceeded
+ * @throws 400 `{ error: "Invalid request data", details: ZodError[] }` when validation fails
+ * @see rateLimitedEndpoints in middleware.ts — chat tier (5 req/min per IP)
+ * @see RATE_LIMIT_TIERS in lib/rate-limit.ts for tier configuration
+ * @see buildSystemPrompt — dynamic prompt sourced from Prisma Product/Service tables and BUSINESS_INFO
+ * @remarks Falls back to `getStaticResponse` when `ANTHROPIC_API_KEY` is absent.
+ *   DB failures during conversation logging do not fail the request.
  */
 export async function POST(request: NextRequest) {
   try {
