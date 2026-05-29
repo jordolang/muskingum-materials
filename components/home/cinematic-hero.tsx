@@ -22,10 +22,11 @@ export function CinematicHero({ scrollContainerRef }: CinematicHeroProps) {
     <div className="relative bg-coal">
       <ScrollVideoHero scrollContainerRef={scrollContainerRef} />
       <RockDumpSection scrollContainerRef={scrollContainerRef} />
-      {/* Hero-scoped grain wash (absolute, not fixed) */}
+      {/* Hero-scoped grain wash (absolute, not fixed). Normal blend (no
+          per-frame mix-blend recomposite) keeps scroll compositing cheap. */}
       <div
         aria-hidden
-        className="grain pointer-events-none absolute inset-0 z-20 opacity-[0.07] mix-blend-overlay"
+        className="grain pointer-events-none absolute inset-0 z-20 opacity-[0.06]"
       />
     </div>
   );

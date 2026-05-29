@@ -3,20 +3,8 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "motion/react";
-import { useScrubVideo } from "./use-scrub-video";
+import { useScrubFrames } from "./use-scrub-frames";
 
-/**
- * Act 1 — a 300vh scroll container pinning a 100vh stage.
- *
- * Scroll drives the loader footage (firefly-1) frame-by-frame while the camera
- * "pulls back" (background zooms out 1.25 → 1), the headline recedes
- * (scales to 0.9, fades to 0.4) and a spec plate slides in from off-screen left.
- * All motion completes by ~45% of the scroll, leaving a hold phase before the
- * page un-sticks into Act 2.
- *
- * Note: the global sticky <Navbar> owns top-of-screen branding, so this stage
- * has no internal brand rail.
- */
 interface ScrollVideoHeroProps {
   /**
    * Optional scroll container. Omit to track window scroll (the /experience
@@ -25,6 +13,15 @@ interface ScrollVideoHeroProps {
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
+/**
+ * Act 1 — a 300vh scroll container pinning a 100vh stage.
+ *
+ * Scroll drives the loader footage (firefly-1, a decoded image sequence drawn to
+ * a canvas) while the camera "pulls back" (background zooms out 1.25 → 1), the
+ * headline recedes (scales to 0.9, fades to 0.4) and a spec plate slides in from
+ * off-screen left. All motion completes by ~45% of the scroll, leaving a hold
+ * phase before the page un-sticks into Act 2.
+ */
 export function ScrollVideoHero({ scrollContainerRef }: ScrollVideoHeroProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -33,14 +30,18 @@ export function ScrollVideoHero({ scrollContainerRef }: ScrollVideoHeroProps) {
     offset: ["start start", "end end"],
   });
 
-  const videoRef = useScrubVideo(scrollYProgress, { completeAt: 0.45, ease: 0.1 });
+  const { canvasRef } = useScrubFrames(scrollYProgress, {
+    base: "/frames/firefly-1",
+    count: 96,
+    completeAt: 0.45,
+    ease: 0.1,
+  });
 
   // Camera pull-back + receding headline. Clamped, so they "hold" past 0.45.
+  // Only GPU-cheap transforms (scale/opacity) — no animated filters.
   const bgScale = useTransform(scrollYProgress, [0, 0.45], [1.25, 1]);
   const textScale = useTransform(scrollYProgress, [0, 0.45], [1, 0.9]);
   const textOpacity = useTransform(scrollYProgress, [0, 0.45], [1, 0.4]);
-  const textBlur = useTransform(scrollYProgress, [0, 0.45], [0, 4]);
-  const textFilter = useTransform(textBlur, (b) => `blur(${b}px)`);
 
   // Foreground spec plate slides in from the left.
   const plateX = useTransform(scrollYProgress, [0.05, 0.45], ["-115%", "0%"]);
@@ -53,16 +54,9 @@ export function ScrollVideoHero({ scrollContainerRef }: ScrollVideoHeroProps) {
   return (
     <section ref={containerRef} className="relative h-[300vh] bg-coal">
       <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden">
-        {/* Equipment backdrop — scrubbed loader footage */}
+        {/* Equipment backdrop — scrubbed loader footage drawn to canvas */}
         <motion.div style={{ scale: bgScale }} className="absolute inset-0">
-          <video
-            ref={videoRef}
-            src="/videos/firefly-1.mp4"
-            muted
-            playsInline
-            preload="auto"
-            className="h-full w-full object-cover"
-          />
+          <canvas ref={canvasRef} className="block h-full w-full" />
         </motion.div>
 
         {/* Cinematic grade: top-down darkening + vignette */}
@@ -82,8 +76,8 @@ export function ScrollVideoHero({ scrollContainerRef }: ScrollVideoHeroProps) {
 
         {/* Receding headline */}
         <motion.div
-          style={{ scale: textScale, opacity: textOpacity, filter: textFilter }}
-          className="relative z-10 max-w-5xl px-6 text-center"
+          style={{ scale: textScale, opacity: textOpacity }}
+          className="relative z-10 max-w-5xl px-6 text-center will-change-transform"
         >
           <p className="mb-5 font-tech text-xs uppercase tracking-[0.5em] text-caution">
             Crushed · Graded · Delivered
@@ -117,9 +111,9 @@ export function ScrollVideoHero({ scrollContainerRef }: ScrollVideoHeroProps) {
         {/* Foreground spec plate — slides in from off-screen left */}
         <motion.div
           style={{ x: plateX, opacity: plateOpacity }}
-          className="absolute bottom-8 left-0 z-10 sm:bottom-12"
+          className="absolute bottom-8 left-0 z-10 will-change-transform sm:bottom-12"
         >
-          <div className="flex items-stretch border-y border-r border-iron/70 bg-coal/85 backdrop-blur-sm">
+          <div className="flex items-stretch border-y border-r border-iron/70 bg-coal/90">
             <div className="hazard w-2" />
             <div className="grid grid-cols-3 divide-x divide-iron/60">
               {[

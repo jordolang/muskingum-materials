@@ -2,26 +2,22 @@
 
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "motion/react";
-import { useScrubVideo } from "./use-scrub-video";
+import { useScrubFrames } from "./use-scrub-frames";
 
-/**
- * Act 2 — the rock dump.
- *
- * A 260vh container pins a 100vh stage. A full-bleed coal layer covers the dump
- * footage (firefly-2) everywhere *except* the letters of AGGREGATE, which are
- * knocked out of it via an SVG mask — so scrolling pours tumbling aggregate into
- * the type. The word swells and lifts as it fills, and a caption rises during
- * the hold.
- *
- * The mask SVG intentionally has no viewBox: its user units are CSS pixels, so a
- * 100%×100% rect always fills the viewport (no letterboxing) and the text sizes
- * responsively with `vw`.
- */
 interface RockDumpSectionProps {
   /** Optional scroll container (see ScrollVideoHero). Omit for window scroll. */
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
+/**
+ * Act 2 — the rock dump.
+ *
+ * A 260vh container pins a 100vh stage. A full-bleed coal layer covers the dump
+ * footage (firefly-2, a canvas image sequence) everywhere *except* the letters
+ * of AGGREGATE, which are knocked out of it via an SVG mask — so scrolling pours
+ * tumbling aggregate into the type. The word swells and lifts as it fills, and a
+ * caption rises during the hold.
+ */
 export function RockDumpSection({ scrollContainerRef }: RockDumpSectionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -30,7 +26,12 @@ export function RockDumpSection({ scrollContainerRef }: RockDumpSectionProps) {
     offset: ["start start", "end end"],
   });
 
-  const videoRef = useScrubVideo(scrollYProgress, { completeAt: 0.55, ease: 0.12 });
+  const { canvasRef } = useScrubFrames(scrollYProgress, {
+    base: "/frames/firefly-2",
+    count: 96,
+    completeAt: 0.55,
+    ease: 0.12,
+  });
 
   // The word swells + lifts as it fills — a pile settling. Applied to the text
   // only (transform-box: fill-box), so the full-bleed cover never shifts.
@@ -45,15 +46,8 @@ export function RockDumpSection({ scrollContainerRef }: RockDumpSectionProps) {
   return (
     <section ref={containerRef} className="relative h-[260vh] bg-coal">
       <div className="sticky top-0 flex h-screen w-full flex-col items-center justify-center overflow-hidden">
-        {/* Hidden full-frame video — only revealed through the letter mask */}
-        <video
-          ref={videoRef}
-          src="/videos/firefly-2.mp4"
-          muted
-          playsInline
-          preload="auto"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
+        {/* Hidden full-frame dump footage — only revealed through the letter mask */}
+        <canvas ref={canvasRef} className="absolute inset-0 block h-full w-full" />
 
         {/* Eyebrow */}
         <motion.p
