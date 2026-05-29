@@ -44,18 +44,21 @@ function StarRating({ rating }: { rating: number }) {
 export default async function ReviewsPage() {
   let testimonials: Testimonial[] = [];
   try {
-    testimonials = await sanityClient.fetch<Testimonial[]>(
-      testimonialsQuery,
-      {},
-      { next: { tags: ["testimonial"] } }
-    );
+    // Coalesce: Sanity can resolve to null/undefined (e.g. unconfigured in a
+    // Preview env) rather than throw, which would slip past the catch below.
+    testimonials =
+      (await sanityClient.fetch<Testimonial[]>(
+        testimonialsQuery,
+        {},
+        { next: { tags: ["testimonial"] } }
+      )) ?? [];
   } catch (error) {
     // Silently fall back to static reviews
   }
 
   // If no testimonials from Sanity, fall back to static reviews data
   const displayTestimonials =
-    testimonials.length > 0
+    Array.isArray(testimonials) && testimonials.length > 0
       ? testimonials
       : REVIEWS.map((review, index) => ({
           _id: `review-${index}`,
