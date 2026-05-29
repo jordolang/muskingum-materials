@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Outfit } from "next/font/google";
+import { Inter, Outfit, Anton, JetBrains_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
@@ -8,6 +8,7 @@ import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { Toaster } from "@/components/ui/toaster";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { CookieConsent } from "@/components/analytics/cookie-consent";
+import { CinematicIntroOverlay } from "@/components/home/cinematic-hero/cinematic-intro-overlay";
 import "./globals.css";
 
 // Preview Vercel builds don't have NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY set,
@@ -28,6 +29,21 @@ const fontSans = Inter({
 const fontHeading = Outfit({
   subsets: ["latin"],
   variable: "--font-heading",
+});
+
+// Cinematic hero typefaces: Anton (industrial display) + JetBrains Mono
+// (technical gauge labels). Used only by the homepage hero.
+const fontDisplay = Anton({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-anton",
+  display: "swap",
+});
+
+const fontTech = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -71,7 +87,7 @@ export default function RootLayout({
 }) {
   const tree = (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${fontSans.variable} ${fontHeading.variable} font-sans antialiased`}>
+      <body className={`${fontSans.variable} ${fontHeading.variable} ${fontDisplay.variable} ${fontTech.variable} font-sans antialiased`}>
         <div className="flex min-h-screen flex-col">
           <div className="print:hidden">
             <Navbar />
@@ -82,6 +98,7 @@ export default function RootLayout({
           </div>
         </div>
         <div className="print:hidden">
+          <CinematicIntroOverlay />
           <ErrorBoundary componentName="ChatWidget">
             <ChatWidgetLoader />
           </ErrorBoundary>

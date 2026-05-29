@@ -57,12 +57,15 @@ const STATIC_GALLERY_IMAGES = [
 export default async function GalleryPage() {
   let galleryImages: GalleryImage[] = [];
   try {
-    galleryImages = await sanityClient.fetch<GalleryImage[]>(galleryQuery, {}, { next: { tags: ['gallery'] } });
+    // Coalesce: Sanity can resolve to null/undefined (e.g. unconfigured in a
+    // Preview env) rather than throw, which would slip past the catch below.
+    galleryImages =
+      (await sanityClient.fetch<GalleryImage[]>(galleryQuery, {}, { next: { tags: ['gallery'] } })) ?? [];
   } catch (error) {
     console.error("Failed to fetch gallery images from Sanity:", error);
   }
 
-  const useSanity = galleryImages.length > 0;
+  const useSanity = Array.isArray(galleryImages) && galleryImages.length > 0;
 
   return (
     <div className="py-12">

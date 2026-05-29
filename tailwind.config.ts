@@ -75,6 +75,17 @@ const config: Config = {
           900: "#1c1917",
           950: "#0c0a09",
         },
+        // Cinematic hero palette (industrial / rugged). Named to avoid colliding
+        // with the existing `amber`/`stone` scales used across the site.
+        coal: "#0b0a09",
+        asphalt: "#14110e",
+        steel: "#211d19",
+        iron: "#44403c",
+        grit: "#78716c",
+        dust: "#d6d2cb",
+        bone: "#f4f1ea",
+        caution: "#f2b705",
+        ember: "#e8590c",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -84,6 +95,8 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-sans)"],
         heading: ["var(--font-heading)"],
+        display: ["var(--font-anton)", "var(--font-heading)", "sans-serif"],
+        tech: ["var(--font-jetbrains)", "ui-monospace", "monospace"],
       },
       keyframes: {
         "accordion-down": {
