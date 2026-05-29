@@ -1,4 +1,4 @@
-import postmark from "postmark";
+import * as postmark from "postmark";
 
 export type OrderStatus =
   | "pending"
