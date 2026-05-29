@@ -3,21 +3,20 @@ import Image from "next/image";
 import {
   Phone,
   ArrowRight,
-  Truck,
-  Scale,
-  Clock,
   Shield,
-  Star,
+  Scale,
+  Truck,
+  Clock,
   MapPin,
   Camera,
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { BUSINESS_INFO } from "@/data/business";
 import { ReviewsCarousel } from "@/components/home/reviews-carousel";
 import { HomepageFAQ } from "@/components/home/homepage-faq";
 import { HomeProductCard } from "@/components/home/home-product-card";
+import { ServicesBento } from "@/components/home/services-bento";
 import { prisma } from "@/lib/prisma";
 import { sanityClient } from "@/lib/sanity/client";
 import { testimonialsQuery } from "@/lib/sanity/queries";
@@ -246,46 +245,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Services */}
-      <section className="py-16 bg-muted/50">
-        <div className="container">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold font-heading mb-3">
-              What We Offer
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              More than just materials - we provide complete solutions for your project needs.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {services.map((service) => (
-              <Card key={service._id} className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-card">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
-                      {service.icon === "mountain" && <Scale className="h-5 w-5 text-amber-700" />}
-                      {service.icon === "truck" && <Truck className="h-5 w-5 text-amber-700" />}
-                      {service.icon === "calculator" && <Star className="h-5 w-5 text-amber-700" />}
-                      {service.icon === "loader" && <Clock className="h-5 w-5 text-amber-700" />}
-                    </div>
-                    <h3 className="text-xl font-bold">{service.title}</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{service.description}</p>
-                  <ul className="space-y-2">
-                    {service.features.map((feature) => (
-                      <li key={feature} className="text-sm flex items-center gap-2.5">
-                        <div className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Services Bento */}
+      <ServicesBento services={services} />
 
       {/* Gallery Preview */}
       <section className="py-16">
