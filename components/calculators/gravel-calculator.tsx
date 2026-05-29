@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calculator } from "lucide-react";
+import { AddToCartButton } from "@/components/order/add-to-cart-button";
 
 interface GravelProduct {
   slug: string;
@@ -14,6 +15,8 @@ interface GravelProduct {
   densityHigh: number;
   priceLow: number;
   priceHigh: number;
+  price?: number;
+  unit?: string;
 }
 
 interface GravelCalculatorProps {
@@ -281,6 +284,18 @@ export function GravelCalculator({ products }: GravelCalculatorProps) {
               supplier. Call Muskingum Materials at (740) 319-0183 for exact
               pricing.
             </p>
+            {(() => {
+              const product = products.find((p) => p.slug === selectedProduct);
+              return product?.price != null && product.price > 0 ? (
+                <div className="mt-4 flex justify-center">
+                  <AddToCartButton
+                    name={product.name}
+                    price={product.price}
+                    unit={product.unit ?? "ton"}
+                  />
+                </div>
+              ) : null;
+            })()}
           </CardContent>
         </Card>
       )}

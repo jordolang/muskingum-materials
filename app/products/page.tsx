@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +7,7 @@ import { BUSINESS_INFO } from "@/data/business";
 import { prisma } from "@/lib/prisma";
 import { generateProductSchema, toJsonLd } from "@/lib/seo/structured-data";
 import { generateProductsMetadata } from "@/lib/seo/metadata";
+import { AddToCartButton } from "@/components/order/add-to-cart-button";
 
 // Revalidate hourly so price/SKU edits in the database surface on the
 // statically generated page within an hour without a redeploy.
@@ -53,10 +53,9 @@ export default async function ProductsPage() {
   const phone = BUSINESS_INFO.phone;
 
   const grouped = {
+    fill: products.filter((p) => p.category === "fill"),
     gravel: products.filter((p) => p.category === "gravel"),
-    sand: products.filter((p) => p.category === "sand"),
-    soil: products.filter((p) => p.category === "soil"),
-    stone: products.filter((p) => p.category === "stone"),
+    limestone: products.filter((p) => p.category === "limestone"),
   };
 
   return (
@@ -102,26 +101,16 @@ export default async function ProductsPage() {
                   <th className="px-4 py-3 text-left font-semibold">Category</th>
                   <th className="px-4 py-3 text-right font-semibold">Price</th>
                   <th className="px-4 py-3 text-right font-semibold">Unit</th>
+                  <th className="px-4 py-3 text-right font-semibold"></th>
                 </tr>
               </thead>
               <tbody>
                 {products.map((product, i) => {
                   const orderable = product.pricePerTon > 0;
-                  const rowClass = `border-b ${i % 2 === 0 ? "bg-background" : "bg-muted/30"} ${orderable ? "hover:bg-amber-50 cursor-pointer" : ""}`;
-                  const cells = (
-                    <>
-                      <td className="px-4 py-3 font-medium">
-                        {orderable ? (
-                          <Link
-                            href={`/order?product=${encodeURIComponent(product.name)}`}
-                            className="text-primary hover:underline"
-                          >
-                            {product.name}
-                          </Link>
-                        ) : (
-                          product.name
-                        )}
-                      </td>
+                  const rowClass = `border-b ${i % 2 === 0 ? "bg-background" : "bg-muted/30"}`;
+                  return (
+                    <tr key={product._id} className={rowClass}>
+                      <td className="px-4 py-3 font-medium">{product.name}</td>
                       <td className="px-4 py-3">
                         <Badge variant="secondary" className="capitalize">
                           {product.category}
@@ -135,11 +124,16 @@ export default async function ProductsPage() {
                       <td className="px-4 py-3 text-right text-muted-foreground capitalize">
                         {product.unit === "call" ? "—" : `Per ${product.unit}`}
                       </td>
-                    </>
-                  );
-                  return (
-                    <tr key={product._id} className={rowClass}>
-                      {cells}
+                      <td className="px-4 py-3 text-right">
+                        {orderable && (
+                          <AddToCartButton
+                            name={product.name}
+                            price={product.pricePerTon}
+                            unit={product.unit}
+                            size="sm"
+                          />
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -155,46 +149,43 @@ export default async function ProductsPage() {
               {category}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.map((product) => {
-                const card = (
-                  <Card className="hover:shadow-md transition-shadow h-full">
-                    <CardContent className="p-6">
-                      <div className="flex justify-between items-start mb-3">
-                        <h3 className="font-semibold text-lg leading-tight">
-                          {product.name}
-                        </h3>
-                        <div className="text-right shrink-0 ml-3">
-                          {product.pricePerTon > 0 ? (
-                            <span className="text-xl font-bold text-primary">
-                              ${product.pricePerTon.toFixed(2)}
-                              <span className="text-xs text-muted-foreground font-normal block">
-                                per {product.unit}
-                              </span>
+              {products.map((product) => (
+                <Card key={product._id} className="hover:shadow-md transition-shadow h-full flex flex-col">
+                  <CardContent className="p-6 flex flex-col flex-1">
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="font-semibold text-lg leading-tight">
+                        {product.name}
+                      </h3>
+                      <div className="text-right shrink-0 ml-3">
+                        {product.pricePerTon > 0 ? (
+                          <span className="text-xl font-bold text-primary">
+                            ${product.pricePerTon.toFixed(2)}
+                            <span className="text-xs text-muted-foreground font-normal block">
+                              per {product.unit}
                             </span>
-                          ) : (
-                            <Badge>Call for Price</Badge>
-                          )}
-                        </div>
+                          </span>
+                        ) : (
+                          <Badge>Call for Price</Badge>
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {product.description}
-                      </p>
-                    </CardContent>
-                  </Card>
-                );
-                return product.pricePerTon > 0 ? (
-                  <Link
-                    key={product._id}
-                    href={`/order?product=${encodeURIComponent(product.name)}`}
-                    aria-label={`Order ${product.name}`}
-                    className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-lg"
-                  >
-                    {card}
-                  </Link>
-                ) : (
-                  <div key={product._id}>{card}</div>
-                );
-              })}
+                    </div>
+                    <p className="text-sm text-muted-foreground flex-1">
+                      {product.description}
+                    </p>
+                    {product.pricePerTon > 0 && (
+                      <div className="mt-4">
+                        <AddToCartButton
+                          name={product.name}
+                          price={product.pricePerTon}
+                          unit={product.unit}
+                          size="sm"
+                          className="w-full"
+                        />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         ))}

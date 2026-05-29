@@ -17,6 +17,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { BUSINESS_INFO } from "@/data/business";
 import { ReviewsCarousel } from "@/components/home/reviews-carousel";
 import { HomepageFAQ } from "@/components/home/homepage-faq";
+import { HomeProductCard } from "@/components/home/home-product-card";
 import { prisma } from "@/lib/prisma";
 import { sanityClient } from "@/lib/sanity/client";
 import { testimonialsQuery } from "@/lib/sanity/queries";
@@ -38,6 +39,7 @@ interface HomeProduct {
   unit: string;
   imageUrl?: string;
   imageAlt?: string;
+  slug?: string;
 }
 
 interface HomeService {
@@ -67,6 +69,7 @@ export default async function HomePage() {
       select: {
         id: true,
         name: true,
+        slug: true,
         shortDescription: true,
         description: true,
         price: true,
@@ -104,6 +107,7 @@ export default async function HomePage() {
   const featuredProducts: HomeProduct[] = productRows.map((row: ProductRow) => ({
     _id: row.id,
     name: row.name,
+    slug: row.slug,
     description: row.shortDescription ?? row.description,
     pricePerTon: row.price,
     unit: row.unit,
@@ -216,47 +220,19 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredProducts.map((product) => {
-              const orderable = product.pricePerTon != null && product.pricePerTon > 0;
-              const card = (
-                <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 bg-card cursor-pointer h-full">
-                  <div className="relative h-48 w-full">
-                    <Image
-                      src={product.imageUrl || "/images/photos/piles.jpg"}
-                      alt={product.imageAlt || product.name}
-                      fill
-                      className="object-cover"
-                    />
-                    <div className="absolute top-3 right-3 bg-amber-600 text-white px-3 py-1.5 rounded-lg shadow-md">
-                      {orderable ? (
-                        <>
-                          <span className="text-lg font-bold">${product.pricePerTon!.toFixed(2)}</span>
-                          <span className="text-xs opacity-90">/{product.unit}</span>
-                        </>
-                      ) : (
-                        <span className="text-sm font-bold">Call for Pricing</span>
-                      )}
-                    </div>
-                  </div>
-                  <CardContent className="p-5">
-                    <h3 className="font-bold text-lg mb-1.5">{product.name}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
-                  </CardContent>
-                </Card>
-              );
-              return orderable ? (
-                <Link
-                  key={product._id}
-                  href={`/order?product=${encodeURIComponent(product.name)}`}
-                  aria-label={`Order ${product.name}`}
-                  className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-xl"
-                >
-                  {card}
-                </Link>
-              ) : (
-                <div key={product._id}>{card}</div>
-              );
-            })}
+            {featuredProducts.map((product) => (
+              <HomeProductCard
+                key={product._id}
+                id={product._id}
+                name={product.name}
+                slug={product.slug}
+                description={product.description}
+                pricePerTon={product.pricePerTon}
+                unit={product.unit}
+                imageUrl={product.imageUrl}
+                imageAlt={product.imageAlt}
+              />
+            ))}
           </div>
 
           <div className="text-center mt-8">

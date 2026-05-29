@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Menu, X, Phone, User, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BUSINESS_INFO } from "@/data/business";
+import { CartNavButton } from "@/components/layout/cart-nav-button";
 
 interface NavItem {
   href: string;
@@ -249,6 +250,7 @@ export function Navbar() {
         </nav>
 
         <div className="hidden md:flex items-center gap-2">
+          <CartNavButton />
           <Link href="/account">
             <Button variant="ghost" size="sm" className="gap-2">
               <User className="h-4 w-4" />

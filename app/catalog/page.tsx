@@ -9,6 +9,7 @@ import { getProductsWithFilters } from "@/lib/products";
 import type { Product } from "@prisma/client";
 import { BUSINESS_INFO } from "@/data/business";
 import { CatalogControls } from "@/components/catalog/catalog-controls";
+import { AddToCartButton } from "@/components/order/add-to-cart-button";
 
 export const metadata: Metadata = {
   title: "Material Catalog",
@@ -100,24 +101,27 @@ export default async function CatalogPage({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {products.map((product) => (
-              <Link key={product.slug} href={`/catalog/${product.slug}`}>
-                <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer group">
+                <Card key={product.slug} className="h-full hover:shadow-lg transition-shadow group flex flex-col">
                   {product.imageUrl && (
-                    <div className="relative h-48 overflow-hidden rounded-t-lg">
-                      <Image
-                        src={product.imageUrl}
-                        alt={product.imageAlt ?? product.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      />
-                    </div>
+                    <Link href={`/catalog/${product.slug}`}>
+                      <div className="relative h-48 overflow-hidden rounded-t-lg">
+                        <Image
+                          src={product.imageUrl}
+                          alt={product.imageAlt ?? product.name}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        />
+                      </div>
+                    </Link>
                   )}
-                  <CardContent className="p-6">
+                  <CardContent className="p-6 flex flex-col flex-1">
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-lg leading-tight group-hover:text-primary transition-colors">
-                        {product.name}
-                      </h3>
+                      <Link href={`/catalog/${product.slug}`}>
+                        <h3 className="font-semibold text-lg leading-tight hover:text-primary transition-colors">
+                          {product.name}
+                        </h3>
+                      </Link>
                       <div className="text-right shrink-0 ml-3">
                         {product.price != null && product.price > 0 ? (
                           <span className="text-xl font-bold text-primary">
@@ -128,7 +132,7 @@ export default async function CatalogPage({
                           </span>
                         ) : product.marketPriceLowPerTon != null ? (
                           <span className="text-sm font-medium text-primary">
-                            ${product.marketPriceLowPerTon}-$
+                            ${product.marketPriceLowPerTon}–$
                             {product.marketPriceHighPerTon}
                             <span className="text-xs text-muted-foreground font-normal block">
                               per ton (market)
@@ -139,17 +143,26 @@ export default async function CatalogPage({
                         )}
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-3">
+                    <p className="text-sm text-muted-foreground mb-4 flex-1">
                       {product.shortDescription}
                     </p>
-                    <div className="flex items-center gap-1 text-xs text-primary font-medium">
-                      View Details
-                      <ArrowRight className="h-3 w-3" />
+                    <div className="flex items-center justify-between gap-2 mt-auto">
+                      <Link href={`/catalog/${product.slug}`} className="flex items-center gap-1 text-xs text-primary font-medium hover:underline">
+                        View Details
+                        <ArrowRight className="h-3 w-3" />
+                      </Link>
+                      {product.price != null && product.price > 0 && (
+                        <AddToCartButton
+                          name={product.name}
+                          price={product.price}
+                          unit={product.unit}
+                          size="sm"
+                        />
+                      )}
                     </div>
                   </CardContent>
                 </Card>
-              </Link>
-            ))}
+              ))}
             </div>
           </>
         )}

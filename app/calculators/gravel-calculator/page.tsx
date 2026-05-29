@@ -24,6 +24,8 @@ export default async function GravelCalculatorPage() {
     densityHigh: p.densityHigh ?? 1.5,
     priceLow: p.marketPriceLowPerTon ?? p.price ?? 20,
     priceHigh: p.marketPriceHighPerTon ?? p.price ?? 40,
+    price: p.price ?? undefined,
+    unit: p.unit,
   }));
 
   return (
