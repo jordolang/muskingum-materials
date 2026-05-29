@@ -38,8 +38,12 @@ const SOCIAL_LINKS = [
 
 export function Footer() {
   return (
-    <footer className="bg-stone-900 text-stone-300">
-      <div className="container py-12">
+    <footer className="relative bg-stone-900 text-stone-300">
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/60 to-transparent"
+      />
+      <div className="container py-12 sm:py-14">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           <div>
             <Link href="/" className="inline-block mb-4">
@@ -63,7 +67,7 @@ export function Footer() {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`flex items-center justify-center h-9 w-9 rounded-lg bg-stone-800 text-stone-400 ${social.hoverColor} hover:bg-stone-700 transition-all`}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full border border-white/5 bg-stone-800 text-stone-400 ${social.hoverColor} transition-all hover:-translate-y-0.5 hover:bg-stone-700`}
                   aria-label={social.name}
                   title={social.name}
                 >

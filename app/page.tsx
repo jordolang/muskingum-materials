@@ -135,9 +135,9 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: toJsonLd(localBusinessSchema) }}
       />
 
-      {/* Hero */}
-      <section className="relative min-h-[600px] flex items-center">
-        <div className="absolute inset-0 z-0">
+      {/* Hero — floating rounded panel */}
+      <section className="ambient-glow px-3 pt-3 sm:px-5 sm:pt-4">
+        <div className="relative mx-auto flex min-h-[560px] max-w-7xl items-center overflow-hidden rounded-[2rem] shadow-float">
           <Image
             src="/images/photos/aerial.jpg"
             alt="Muskingum Materials aerial view"
@@ -146,67 +146,67 @@ export default async function HomePage() {
             priority
           />
           <div className="absolute inset-0 hero-gradient" />
-        </div>
-
-        <div className="container relative z-10 py-20">
-          <div className="max-w-2xl text-white">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-heading mb-4 leading-tight">
-              Sand, Soil &<br />Gravel Delivered
-            </h1>
-            <p className="text-lg md:text-xl text-white/90 mb-6 max-w-lg">
-              {BUSINESS_INFO.tagline}. Family-owned, fair pricing, and serving
-              Southeast Ohio since day one.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Link href="/recommendations">
-                <Button size="lg" className="bg-amber-700 text-white hover:bg-amber-800 font-semibold gap-2">
-                  <Sparkles className="h-4 w-4" />
-                  Find Your Material
-                </Button>
-              </Link>
-              <Link href="/products">
-                <Button size="lg" className="bg-white text-amber-800 hover:bg-white/90 font-semibold gap-2">
-                  View Products & Pricing
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <a href={`tel:${BUSINESS_INFO.phone.replace(/\D/g, "")}`}>
-                <Button size="lg" className="bg-amber-600 text-white hover:bg-amber-700 font-semibold gap-2">
-                  <Phone className="h-4 w-4" />
-                  Call {BUSINESS_INFO.phone}
-                </Button>
-              </a>
+          <div className="relative z-10 w-full px-7 py-20 sm:px-12 lg:px-16">
+            <div className="max-w-2xl text-white">
+              <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-xs font-medium uppercase tracking-wider backdrop-blur">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                Family-owned · Southeast Ohio
+              </span>
+              <h1 className="mb-4 font-heading text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
+                Sand, Soil &<br />Gravel Delivered
+              </h1>
+              <p className="mb-7 max-w-lg text-lg text-white/90 md:text-xl">
+                {BUSINESS_INFO.tagline}. Family-owned, fair pricing, and serving
+                Southeast Ohio since day one.
+              </p>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Link href="/recommendations">
+                  <Button
+                    size="lg"
+                    className="gap-2 bg-amber-600 font-semibold text-white shadow-glow hover:bg-amber-700"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    Find Your Material
+                  </Button>
+                </Link>
+                <Link href="/products">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="gap-2 border-white/30 bg-white/10 font-semibold text-white backdrop-blur hover:bg-white/20 hover:text-white"
+                  >
+                    View Products & Pricing
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Trust Badges */}
-      <section className="bg-stone-800 text-white py-5">
-        <div className="container">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="flex items-center justify-center gap-2.5">
-              <Shield className="h-5 w-5 text-amber-400 shrink-0" />
-              <span className="font-bold text-sm tracking-wide uppercase">Family Owned</span>
+      {/* Trust Badges — floating glass pill overlapping the hero */}
+      <section className="relative z-20 -mt-7 px-3 sm:px-5">
+        <div className="glass-dark mx-auto grid max-w-5xl grid-cols-2 gap-2 rounded-3xl bg-stone-900/85 p-3 text-white shadow-float md:grid-cols-4">
+          {[
+            { icon: Shield, label: "Family Owned" },
+            { icon: Scale, label: "State-Approved Scales" },
+            { icon: Truck, label: "Delivery Available" },
+            { icon: Clock, label: "Mon–Fri 7:30–4:00" },
+          ].map(({ icon: Icon, label }) => (
+            <div
+              key={label}
+              className="flex items-center justify-center gap-2.5 rounded-2xl px-3 py-2.5 text-center transition-colors hover:bg-white/5"
+            >
+              <Icon className="h-5 w-5 shrink-0 text-amber-400" />
+              <span className="text-sm font-bold uppercase tracking-wide">{label}</span>
             </div>
-            <div className="flex items-center justify-center gap-2.5">
-              <Scale className="h-5 w-5 text-amber-400 shrink-0" />
-              <span className="font-bold text-sm tracking-wide uppercase">State-Approved Scales</span>
-            </div>
-            <div className="flex items-center justify-center gap-2.5">
-              <Truck className="h-5 w-5 text-amber-400 shrink-0" />
-              <span className="font-bold text-sm tracking-wide uppercase">Delivery Available</span>
-            </div>
-            <div className="flex items-center justify-center gap-2.5">
-              <Clock className="h-5 w-5 text-amber-400 shrink-0" />
-              <span className="font-bold text-sm tracking-wide uppercase">Mon–Fri 7:30–4:00</span>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
       {/* Featured Products */}
-      <section className="py-16 bg-background">
+      <section className="ambient-glow bg-background py-16 sm:py-20">
         <div className="container">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold font-heading mb-3">
@@ -266,7 +266,7 @@ export default async function HomePage() {
               { img: "stone-hand", label: "Product Quality", desc: "Hand-inspected gravel" },
               { img: "feeder", label: "Processing", desc: "Sorting & washing systems" },
             ].map((item) => (
-              <Link key={item.img} href="/gallery" className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer block">
+              <Link key={item.img} href="/gallery" className="group hover-lift relative block aspect-square cursor-pointer overflow-hidden rounded-3xl shadow-float">
                 <Image
                   src={`/images/photos/${item.img}.jpg`}
                   alt={item.label}
@@ -288,7 +288,7 @@ export default async function HomePage() {
                   </p>
                 </div>
                 {/* Hover border glow */}
-                <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-amber-400/50 transition-colors duration-300" />
+                <div className="absolute inset-0 rounded-3xl border-2 border-transparent transition-colors duration-300 group-hover:border-amber-400/50" />
               </Link>
             ))}
           </div>
@@ -344,29 +344,43 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-16 bg-stone-800 text-white">
-        <div className="container text-center">
-          <h2 className="text-3xl font-bold font-heading mb-4">
-            Ready to Get Started?
-          </h2>
-          <p className="text-stone-300 mb-6 max-w-lg mx-auto">
-            Call today to set up your order or get a quote for your project.
-            We&apos;re here to help Monday through Friday.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href={`tel:${BUSINESS_INFO.phone.replace(/\D/g, "")}`}>
-              <Button size="lg" className="gap-2 font-semibold">
-                <Phone className="h-5 w-5" />
-                Call {BUSINESS_INFO.phone}
-              </Button>
-            </a>
-            <Link href="/contact">
-              <Button size="lg" className="bg-white text-black hover:bg-white/90 font-semibold gap-2">
-                <MapPin className="h-5 w-5" />
-                Get Directions
-              </Button>
-            </Link>
+      {/* CTA — floating glow panel */}
+      <section className="px-3 py-16 sm:px-5 sm:py-20">
+        <div className="relative mx-auto max-w-5xl overflow-hidden rounded-[2rem] bg-stone-900 px-6 py-16 text-center text-white shadow-float">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(60% 80% at 50% 0%, rgba(245,158,11,0.28), transparent 70%)",
+            }}
+          />
+          <div className="relative z-10">
+            <h2 className="mb-4 font-heading text-3xl font-bold sm:text-4xl">
+              Ready to Get Started?
+            </h2>
+            <p className="mx-auto mb-7 max-w-lg text-stone-300">
+              Call today to set up your order or get a quote for your project.
+              We&apos;re here to help Monday through Friday.
+            </p>
+            <div className="flex flex-col justify-center gap-3 sm:flex-row">
+              <a href={`tel:${BUSINESS_INFO.phone.replace(/\D/g, "")}`}>
+                <Button size="lg" className="gap-2 font-semibold shadow-glow">
+                  <Phone className="h-5 w-5" />
+                  Call {BUSINESS_INFO.phone}
+                </Button>
+              </a>
+              <Link href="/contact">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="gap-2 border-white/25 bg-white/10 font-semibold text-white backdrop-blur hover:bg-white/20 hover:text-white"
+                >
+                  <MapPin className="h-5 w-5" />
+                  Get Directions
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>

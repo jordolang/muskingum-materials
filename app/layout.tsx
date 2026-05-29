@@ -89,9 +89,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${fontSans.variable} ${fontHeading.variable} ${fontDisplay.variable} ${fontTech.variable} font-sans antialiased`}>
         <div className="flex min-h-screen flex-col">
-          <div className="print:hidden">
-            <Navbar />
-          </div>
+          <Navbar />
           <main className="flex-1">{children}</main>
           <div className="print:hidden">
             <Footer />
