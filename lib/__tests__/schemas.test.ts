@@ -120,6 +120,7 @@ describe("checkoutFormSchema", () => {
         email: "jane@example.com",
         phone: "1234567890",
         fulfillment: "pickup" as const,
+        termsAccepted: true,
       };
 
       const result = checkoutFormSchema.parse(validData);
@@ -134,6 +135,7 @@ describe("checkoutFormSchema", () => {
         fulfillment: "delivery" as const,
         deliveryAddress: "123 Main St",
         deliveryNotes: "Leave at door",
+        termsAccepted: true,
       };
 
       const result = checkoutFormSchema.parse(validData);
@@ -146,6 +148,7 @@ describe("checkoutFormSchema", () => {
         email: "jane@example.com",
         phone: "1234567890",
         fulfillment: "pickup" as const,
+        termsAccepted: true,
       };
 
       const result = checkoutFormSchema.parse(validData);
@@ -214,6 +217,7 @@ describe("checkoutSchema", () => {
         email: "jane@example.com",
         phone: "1234567890",
         fulfillment: "pickup" as const,
+        termsAccepted: true,
         items: [
           { name: "Fill Dirt", price: 2.0, unit: "ton", quantity: 5 },
           { name: "Fill Sand", price: 4.0, unit: "ton", quantity: 3 },
@@ -235,6 +239,7 @@ describe("checkoutSchema", () => {
         phone: "1234567890",
         fulfillment: "delivery" as const,
         deliveryAddress: "123 Main St",
+        termsAccepted: true,
         items: [{ name: "Fill Dirt", price: 2.0, unit: "ton", quantity: 1 }],
         subtotal: 2.0,
         tax: 0.145,

@@ -148,7 +148,8 @@ export async function POST(request: NextRequest) {
 
           // Send SMS notification if customer opted in
           if (order.smsOptIn && order.phone) {
-            const message = `Your order #${order.orderNumber} has been confirmed! Track your order at ${process.env.NEXT_PUBLIC_APP_URL}/orders/${order.orderNumber}`;
+            const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+            const message = `Your order #${order.orderNumber} has been confirmed! Track your order at ${baseUrl}/account/orders/${order.orderNumber}`;
 
             const result = await sendSMS({
               to: order.phone,

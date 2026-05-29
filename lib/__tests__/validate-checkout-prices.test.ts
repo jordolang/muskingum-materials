@@ -9,6 +9,18 @@ vi.mock("@/lib/sanity/client", () => ({
   },
 }));
 
+// The Prisma fallback (used when Sanity is empty/null/throws) calls
+// prisma.product.findMany(); mock it so those paths don't hit a real DB.
+vi.mock("@/lib/prisma", () => ({
+  prisma: {
+    product: {
+      findMany: vi.fn().mockResolvedValue([
+        { name: "Fill Dirt", price: 2.0, unit: "ton" },
+      ]),
+    },
+  },
+}));
+
 // Cast to avoid RawQuerylessQueryResponse type mismatch in Sanity SDK v3
 const fetchMock = sanityClient.fetch as unknown as {
   mockResolvedValue: (v: unknown) => void;

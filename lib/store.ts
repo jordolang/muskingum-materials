@@ -31,11 +31,18 @@ interface ChatState {
  */
 function generateVisitorId(): string {
   if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("mm-visitor-id");
-    if (stored) return stored;
-    const id = crypto.randomUUID();
-    localStorage.setItem("mm-visitor-id", id);
-    return id;
+    try {
+      const stored = window.localStorage.getItem("mm-visitor-id");
+      if (stored) return stored;
+      const id = crypto.randomUUID();
+      window.localStorage.setItem("mm-visitor-id", id);
+      return id;
+    } catch {
+      // localStorage can throw or be unavailable (Safari private mode,
+      // sandboxed iframes, storage disabled, or a test env without a shim).
+      // Fall back to a session-only id instead of crashing store init.
+      return crypto.randomUUID();
+    }
   }
   return "server";
 }

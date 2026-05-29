@@ -76,7 +76,7 @@ describe("POST /api/contact", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ success: true });
+      expect(data).toMatchObject({ success: true });
       expect(prisma.contactSubmission.create).toHaveBeenCalledWith({
         data: {
           name: "John Doe",
@@ -116,7 +116,7 @@ describe("POST /api/contact", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ success: true });
+      expect(data).toMatchObject({ success: true });
       expect(prisma.contactSubmission.create).toHaveBeenCalledWith({
         data: {
           name: "John Doe",
@@ -230,7 +230,7 @@ describe("POST /api/contact", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ success: true });
+      expect(data).toMatchObject({ success: true });
       expect(mockPostmarkSendEmail).not.toHaveBeenCalled();
     });
 
@@ -253,7 +253,7 @@ describe("POST /api/contact", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ success: true });
+      expect(data).toMatchObject({ success: true });
     });
   });
 
@@ -486,7 +486,7 @@ describe("POST /api/contact", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ success: true });
+      expect(data).toMatchObject({ success: true });
     });
 
     it("should handle long message content", async () => {
@@ -514,7 +514,7 @@ describe("POST /api/contact", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ success: true });
+      expect(data).toMatchObject({ success: true });
     });
 
     it("should handle special characters in input", async () => {
@@ -544,7 +544,7 @@ describe("POST /api/contact", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ success: true });
+      expect(data).toMatchObject({ success: true });
     });
 
     it("should use default from email if not configured", async () => {

@@ -12,6 +12,12 @@ vi.mock("@/lib/prisma", () => ({
     chatMessage: {
       createMany: vi.fn(),
     },
+    // The static "price/cost" fallback response reads the live catalog.
+    product: {
+      findMany: vi.fn().mockResolvedValue([
+        { name: "Bank Run", price: 2.0, unit: "ton" },
+      ]),
+    },
   },
 }));
 

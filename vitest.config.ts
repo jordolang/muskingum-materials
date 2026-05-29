@@ -14,6 +14,7 @@ export default defineConfig({
       "**/.{idea,git,cache,output,temp}/**",
       "**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*",
       "**/e2e/**", // E2E tests run with Playwright, not Vitest
+      "**/.auto-claude/**", // stale per-task worktree copies (also excluded in tsconfig)
     ],
     coverage: {
       provider: "v8",

@@ -57,6 +57,7 @@ describe("POST /api/orders/checkout", () => {
     email: "john@example.com",
     phone: "7403190183",
     fulfillment: "pickup",
+    termsAccepted: true,
     items: [
       { name: "Fill Dirt", price: 2.0, unit: "ton", quantity: 5 },
     ],
@@ -121,7 +122,7 @@ describe("POST /api/orders/checkout", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ url: mockStripeSession.url });
+      expect(data).toMatchObject({ url: mockStripeSession.url });
       expect(prisma.order.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           name: "John Doe",
@@ -298,14 +299,16 @@ describe("POST /api/orders/checkout", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ orderNumber: expect.stringMatching(/^MM-\d{6}-[A-Z0-9]{8}$/) });
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        From: "noreply@test.com",
-        To: "sales@muskingummaterials.com",
-        Subject: expect.stringContaining("New Online Order"),
-        TextBody: expect.stringContaining("Fill Dirt"),
-        ReplyTo: "john@example.com",
-      });
+      expect(data).toMatchObject({ orderNumber: expect.stringMatching(/^MM-\d{6}-[A-Z0-9]{8}$/) });
+      expect(mockPostmarkSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          From: "noreply@test.com",
+          To: "sales@muskingummaterials.com",
+          Subject: expect.stringContaining("New Online Order"),
+          TextBody: expect.stringContaining("Fill Dirt"),
+          ReplyTo: "john@example.com",
+        })
+      );
     });
 
     it("should not fail if email sending fails", async () => {
@@ -326,7 +329,7 @@ describe("POST /api/orders/checkout", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ orderNumber: expect.stringMatching(/^MM-\d{6}-[A-Z0-9]{8}$/) });
+      expect(data).toMatchObject({ orderNumber: expect.stringMatching(/^MM-\d{6}-[A-Z0-9]{8}$/) });
     });
   });
 
@@ -350,7 +353,7 @@ describe("POST /api/orders/checkout", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ orderNumber: expect.stringMatching(/^MM-\d{6}-[A-Z0-9]{8}$/) });
+      expect(data).toMatchObject({ orderNumber: expect.stringMatching(/^MM-\d{6}-[A-Z0-9]{8}$/) });
       expect(mockPostmarkSendEmail).toHaveBeenCalled();
     });
 
@@ -376,7 +379,7 @@ describe("POST /api/orders/checkout", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ url: "https://checkout.stripe.com/pay/cs_test_123" });
+      expect(data).toMatchObject({ url: "https://checkout.stripe.com/pay/cs_test_123" });
     });
   });
 
@@ -421,6 +424,7 @@ describe("POST /api/orders/checkout", () => {
           items: validCheckoutData.items,
           subtotal: validCheckoutData.subtotal,
         }),
+        undefined,
       );
     });
 

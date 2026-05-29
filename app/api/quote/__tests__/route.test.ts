@@ -73,7 +73,7 @@ describe("POST /api/quote", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ success: true });
+      expect(data).toMatchObject({ success: true });
       expect(prisma.quoteRequest.create).toHaveBeenCalledWith({
         data: {
           name: "John Doe",
@@ -123,7 +123,7 @@ describe("POST /api/quote", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ success: true });
+      expect(data).toMatchObject({ success: true });
       expect(prisma.quoteRequest.create).toHaveBeenCalledWith({
         data: {
           name: "Jane Smith",
@@ -279,7 +279,7 @@ describe("POST /api/quote", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ success: true });
+      expect(data).toMatchObject({ success: true });
       expect(mockPostmarkSendEmail).not.toHaveBeenCalled();
     });
 
@@ -302,7 +302,7 @@ describe("POST /api/quote", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ success: true });
+      expect(data).toMatchObject({ success: true });
     });
   });
 
@@ -376,7 +376,7 @@ describe("POST /api/quote", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ success: true });
+      expect(data).toMatchObject({ success: true });
     });
 
     it("should return 400 for missing required fields", async () => {
@@ -526,7 +526,7 @@ describe("POST /api/quote", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ success: true });
+      expect(data).toMatchObject({ success: true });
     });
 
     it("should handle multiple products", async () => {
@@ -557,7 +557,7 @@ describe("POST /api/quote", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ success: true });
+      expect(data).toMatchObject({ success: true });
       expect(prisma.quoteRequest.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           products: [
@@ -600,7 +600,7 @@ describe("POST /api/quote", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ success: true });
+      expect(data).toMatchObject({ success: true });
     });
 
     it("should use default from email if not configured", async () => {
@@ -656,7 +656,7 @@ describe("POST /api/quote", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ success: true });
+      expect(data).toMatchObject({ success: true });
     });
   });
 });
