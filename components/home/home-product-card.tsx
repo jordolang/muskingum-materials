@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,15 +29,18 @@ export function HomeProductCard({
 }: HomeProductCardProps) {
   const orderable = pricePerTon != null && pricePerTon > 0;
   const detailHref = slug ? `/catalog/${slug}` : `/order?product=${encodeURIComponent(name)}`;
+  const FALLBACK_IMAGE = "/images/photos/piles.jpg";
+  const [imgSrc, setImgSrc] = useState(imageUrl || FALLBACK_IMAGE);
 
   return (
     <Card className="group hover-lift flex h-full flex-col overflow-hidden rounded-3xl border border-stone-200/70 bg-white shadow-float transition-shadow duration-300 hover:shadow-glow">
       <Link href={detailHref} aria-label={`View ${name}`} className="block">
         <div className="relative m-2 h-48 overflow-hidden rounded-[1.35rem]">
           <Image
-            src={imageUrl || "/images/photos/piles.jpg"}
+            src={imgSrc}
             alt={imageAlt || name}
             fill
+            onError={() => setImgSrc(FALLBACK_IMAGE)}
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
