@@ -227,14 +227,14 @@ export function Navbar() {
           </Link>
 
           {/* Centered nav pill cluster */}
-          <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 lg:flex">
+          <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex">
             {NAV_ITEMS.map((item) => (
               <DesktopDropdown key={item.label} item={item} />
             ))}
           </nav>
 
           {/* Right actions */}
-          <div className="hidden items-center gap-1.5 lg:flex">
+          <div className="hidden shrink-0 items-center gap-1.5 lg:flex">
             <CartNavButton />
             <Link href="/account" aria-label="Account">
               <Button variant="ghost" size="icon" className="rounded-full text-stone-600">
