@@ -27,72 +27,94 @@ function GoogleGlyph({ className }: { className?: string }) {
 }
 
 /**
- * Lightweight, dependency-free Google Business review widget for the footer.
+ * Lightweight, dependency-free review widget for the footer.
  *
- * Rather than embedding a third-party script (which would require loosening the
- * CSP and slow the page), this renders the aggregate rating from our own review
- * data and links straight to the Google Business Profile to read or leave a
- * review. Robust by design — no API key, no runtime fetch, nothing to break.
+ * It drives Google Business reviews — the primary CTA opens our Google profile
+ * to read or leave a review — without embedding a third-party script (which
+ * would require loosening the CSP). The numeric rating shown is our own
+ * aggregated customer rating from on-site reviews; it is intentionally labeled
+ * as such rather than presented as a live Google score, since we don't fetch
+ * from the Google API here. No API key, no runtime fetch, nothing to break.
  */
 export function GoogleReviewWidget() {
   const ratings = REVIEWS.map((r) => r.rating);
+  const reviewCount = ratings.length;
   const average =
-    ratings.length > 0
-      ? ratings.reduce((sum, n) => sum + n, 0) / ratings.length
-      : 5;
+    reviewCount > 0
+      ? ratings.reduce((sum, n) => sum + n, 0) / reviewCount
+      : 0;
+  // Display value and star fill are derived from the same rounded number so
+  // the stars always match the score shown.
   const rounded = Math.round(average * 10) / 10;
-  const googleUrl = BUSINESS_INFO.social.google;
+  const filledStars = Math.round(rounded);
+  const googleUrl = BUSINESS_INFO.social.google?.trim();
 
   return (
     <div className="rounded-xl border border-white/10 bg-stone-800/60 p-4">
       <div className="flex items-center gap-2 mb-3">
         <GoogleGlyph className="h-5 w-5" />
         <span className="text-sm font-semibold text-white">
-          Reviews on Google
+          Reviews
         </span>
       </div>
 
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-2xl font-bold text-white tabular-nums">
-          {rounded.toFixed(1)}
-        </span>
-        <div className="flex" aria-label={`${rounded.toFixed(1)} out of 5 stars`}>
-          {Array.from({ length: 5 }, (_, i) => (
-            <Star
-              key={i}
-              className={`h-4 w-4 ${
-                i < Math.round(average)
-                  ? "fill-amber-400 text-amber-400"
-                  : "fill-stone-600 text-stone-600"
-              }`}
-            />
-          ))}
+      {reviewCount > 0 ? (
+        <div className="mb-3">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-2xl font-bold text-white tabular-nums">
+              {rounded.toFixed(1)}
+            </span>
+            <div
+              className="flex"
+              aria-label={`${rounded.toFixed(1)} out of 5 stars`}
+            >
+              {Array.from({ length: 5 }, (_, i) => (
+                <Star
+                  key={i}
+                  className={`h-4 w-4 ${
+                    i < filledStars
+                      ? "fill-amber-400 text-amber-400"
+                      : "fill-stone-600 text-stone-600"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+          <p className="text-xs text-stone-400">
+            Average of {reviewCount} customer review
+            {reviewCount !== 1 ? "s" : ""}
+          </p>
         </div>
-      </div>
-      <p className="text-xs text-stone-400 mb-3">
-        Trusted by customers across Southeast Ohio
-      </p>
+      ) : (
+        <p className="text-xs text-stone-400 mb-3">
+          Be the first to leave us a review!
+        </p>
+      )}
 
       <div className="flex flex-col gap-2">
-        <a
-          href={googleUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-1.5 rounded-md bg-white text-stone-900 text-xs font-semibold px-3 py-2 transition-colors hover:bg-stone-200"
-        >
-          <PenLine className="h-3.5 w-3.5" />
-          Leave a Google Review
-        </a>
-        <div className="flex gap-2">
+        {googleUrl && (
           <a
             href={googleUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-md border border-white/10 bg-stone-900/50 text-stone-300 text-xs font-medium px-3 py-2 transition-colors hover:bg-stone-700"
+            className="inline-flex items-center justify-center gap-1.5 rounded-md bg-white text-stone-900 text-xs font-semibold px-3 py-2 transition-colors hover:bg-stone-200"
           >
-            Read on Google
-            <ExternalLink className="h-3 w-3 opacity-60" />
+            <PenLine className="h-3.5 w-3.5" />
+            Leave a Google Review
           </a>
+        )}
+        <div className="flex gap-2">
+          {googleUrl && (
+            <a
+              href={googleUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-md border border-white/10 bg-stone-900/50 text-stone-300 text-xs font-medium px-3 py-2 transition-colors hover:bg-stone-700"
+            >
+              Read on Google
+              <ExternalLink className="h-3 w-3 opacity-60" />
+            </a>
+          )}
           <Link
             href="/reviews"
             className="flex-1 inline-flex items-center justify-center rounded-md border border-white/10 bg-stone-900/50 text-stone-300 text-xs font-medium px-3 py-2 transition-colors hover:bg-stone-700"

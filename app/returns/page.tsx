@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { RotateCcw } from "lucide-react";
 import { BUSINESS_INFO } from "@/data/business";
+import { POLICY_LAST_UPDATED } from "@/lib/constants/legal";
 
 export const metadata = {
   title: "Returns & Refund Policy | Muskingum Materials",
@@ -19,7 +20,7 @@ export default function ReturnsPage() {
           </h1>
         </div>
         <p className="text-sm text-muted-foreground mb-2">
-          Last updated: June 17, 2026
+          Last updated: {POLICY_LAST_UPDATED}
         </p>
 
         <div className="rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 p-4 mb-8 text-sm text-amber-900 dark:text-amber-200">

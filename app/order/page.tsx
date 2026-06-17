@@ -25,7 +25,10 @@ export const revalidate = 300;
 // dead end. Mirrors the graceful-degradation pattern used elsewhere in the app.
 function getFallbackProducts(): OrderableProduct[] {
   return PRODUCTS.filter((product) => product.price > 0).map((product) => ({
-    id: product.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
+    // Prefix synthetic IDs so they're clearly distinct from real database
+    // primary keys. The id is only used as a React key here — the cart and
+    // checkout flow key off the product name, not this id.
+    id: `static-${product.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`,
     name: product.name,
     description: product.description,
     price: product.price,

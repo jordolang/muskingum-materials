@@ -1,12 +1,26 @@
 import Link from "next/link";
 import { Lock } from "lucide-react";
 import { BUSINESS_INFO } from "@/data/business";
+import { POLICY_LAST_UPDATED } from "@/lib/constants/legal";
 
 export const metadata = {
   title: "Data Use & Protection Policy | Muskingum Materials",
   description:
     "How Muskingum Materials handles, secures, and protects the data you share when you use our website, place an order, or contact us.",
 };
+
+// Third-party processors and the safeguard each one provides. Kept as a
+// file-level constant so the table is easy to audit and maintain.
+const DATA_PROVIDERS: ReadonlyArray<readonly [string, string]> = [
+  ["Stripe", "Payments — PCI-DSS Level 1, card data never touches our servers"],
+  ["Clerk", "Authentication — manages credentials and sessions securely"],
+  ["Neon", "Database — encrypted, access-controlled Postgres hosting"],
+  ["Postmark", "Transactional email — order receipts and updates only"],
+  ["Anthropic (Claude)", "AI chat — processes chat messages to answer questions"],
+  ["Google Analytics", "Usage analytics — IP anonymization enabled"],
+  ["Upstash", "Rate limiting — protects endpoints from abuse"],
+  ["Vercel", "Hosting — serves the site over encrypted connections"],
+];
 
 export default function DataUsePolicyPage() {
   return (
@@ -19,7 +33,7 @@ export default function DataUsePolicyPage() {
           </h1>
         </div>
         <p className="text-sm text-muted-foreground mb-2">
-          Last updated: June 17, 2026
+          Last updated: {POLICY_LAST_UPDATED}
         </p>
 
         <div className="rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 p-4 mb-8 text-sm text-amber-900 dark:text-amber-200">
@@ -129,16 +143,7 @@ export default function DataUsePolicyPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {[
-                    ["Stripe", "Payments — PCI-DSS Level 1, card data never touches our servers"],
-                    ["Clerk", "Authentication — manages credentials and sessions securely"],
-                    ["Neon", "Database — encrypted, access-controlled Postgres hosting"],
-                    ["Postmark", "Transactional email — order receipts and updates only"],
-                    ["Anthropic (Claude)", "AI chat — processes chat messages to answer questions"],
-                    ["Google Analytics", "Usage analytics — IP anonymization enabled"],
-                    ["Upstash", "Rate limiting — protects endpoints from abuse"],
-                    ["Vercel", "Hosting — serves the site over encrypted connections"],
-                  ].map(([provider, role]) => (
+                  {DATA_PROVIDERS.map(([provider, role]) => (
                     <tr key={provider}>
                       <td className="py-2 px-4 font-medium">{provider}</td>
                       <td className="py-2 px-4 text-muted-foreground">{role}</td>

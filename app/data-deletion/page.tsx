@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Trash2 } from "lucide-react";
 import { BUSINESS_INFO } from "@/data/business";
+import { POLICY_LAST_UPDATED } from "@/lib/constants/legal";
 
 export const metadata = {
   title: "Delete My Data Request | Muskingum Materials",
@@ -24,14 +25,14 @@ export default function DataDeletionPage() {
           </h1>
         </div>
         <p className="text-sm text-muted-foreground mb-2">
-          Last updated: June 17, 2026
+          Last updated: {POLICY_LAST_UPDATED}
         </p>
 
         <div className="rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 p-4 mb-8 text-sm text-amber-900 dark:text-amber-200">
           You can ask us to delete the personal information we hold about you at
           any time. We honor verified deletion requests within{" "}
-          <strong>30 days</strong>, except where the law requires us to keep
-          certain records (see below).
+          <strong>90 days</strong> (often sooner), except where the law requires
+          us to keep certain records (see below).
         </div>
 
         <div className="space-y-10 text-sm leading-relaxed text-foreground">
@@ -141,9 +142,13 @@ export default function DataDeletionPage() {
             </h2>
             <p className="text-muted-foreground">
               We confirm receipt of your request within 5 business days and
-              complete verified deletions within 30 days. We will email you when
-              the deletion is complete. If we cannot fully delete certain data
-              for the legal reasons above, we will tell you what we kept and why.
+              complete verified deletions within 90 days, in line with our{" "}
+              <Link href="/privacy" className="text-primary hover:underline">
+                Privacy Policy
+              </Link>{" "}
+              — usually much sooner. We will email you when the deletion is
+              complete. If we cannot fully delete certain data for the legal
+              reasons above, we will tell you what we kept and why.
             </p>
           </section>
 
