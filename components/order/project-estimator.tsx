@@ -12,6 +12,8 @@ import {
   Map as MapIcon,
   Truck,
   Sparkles,
+  Check,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -128,9 +130,14 @@ export function ProjectEstimator({
   // Map state
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
-  const drawingManagerRef = useRef<google.maps.drawing.DrawingManager | null>(null);
   const polygonsRef = useRef<PolygonData[]>([]);
   const selectedRef = useRef<number>(-1);
+  // The polygon currently being drawn (point-by-point) plus the map click
+  // listener feeding it. Google removed `drawing.DrawingManager` in Maps JS
+  // API v3.65, so we build polygons manually from map clicks instead.
+  const activePolygonRef = useRef<google.maps.Polygon | null>(null);
+  const activePointsRef = useRef<google.maps.LatLng[]>([]);
+  const mapClickListenerRef = useRef<google.maps.MapsEventListener | null>(null);
 
   const [mapsScriptLoaded, setMapsScriptLoaded] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -229,7 +236,7 @@ export function ProjectEstimator({
     }
 
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=drawing,geometry,places&callback=initEstimatorMap`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=geometry,places&callback=initEstimatorMap`;
     script.async = true;
     script.defer = true;
     script.dataset.estimatorMaps = "true";
@@ -306,13 +313,114 @@ export function ProjectEstimator({
     });
   }
 
-  function startDrawing() {
-    if (!drawingManagerRef.current) return;
-    drawingManagerRef.current.setDrawingMode(
-      google.maps.drawing.OverlayType.POLYGON,
-    );
+  // Begin a fresh polygon: every map click appends a vertex to it.
+  const startDrawing = useCallback(() => {
+    const map = mapRef.current;
+    if (!map || activePolygonRef.current) return;
+
+    // Collect vertices in a plain array and re-apply the whole path on each
+    // click. Passing a fresh array to setPath() lets Google build a clean
+    // internal path every time — more robust than mutating an MVCArray, which
+    // can leave the polygon's path malformed once it becomes editable.
+    const points: google.maps.LatLng[] = [];
+    const polygon = new google.maps.Polygon({
+      map,
+      fillColor: "#f59e0b",
+      fillOpacity: 0.3,
+      strokeColor: "#92400e",
+      strokeWeight: 2,
+      editable: false,
+      clickable: false,
+    });
+    polygon.setPath(points);
+    activePolygonRef.current = polygon;
+    activePointsRef.current = points;
     setIsDrawing(true);
-  }
+
+    mapClickListenerRef.current = map.addListener(
+      "click",
+      (event: google.maps.MapMouseEvent) => {
+        if (event.latLng) {
+          points.push(event.latLng);
+          polygon.setPath(points);
+        }
+      },
+    );
+  }, []);
+
+  const detachActiveDrawing = useCallback(() => {
+    if (mapClickListenerRef.current) {
+      google.maps.event.removeListener(mapClickListenerRef.current);
+      mapClickListenerRef.current = null;
+    }
+  }, []);
+
+  // Commit the in-progress polygon (needs at least 3 points to have an area),
+  // make it editable, attach the live recalculation listeners, and label it.
+  const finishDrawing = useCallback(() => {
+    const polygon = activePolygonRef.current;
+    const map = mapRef.current;
+    if (!polygon || !map) return;
+
+    if (activePointsRef.current.length < 3) {
+      polygon.setMap(null);
+      activePolygonRef.current = null;
+      activePointsRef.current = [];
+      detachActiveDrawing();
+      setIsDrawing(false);
+      return;
+    }
+
+    const path = polygon.getPath();
+
+    polygon.setEditable(true);
+    polygon.setDraggable(true);
+    polygon.setOptions({ clickable: true });
+
+    const label = new google.maps.Marker({
+      map,
+      icon: { path: google.maps.SymbolPath.CIRCLE, scale: 0 },
+      clickable: false,
+    });
+
+    const data: PolygonData = { polygon, label, areaSqFt: 0 };
+    updatePolygonLabel(data);
+
+    const idx = polygonsRef.current.length;
+    polygonsRef.current.push(data);
+    setPolygonCount(polygonsRef.current.length);
+    recalcDrawnArea();
+    syncPolygonPaths();
+
+    polygon.addListener("click", () => {
+      selectedRef.current = idx;
+    });
+
+    const recalc = () => {
+      updatePolygonLabel(data);
+      recalcDrawnArea();
+      syncPolygonPaths();
+    };
+    google.maps.event.addListener(path, "set_at", recalc);
+    google.maps.event.addListener(path, "insert_at", recalc);
+    google.maps.event.addListener(path, "remove_at", recalc);
+
+    detachActiveDrawing();
+    activePolygonRef.current = null;
+    activePointsRef.current = [];
+    setIsDrawing(false);
+  }, [detachActiveDrawing, recalcDrawnArea, syncPolygonPaths]);
+
+  // Abandon the in-progress polygon without saving it.
+  const cancelDrawing = useCallback(() => {
+    if (activePolygonRef.current) {
+      activePolygonRef.current.setMap(null);
+      activePolygonRef.current = null;
+    }
+    activePointsRef.current = [];
+    detachActiveDrawing();
+    setIsDrawing(false);
+  }, [detachActiveDrawing]);
 
   const undoLast = useCallback(() => {
     if (polygonsRef.current.length === 0) return;
@@ -330,6 +438,17 @@ export function ProjectEstimator({
   }, [recalcDrawnArea, syncPolygonPaths]);
 
   const clearAll = useCallback(() => {
+    // Discard an in-progress shape too, not just committed ones.
+    if (activePolygonRef.current) {
+      activePolygonRef.current.setMap(null);
+      activePolygonRef.current = null;
+    }
+    activePointsRef.current = [];
+    if (mapClickListenerRef.current) {
+      google.maps.event.removeListener(mapClickListenerRef.current);
+      mapClickListenerRef.current = null;
+    }
+    setIsDrawing(false);
     for (const data of polygonsRef.current) {
       data.polygon.setMap(null);
       data.label.setMap(null);
@@ -344,8 +463,13 @@ export function ProjectEstimator({
   // ---------- Map: clear cached ref / polygons when leaving map mode so we re-init cleanly on return ----------
   useEffect(() => {
     if (mode !== "map") {
+      if (mapClickListenerRef.current) {
+        google.maps.event.removeListener(mapClickListenerRef.current);
+        mapClickListenerRef.current = null;
+      }
       mapRef.current = null;
-      drawingManagerRef.current = null;
+      activePolygonRef.current = null;
+      activePointsRef.current = [];
       polygonsRef.current = [];
       selectedRef.current = -1;
       setPolygonCount(0);
@@ -370,63 +494,14 @@ export function ProjectEstimator({
       fullscreenControl: true,
       mapTypeControl: false,
       streetViewControl: false,
+      // Avoid the browser zooming when the user double-clicks to place the
+      // last vertex of a shape they're outlining.
+      disableDoubleClickZoom: true,
     });
     mapRef.current = map;
-
-    const drawingManager = new google.maps.drawing.DrawingManager({
-      drawingMode: null,
-      drawingControl: false,
-      polygonOptions: {
-        fillColor: "#f59e0b",
-        fillOpacity: 0.3,
-        strokeColor: "#92400e",
-        strokeWeight: 2,
-        editable: true,
-        draggable: true,
-      },
-    });
-    drawingManager.setMap(map);
-    drawingManagerRef.current = drawingManager;
-
-    google.maps.event.addListener(
-      drawingManager,
-      "polygoncomplete",
-      (polygon: google.maps.Polygon) => {
-        drawingManager.setDrawingMode(null);
-        setIsDrawing(false);
-
-        const label = new google.maps.Marker({
-          map,
-          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 0 },
-          clickable: false,
-        });
-
-        const data: PolygonData = { polygon, label, areaSqFt: 0 };
-        updatePolygonLabel(data);
-
-        const idx = polygonsRef.current.length;
-        polygonsRef.current.push(data);
-        setPolygonCount(polygonsRef.current.length);
-        recalcDrawnArea();
-        syncPolygonPaths();
-
-        polygon.addListener("click", () => {
-          selectedRef.current = idx;
-        });
-
-        const path = polygon.getPath();
-        const recalc = () => {
-          updatePolygonLabel(data);
-          recalcDrawnArea();
-          syncPolygonPaths();
-        };
-        google.maps.event.addListener(path, "set_at", recalc);
-        google.maps.event.addListener(path, "insert_at", recalc);
-        google.maps.event.addListener(path, "remove_at", recalc);
-      },
-    );
-
-  }, [mode, mapsScriptLoaded, recalcDrawnArea, syncPolygonPaths, addressLocation]);
+    // Polygons are now drawn manually via startDrawing()/finishDrawing();
+    // the deprecated drawing.DrawingManager is no longer instantiated.
+  }, [mode, mapsScriptLoaded, addressLocation]);
 
   return (
     <div className="space-y-6 p-5">
@@ -608,17 +683,42 @@ export function ProjectEstimator({
               </p>
               <div className="relative rounded-lg border bg-muted/30 overflow-hidden">
                 <div className="absolute top-3 left-3 z-10 flex flex-wrap gap-1.5">
-                  <Button
-                    size="sm"
-                    type="button"
-                    variant={isDrawing ? "default" : "secondary"}
-                    onClick={startDrawing}
-                    disabled={!mapsScriptLoaded}
-                    className="gap-1.5 shadow-md"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                    {isDrawing ? "Click to add points…" : "Draw area"}
-                  </Button>
+                  {isDrawing ? (
+                    <>
+                      <Button
+                        size="sm"
+                        type="button"
+                        variant="default"
+                        onClick={finishDrawing}
+                        className="gap-1.5 shadow-md"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                        Finish shape
+                      </Button>
+                      <Button
+                        size="sm"
+                        type="button"
+                        variant="secondary"
+                        onClick={cancelDrawing}
+                        className="gap-1.5 shadow-md"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      size="sm"
+                      type="button"
+                      variant="secondary"
+                      onClick={startDrawing}
+                      disabled={!mapsScriptLoaded}
+                      className="gap-1.5 shadow-md"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Draw area
+                    </Button>
+                  )}
                   <Button
                     size="sm"
                     type="button"
@@ -635,7 +735,7 @@ export function ProjectEstimator({
                     type="button"
                     variant="secondary"
                     onClick={clearAll}
-                    disabled={polygonCount === 0}
+                    disabled={polygonCount === 0 && !isDrawing}
                     className="gap-1.5 shadow-md"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -661,9 +761,10 @@ export function ProjectEstimator({
               </div>
 
               <p className="text-xs text-muted-foreground mt-2">
-                Click the map to drop points around the perimeter of your
-                project. Double-click to close the shape. You can draw multiple
-                areas.
+                Click <strong>Draw area</strong>, then click the map to drop
+                points around the perimeter of your project. Add at least three
+                points and click <strong>Finish shape</strong> to close it. You
+                can draw multiple areas and drag any point to fine-tune.
               </p>
             </div>
           )}

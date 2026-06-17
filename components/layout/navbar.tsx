@@ -217,11 +217,11 @@ export function Navbar() {
         <div className="glass shadow-float relative flex h-16 items-center justify-between gap-3 rounded-full pl-5 pr-2.5">
           <Link href="/" className="shrink-0">
             <Image
-              src="/logo.svg"
+              src="/muskingum-materials-logo.png"
               alt="Muskingum Materials"
-              width={200}
-              height={60}
-              className="h-9 w-auto"
+              width={300}
+              height={200}
+              className="h-11 w-auto"
               priority
             />
           </Link>

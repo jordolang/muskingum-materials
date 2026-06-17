@@ -59,11 +59,11 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="inline-block mb-4">
               <Image
-                src="/logo-light.svg"
+                src="/muskingum-materials-logo.png"
                 alt="Muskingum Materials"
-                width={200}
-                height={60}
-                className="h-12 w-auto"
+                width={300}
+                height={200}
+                className="h-16 w-auto"
               />
             </Link>
             <p className="text-sm text-stone-400 mb-5">
