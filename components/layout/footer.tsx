@@ -37,6 +37,14 @@ const SOCIAL_LINKS = [
   },
 ];
 
+const LEGAL_LINKS = [
+  { label: "Terms of Service", href: "/terms" },
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Data Use & Protection", href: "/data-use-policy" },
+  { label: "Returns & Refunds", href: "/returns" },
+  { label: "Delete My Data", href: "/data-deletion" },
+];
+
 export function Footer() {
   return (
     <footer className="relative bg-stone-900 text-stone-300">
@@ -45,8 +53,10 @@ export function Footer() {
         className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/60 to-transparent"
       />
       <div className="container py-12 sm:py-14">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
-          <div>
+        {/* ── Top row: Brand · Quick Links · Calculators · Business Hours ── */}
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+          {/* Brand + social */}
+          <div className="col-span-2 md:col-span-1">
             <Link href="/" className="inline-block mb-4">
               <Image
                 src="/logo-light.svg"
@@ -59,9 +69,7 @@ export function Footer() {
             <p className="text-sm text-stone-400 mb-5">
               {BUSINESS_INFO.tagline}
             </p>
-
-            {/* Social Icons */}
-            <div className="flex items-center gap-3 mb-5">
+            <div className="flex items-center gap-3">
               {SOCIAL_LINKS.map((social) => (
                 <a
                   key={social.name}
@@ -76,11 +84,9 @@ export function Footer() {
                 </a>
               ))}
             </div>
-
-            {/* Google Business review widget */}
-            <GoogleReviewWidget />
           </div>
 
+          {/* Quick Links */}
           <div>
             <h3 className="text-white font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sm">
@@ -95,17 +101,7 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
-            <h3 className="text-white font-semibold mb-4">Legal &amp; Policies</h3>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/terms" className="hover:text-amber-500 transition-colors">Terms of Service</Link></li>
-              <li><Link href="/privacy" className="hover:text-amber-500 transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/data-use-policy" className="hover:text-amber-500 transition-colors">Data Use &amp; Protection</Link></li>
-              <li><Link href="/returns" className="hover:text-amber-500 transition-colors">Returns &amp; Refunds</Link></li>
-              <li><Link href="/data-deletion" className="hover:text-amber-500 transition-colors">Delete My Data</Link></li>
-            </ul>
-          </div>
-
+          {/* Calculators */}
           <div>
             <h3 className="text-white font-semibold mb-4">Calculators</h3>
             <ul className="space-y-2 text-sm">
@@ -117,43 +113,7 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
-            <h3 className="text-white font-semibold mb-4">Contact Info</h3>
-            <ul className="space-y-3 text-sm">
-              <li className="flex items-start gap-2">
-                <Phone className="h-4 w-4 mt-0.5 text-amber-500 shrink-0" />
-                <div>
-                  <a href={`tel:${BUSINESS_INFO.phone.replace(/\D/g, "")}`} className="hover:text-amber-500 transition-colors">
-                    {BUSINESS_INFO.phone}
-                  </a>
-                  <br />
-                  <a href={`tel:${BUSINESS_INFO.altPhone.replace(/\D/g, "")}`} className="hover:text-amber-500 transition-colors">
-                    {BUSINESS_INFO.altPhone}
-                  </a>
-                </div>
-              </li>
-              <li className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-amber-500 shrink-0" />
-                <a href={`mailto:${BUSINESS_INFO.email}`} className="hover:text-amber-500 transition-colors">
-                  {BUSINESS_INFO.email}
-                </a>
-              </li>
-              <li className="flex items-start gap-2">
-                <MapPin className="h-4 w-4 mt-0.5 text-amber-500 shrink-0" />
-                <a
-                  href={BUSINESS_INFO.social.google}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-amber-500 transition-colors"
-                >
-                  {BUSINESS_INFO.address}<br />
-                  {BUSINESS_INFO.city}, {BUSINESS_INFO.state} {BUSINESS_INFO.zip}
-                  <ExternalLink className="h-3 w-3 inline ml-1 opacity-50" />
-                </a>
-              </li>
-            </ul>
-          </div>
-
+          {/* Business Hours */}
           <div>
             <h3 className="text-white font-semibold mb-4">Business Hours</h3>
             <ul className="space-y-1 text-sm">
@@ -168,8 +128,6 @@ export function Footer() {
               <p>Accepted: Visa, Mastercard, Discover, Apple Pay</p>
               <p className="mt-1">Tax: 7.25% | Credit Processing: 4.5%</p>
             </div>
-
-            {/* Find Us Online */}
             <div className="mt-5 pt-4 border-t border-stone-800">
               <p className="text-xs font-medium text-stone-400 mb-2">Find Us Online</p>
               <div className="space-y-1.5">
@@ -198,7 +156,69 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-stone-800 mt-8 pt-8 space-y-3 text-xs text-stone-500">
+        {/* ── Bottom row: Reviews · Legal & Policies · Contact Info (landscape cards) ── */}
+        <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* Reviews */}
+          <GoogleReviewWidget />
+
+          {/* Legal & Policies — links flow horizontally to keep the card landscape */}
+          <div className="rounded-xl border border-white/10 bg-stone-800/40 p-5">
+            <h3 className="text-white font-semibold mb-4">Legal &amp; Policies</h3>
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+              {LEGAL_LINKS.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="hover:text-amber-500 transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact Info — items wrap horizontally to keep the card landscape */}
+          <div className="rounded-xl border border-white/10 bg-stone-800/40 p-5">
+            <h3 className="text-white font-semibold mb-4">Contact Info</h3>
+            <div className="flex flex-wrap gap-x-8 gap-y-4 text-sm">
+              <div className="flex items-start gap-2">
+                <Phone className="h-4 w-4 mt-0.5 text-amber-500 shrink-0" />
+                <div>
+                  <a href={`tel:${BUSINESS_INFO.phone.replace(/\D/g, "")}`} className="hover:text-amber-500 transition-colors">
+                    {BUSINESS_INFO.phone}
+                  </a>
+                  <br />
+                  <a href={`tel:${BUSINESS_INFO.altPhone.replace(/\D/g, "")}`} className="hover:text-amber-500 transition-colors">
+                    {BUSINESS_INFO.altPhone}
+                  </a>
+                </div>
+              </div>
+              <a
+                href={`mailto:${BUSINESS_INFO.email}`}
+                className="flex items-center gap-2 hover:text-amber-500 transition-colors"
+              >
+                <Mail className="h-4 w-4 text-amber-500 shrink-0" />
+                <span className="break-all">{BUSINESS_INFO.email}</span>
+              </a>
+              <a
+                href={BUSINESS_INFO.social.google}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-2 hover:text-amber-500 transition-colors"
+              >
+                <MapPin className="h-4 w-4 mt-0.5 text-amber-500 shrink-0" />
+                <span>
+                  {BUSINESS_INFO.address}<br />
+                  {BUSINESS_INFO.city}, {BUSINESS_INFO.state} {BUSINESS_INFO.zip}
+                  <ExternalLink className="h-3 w-3 inline ml-1 opacity-50" />
+                </span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-stone-800 mt-10 pt-8 space-y-3 text-xs text-stone-500">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p>&copy; {new Date().getFullYear()} Muskingum Materials. All rights reserved.</p>
             <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">

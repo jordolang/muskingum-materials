@@ -32,7 +32,7 @@ export function HomeProductCard({
   const [imgSrc, setImgSrc] = useState(imageUrl || FALLBACK_IMAGE);
 
   return (
-    <Card className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-stone-200/70 bg-gradient-to-br from-white via-white to-amber-50/60 shadow-float transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-amber-300/70 hover:shadow-glow motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+    <Card className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-stone-300/70 bg-gradient-to-br from-white via-white to-amber-50/70 shadow-float transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-amber-300/70 hover:shadow-glow motion-reduce:transition-none motion-reduce:hover:translate-y-0">
       {/* Warm radial glow that blooms in on hover */}
       <div
         aria-hidden

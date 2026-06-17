@@ -50,47 +50,48 @@ export function GoogleReviewWidget() {
   const googleUrl = BUSINESS_INFO.social.google?.trim();
 
   return (
-    <div className="rounded-xl border border-white/10 bg-stone-800/60 p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <GoogleGlyph className="h-5 w-5" />
-        <span className="text-sm font-semibold text-white">
-          Reviews
-        </span>
+    <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/10 bg-stone-800/60 p-5">
+      {/* Rating summary */}
+      <div className="min-w-0">
+        <div className="flex items-center gap-2 mb-1.5">
+          <GoogleGlyph className="h-5 w-5" />
+          <span className="text-sm font-semibold text-white">Reviews</span>
+        </div>
+        {reviewCount > 0 ? (
+          <>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold text-white tabular-nums">
+                {rounded.toFixed(1)}
+              </span>
+              <div
+                className="flex"
+                aria-label={`${rounded.toFixed(1)} out of 5 stars`}
+              >
+                {Array.from({ length: 5 }, (_, i) => (
+                  <Star
+                    key={i}
+                    className={`h-4 w-4 ${
+                      i < filledStars
+                        ? "fill-amber-400 text-amber-400"
+                        : "fill-stone-600 text-stone-600"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+            <p className="text-xs text-stone-400 mt-1">
+              Average of {reviewCount} customer review
+              {reviewCount !== 1 ? "s" : ""}
+            </p>
+          </>
+        ) : (
+          <p className="text-xs text-stone-400">
+            Be the first to leave us a review!
+          </p>
+        )}
       </div>
 
-      {reviewCount > 0 ? (
-        <div className="mb-3">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-2xl font-bold text-white tabular-nums">
-              {rounded.toFixed(1)}
-            </span>
-            <div
-              className="flex"
-              aria-label={`${rounded.toFixed(1)} out of 5 stars`}
-            >
-              {Array.from({ length: 5 }, (_, i) => (
-                <Star
-                  key={i}
-                  className={`h-4 w-4 ${
-                    i < filledStars
-                      ? "fill-amber-400 text-amber-400"
-                      : "fill-stone-600 text-stone-600"
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-          <p className="text-xs text-stone-400">
-            Average of {reviewCount} customer review
-            {reviewCount !== 1 ? "s" : ""}
-          </p>
-        </div>
-      ) : (
-        <p className="text-xs text-stone-400 mb-3">
-          Be the first to leave us a review!
-        </p>
-      )}
-
+      {/* Actions */}
       <div className="flex flex-col gap-2">
         {googleUrl && (
           <a

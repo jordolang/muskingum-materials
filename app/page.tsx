@@ -279,7 +279,7 @@ export default async function HomePage() {
       </section>
 
       {/* Featured Products */}
-      <section className="ambient-glow bg-background py-16 sm:py-20">
+      <section className="bg-gradient-to-b from-stone-100 to-stone-50 py-16 sm:py-20">
         <div className="container">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold font-heading mb-3">
