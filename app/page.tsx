@@ -219,7 +219,7 @@ export default async function HomePage() {
             priority
           />
           <div className="absolute inset-0 hero-gradient" />
-          <div className="relative z-10 w-full px-7 py-20 sm:px-12 lg:px-16">
+          <div className="relative z-10 grid w-full items-center gap-10 px-7 py-20 sm:px-12 lg:grid-cols-2 lg:px-16">
             <div className="max-w-2xl text-white">
               <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-xs font-medium uppercase tracking-wider backdrop-blur">
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
@@ -253,6 +253,16 @@ export default async function HomePage() {
                   </Button>
                 </Link>
               </div>
+            </div>
+            <div className="hidden justify-center lg:flex">
+              <Image
+                src="/muskingum-materials-logo.png"
+                alt="Muskingum Materials"
+                width={600}
+                height={400}
+                priority
+                className="w-full max-w-lg drop-shadow-2xl"
+              />
             </div>
           </div>
         </div>
