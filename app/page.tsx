@@ -12,12 +12,18 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BUSINESS_INFO } from "@/data/business";
+import {
+  BUSINESS_INFO,
+  PRODUCTS,
+  PRODUCT_IMAGES,
+  SERVICES,
+} from "@/data/business";
 import { ReviewsCarousel } from "@/components/home/reviews-carousel";
 import { HomepageFAQ } from "@/components/home/homepage-faq";
 import { HomeProductCard } from "@/components/home/home-product-card";
 import { ServicesBento } from "@/components/home/services-bento";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 import { sanityClient } from "@/lib/sanity/client";
 import { testimonialsQuery } from "@/lib/sanity/queries";
 import { generateLocalBusinessSchema, toJsonLd } from "@/lib/seo/structured-data";
@@ -57,12 +63,48 @@ interface HomeTestimonial {
   text: string;
 }
 
-export default async function HomePage() {
-  // Pull products and services from Postgres (Prisma). Testimonials still
-  // come from Sanity for now and degrade to a static fallback inside the
-  // ReviewsCarousel server component when empty.
-  const [productRows, serviceRows, testimonialResult] = await Promise.all([
-    prisma.product.findMany({
+// Turn a product/service name into a URL/key-safe slug.
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+// Static fallbacks from the canonical lists in data/business.ts so the homepage
+// still renders its product and service sections if the database is unreachable
+// (missing DATABASE_URL in a preview deploy, transient Neon outage, etc.) rather
+// than crashing the whole page. Synthetic IDs are prefixed with "static-" to
+// keep them clearly distinct from real database primary keys.
+function getFallbackHomeProducts(): HomeProduct[] {
+  return PRODUCTS.map((product) => {
+    const slug = slugify(product.name);
+    return {
+      _id: `static-${slug}`,
+      name: product.name,
+      slug,
+      description: product.description,
+      pricePerTon: product.price ?? null,
+      unit: product.unit,
+      imageUrl: PRODUCT_IMAGES[product.name],
+      imageAlt: product.name,
+    };
+  });
+}
+
+function getFallbackHomeServices(): HomeService[] {
+  return SERVICES.map((service) => ({
+    _id: `static-${slugify(service.title)}`,
+    title: service.title,
+    description: service.description,
+    icon: service.icon,
+    features: [...service.features],
+  }));
+}
+
+async function getHomeProducts(): Promise<HomeProduct[]> {
+  try {
+    const productRows = await prisma.product.findMany({
       where: { active: true },
       orderBy: [{ sortOrder: "asc" }],
       select: {
@@ -76,8 +118,32 @@ export default async function HomePage() {
         imageUrl: true,
         imageAlt: true,
       },
-    }),
-    prisma.service.findMany({
+    });
+
+    const mapped: HomeProduct[] = productRows.map((row) => ({
+      _id: row.id,
+      name: row.name,
+      slug: row.slug,
+      description: row.shortDescription ?? row.description,
+      pricePerTon: row.price,
+      unit: row.unit,
+      imageUrl: row.imageUrl ?? undefined,
+      imageAlt: row.imageAlt ?? undefined,
+    }));
+
+    return mapped.length > 0 ? mapped : getFallbackHomeProducts();
+  } catch (error) {
+    logger.error(
+      "Homepage: failed to load products from database, using static fallback",
+      error,
+    );
+    return getFallbackHomeProducts();
+  }
+}
+
+async function getHomeServices(): Promise<HomeService[]> {
+  try {
+    const serviceRows = await prisma.service.findMany({
       where: { active: true },
       orderBy: { sortOrder: "asc" },
       select: {
@@ -87,42 +153,49 @@ export default async function HomePage() {
         icon: true,
         features: true,
       },
-    }),
+    });
+
+    const mapped: HomeService[] = serviceRows.map((row) => ({
+      _id: row.id,
+      title: row.title,
+      description: row.description,
+      icon: row.icon ?? undefined,
+      features: row.features,
+    }));
+
+    return mapped.length > 0 ? mapped : getFallbackHomeServices();
+  } catch (error) {
+    logger.error(
+      "Homepage: failed to load services from database, using static fallback",
+      error,
+    );
+    return getFallbackHomeServices();
+  }
+}
+
+export default async function HomePage() {
+  // Pull products and services from Postgres (Prisma), each with a static
+  // fallback so a database hiccup never takes down the homepage. Testimonials
+  // come from Sanity and degrade to a static fallback inside the
+  // ReviewsCarousel server component when empty.
+  const [featuredProducts, services, testimonials] = await Promise.all([
+    getHomeProducts(),
+    getHomeServices(),
     sanityClient
       .fetch<HomeTestimonial[]>(
         testimonialsQuery,
         {},
         { next: { tags: ["testimonials"] } }
       )
+      // Sanity can *resolve* to null/undefined when unconfigured (e.g. a
+      // preview env without project creds) rather than reject, which would
+      // slip past .catch and leave testimonials undefined — coalesce to [].
+      .then((result) => result ?? [])
       .catch((error) => {
         console.error("Failed to fetch testimonials from Sanity:", error);
         return [] as HomeTestimonial[];
       }),
   ]);
-
-  type ProductRow = typeof productRows[number];
-  type ServiceRow = typeof serviceRows[number];
-
-  const featuredProducts: HomeProduct[] = productRows.map((row: ProductRow) => ({
-    _id: row.id,
-    name: row.name,
-    slug: row.slug,
-    description: row.shortDescription ?? row.description,
-    pricePerTon: row.price,
-    unit: row.unit,
-    imageUrl: row.imageUrl ?? undefined,
-    imageAlt: row.imageAlt ?? undefined,
-  }));
-
-  const services: HomeService[] = serviceRows.map((row: ServiceRow) => ({
-    _id: row.id,
-    title: row.title,
-    description: row.description,
-    icon: row.icon ?? undefined,
-    features: row.features,
-  }));
-
-  const testimonials: HomeTestimonial[] = testimonialResult;
 
   const localBusinessSchema = generateLocalBusinessSchema();
 

@@ -9,6 +9,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { BUSINESS_INFO } from "@/data/business";
+import { GoogleReviewWidget } from "./google-review-widget";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -44,7 +45,7 @@ export function Footer() {
         className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/60 to-transparent"
       />
       <div className="container py-12 sm:py-14">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
           <div>
             <Link href="/" className="inline-block mb-4">
               <Image
@@ -60,7 +61,7 @@ export function Footer() {
             </p>
 
             {/* Social Icons */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 mb-5">
               {SOCIAL_LINKS.map((social) => (
                 <a
                   key={social.name}
@@ -75,6 +76,9 @@ export function Footer() {
                 </a>
               ))}
             </div>
+
+            {/* Google Business review widget */}
+            <GoogleReviewWidget />
           </div>
 
           <div>
@@ -87,10 +91,18 @@ export function Footer() {
               <li><Link href="/about" className="hover:text-amber-500 transition-colors">About Us</Link></li>
               <li><Link href="/contact" className="hover:text-amber-500 transition-colors">Contact</Link></li>
               <li><Link href="/faq" className="hover:text-amber-500 transition-colors">FAQ</Link></li>
-              <li className="pt-2 border-t border-stone-800 mt-2">
-                <Link href="/privacy" className="hover:text-amber-500 transition-colors">Privacy Policy</Link>
-              </li>
+              <li><Link href="/reviews" className="hover:text-amber-500 transition-colors">Customer Reviews</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-white font-semibold mb-4">Legal &amp; Policies</h3>
+            <ul className="space-y-2 text-sm">
               <li><Link href="/terms" className="hover:text-amber-500 transition-colors">Terms of Service</Link></li>
+              <li><Link href="/privacy" className="hover:text-amber-500 transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/data-use-policy" className="hover:text-amber-500 transition-colors">Data Use &amp; Protection</Link></li>
+              <li><Link href="/returns" className="hover:text-amber-500 transition-colors">Returns &amp; Refunds</Link></li>
+              <li><Link href="/data-deletion" className="hover:text-amber-500 transition-colors">Delete My Data</Link></li>
             </ul>
           </div>
 
@@ -189,9 +201,12 @@ export function Footer() {
         <div className="border-t border-stone-800 mt-8 pt-8 space-y-3 text-xs text-stone-500">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p>&copy; {new Date().getFullYear()} Muskingum Materials. All rights reserved.</p>
-            <div className="flex items-center gap-4">
-              <Link href="/privacy" className="hover:text-stone-300 transition-colors">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-stone-300 transition-colors">Terms of Service</Link>
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+              <Link href="/privacy" className="hover:text-stone-300 transition-colors">Privacy</Link>
+              <Link href="/terms" className="hover:text-stone-300 transition-colors">Terms</Link>
+              <Link href="/data-use-policy" className="hover:text-stone-300 transition-colors">Data Use</Link>
+              <Link href="/returns" className="hover:text-stone-300 transition-colors">Returns</Link>
+              <Link href="/data-deletion" className="hover:text-stone-300 transition-colors">Delete My Data</Link>
               {SOCIAL_LINKS.map((social) => (
                 <a
                   key={social.name}

@@ -3,6 +3,8 @@ import { Suspense } from "react";
 import { OrderForm, type OrderableProduct } from "@/components/order/order-form";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
+import { PRODUCTS, PRODUCT_IMAGES } from "@/data/business";
 
 export const metadata: Metadata = {
   title: "Order Materials Online",
@@ -14,31 +16,69 @@ export const metadata: Metadata = {
 // page without a redeploy.
 export const revalidate = 300;
 
-export default async function OrderPage() {
-  const productRows = await prisma.product.findMany({
-    where: { active: true, price: { gt: 0 } },
-    orderBy: [{ sortOrder: "asc" }],
-    select: {
-      id: true,
-      name: true,
-      shortDescription: true,
-      description: true,
-      price: true,
-      unit: true,
-      imageUrl: true,
-      imageAlt: true,
-    },
-  });
-
-  const products: OrderableProduct[] = productRows.map((row) => ({
-    id: row.id,
-    name: row.name,
-    description: row.shortDescription ?? row.description,
-    price: row.price ?? 0,
-    unit: row.unit,
-    imageUrl: row.imageUrl ?? undefined,
-    imageAlt: row.imageAlt ?? undefined,
+// Static fallback derived from the canonical price list in data/business.ts.
+// If the database is unreachable at build/runtime (e.g. a missing
+// DATABASE_URL in a preview deploy, or a transient Neon outage) the order
+// page used to throw and render the generic "Something went wrong" error
+// screen. Falling back to the published catalog keeps the page usable —
+// customers can still browse, estimate, and reach us — instead of hitting a
+// dead end. Mirrors the graceful-degradation pattern used elsewhere in the app.
+function getFallbackProducts(): OrderableProduct[] {
+  return PRODUCTS.filter((product) => product.price > 0).map((product) => ({
+    // Prefix synthetic IDs so they're clearly distinct from real database
+    // primary keys. The id is only used as a React key here — the cart and
+    // checkout flow key off the product name, not this id.
+    id: `static-${product.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`,
+    name: product.name,
+    description: product.description,
+    price: product.price,
+    unit: product.unit,
+    imageUrl: PRODUCT_IMAGES[product.name],
+    imageAlt: product.name,
   }));
+}
+
+async function getOrderableProducts(): Promise<OrderableProduct[]> {
+  try {
+    const productRows = await prisma.product.findMany({
+      where: { active: true, price: { gt: 0 } },
+      orderBy: [{ sortOrder: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        shortDescription: true,
+        description: true,
+        price: true,
+        unit: true,
+        imageUrl: true,
+        imageAlt: true,
+      },
+    });
+
+    const products: OrderableProduct[] = productRows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      description: row.shortDescription ?? row.description,
+      price: row.price ?? 0,
+      unit: row.unit,
+      imageUrl: row.imageUrl ?? undefined,
+      imageAlt: row.imageAlt ?? undefined,
+    }));
+
+    // An empty catalog (DB reachable but unseeded) is just as broken to a
+    // shopper as a hard failure — fall back to the published price list.
+    return products.length > 0 ? products : getFallbackProducts();
+  } catch (error) {
+    logger.error(
+      "Order page: failed to load products from database, using static fallback",
+      error,
+    );
+    return getFallbackProducts();
+  }
+}
+
+export default async function OrderPage() {
+  const products = await getOrderableProducts();
 
   return (
     <div className="py-12">
