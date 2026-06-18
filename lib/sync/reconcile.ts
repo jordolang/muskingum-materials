@@ -71,6 +71,8 @@ function hasSanityCredentials(): boolean {
  * ```
  */
 export async function reconcileProducts(): Promise<ReconciliationResult> {
+  const startTime = Date.now();
+
   const result: ReconciliationResult = {
     onlyInPrisma: [],
     onlyInSanity: [],
@@ -78,26 +80,48 @@ export async function reconcileProducts(): Promise<ReconciliationResult> {
   };
 
   try {
+    logger.info("Starting product reconciliation", {
+      operationType: "reconcile_products",
+      timestamp: new Date().toISOString(),
+    });
+
     // Skip reconciliation if either store is unavailable
     if (!hasDatabase()) {
-      logger.warn("Product reconciliation skipped - no database configured");
+      logger.warn("Product reconciliation skipped - no database configured", {
+        operationType: "reconcile_products",
+        reason: "no_database",
+      });
       return result;
     }
 
     if (!hasSanityCredentials()) {
-      logger.warn("Product reconciliation skipped - Sanity not configured");
+      logger.warn("Product reconciliation skipped - Sanity not configured", {
+        operationType: "reconcile_products",
+        reason: "no_sanity_credentials",
+      });
       return result;
     }
 
-    logger.info("Starting product reconciliation");
-
     // Fetch all products from Prisma
+    logger.info("Fetching products from Prisma", {
+      operationType: "reconcile_products",
+    });
+
     const prismaProducts = await prisma.product.findMany({
       select: { id: true, slug: true, name: true },
       orderBy: { slug: "asc" },
     });
 
+    logger.info("Fetched products from Prisma", {
+      operationType: "reconcile_products",
+      count: prismaProducts.length,
+    });
+
     // Fetch all products from Sanity (only _id and slug)
+    logger.info("Fetching products from Sanity", {
+      operationType: "reconcile_products",
+    });
+
     const sanityProducts = await sanityClient.fetch<
       Array<{ _id: string; slug: { current: string } }>
     >(
@@ -106,6 +130,11 @@ export async function reconcileProducts(): Promise<ReconciliationResult> {
         slug
       }`,
     );
+
+    logger.info("Fetched products from Sanity", {
+      operationType: "reconcile_products",
+      count: sanityProducts?.length || 0,
+    });
 
     // Create lookup maps by slug for efficient comparison
     const prismaBySlug = new Map<string, { id: string; name: string }>(
@@ -153,29 +182,49 @@ export async function reconcileProducts(): Promise<ReconciliationResult> {
     // Log warnings for mismatches (but don't treat as errors)
     if (result.onlyInPrisma.length > 0) {
       logger.warn("Products found in Prisma but not in Sanity", {
+        operationType: "reconcile_products",
         count: result.onlyInPrisma.length,
         slugs: result.onlyInPrisma.map((p) => p.slug),
+        products: result.onlyInPrisma,
       });
     }
 
     if (result.onlyInSanity.length > 0) {
       logger.warn("Products found in Sanity but not in Prisma (orphaned)", {
+        operationType: "reconcile_products",
         count: result.onlyInSanity.length,
         slugs: result.onlyInSanity.map((p) => p.slug),
+        products: result.onlyInSanity,
       });
     }
 
+    const duration = Date.now() - startTime;
+
     logger.info("Product reconciliation completed", {
+      operationType: "reconcile_products",
       totalPrisma: prismaProducts.length,
       totalSanity: sanityProducts?.length || 0,
       inBoth: result.inBoth.length,
       onlyInPrisma: result.onlyInPrisma.length,
       onlyInSanity: result.onlyInSanity.length,
+      durationMs: duration,
+      timestamp: new Date().toISOString(),
     });
 
     return result;
   } catch (error) {
-    logger.error("Product reconciliation failed", error);
+    const duration = Date.now() - startTime;
+
+    logger.error("Product reconciliation failed", error, {
+      operationType: "reconcile_products",
+      partialResults: {
+        onlyInPrisma: result.onlyInPrisma.length,
+        onlyInSanity: result.onlyInSanity.length,
+        inBoth: result.inBoth.length,
+      },
+      durationMs: duration,
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
 
     // Return partial results even on error
     return result;
@@ -208,6 +257,8 @@ export async function reconcileProducts(): Promise<ReconciliationResult> {
  * ```
  */
 export async function reconcileServices(): Promise<ReconciliationResult> {
+  const startTime = Date.now();
+
   const result: ReconciliationResult = {
     onlyInPrisma: [],
     onlyInSanity: [],
@@ -215,26 +266,48 @@ export async function reconcileServices(): Promise<ReconciliationResult> {
   };
 
   try {
+    logger.info("Starting service reconciliation", {
+      operationType: "reconcile_services",
+      timestamp: new Date().toISOString(),
+    });
+
     // Skip reconciliation if either store is unavailable
     if (!hasDatabase()) {
-      logger.warn("Service reconciliation skipped - no database configured");
+      logger.warn("Service reconciliation skipped - no database configured", {
+        operationType: "reconcile_services",
+        reason: "no_database",
+      });
       return result;
     }
 
     if (!hasSanityCredentials()) {
-      logger.warn("Service reconciliation skipped - Sanity not configured");
+      logger.warn("Service reconciliation skipped - Sanity not configured", {
+        operationType: "reconcile_services",
+        reason: "no_sanity_credentials",
+      });
       return result;
     }
 
-    logger.info("Starting service reconciliation");
-
     // Fetch all services from Prisma
+    logger.info("Fetching services from Prisma", {
+      operationType: "reconcile_services",
+    });
+
     const prismaServices = await prisma.service.findMany({
       select: { id: true, slug: true, title: true },
       orderBy: { slug: "asc" },
     });
 
+    logger.info("Fetched services from Prisma", {
+      operationType: "reconcile_services",
+      count: prismaServices.length,
+    });
+
     // Fetch all services from Sanity (only _id and slug)
+    logger.info("Fetching services from Sanity", {
+      operationType: "reconcile_services",
+    });
+
     const sanityServices = await sanityClient.fetch<
       Array<{ _id: string; slug: { current: string } }>
     >(
@@ -243,6 +316,11 @@ export async function reconcileServices(): Promise<ReconciliationResult> {
         slug
       }`,
     );
+
+    logger.info("Fetched services from Sanity", {
+      operationType: "reconcile_services",
+      count: sanityServices?.length || 0,
+    });
 
     // Create lookup maps by slug for efficient comparison
     const prismaBySlug = new Map<string, { id: string; name: string }>(
@@ -290,29 +368,49 @@ export async function reconcileServices(): Promise<ReconciliationResult> {
     // Log warnings for mismatches (but don't treat as errors)
     if (result.onlyInPrisma.length > 0) {
       logger.warn("Services found in Prisma but not in Sanity", {
+        operationType: "reconcile_services",
         count: result.onlyInPrisma.length,
         slugs: result.onlyInPrisma.map((s) => s.slug),
+        services: result.onlyInPrisma,
       });
     }
 
     if (result.onlyInSanity.length > 0) {
       logger.warn("Services found in Sanity but not in Prisma (orphaned)", {
+        operationType: "reconcile_services",
         count: result.onlyInSanity.length,
         slugs: result.onlyInSanity.map((s) => s.slug),
+        services: result.onlyInSanity,
       });
     }
 
+    const duration = Date.now() - startTime;
+
     logger.info("Service reconciliation completed", {
+      operationType: "reconcile_services",
       totalPrisma: prismaServices.length,
       totalSanity: sanityServices?.length || 0,
       inBoth: result.inBoth.length,
       onlyInPrisma: result.onlyInPrisma.length,
       onlyInSanity: result.onlyInSanity.length,
+      durationMs: duration,
+      timestamp: new Date().toISOString(),
     });
 
     return result;
   } catch (error) {
-    logger.error("Service reconciliation failed", error);
+    const duration = Date.now() - startTime;
+
+    logger.error("Service reconciliation failed", error, {
+      operationType: "reconcile_services",
+      partialResults: {
+        onlyInPrisma: result.onlyInPrisma.length,
+        onlyInSanity: result.onlyInSanity.length,
+        inBoth: result.inBoth.length,
+      },
+      durationMs: duration,
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
 
     // Return partial results even on error
     return result;

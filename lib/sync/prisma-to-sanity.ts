@@ -91,11 +91,26 @@ function hasSanityCredentials(): boolean {
 export async function syncProductToSanity(
   product: Product,
 ): Promise<SyncResult> {
+  const startTime = Date.now();
+  const documentId = `product.${product.id}`;
+
+  logger.info("Starting product sync to Sanity", {
+    operationType: "sync_product",
+    productId: product.id,
+    productName: product.name,
+    productSlug: product.slug,
+    documentId,
+    timestamp: new Date().toISOString(),
+  });
+
   try {
     // Skip sync if Sanity credentials are not configured
     if (!hasSanityCredentials()) {
       logger.warn("Sanity sync skipped - no API token configured", {
+        operationType: "sync_product",
         productId: product.id,
+        productSlug: product.slug,
+        reason: "missing_credentials",
       });
       return {
         success: false,
@@ -110,19 +125,29 @@ export async function syncProductToSanity(
       "product",
     );
 
-    const documentId = `product.${product.id}`;
-
     // Fetch existing Sanity document to preserve Sanity-owned fields
     let existingDoc: Record<string, unknown> | null = null;
+    let isNewDocument = true;
     try {
       existingDoc = await previewClient.fetch(
         `*[_type == "product" && _id == $id][0]`,
         { id: documentId },
       );
+      isNewDocument = !existingDoc;
+
+      logger.info("Fetched existing Sanity document", {
+        operationType: "sync_product",
+        documentId,
+        productSlug: product.slug,
+        exists: !!existingDoc,
+        isNewDocument,
+      });
     } catch (error) {
       logger.warn("Failed to fetch existing Sanity document", {
+        operationType: "sync_product",
         documentId,
-        error,
+        productSlug: product.slug,
+        error: error instanceof Error ? error.message : String(error),
       });
     }
 
@@ -130,6 +155,7 @@ export async function syncProductToSanity(
     const mergedDoc: Record<string, unknown> = { ...prismaFields };
 
     // Preserve Sanity-owned fields from existing document
+    let preservedFieldCount = 0;
     if (existingDoc) {
       const sanityOwnedFields = getSanityOwnedFields(PRODUCT_FIELD_MAP);
 
@@ -138,6 +164,7 @@ export async function syncProductToSanity(
 
         // Only preserve if the field actually exists in Sanity
         if (existingValue !== undefined) {
+          preservedFieldCount++;
           // Handle nested fields (e.g., 'image.alt')
           const fieldParts = mapping.sanityField.split(".");
           if (fieldParts.length > 1) {
@@ -155,15 +182,30 @@ export async function syncProductToSanity(
           }
         }
       }
+
+      logger.info("Preserved Sanity-owned fields", {
+        operationType: "sync_product",
+        documentId,
+        productSlug: product.slug,
+        preservedFieldCount,
+      });
     }
 
     // Write to Sanity using createOrReplace (upsert behavior)
     await previewClient.createOrReplace(mergedDoc as any);
 
-    logger.info("Product synced to Sanity", {
+    const duration = Date.now() - startTime;
+
+    logger.info("Product synced to Sanity successfully", {
+      operationType: "sync_product",
       productId: product.id,
       documentId,
       productName: product.name,
+      productSlug: product.slug,
+      isNewDocument,
+      preservedFieldCount,
+      durationMs: duration,
+      timestamp: new Date().toISOString(),
     });
 
     return {
@@ -171,9 +213,16 @@ export async function syncProductToSanity(
       documentId,
     };
   } catch (error) {
+    const duration = Date.now() - startTime;
+
     logger.error("Failed to sync product to Sanity", error, {
+      operationType: "sync_product",
       productId: product.id,
       productName: product.name,
+      productSlug: product.slug,
+      documentId,
+      durationMs: duration,
+      errorMessage: error instanceof Error ? error.message : String(error),
     });
 
     return {
@@ -206,11 +255,26 @@ export async function syncProductToSanity(
 export async function syncServiceToSanity(
   service: Service,
 ): Promise<SyncResult> {
+  const startTime = Date.now();
+  const documentId = `service.${service.id}`;
+
+  logger.info("Starting service sync to Sanity", {
+    operationType: "sync_service",
+    serviceId: service.id,
+    serviceTitle: service.title,
+    serviceSlug: service.slug,
+    documentId,
+    timestamp: new Date().toISOString(),
+  });
+
   try {
     // Skip sync if Sanity credentials are not configured
     if (!hasSanityCredentials()) {
       logger.warn("Sanity sync skipped - no API token configured", {
+        operationType: "sync_service",
         serviceId: service.id,
+        serviceSlug: service.slug,
+        reason: "missing_credentials",
       });
       return {
         success: false,
@@ -225,19 +289,29 @@ export async function syncServiceToSanity(
       "service",
     );
 
-    const documentId = `service.${service.id}`;
-
     // Fetch existing Sanity document to preserve Sanity-owned fields
     let existingDoc: Record<string, unknown> | null = null;
+    let isNewDocument = true;
     try {
       existingDoc = await previewClient.fetch(
         `*[_type == "service" && _id == $id][0]`,
         { id: documentId },
       );
+      isNewDocument = !existingDoc;
+
+      logger.info("Fetched existing Sanity document", {
+        operationType: "sync_service",
+        documentId,
+        serviceSlug: service.slug,
+        exists: !!existingDoc,
+        isNewDocument,
+      });
     } catch (error) {
       logger.warn("Failed to fetch existing Sanity document", {
+        operationType: "sync_service",
         documentId,
-        error,
+        serviceSlug: service.slug,
+        error: error instanceof Error ? error.message : String(error),
       });
     }
 
@@ -245,6 +319,7 @@ export async function syncServiceToSanity(
     const mergedDoc: Record<string, unknown> = { ...prismaFields };
 
     // Preserve Sanity-owned fields from existing document
+    let preservedFieldCount = 0;
     if (existingDoc) {
       const sanityOwnedFields = getSanityOwnedFields(SERVICE_FIELD_MAP);
 
@@ -253,6 +328,7 @@ export async function syncServiceToSanity(
 
         // Only preserve if the field actually exists in Sanity
         if (existingValue !== undefined) {
+          preservedFieldCount++;
           // Handle nested fields (e.g., 'image.alt')
           const fieldParts = mapping.sanityField.split(".");
           if (fieldParts.length > 1) {
@@ -270,15 +346,30 @@ export async function syncServiceToSanity(
           }
         }
       }
+
+      logger.info("Preserved Sanity-owned fields", {
+        operationType: "sync_service",
+        documentId,
+        serviceSlug: service.slug,
+        preservedFieldCount,
+      });
     }
 
     // Write to Sanity using createOrReplace (upsert behavior)
     await previewClient.createOrReplace(mergedDoc as any);
 
-    logger.info("Service synced to Sanity", {
+    const duration = Date.now() - startTime;
+
+    logger.info("Service synced to Sanity successfully", {
+      operationType: "sync_service",
       serviceId: service.id,
       documentId,
       serviceTitle: service.title,
+      serviceSlug: service.slug,
+      isNewDocument,
+      preservedFieldCount,
+      durationMs: duration,
+      timestamp: new Date().toISOString(),
     });
 
     return {
@@ -286,9 +377,16 @@ export async function syncServiceToSanity(
       documentId,
     };
   } catch (error) {
+    const duration = Date.now() - startTime;
+
     logger.error("Failed to sync service to Sanity", error, {
+      operationType: "sync_service",
       serviceId: service.id,
       serviceTitle: service.title,
+      serviceSlug: service.slug,
+      documentId,
+      durationMs: duration,
+      errorMessage: error instanceof Error ? error.message : String(error),
     });
 
     return {
@@ -322,6 +420,8 @@ export interface BulkSyncResult {
  * ```
  */
 export async function syncAllProducts(): Promise<BulkSyncResult> {
+  const startTime = Date.now();
+
   const result: BulkSyncResult = {
     total: 0,
     successful: 0,
@@ -330,6 +430,11 @@ export async function syncAllProducts(): Promise<BulkSyncResult> {
   };
 
   try {
+    logger.info("Starting bulk product sync", {
+      operationType: "bulk_sync_products",
+      timestamp: new Date().toISOString(),
+    });
+
     // Fetch all products from Prisma
     const products = await prisma.product.findMany({
       orderBy: { name: "asc" },
@@ -337,12 +442,23 @@ export async function syncAllProducts(): Promise<BulkSyncResult> {
 
     result.total = products.length;
 
-    logger.info("Starting bulk product sync", {
+    logger.info("Fetched products from Prisma", {
+      operationType: "bulk_sync_products",
       totalProducts: products.length,
+      productSlugs: products.map((p) => p.slug),
     });
 
     // Sync each product individually, continuing even if one fails
-    for (const product of products) {
+    for (let i = 0; i < products.length; i++) {
+      const product = products[i];
+
+      logger.info("Processing product", {
+        operationType: "bulk_sync_products",
+        progress: `${i + 1}/${products.length}`,
+        productId: product.id,
+        productSlug: product.slug,
+      });
+
       const syncResult = await syncProductToSanity(product);
 
       if (syncResult.success) {
@@ -354,18 +470,40 @@ export async function syncAllProducts(): Promise<BulkSyncResult> {
           name: product.name,
           error: syncResult.error || "Unknown error",
         });
+
+        logger.warn("Product sync failed in bulk operation", {
+          operationType: "bulk_sync_products",
+          productId: product.id,
+          productSlug: product.slug,
+          error: syncResult.error,
+        });
       }
     }
 
+    const duration = Date.now() - startTime;
+
     logger.info("Bulk product sync completed", {
+      operationType: "bulk_sync_products",
       total: result.total,
       successful: result.successful,
       failed: result.failed,
+      errorCount: result.errors.length,
+      durationMs: duration,
+      timestamp: new Date().toISOString(),
     });
 
     return result;
   } catch (error) {
-    logger.error("Bulk product sync failed", error);
+    const duration = Date.now() - startTime;
+
+    logger.error("Bulk product sync failed", error, {
+      operationType: "bulk_sync_products",
+      total: result.total,
+      successful: result.successful,
+      failed: result.failed,
+      durationMs: duration,
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
 
     // Return partial results even on catastrophic failure
     return {
@@ -396,6 +534,8 @@ export async function syncAllProducts(): Promise<BulkSyncResult> {
  * ```
  */
 export async function syncAllServices(): Promise<BulkSyncResult> {
+  const startTime = Date.now();
+
   const result: BulkSyncResult = {
     total: 0,
     successful: 0,
@@ -404,6 +544,11 @@ export async function syncAllServices(): Promise<BulkSyncResult> {
   };
 
   try {
+    logger.info("Starting bulk service sync", {
+      operationType: "bulk_sync_services",
+      timestamp: new Date().toISOString(),
+    });
+
     // Fetch all services from Prisma
     const services = await prisma.service.findMany({
       orderBy: { title: "asc" },
@@ -411,12 +556,23 @@ export async function syncAllServices(): Promise<BulkSyncResult> {
 
     result.total = services.length;
 
-    logger.info("Starting bulk service sync", {
+    logger.info("Fetched services from Prisma", {
+      operationType: "bulk_sync_services",
       totalServices: services.length,
+      serviceSlugs: services.map((s) => s.slug),
     });
 
     // Sync each service individually, continuing even if one fails
-    for (const service of services) {
+    for (let i = 0; i < services.length; i++) {
+      const service = services[i];
+
+      logger.info("Processing service", {
+        operationType: "bulk_sync_services",
+        progress: `${i + 1}/${services.length}`,
+        serviceId: service.id,
+        serviceSlug: service.slug,
+      });
+
       const syncResult = await syncServiceToSanity(service);
 
       if (syncResult.success) {
@@ -428,18 +584,40 @@ export async function syncAllServices(): Promise<BulkSyncResult> {
           name: service.title,
           error: syncResult.error || "Unknown error",
         });
+
+        logger.warn("Service sync failed in bulk operation", {
+          operationType: "bulk_sync_services",
+          serviceId: service.id,
+          serviceSlug: service.slug,
+          error: syncResult.error,
+        });
       }
     }
 
+    const duration = Date.now() - startTime;
+
     logger.info("Bulk service sync completed", {
+      operationType: "bulk_sync_services",
       total: result.total,
       successful: result.successful,
       failed: result.failed,
+      errorCount: result.errors.length,
+      durationMs: duration,
+      timestamp: new Date().toISOString(),
     });
 
     return result;
   } catch (error) {
-    logger.error("Bulk service sync failed", error);
+    const duration = Date.now() - startTime;
+
+    logger.error("Bulk service sync failed", error, {
+      operationType: "bulk_sync_services",
+      total: result.total,
+      successful: result.successful,
+      failed: result.failed,
+      durationMs: duration,
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
 
     // Return partial results even on catastrophic failure
     return {
