@@ -17,6 +17,7 @@ import type { Product, Service } from "@prisma/client";
 import { logger } from "@/lib/logger";
 import { previewClient } from "@/lib/sanity/client";
 import { prisma } from "@/lib/prisma";
+import { captureError, addBreadcrumb } from "@/lib/monitoring";
 import {
   PRODUCT_FIELD_MAP,
   SERVICE_FIELD_MAP,
@@ -101,6 +102,12 @@ export async function syncProductToSanity(
     productSlug: product.slug,
     documentId,
     timestamp: new Date().toISOString(),
+  });
+
+  addBreadcrumb("Starting product sync", "sync", {
+    productId: product.id,
+    productSlug: product.slug,
+    documentId,
   });
 
   try {
@@ -225,6 +232,19 @@ export async function syncProductToSanity(
       errorMessage: error instanceof Error ? error.message : String(error),
     });
 
+    // Capture error in Sentry with context
+    captureError(
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        operationType: "sync_product",
+        productId: product.id,
+        productName: product.name,
+        productSlug: product.slug,
+        documentId,
+        durationMs: duration,
+      }
+    );
+
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -265,6 +285,12 @@ export async function syncServiceToSanity(
     serviceSlug: service.slug,
     documentId,
     timestamp: new Date().toISOString(),
+  });
+
+  addBreadcrumb("Starting service sync", "sync", {
+    serviceId: service.id,
+    serviceSlug: service.slug,
+    documentId,
   });
 
   try {
@@ -389,6 +415,19 @@ export async function syncServiceToSanity(
       errorMessage: error instanceof Error ? error.message : String(error),
     });
 
+    // Capture error in Sentry with context
+    captureError(
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        operationType: "sync_service",
+        serviceId: service.id,
+        serviceTitle: service.title,
+        serviceSlug: service.slug,
+        documentId,
+        durationMs: duration,
+      }
+    );
+
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -433,6 +472,10 @@ export async function syncAllProducts(): Promise<BulkSyncResult> {
     logger.info("Starting bulk product sync", {
       operationType: "bulk_sync_products",
       timestamp: new Date().toISOString(),
+    });
+
+    addBreadcrumb("Starting bulk product sync", "sync", {
+      operationType: "bulk_sync_products",
     });
 
     // Fetch all products from Prisma
@@ -505,6 +548,18 @@ export async function syncAllProducts(): Promise<BulkSyncResult> {
       errorMessage: error instanceof Error ? error.message : String(error),
     });
 
+    // Capture catastrophic bulk sync error in Sentry
+    captureError(
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        operationType: "bulk_sync_products",
+        total: result.total,
+        successful: result.successful,
+        failed: result.failed,
+        durationMs: duration,
+      }
+    );
+
     // Return partial results even on catastrophic failure
     return {
       ...result,
@@ -547,6 +602,10 @@ export async function syncAllServices(): Promise<BulkSyncResult> {
     logger.info("Starting bulk service sync", {
       operationType: "bulk_sync_services",
       timestamp: new Date().toISOString(),
+    });
+
+    addBreadcrumb("Starting bulk service sync", "sync", {
+      operationType: "bulk_sync_services",
     });
 
     // Fetch all services from Prisma
@@ -618,6 +677,18 @@ export async function syncAllServices(): Promise<BulkSyncResult> {
       durationMs: duration,
       errorMessage: error instanceof Error ? error.message : String(error),
     });
+
+    // Capture catastrophic bulk sync error in Sentry
+    captureError(
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        operationType: "bulk_sync_services",
+        total: result.total,
+        successful: result.successful,
+        failed: result.failed,
+        durationMs: duration,
+      }
+    );
 
     // Return partial results even on catastrophic failure
     return {

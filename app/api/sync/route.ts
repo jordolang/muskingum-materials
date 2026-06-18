@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
+import { captureError, addBreadcrumb } from "@/lib/monitoring";
 import {
   syncAllProducts,
   syncAllServices,
@@ -42,6 +43,11 @@ export async function POST(request: NextRequest) {
     ip,
     userAgent,
     timestamp: new Date().toISOString(),
+  });
+
+  addBreadcrumb("Sync API request received", "api", {
+    requestId,
+    ip,
   });
 
   try {
@@ -105,6 +111,11 @@ export async function POST(request: NextRequest) {
       syncType: data.type,
     });
 
+    addBreadcrumb("Sync request authenticated", "api", {
+      requestId,
+      syncType: data.type,
+    });
+
     // Execute the appropriate sync operation
     logger.info("Manual sync triggered", {
       operationType: "api_sync",
@@ -145,6 +156,23 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
 
+    // If sync completed but had failures, capture as error for monitoring
+    if (result.failed > 0) {
+      captureError(
+        new Error(`Sync completed with ${result.failed} failures out of ${result.total} items`),
+        {
+          operationType: "api_sync",
+          requestId,
+          syncType: data.type,
+          total: result.total,
+          successful: result.successful,
+          failed: result.failed,
+          errorCount: result.errors.length,
+          durationMs: duration,
+        }
+      );
+    }
+
     return NextResponse.json(response);
   } catch (error) {
     const duration = Date.now() - startTime;
@@ -173,6 +201,17 @@ export async function POST(request: NextRequest) {
       durationMs: duration,
       errorMessage: error instanceof Error ? error.message : String(error),
     });
+
+    // Capture unexpected API errors in Sentry
+    captureError(
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        operationType: "api_sync",
+        requestId,
+        ip,
+        durationMs: duration,
+      }
+    );
 
     return NextResponse.json(
       { error: "Internal server error" },
