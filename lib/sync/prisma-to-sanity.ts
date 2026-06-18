@@ -16,6 +16,7 @@
 import type { Product, Service } from "@prisma/client";
 import { logger } from "@/lib/logger";
 import { previewClient } from "@/lib/sanity/client";
+import { prisma } from "@/lib/prisma";
 import {
   PRODUCT_FIELD_MAP,
   SERVICE_FIELD_MAP,
@@ -293,6 +294,164 @@ export async function syncServiceToSanity(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Result of a bulk sync operation
+ */
+export interface BulkSyncResult {
+  total: number;
+  successful: number;
+  failed: number;
+  errors: Array<{ id: string; name: string; error: string }>;
+}
+
+/**
+ * Syncs all Prisma products to Sanity CMS
+ *
+ * @returns Summary of sync results including success/failure counts
+ *
+ * @example
+ * ```ts
+ * import { syncAllProducts } from "@/lib/sync/prisma-to-sanity";
+ *
+ * const result = await syncAllProducts();
+ * console.log(`Synced ${result.successful}/${result.total} products`);
+ * ```
+ */
+export async function syncAllProducts(): Promise<BulkSyncResult> {
+  const result: BulkSyncResult = {
+    total: 0,
+    successful: 0,
+    failed: 0,
+    errors: [],
+  };
+
+  try {
+    // Fetch all products from Prisma
+    const products = await prisma.product.findMany({
+      orderBy: { name: "asc" },
+    });
+
+    result.total = products.length;
+
+    logger.info("Starting bulk product sync", {
+      totalProducts: products.length,
+    });
+
+    // Sync each product individually, continuing even if one fails
+    for (const product of products) {
+      const syncResult = await syncProductToSanity(product);
+
+      if (syncResult.success) {
+        result.successful++;
+      } else {
+        result.failed++;
+        result.errors.push({
+          id: product.id,
+          name: product.name,
+          error: syncResult.error || "Unknown error",
+        });
+      }
+    }
+
+    logger.info("Bulk product sync completed", {
+      total: result.total,
+      successful: result.successful,
+      failed: result.failed,
+    });
+
+    return result;
+  } catch (error) {
+    logger.error("Bulk product sync failed", error);
+
+    // Return partial results even on catastrophic failure
+    return {
+      ...result,
+      errors: [
+        ...result.errors,
+        {
+          id: "bulk-sync",
+          name: "Bulk Sync Operation",
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
+      ],
+    };
+  }
+}
+
+/**
+ * Syncs all Prisma services to Sanity CMS
+ *
+ * @returns Summary of sync results including success/failure counts
+ *
+ * @example
+ * ```ts
+ * import { syncAllServices } from "@/lib/sync/prisma-to-sanity";
+ *
+ * const result = await syncAllServices();
+ * console.log(`Synced ${result.successful}/${result.total} services`);
+ * ```
+ */
+export async function syncAllServices(): Promise<BulkSyncResult> {
+  const result: BulkSyncResult = {
+    total: 0,
+    successful: 0,
+    failed: 0,
+    errors: [],
+  };
+
+  try {
+    // Fetch all services from Prisma
+    const services = await prisma.service.findMany({
+      orderBy: { title: "asc" },
+    });
+
+    result.total = services.length;
+
+    logger.info("Starting bulk service sync", {
+      totalServices: services.length,
+    });
+
+    // Sync each service individually, continuing even if one fails
+    for (const service of services) {
+      const syncResult = await syncServiceToSanity(service);
+
+      if (syncResult.success) {
+        result.successful++;
+      } else {
+        result.failed++;
+        result.errors.push({
+          id: service.id,
+          name: service.title,
+          error: syncResult.error || "Unknown error",
+        });
+      }
+    }
+
+    logger.info("Bulk service sync completed", {
+      total: result.total,
+      successful: result.successful,
+      failed: result.failed,
+    });
+
+    return result;
+  } catch (error) {
+    logger.error("Bulk service sync failed", error);
+
+    // Return partial results even on catastrophic failure
+    return {
+      ...result,
+      errors: [
+        ...result.errors,
+        {
+          id: "bulk-sync",
+          name: "Bulk Sync Operation",
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
+      ],
     };
   }
 }
