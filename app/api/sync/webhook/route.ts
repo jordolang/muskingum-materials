@@ -4,6 +4,7 @@ import { logger } from "@/lib/logger";
 import {
   syncAllProducts,
   syncAllServices,
+  type BulkSyncResult,
 } from "@/lib/sync/prisma-to-sanity";
 
 const webhookSchema = z.object({
@@ -64,18 +65,8 @@ export async function POST(request: NextRequest) {
 
     // Execute sync based on type parameter
     const syncResults: {
-      products?: {
-        total: number;
-        successful: number;
-        failed: number;
-        errors: Array<{ slug: string; error: string }>;
-      };
-      services?: {
-        total: number;
-        successful: number;
-        failed: number;
-        errors: Array<{ slug: string; error: string }>;
-      };
+      products?: BulkSyncResult;
+      services?: BulkSyncResult;
     } = {};
 
     if (data.type === "products" || data.type === "all") {

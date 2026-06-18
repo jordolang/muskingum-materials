@@ -32,6 +32,7 @@ export interface SyncResult {
   success: boolean;
   documentId?: string;
   error?: string;
+  dryRun?: boolean;
 }
 
 /**
@@ -73,6 +74,7 @@ function hasSanityCredentials(): boolean {
  * Syncs a Prisma product to Sanity CMS
  *
  * @param product - Prisma product to sync
+ * @param dryRun - If true, validate and prepare the sync but don't write to Sanity
  * @returns Result indicating success or failure
  *
  * @example
@@ -91,6 +93,7 @@ function hasSanityCredentials(): boolean {
  */
 export async function syncProductToSanity(
   product: Product,
+  dryRun = false,
 ): Promise<SyncResult> {
   const startTime = Date.now();
   const documentId = `product.${product.id}`;
@@ -101,6 +104,7 @@ export async function syncProductToSanity(
     productName: product.name,
     productSlug: product.slug,
     documentId,
+    dryRun,
     timestamp: new Date().toISOString(),
   });
 
@@ -108,6 +112,7 @@ export async function syncProductToSanity(
     productId: product.id,
     productSlug: product.slug,
     documentId,
+    dryRun,
   });
 
   try {
@@ -199,25 +204,34 @@ export async function syncProductToSanity(
     }
 
     // Write to Sanity using createOrReplace (upsert behavior)
-    await previewClient.createOrReplace(mergedDoc as any);
+    if (!dryRun) {
+      await previewClient.createOrReplace(mergedDoc as any);
+    }
 
     const duration = Date.now() - startTime;
 
-    logger.info("Product synced to Sanity successfully", {
-      operationType: "sync_product",
-      productId: product.id,
-      documentId,
-      productName: product.name,
-      productSlug: product.slug,
-      isNewDocument,
-      preservedFieldCount,
-      durationMs: duration,
-      timestamp: new Date().toISOString(),
-    });
+    logger.info(
+      dryRun
+        ? "Product sync validated (dry-run mode)"
+        : "Product synced to Sanity successfully",
+      {
+        operationType: "sync_product",
+        productId: product.id,
+        documentId,
+        productName: product.name,
+        productSlug: product.slug,
+        isNewDocument,
+        preservedFieldCount,
+        dryRun,
+        durationMs: duration,
+        timestamp: new Date().toISOString(),
+      }
+    );
 
     return {
       success: true,
       documentId,
+      dryRun,
     };
   } catch (error) {
     const duration = Date.now() - startTime;
@@ -256,6 +270,7 @@ export async function syncProductToSanity(
  * Syncs a Prisma service to Sanity CMS
  *
  * @param service - Prisma service to sync
+ * @param dryRun - If true, validate and prepare the sync but don't write to Sanity
  * @returns Result indicating success or failure
  *
  * @example
@@ -274,6 +289,7 @@ export async function syncProductToSanity(
  */
 export async function syncServiceToSanity(
   service: Service,
+  dryRun = false,
 ): Promise<SyncResult> {
   const startTime = Date.now();
   const documentId = `service.${service.id}`;
@@ -284,6 +300,7 @@ export async function syncServiceToSanity(
     serviceTitle: service.title,
     serviceSlug: service.slug,
     documentId,
+    dryRun,
     timestamp: new Date().toISOString(),
   });
 
@@ -291,6 +308,7 @@ export async function syncServiceToSanity(
     serviceId: service.id,
     serviceSlug: service.slug,
     documentId,
+    dryRun,
   });
 
   try {
@@ -382,25 +400,34 @@ export async function syncServiceToSanity(
     }
 
     // Write to Sanity using createOrReplace (upsert behavior)
-    await previewClient.createOrReplace(mergedDoc as any);
+    if (!dryRun) {
+      await previewClient.createOrReplace(mergedDoc as any);
+    }
 
     const duration = Date.now() - startTime;
 
-    logger.info("Service synced to Sanity successfully", {
-      operationType: "sync_service",
-      serviceId: service.id,
-      documentId,
-      serviceTitle: service.title,
-      serviceSlug: service.slug,
-      isNewDocument,
-      preservedFieldCount,
-      durationMs: duration,
-      timestamp: new Date().toISOString(),
-    });
+    logger.info(
+      dryRun
+        ? "Service sync validated (dry-run mode)"
+        : "Service synced to Sanity successfully",
+      {
+        operationType: "sync_service",
+        serviceId: service.id,
+        documentId,
+        serviceTitle: service.title,
+        serviceSlug: service.slug,
+        isNewDocument,
+        preservedFieldCount,
+        dryRun,
+        durationMs: duration,
+        timestamp: new Date().toISOString(),
+      }
+    );
 
     return {
       success: true,
       documentId,
+      dryRun,
     };
   } catch (error) {
     const duration = Date.now() - startTime;
@@ -443,11 +470,13 @@ export interface BulkSyncResult {
   successful: number;
   failed: number;
   errors: Array<{ id: string; name: string; error: string }>;
+  dryRun?: boolean;
 }
 
 /**
  * Syncs all Prisma products to Sanity CMS
  *
+ * @param dryRun - If true, validate and prepare all syncs but don't write to Sanity
  * @returns Summary of sync results including success/failure counts
  *
  * @example
@@ -458,7 +487,9 @@ export interface BulkSyncResult {
  * console.log(`Synced ${result.successful}/${result.total} products`);
  * ```
  */
-export async function syncAllProducts(): Promise<BulkSyncResult> {
+export async function syncAllProducts(
+  dryRun = false,
+): Promise<BulkSyncResult> {
   const startTime = Date.now();
 
   const result: BulkSyncResult = {
@@ -466,16 +497,19 @@ export async function syncAllProducts(): Promise<BulkSyncResult> {
     successful: 0,
     failed: 0,
     errors: [],
+    dryRun,
   };
 
   try {
     logger.info("Starting bulk product sync", {
       operationType: "bulk_sync_products",
+      dryRun,
       timestamp: new Date().toISOString(),
     });
 
     addBreadcrumb("Starting bulk product sync", "sync", {
       operationType: "bulk_sync_products",
+      dryRun,
     });
 
     // Fetch all products from Prisma
@@ -500,9 +534,10 @@ export async function syncAllProducts(): Promise<BulkSyncResult> {
         progress: `${i + 1}/${products.length}`,
         productId: product.id,
         productSlug: product.slug,
+        dryRun,
       });
 
-      const syncResult = await syncProductToSanity(product);
+      const syncResult = await syncProductToSanity(product, dryRun);
 
       if (syncResult.success) {
         result.successful++;
@@ -531,6 +566,7 @@ export async function syncAllProducts(): Promise<BulkSyncResult> {
       successful: result.successful,
       failed: result.failed,
       errorCount: result.errors.length,
+      dryRun,
       durationMs: duration,
       timestamp: new Date().toISOString(),
     });
@@ -578,6 +614,7 @@ export async function syncAllProducts(): Promise<BulkSyncResult> {
 /**
  * Syncs all Prisma services to Sanity CMS
  *
+ * @param dryRun - If true, validate and prepare all syncs but don't write to Sanity
  * @returns Summary of sync results including success/failure counts
  *
  * @example
@@ -588,7 +625,9 @@ export async function syncAllProducts(): Promise<BulkSyncResult> {
  * console.log(`Synced ${result.successful}/${result.total} services`);
  * ```
  */
-export async function syncAllServices(): Promise<BulkSyncResult> {
+export async function syncAllServices(
+  dryRun = false,
+): Promise<BulkSyncResult> {
   const startTime = Date.now();
 
   const result: BulkSyncResult = {
@@ -596,16 +635,19 @@ export async function syncAllServices(): Promise<BulkSyncResult> {
     successful: 0,
     failed: 0,
     errors: [],
+    dryRun,
   };
 
   try {
     logger.info("Starting bulk service sync", {
       operationType: "bulk_sync_services",
+      dryRun,
       timestamp: new Date().toISOString(),
     });
 
     addBreadcrumb("Starting bulk service sync", "sync", {
       operationType: "bulk_sync_services",
+      dryRun,
     });
 
     // Fetch all services from Prisma
@@ -630,9 +672,10 @@ export async function syncAllServices(): Promise<BulkSyncResult> {
         progress: `${i + 1}/${services.length}`,
         serviceId: service.id,
         serviceSlug: service.slug,
+        dryRun,
       });
 
-      const syncResult = await syncServiceToSanity(service);
+      const syncResult = await syncServiceToSanity(service, dryRun);
 
       if (syncResult.success) {
         result.successful++;
@@ -661,6 +704,7 @@ export async function syncAllServices(): Promise<BulkSyncResult> {
       successful: result.successful,
       failed: result.failed,
       errorCount: result.errors.length,
+      dryRun,
       durationMs: duration,
       timestamp: new Date().toISOString(),
     });

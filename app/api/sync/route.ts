@@ -10,6 +10,7 @@ import {
 const syncSchema = z.object({
   secret: z.string(),
   type: z.enum(["products", "services"]),
+  dryRun: z.boolean().optional().default(false),
 });
 
 /**
@@ -22,9 +23,10 @@ const syncSchema = z.object({
  * Request body:
  * - secret: string (matches SANITY_REVALIDATE_SECRET env var)
  * - type: "products" | "services"
+ * - dryRun: boolean (optional, default: false) - If true, validates sync without writing to Sanity
  *
  * Returns:
- * - 200: { success: true, type: string, total: number, successful: number, failed: number, errors: [...] }
+ * - 200: { success: true, type: string, total: number, successful: number, failed: number, errors: [...], dryRun?: boolean }
  * - 400: Invalid request data or malformed JSON
  * - 401: Invalid secret token
  * - 500: Server misconfiguration or sync failure
@@ -74,6 +76,7 @@ export async function POST(request: NextRequest) {
       operationType: "api_sync",
       requestId,
       syncType: data.type,
+      dryRun: data.dryRun,
     });
 
     // Verify secret token
@@ -109,11 +112,13 @@ export async function POST(request: NextRequest) {
       operationType: "api_sync",
       requestId,
       syncType: data.type,
+      dryRun: data.dryRun,
     });
 
     addBreadcrumb("Sync request authenticated", "api", {
       requestId,
       syncType: data.type,
+      dryRun: data.dryRun,
     });
 
     // Execute the appropriate sync operation
@@ -121,14 +126,15 @@ export async function POST(request: NextRequest) {
       operationType: "api_sync",
       requestId,
       syncType: data.type,
+      dryRun: data.dryRun,
       timestamp: new Date().toISOString(),
     });
 
     let result;
     if (data.type === "products") {
-      result = await syncAllProducts();
+      result = await syncAllProducts(data.dryRun);
     } else {
-      result = await syncAllServices();
+      result = await syncAllServices(data.dryRun);
     }
 
     const duration = Date.now() - startTime;
@@ -141,6 +147,7 @@ export async function POST(request: NextRequest) {
       successful: result.successful,
       failed: result.failed,
       errors: result.errors,
+      dryRun: data.dryRun,
       timestamp: Date.now(),
     };
 
@@ -152,6 +159,7 @@ export async function POST(request: NextRequest) {
       successful: result.successful,
       failed: result.failed,
       errorCount: result.errors.length,
+      dryRun: data.dryRun,
       durationMs: duration,
       timestamp: new Date().toISOString(),
     });
