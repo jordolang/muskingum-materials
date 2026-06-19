@@ -71,8 +71,23 @@ interface PolygonData {
 interface EstimateResult {
   cubicFeet: number;
   cubicYards: number;
+  cubicYardsLow?: number;
+  cubicYardsExpected?: number;
+  cubicYardsHigh?: number;
   tons: number;
+  tonsLow?: number;
+  tonsExpected?: number;
+  tonsHigh?: number;
   truckloads: number;
+  truckloadsLow?: number;
+  truckloadsExpected?: number;
+  truckloadsHigh?: number;
+  depthVariance?: number;
+  confidenceFactors?: {
+    densityVariation: boolean;
+    depthMeasurementVariance: boolean;
+    materialType?: string;
+  };
   source: "map" | "dimensions";
 }
 

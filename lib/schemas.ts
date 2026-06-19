@@ -59,8 +59,25 @@ export const projectSiteSchema = z
       .object({
         cubicFeet: z.number(),
         cubicYards: z.number(),
+        cubicYardsLow: z.number().optional(),
+        cubicYardsExpected: z.number().optional(),
+        cubicYardsHigh: z.number().optional(),
         tons: z.number(),
+        tonsLow: z.number().optional(),
+        tonsExpected: z.number().optional(),
+        tonsHigh: z.number().optional(),
         truckloads: z.number(),
+        truckloadsLow: z.number().optional(),
+        truckloadsExpected: z.number().optional(),
+        truckloadsHigh: z.number().optional(),
+        depthVariance: z.number().optional(),
+        confidenceFactors: z
+          .object({
+            densityVariation: z.boolean(),
+            depthMeasurementVariance: z.boolean(),
+            materialType: z.string().optional(),
+          })
+          .optional(),
         source: z.enum(["map", "dimensions"]),
       })
       .nullable()
