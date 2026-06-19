@@ -31,6 +31,7 @@ import {
   calculateFromDimensions as calculateDimensionsWithConfidence,
 } from "@/lib/estimate-calculations";
 import { ConfidenceExplanation } from "./confidence-explanation";
+import { ConfidenceRangeDisplay } from "./confidence-range-display";
 
 declare global {
   interface Window {
@@ -781,16 +782,9 @@ export function ProjectEstimator({
                 </Badge>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <ResultStat
-                  value={estimate.tons.toFixed(1)}
-                  label="Tons"
-                  primary
-                />
-                <ResultStat
-                  value={estimate.cubicYards.toFixed(1)}
-                  label="Cubic Yards"
-                />
+              <ConfidenceRangeDisplay estimate={estimate} />
+
+              <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-amber-200/70">
                 <ResultStat
                   value={estimate.cubicFeet.toFixed(0)}
                   label="Cubic Feet"
