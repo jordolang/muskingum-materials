@@ -142,6 +142,7 @@ model Order {
 
   statusHistory    OrderStatusHistory[]
   smsNotifications SmsNotification[]
+  invoices         Invoice[]
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
 
@@ -175,6 +176,25 @@ model OrderStatusHistory {
   createdAt DateTime @default(now())
 
   @@index([orderId])
+}
+
+model Invoice {
+  id            String    @id @default(cuid())
+  invoiceNumber String    @unique
+  orderId       String
+  order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount        Float
+  dueDate       DateTime
+  status        String    @default("pending")
+  paidAt        DateTime?
+  notes         String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([orderId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([invoiceNumber])
 }
 
 model UserProfile {
