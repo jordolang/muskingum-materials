@@ -5,8 +5,8 @@ import { requireAdmin } from "@/lib/admin-auth";
 
 // Schema for contractor terms approval
 const contractorTermsApprovalSchema = z.object({
-  creditLimit: z.number().positive("Credit limit must be positive"),
-  termsLength: z.number().int().positive("Terms length must be a positive integer"),
+  creditLimit: z.number().nonnegative("Credit limit must be non-negative"),
+  termsLength: z.number().int().nonnegative("Terms length must be non-negative"),
 });
 
 /**
@@ -52,11 +52,15 @@ export async function POST(
       );
     }
 
-    // Update user profile to approve net terms
+    // Determine if approving or revoking based on credit limit
+    // If creditLimit is 0, revoke approval
+    const isApproving = creditLimit > 0 && termsLength > 0;
+
+    // Update user profile to approve or revoke net terms
     const updatedProfile = await prisma.userProfile.update({
       where: { userId },
       data: {
-        netTermsApproved: true,
+        netTermsApproved: isApproving,
         netTermsCreditLimit: creditLimit,
         netTermsLength: termsLength,
       },
