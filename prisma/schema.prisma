@@ -89,49 +89,58 @@ model QuoteRequest {
 }
 
 model Order {
-  id               String            @id @default(cuid())
-  orderNumber      String            @unique
-  userId           String?
-  name             String
-  email            String
-  phone            String?
-  items            Json
-  subtotal         Float
-  tax              Float
-  processingFee    Float
-  deliveryFee      Float             @default(0)
-  total            Float
-  deliveryAddress  String?           @db.Text
-  deliveryNotes    String?           @db.Text
-  pickupOrDeliver  String            @default("pickup")
-  status           String            @default("pending")
-  paymentStatus    String            @default("unpaid")
-  stripeSessionId  String?
-  stripePaymentId  String?
-  invoiceUrl       String?
-  smsOptIn         Boolean           @default(false)
-  termsAcceptedAt  DateTime?
-  completedAt      DateTime?
+  id              String    @id @default(cuid())
+  orderNumber     String    @unique
+  userId          String?
+  name            String
+  email           String
+  phone           String?
+  items           Json
+  subtotal        Float
+  tax             Float
+  processingFee   Float
+  deliveryFee     Float     @default(0)
+  total           Float
+  deliveryAddress String?   @db.Text
+  deliveryNotes   String?   @db.Text
+  pickupOrDeliver String    @default("pickup")
+  status          String    @default("pending")
+  paymentStatus   String    @default("unpaid")
+  stripeSessionId String?
+  stripePaymentId String?
+  invoiceUrl      String?
+  smsOptIn        Boolean   @default(false)
+  termsAcceptedAt DateTime?
+  completedAt     DateTime?
 
   // Project site capture from the on-site map estimator. These fields exist
   // so every residential order without a survey carries the customer's own
   // satellite outline, dimensions, and material estimate — visible to the
   // customer and to Muskingum Materials staff.
-  projectAddress         String?  @db.Text
-  projectLat             Float?
-  projectLng             Float?
-  projectAreaSqFt        Float?
-  projectDepthInches     Float?
-  projectEstimateTons    Float?
+  projectAddress            String? @db.Text
+  projectLat                Float?
+  projectLng                Float?
+  projectAreaSqFt           Float?
+  projectDepthInches        Float?
+  projectEstimateTons       Float?
   projectEstimateCubicYards Float?
-  projectEstimateSource  String?  // "map" | "dimensions" | "preset"
-  projectPolygons        Json?    // Array<Array<{ lat: number; lng: number }>>
-  projectMapImageUrl     String?  @db.Text
+  projectEstimateSource     String? // "map" | "dimensions" | "preset"
+  projectPolygons           Json? // Array<Array<{ lat: number; lng: number }>>
+  projectMapImageUrl        String? @db.Text
+
+  // Confidence range for project estimates (low/expected/high). The base
+  // projectEstimateTons and projectEstimateCubicYards serve as "expected";
+  // these fields capture the low and high bounds based on product density
+  // range and depth variance to help customers right-size their order.
+  projectEstimateTonsLow        Float?
+  projectEstimateTonsHigh       Float?
+  projectEstimateCubicYardsLow  Float?
+  projectEstimateCubicYardsHigh Float?
 
   statusHistory    OrderStatusHistory[]
   smsNotifications SmsNotification[]
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
 
   @@index([orderNumber])
   @@index([userId])
@@ -141,14 +150,14 @@ model Order {
 }
 
 model SavedOrder {
-  id              String      @id @default(cuid())
+  id              String   @id @default(cuid())
   userId          String
   name            String
   items           Json
-  deliveryAddress String?     @db.Text
-  pickupOrDeliver String      @default("pickup")
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  deliveryAddress String?  @db.Text
+  pickupOrDeliver String   @default("pickup")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([userId])
 }
@@ -209,15 +218,15 @@ model NewsletterSubscriber {
 }
 
 model LoyaltyAccount {
-  id              String               @id @default(cuid())
-  userId          String               @unique
-  points          Int                  @default(0)
-  pointsLifetime  Int                  @default(0)
-  tier            String               @default("bronze")
-  tierSince       DateTime             @default(now())
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
-  transactions    LoyaltyTransaction[]
+  id             String               @id @default(cuid())
+  userId         String               @unique
+  points         Int                  @default(0)
+  pointsLifetime Int                  @default(0)
+  tier           String               @default("bronze")
+  tierSince      DateTime             @default(now())
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  transactions   LoyaltyTransaction[]
 
   @@index([userId])
 }
