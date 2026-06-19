@@ -166,6 +166,22 @@ model SavedOrder {
   @@index([userId])
 }
 
+model SavedPaymentMethod {
+  id                    String   @id @default(cuid())
+  userId                String
+  stripePaymentMethodId String   @unique
+  brand                 String?
+  last4                 String?
+  expiryMonth           Int?
+  expiryYear            Int?
+  isDefault             Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([userId])
+  @@index([stripePaymentMethodId])
+}
+
 model OrderStatusHistory {
   id        String   @id @default(cuid())
   orderId   String
