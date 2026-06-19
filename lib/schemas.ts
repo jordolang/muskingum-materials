@@ -230,6 +230,20 @@ export const campaignSchema = z.object({
   recipientFilter: z.string().optional(),
 });
 
+// Saved payment method schema
+export const savedPaymentMethodCreateSchema = z.object({
+  stripePaymentMethodId: z.string().min(1, "Stripe payment method ID is required"),
+  brand: z.string().optional(),
+  last4: z.string().optional(),
+  expiryMonth: z.number().int().min(1).max(12).optional(),
+  expiryYear: z.number().int().min(2024).optional(),
+  isDefault: z.boolean().optional(),
+});
+
+export const savedPaymentMethodUpdateSchema = z.object({
+  isDefault: z.boolean().optional(),
+});
+
 // Type exports for convenience
 export type ContactFormData = z.infer<typeof contactSchema>;
 export type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
@@ -247,3 +261,5 @@ export type ReviewData = z.infer<typeof reviewSchema>;
 export type OrderStatusUpdateData = z.infer<typeof orderStatusUpdateSchema>;
 export type PointRedemptionData = z.infer<typeof pointRedemptionSchema>;
 export type CampaignData = z.infer<typeof campaignSchema>;
+export type SavedPaymentMethodCreateData = z.infer<typeof savedPaymentMethodCreateSchema>;
+export type SavedPaymentMethodUpdateData = z.infer<typeof savedPaymentMethodUpdateSchema>;
