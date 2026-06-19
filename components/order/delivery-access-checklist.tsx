@@ -39,6 +39,11 @@ export function DeliveryAccessChecklist({
   const turningRoom = watch("deliveryAccessChecklist.turningRoom");
   const surface = watch("deliveryAccessChecklist.surface");
 
+  // Detect tight access conditions
+  const hasNarrowDriveway = drivewayWidth === "less_than_10ft";
+  const hasLowClearance = overheadClearance === "less_than_14ft";
+  const showAccessWarning = hasNarrowDriveway || hasLowClearance;
+
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-top-1 duration-300">
       <div className="flex items-start gap-2">
@@ -195,6 +200,34 @@ export function DeliveryAccessChecklist({
           </p>
         </div>
       </div>
+
+      {showAccessWarning && (
+        <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-4 animate-in fade-in slide-in-from-top-1 duration-300">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-500 mt-0.5 flex-shrink-0" />
+            <div className="space-y-2">
+              <h5 className="font-semibold text-amber-900 dark:text-amber-100">
+                Tight Access Detected
+              </h5>
+              <div className="text-sm text-amber-800 dark:text-amber-200 space-y-1">
+                {hasNarrowDriveway && (
+                  <p>• Your driveway width may be too narrow for our standard delivery truck</p>
+                )}
+                {hasLowClearance && (
+                  <p>• Overhead clearance may not be sufficient for safe delivery</p>
+                )}
+              </div>
+              <div className="text-sm text-amber-900 dark:text-amber-100 pt-2 border-t border-amber-200 dark:border-amber-800">
+                <p className="font-medium mb-1">Recommendation:</p>
+                <p>
+                  Consider selecting <strong>Pickup</strong> instead to avoid potential delivery issues.
+                  Our team will contact you to confirm delivery feasibility if you proceed with delivery.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
