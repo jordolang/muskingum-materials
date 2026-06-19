@@ -446,3 +446,15 @@ model Campaign {
   @@index([scheduledAt])
   @@index([templateId])
 }
+
+model DeliveryConfig {
+  id              String   @id @default(cuid())
+  availableDays   Json     // e.g., {"monday": true, "tuesday": true, ...}
+  blackoutDates   Json     // Array of ISO date strings: ["2026-07-04", "2026-12-25", ...]
+  slotsPerDay     Int      @default(2)
+  capacityPerSlot Int      @default(5)
+  leadTimeDays    Int      @default(2)
+  timeWindows     Json     // e.g., [{"key": "morning", "label": "Morning (8am-12pm)", "start": "08:00", "end": "12:00"}, ...]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
