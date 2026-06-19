@@ -21,8 +21,16 @@ export const contactSchema = z.object({
   message: z.string().min(10, "Message must be at least 10 characters"),
 });
 
-// Checkout form schema (client-side)
-export const checkoutFormSchema = z.object({
+// Payment method enum for checkout
+export const paymentMethodEnum = z.enum([
+  "stripe",
+  "purchase_order",
+  "net_terms",
+  "saved_payment_method",
+]);
+
+// Base checkout form schema (without refinements, for extending)
+const checkoutFormBaseSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Valid email is required"),
   phone: z.string().min(10, "Phone number is required"),
@@ -30,12 +38,42 @@ export const checkoutFormSchema = z.object({
   deliveryAddress: z.string().optional(),
   deliveryNotes: z.string().optional(),
   smsOptIn: z.boolean().optional(),
+  paymentMethod: paymentMethodEnum.default("stripe"),
+  purchaseOrderNumber: z.string().optional(),
+  savedPaymentMethodId: z.string().optional(),
   termsAccepted: z.literal(true, {
     errorMap: () => ({
       message: "You must accept the Terms of Service to proceed",
     }),
   }),
 });
+
+// Checkout form schema (client-side) with payment method validation
+export const checkoutFormSchema = checkoutFormBaseSchema.refine(
+  (data) => {
+    // Require PO number when payment method is purchase_order
+    if (data.paymentMethod === "purchase_order" && !data.purchaseOrderNumber) {
+      return false;
+    }
+    return true;
+  },
+  {
+    message: "Purchase order number is required for PO payments",
+    path: ["purchaseOrderNumber"],
+  }
+).refine(
+  (data) => {
+    // Require saved payment method ID when payment method is saved_payment_method
+    if (data.paymentMethod === "saved_payment_method" && !data.savedPaymentMethodId) {
+      return false;
+    }
+    return true;
+  },
+  {
+    message: "Saved payment method ID is required",
+    path: ["savedPaymentMethodId"],
+  }
+);
 
 // Project site data schema — captures the customer's outline, address,
 // and material estimate from the on-site map estimator so the same data
@@ -69,7 +107,7 @@ export const projectSiteSchema = z
   .optional();
 
 // Checkout schema (API-side with order details)
-export const checkoutSchema = checkoutFormSchema.extend({
+export const checkoutSchema = checkoutFormBaseSchema.extend({
   items: z.array(
     z.object({
       name: z.string(),
@@ -245,6 +283,7 @@ export const savedPaymentMethodUpdateSchema = z.object({
 });
 
 // Type exports for convenience
+export type PaymentMethod = z.infer<typeof paymentMethodEnum>;
 export type ContactFormData = z.infer<typeof contactSchema>;
 export type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
 export type CheckoutData = z.infer<typeof checkoutSchema>;
