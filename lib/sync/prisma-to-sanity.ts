@@ -26,6 +26,15 @@ import {
 } from "./field-mapping";
 
 /**
+ * Minimal Sanity document type with required fields
+ */
+interface SanityDocumentStub {
+  _id: string;
+  _type: string;
+  [key: string]: unknown;
+}
+
+/**
  * Result of a sync operation
  */
 export interface SyncResult {
@@ -164,7 +173,7 @@ export async function syncProductToSanity(
     }
 
     // Merge: Start with Prisma-owned fields
-    const mergedDoc: Record<string, unknown> = { ...prismaFields };
+    const mergedDoc = { ...prismaFields } as SanityDocumentStub;
 
     // Preserve Sanity-owned fields from existing document
     let preservedFieldCount = 0;
@@ -180,7 +189,7 @@ export async function syncProductToSanity(
           // Handle nested fields (e.g., 'image.alt')
           const fieldParts = mapping.sanityField.split(".");
           if (fieldParts.length > 1) {
-            let current = mergedDoc;
+            let current: Record<string, unknown> = mergedDoc;
             for (let i = 0; i < fieldParts.length - 1; i++) {
               const part = fieldParts[i];
               if (!current[part]) {
@@ -205,7 +214,7 @@ export async function syncProductToSanity(
 
     // Write to Sanity using createOrReplace (upsert behavior)
     if (!dryRun) {
-      await previewClient.createOrReplace(mergedDoc as any);
+      await previewClient.createOrReplace(mergedDoc);
     }
 
     const duration = Date.now() - startTime;
@@ -360,7 +369,7 @@ export async function syncServiceToSanity(
     }
 
     // Merge: Start with Prisma-owned fields
-    const mergedDoc: Record<string, unknown> = { ...prismaFields };
+    const mergedDoc = { ...prismaFields } as SanityDocumentStub;
 
     // Preserve Sanity-owned fields from existing document
     let preservedFieldCount = 0;
@@ -376,7 +385,7 @@ export async function syncServiceToSanity(
           // Handle nested fields (e.g., 'image.alt')
           const fieldParts = mapping.sanityField.split(".");
           if (fieldParts.length > 1) {
-            let current = mergedDoc;
+            let current: Record<string, unknown> = mergedDoc;
             for (let i = 0; i < fieldParts.length - 1; i++) {
               const part = fieldParts[i];
               if (!current[part]) {
@@ -401,7 +410,7 @@ export async function syncServiceToSanity(
 
     // Write to Sanity using createOrReplace (upsert behavior)
     if (!dryRun) {
-      await previewClient.createOrReplace(mergedDoc as any);
+      await previewClient.createOrReplace(mergedDoc);
     }
 
     const duration = Date.now() - startTime;
