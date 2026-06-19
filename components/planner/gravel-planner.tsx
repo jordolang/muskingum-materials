@@ -9,6 +9,7 @@ import { Phone } from "lucide-react";
 import { BUSINESS_INFO } from "@/data/business";
 import { PlannerMap } from "./planner-map";
 import { calculateConfidenceRange, type DensityRange } from "@/lib/estimate-calculations";
+import { ConfidenceRangeDisplay } from "@/components/order/confidence-range-display";
 
 interface Material {
   slug: string;
@@ -25,15 +26,23 @@ interface GravelPlannerProps {
 
 interface Estimate {
   areaSqFt: number;
+  cubicYards: number;
   cubicYardsLow: number;
   cubicYardsExpected: number;
   cubicYardsHigh: number;
+  tons: number;
   tonsLow: number;
   tonsExpected: number;
   tonsHigh: number;
   costLow: number;
   costExpected: number;
   costHigh: number;
+  depthVariance?: number;
+  confidenceFactors?: {
+    densityVariation: boolean;
+    depthMeasurementVariance: boolean;
+    materialType?: string;
+  };
 }
 
 const DEPTH_PRESETS = [2, 3, 4, 6];
@@ -117,15 +126,19 @@ export function GravelPlanner({ materials }: GravelPlannerProps) {
 
       setEstimate({
         areaSqFt: Math.round(areaSqFt),
+        cubicYards: Math.round(cubicYardsExpected * 100) / 100,
         cubicYardsLow: Math.round(cubicYardsLow * 100) / 100,
         cubicYardsExpected: Math.round(cubicYardsExpected * 100) / 100,
         cubicYardsHigh: Math.round(cubicYardsHigh * 100) / 100,
+        tons: Math.round(tonsExpected * 10) / 10,
         tonsLow: Math.round(tonsLow * 10) / 10,
         tonsExpected: Math.round(tonsExpected * 10) / 10,
         tonsHigh: Math.round(tonsHigh * 10) / 10,
         costLow: Math.round(costLow),
         costExpected: Math.round(costExpected),
         costHigh: Math.round(costHigh),
+        depthVariance: baseEstimate.depthVariance,
+        confidenceFactors: baseEstimate.confidenceFactors,
       });
     },
     [materials, selectedMaterial, depth, waste],
@@ -224,7 +237,7 @@ export function GravelPlanner({ materials }: GravelPlannerProps) {
           </CardHeader>
           <CardContent>
             {estimate ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex justify-between items-center py-2 border-b">
                   <span className="text-sm text-muted-foreground">
                     Total Area
@@ -233,33 +246,10 @@ export function GravelPlanner({ materials }: GravelPlannerProps) {
                     {estimate.areaSqFt.toLocaleString()} ft²
                   </span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-sm text-muted-foreground">
-                    Volume Needed
-                  </span>
-                  <div className="text-right">
-                    <div className="font-semibold">
-                      {estimate.cubicYardsExpected} yd³
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      ({estimate.cubicYardsLow}-{estimate.cubicYardsHigh})
-                    </div>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-sm text-muted-foreground">
-                    Weight to Order
-                  </span>
-                  <div className="text-right">
-                    <div className="font-semibold text-primary">
-                      {estimate.tonsExpected} tons
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      ({estimate.tonsLow}-{estimate.tonsHigh})
-                    </div>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center py-2">
+
+                <ConfidenceRangeDisplay estimate={estimate} />
+
+                <div className="flex justify-between items-center py-2 border-t pt-3">
                   <span className="text-sm text-muted-foreground">
                     Est. Material Cost
                   </span>
@@ -273,9 +263,9 @@ export function GravelPlanner({ materials }: GravelPlannerProps) {
                     </div>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground pt-2">
+                <p className="text-xs text-muted-foreground pt-2 border-t">
                   Includes {waste}% waste allowance and compaction factor.
-                  Delivery not included. Ranges account for depth variance.
+                  Delivery not included.
                 </p>
               </div>
             ) : (
