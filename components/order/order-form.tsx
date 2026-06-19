@@ -75,6 +75,14 @@ export const checkoutSchema = z
         accessInstructions: z.string().optional(),
       })
       .optional(),
+    dropLocation: z
+      .object({
+        notes: z.string().optional(),
+        photoUrl: z.string().optional(),
+        lat: z.number().optional(),
+        lng: z.number().optional(),
+      })
+      .optional(),
   })
   .refine(
     (data) =>

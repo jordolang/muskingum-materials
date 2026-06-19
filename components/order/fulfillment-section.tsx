@@ -22,6 +22,7 @@ import { BUSINESS_INFO } from "@/data/business";
 import { cn } from "@/lib/utils";
 import type { CheckoutData } from "./order-form";
 import { DeliveryAccessChecklist } from "./delivery-access-checklist";
+import { DropLocationCapture } from "./drop-location-capture";
 
 interface SavedAddress {
   id: string;
@@ -212,6 +213,14 @@ export function FulfillmentSection({
             watch={watch}
             setValue={setValue}
             errors={errors}
+          />
+
+          <DropLocationCapture
+            register={register}
+            watch={watch}
+            setValue={setValue}
+            errors={errors}
+            deliveryAddress={watch("deliveryAddress")}
           />
 
           <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 space-y-2">
