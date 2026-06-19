@@ -27,9 +27,9 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
-  MATERIAL_DENSITY_AVG,
-  TRUCK_CAPACITY_TONS,
-} from "@/lib/constants/business-rules";
+  calculateConfidenceRange,
+  calculateFromDimensions as calculateDimensionsWithConfidence,
+} from "@/lib/estimate-calculations";
 
 declare global {
   interface Window {
@@ -107,25 +107,6 @@ interface ProjectEstimatorProps {
   onSiteDataChange: (data: ProjectSiteData) => void;
 }
 
-function calculateFromArea(areaSqFt: number, depthIn: number): EstimateResult {
-  const cubicFeet = areaSqFt * (depthIn / 12);
-  const cubicYards = cubicFeet / 27;
-  const tons = cubicYards * MATERIAL_DENSITY_AVG;
-  const truckloads = Math.max(1, Math.ceil(tons / TRUCK_CAPACITY_TONS));
-  return { cubicFeet, cubicYards, tons, truckloads, source: "map" };
-}
-
-function calculateFromDimensions(
-  lengthFt: number,
-  widthFt: number,
-  depthIn: number,
-): EstimateResult {
-  return {
-    ...calculateFromArea(lengthFt * widthFt, depthIn),
-    source: "dimensions",
-  };
-}
-
 export function ProjectEstimator({
   onSiteDataChange,
 }: ProjectEstimatorProps) {
@@ -172,13 +153,13 @@ export function ProjectEstimator({
   // Compute the active estimate
   const estimate = useMemo<EstimateResult | null>(() => {
     if (mode === "map" && drawnAreaSqFt > 0) {
-      return calculateFromArea(drawnAreaSqFt, depth);
+      return calculateConfidenceRange(drawnAreaSqFt, depth, undefined, undefined, "map");
     }
     if (mode === "dimensions" || mode === "preset") {
       const l = parseFloat(length);
       const w = parseFloat(width);
       if (l > 0 && w > 0 && depth > 0) {
-        return calculateFromDimensions(l, w, depth);
+        return calculateDimensionsWithConfidence(l, w, depth);
       }
     }
     return null;
