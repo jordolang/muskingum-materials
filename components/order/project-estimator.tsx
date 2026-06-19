@@ -30,6 +30,7 @@ import {
   calculateConfidenceRange,
   calculateFromDimensions as calculateDimensionsWithConfidence,
 } from "@/lib/estimate-calculations";
+import { ConfidenceExplanation } from "./confidence-explanation";
 
 declare global {
   interface Window {
@@ -813,6 +814,8 @@ export function ProjectEstimator({
                   20-ton trucks.
                 </p>
               </div>
+
+              <ConfidenceExplanation estimate={estimate} className="mt-4" />
             </div>
           ) : (
             <div className="rounded-xl border border-dashed bg-muted/30 p-5 text-center text-sm text-muted-foreground">
