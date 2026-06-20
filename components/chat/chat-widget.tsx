@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Loader2 } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -118,6 +118,10 @@ export function ChatWidget() {
     }
   }
 
+  function handleTalkToPerson() {
+    setShowContactForm(true);
+  }
+
   return (
     <>
       {!isOpen && (
@@ -138,15 +142,27 @@ export function ChatWidget() {
               <p className="font-semibold text-sm">Muskingum Materials</p>
               <p className="text-xs opacity-90">Ask us anything!</p>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleChat}
-              className="text-white hover:bg-white/20 h-8 w-8"
-              aria-label="Close chat"
-            >
-              <X className="h-5 w-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleTalkToPerson}
+                className="text-white hover:bg-white/20 h-8 text-xs gap-1"
+                aria-label="Talk to a person"
+              >
+                <UserCircle className="h-4 w-4" />
+                Talk to a person
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleChat}
+                className="text-white hover:bg-white/20 h-8 w-8"
+                aria-label="Close chat"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
 
           <ScrollArea className="flex-1 p-4 min-h-0 max-h-[400px]" ref={scrollRef}>
