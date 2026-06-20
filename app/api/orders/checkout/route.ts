@@ -4,6 +4,8 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { checkoutSchema } from "@/lib/schemas";
 import { validateCheckoutPrices } from "@/lib/validate-checkout-prices";
+import { validateCreditLimit } from "@/lib/validate-credit-limit";
+import { generateInvoice } from "@/lib/generate-invoice";
 import { sendEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
 import { addBreadcrumb, startTransaction } from "@/lib/monitoring";
@@ -130,6 +132,16 @@ async function handleCheckout(request: NextRequest) {
         })
       : null;
 
+    // Determine payment method - map from schema to Prisma enum
+    const paymentMethodMap = {
+      stripe: "CARD" as const,
+      purchase_order: "PURCHASE_ORDER" as const,
+      net_terms: "NET_TERMS" as const,
+      saved_payment_method: "SAVED_PAYMENT_METHOD" as const,
+    };
+    type PaymentMethodKey = keyof typeof paymentMethodMap;
+    const paymentMethod = paymentMethodMap[(data.paymentMethod || "stripe") as PaymentMethodKey] || ("CARD" as const);
+
     // Create order in database
     let order;
     try {
@@ -152,6 +164,9 @@ async function handleCheckout(request: NextRequest) {
           termsAcceptedAt: data.termsAccepted ? new Date() : null,
           status: "pending",
           paymentStatus: "unpaid",
+          paymentMethod,
+          poNumber: data.purchaseOrderNumber || null,
+          savedPaymentMethodId: data.savedPaymentMethodId || null,
           projectAddress: site?.address || null,
           projectLat: site?.location?.lat ?? null,
           projectLng: site?.location?.lng ?? null,
@@ -191,6 +206,195 @@ async function handleCheckout(request: NextRequest) {
       );
     }
 
+    // Handle payment method-specific flows
+    const requestedPaymentMethod = data.paymentMethod || "stripe";
+
+    // PURCHASE ORDER: Skip Stripe, record PO number, send email notification
+    if (requestedPaymentMethod === "purchase_order") {
+      logger.info('Purchase order payment method selected', {
+        orderNumber,
+        poNumber: data.purchaseOrderNumber,
+        userId,
+      });
+
+      addBreadcrumb('Purchase order flow', 'checkout', {
+        orderNumber,
+        poNumber: data.purchaseOrderNumber,
+      });
+
+      // Send email notification for PO order
+      await sendPurchaseOrderEmail(data, order, validatedPrices, site, projectMapImageUrl);
+
+      logger.info('Checkout completed successfully with purchase order', {
+        orderNumber,
+        total: validatedPrices.total,
+        paymentMethod: 'purchase_order',
+        poNumber: data.purchaseOrderNumber,
+      });
+
+      return NextResponse.json({
+        orderNumber,
+        paymentMethod: 'purchase_order',
+        analytics: {
+          orderNumber,
+          subtotal: data.subtotal,
+          tax: data.tax,
+          total: data.total,
+          items: data.items.map((item) => ({
+            id: item.name.toLowerCase().replace(/\s+/g, "-"),
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+        },
+      });
+    }
+
+    // NET TERMS: Validate credit limit, create invoice, update balance
+    if (requestedPaymentMethod === "net_terms") {
+      if (!userId) {
+        logger.warn('Net terms requested without authentication', {
+          orderNumber,
+          email: data.email,
+        });
+
+        return NextResponse.json(
+          { error: "You must be logged in to use net terms payment" },
+          { status: 401 }
+        );
+      }
+
+      // Validate credit limit
+      const creditValidation = await validateCreditLimit(userId, validatedPrices.total);
+      if (!creditValidation.allowed) {
+        logger.warn('Net terms credit limit validation failed', {
+          orderNumber,
+          userId,
+          total: validatedPrices.total,
+          errorMessage: creditValidation.errorMessage,
+        });
+
+        return NextResponse.json(
+          { error: creditValidation.errorMessage || "Credit limit exceeded" },
+          { status: 400 }
+        );
+      }
+
+      // Fetch contractor's net terms length
+      const profile = await prisma.userProfile.findUnique({
+        where: { userId },
+        select: { netTermsLength: true },
+      });
+
+      if (!profile?.netTermsLength) {
+        logger.error('Net terms length not found for approved contractor', {
+          orderNumber,
+          userId,
+        });
+
+        return NextResponse.json(
+          { error: "Net terms configuration error. Please contact support." },
+          { status: 500 }
+        );
+      }
+
+      // Create invoice
+      let invoice;
+      try {
+        invoice = await generateInvoice({
+          orderId: order.id,
+          amount: validatedPrices.total,
+          netTermsLength: profile.netTermsLength,
+          notes: `Net ${profile.netTermsLength} terms for order ${orderNumber}`,
+        });
+
+        // Update order with due date
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { dueDate: invoice.dueDate },
+        });
+
+        // Update contractor's net terms balance
+        await prisma.userProfile.update({
+          where: { userId },
+          data: {
+            netTermsBalance: {
+              increment: validatedPrices.total,
+            },
+          },
+        });
+
+        logger.info('Invoice created for net terms order', {
+          orderNumber,
+          invoiceNumber: invoice.invoiceNumber,
+          dueDate: invoice.dueDate,
+          amount: validatedPrices.total,
+        });
+
+        addBreadcrumb('Invoice created', 'database', {
+          orderNumber,
+          invoiceNumber: invoice.invoiceNumber,
+        });
+      } catch (invoiceError) {
+        logger.error('Failed to create invoice for net terms order', invoiceError, {
+          orderNumber,
+          userId,
+          total: validatedPrices.total,
+        });
+
+        return NextResponse.json(
+          { error: "Failed to create invoice. Please contact support." },
+          { status: 500 }
+        );
+      }
+
+      // Send email notification for net terms order
+      await sendNetTermsEmail(data, order, invoice, validatedPrices, site, projectMapImageUrl);
+
+      logger.info('Checkout completed successfully with net terms', {
+        orderNumber,
+        invoiceNumber: invoice.invoiceNumber,
+        total: validatedPrices.total,
+        paymentMethod: 'net_terms',
+        dueDate: invoice.dueDate,
+      });
+
+      return NextResponse.json({
+        orderNumber,
+        invoiceNumber: invoice.invoiceNumber,
+        dueDate: invoice.dueDate,
+        paymentMethod: 'net_terms',
+        analytics: {
+          orderNumber,
+          subtotal: data.subtotal,
+          tax: data.tax,
+          total: data.total,
+          items: data.items.map((item) => ({
+            id: item.name.toLowerCase().replace(/\s+/g, "-"),
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+        },
+      });
+    }
+
+    // SAVED PAYMENT METHOD: Charge the saved card via Stripe PaymentIntent
+    if (requestedPaymentMethod === "saved_payment_method") {
+      // TODO: Implement saved payment method charging in subtask-4-4
+      // This will use Stripe PaymentIntents.create with payment_method
+      logger.warn('Saved payment method not yet implemented', {
+        orderNumber,
+        userId,
+      });
+
+      return NextResponse.json(
+        { error: "Saved payment method checkout is not yet available. Please use card payment." },
+        { status: 501 }
+      );
+    }
+
+    // STRIPE CHECKOUT (default): Create Stripe Checkout Session
     // Try Stripe Checkout Session
     if (process.env.STRIPE_SECRET_KEY) {
       try {
@@ -459,4 +663,243 @@ Payment: Pending — Stripe not configured, customer will pay on pickup/delivery
       { status: 500 }
     );
   }
+}
+
+/**
+ * Helper function to send email notification for purchase order payments
+ */
+async function sendPurchaseOrderEmail(
+  data: any,
+  order: any,
+  validatedPrices: any,
+  site: any,
+  projectMapImageUrl: string | null
+) {
+  const itemsList = data.items
+    .map((i: any) => `  - ${i.name}: ${i.quantity} ${i.unit}(s) @ $${i.price.toFixed(2)} = $${(i.price * i.quantity).toFixed(2)}`)
+    .join("\n");
+
+  const siteSummaryLines: string[] = [];
+  if (site) {
+    if (site.address) {
+      siteSummaryLines.push(`Project address: ${site.address}`);
+    }
+    if (site.estimate) {
+      siteSummaryLines.push(
+        `Estimate: ${site.estimate.tons.toFixed(1)} tons (${site.estimate.cubicYards.toFixed(1)} cu yd) over ${site.totalAreaSqFt?.toFixed(0) ?? "?"} sq ft @ ${site.depthInches ?? "?"}" depth — source: ${site.mode}`,
+      );
+    }
+    if (projectMapImageUrl) {
+      siteSummaryLines.push(`Satellite outline: ${projectMapImageUrl}`);
+    }
+  }
+  const siteSummaryText = siteSummaryLines.length
+    ? `\n\nProject site:\n${siteSummaryLines.join("\n")}`
+    : "";
+
+  const htmlBody = `
+<!DOCTYPE html>
+<html><body style="font-family: system-ui, -apple-system, sans-serif; color: #1f2937;">
+<h2>New online order received (Purchase Order)</h2>
+<p><strong>Order #:</strong> ${order.orderNumber}<br>
+<strong>PO Number:</strong> ${data.purchaseOrderNumber}<br>
+<strong>Customer:</strong> ${data.name}<br>
+<strong>Email:</strong> ${data.email}<br>
+<strong>Phone:</strong> ${data.phone}<br>
+<strong>Fulfillment:</strong> ${data.fulfillment === "pickup" ? "Pickup at yard" : "Delivery"}</p>
+${data.deliveryAddress ? `<p><strong>Delivery Address:</strong><br>${data.deliveryAddress}</p>` : ""}
+${data.deliveryNotes ? `<p><strong>Notes:</strong> ${data.deliveryNotes}</p>` : ""}
+${
+  site
+    ? `
+<h3>Project site (customer-captured)</h3>
+${site.address ? `<p><strong>Address:</strong> ${site.address}</p>` : ""}
+${
+  site.estimate
+    ? `<p><strong>Estimate:</strong> ${site.estimate.tons.toFixed(1)} tons (${site.estimate.cubicYards.toFixed(1)} cu yd) over ${site.totalAreaSqFt?.toFixed(0) ?? "?"} sq ft @ ${site.depthInches ?? "?"}" depth<br>
+<em>This is a customer self-estimate, not survey data.</em></p>`
+    : ""
+}
+${
+  projectMapImageUrl
+    ? `<p><img src="${projectMapImageUrl}" alt="Project area outlined on satellite map" style="max-width:640px;border:1px solid #d1d5db;border-radius:8px"></p>`
+    : ""
+}
+`
+    : ""
+}
+<h3>Items</h3>
+<pre style="font-family:ui-monospace,Menlo,monospace;background:#f9fafb;padding:12px;border-radius:8px">${itemsList}</pre>
+<p>
+Subtotal: $${validatedPrices.subtotal.toFixed(2)}<br>
+Tax (7.25%): $${validatedPrices.tax.toFixed(2)}<br>
+Processing Fee (4.5%): $${validatedPrices.processingFee.toFixed(2)}<br>
+<strong>Total: $${validatedPrices.total.toFixed(2)}</strong>
+</p>
+<p style="color:#059669;font-weight:bold">Payment: Purchase Order ${data.purchaseOrderNumber}</p>
+</body></html>
+  `.trim();
+
+  await sendEmail({
+    to: "sales@muskingummaterials.com",
+    subject: `New PO Order ${order.orderNumber} from ${data.name}`,
+    textBody: `
+New online order received (Purchase Order)!
+
+Order #: ${order.orderNumber}
+PO Number: ${data.purchaseOrderNumber}
+Customer: ${data.name}
+Email: ${data.email}
+Phone: ${data.phone}
+Fulfillment: ${data.fulfillment === "pickup" ? "Pickup at yard" : "Delivery"}
+${data.deliveryAddress ? `Delivery Address: ${data.deliveryAddress}` : ""}
+${data.deliveryNotes ? `Notes: ${data.deliveryNotes}` : ""}${siteSummaryText}
+
+Items:
+${itemsList}
+
+Subtotal: $${validatedPrices.subtotal.toFixed(2)}
+Tax (7.25%): $${validatedPrices.tax.toFixed(2)}
+Processing Fee (4.5%): $${validatedPrices.processingFee.toFixed(2)}
+Total: $${validatedPrices.total.toFixed(2)}
+
+Payment: Purchase Order ${data.purchaseOrderNumber}
+    `.trim(),
+    htmlBody,
+    replyTo: data.email,
+  });
+
+  logger.info('Purchase order notification email sent', {
+    orderNumber: order.orderNumber,
+    recipient: 'sales@muskingummaterials.com',
+  });
+
+  addBreadcrumb('Email notification sent', 'email', {
+    orderNumber: order.orderNumber,
+  });
+}
+
+/**
+ * Helper function to send email notification for net terms payments
+ */
+async function sendNetTermsEmail(
+  data: any,
+  order: any,
+  invoice: any,
+  validatedPrices: any,
+  site: any,
+  projectMapImageUrl: string | null
+) {
+  const itemsList = data.items
+    .map((i: any) => `  - ${i.name}: ${i.quantity} ${i.unit}(s) @ $${i.price.toFixed(2)} = $${(i.price * i.quantity).toFixed(2)}`)
+    .join("\n");
+
+  const siteSummaryLines: string[] = [];
+  if (site) {
+    if (site.address) {
+      siteSummaryLines.push(`Project address: ${site.address}`);
+    }
+    if (site.estimate) {
+      siteSummaryLines.push(
+        `Estimate: ${site.estimate.tons.toFixed(1)} tons (${site.estimate.cubicYards.toFixed(1)} cu yd) over ${site.totalAreaSqFt?.toFixed(0) ?? "?"} sq ft @ ${site.depthInches ?? "?"}" depth — source: ${site.mode}`,
+      );
+    }
+    if (projectMapImageUrl) {
+      siteSummaryLines.push(`Satellite outline: ${projectMapImageUrl}`);
+    }
+  }
+  const siteSummaryText = siteSummaryLines.length
+    ? `\n\nProject site:\n${siteSummaryLines.join("\n")}`
+    : "";
+
+  const dueDateFormatted = invoice.dueDate.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  const htmlBody = `
+<!DOCTYPE html>
+<html><body style="font-family: system-ui, -apple-system, sans-serif; color: #1f2937;">
+<h2>New online order received (Net Terms)</h2>
+<p><strong>Order #:</strong> ${order.orderNumber}<br>
+<strong>Invoice #:</strong> ${invoice.invoiceNumber}<br>
+<strong>Due Date:</strong> ${dueDateFormatted}<br>
+<strong>Customer:</strong> ${data.name}<br>
+<strong>Email:</strong> ${data.email}<br>
+<strong>Phone:</strong> ${data.phone}<br>
+<strong>Fulfillment:</strong> ${data.fulfillment === "pickup" ? "Pickup at yard" : "Delivery"}</p>
+${data.deliveryAddress ? `<p><strong>Delivery Address:</strong><br>${data.deliveryAddress}</p>` : ""}
+${data.deliveryNotes ? `<p><strong>Notes:</strong> ${data.deliveryNotes}</p>` : ""}
+${
+  site
+    ? `
+<h3>Project site (customer-captured)</h3>
+${site.address ? `<p><strong>Address:</strong> ${site.address}</p>` : ""}
+${
+  site.estimate
+    ? `<p><strong>Estimate:</strong> ${site.estimate.tons.toFixed(1)} tons (${site.estimate.cubicYards.toFixed(1)} cu yd) over ${site.totalAreaSqFt?.toFixed(0) ?? "?"} sq ft @ ${site.depthInches ?? "?"}" depth<br>
+<em>This is a customer self-estimate, not survey data.</em></p>`
+    : ""
+}
+${
+  projectMapImageUrl
+    ? `<p><img src="${projectMapImageUrl}" alt="Project area outlined on satellite map" style="max-width:640px;border:1px solid #d1d5db;border-radius:8px"></p>`
+    : ""
+}
+`
+    : ""
+}
+<h3>Items</h3>
+<pre style="font-family:ui-monospace,Menlo,monospace;background:#f9fafb;padding:12px;border-radius:8px">${itemsList}</pre>
+<p>
+Subtotal: $${validatedPrices.subtotal.toFixed(2)}<br>
+Tax (7.25%): $${validatedPrices.tax.toFixed(2)}<br>
+Processing Fee (4.5%): $${validatedPrices.processingFee.toFixed(2)}<br>
+<strong>Total: $${validatedPrices.total.toFixed(2)}</strong>
+</p>
+<p style="color:#2563eb;font-weight:bold">Payment: Net Terms — Invoice ${invoice.invoiceNumber} due ${dueDateFormatted}</p>
+</body></html>
+  `.trim();
+
+  await sendEmail({
+    to: "sales@muskingummaterials.com",
+    subject: `New Net Terms Order ${order.orderNumber} from ${data.name}`,
+    textBody: `
+New online order received (Net Terms)!
+
+Order #: ${order.orderNumber}
+Invoice #: ${invoice.invoiceNumber}
+Due Date: ${dueDateFormatted}
+Customer: ${data.name}
+Email: ${data.email}
+Phone: ${data.phone}
+Fulfillment: ${data.fulfillment === "pickup" ? "Pickup at yard" : "Delivery"}
+${data.deliveryAddress ? `Delivery Address: ${data.deliveryAddress}` : ""}
+${data.deliveryNotes ? `Notes: ${data.deliveryNotes}` : ""}${siteSummaryText}
+
+Items:
+${itemsList}
+
+Subtotal: $${validatedPrices.subtotal.toFixed(2)}
+Tax (7.25%): $${validatedPrices.tax.toFixed(2)}
+Processing Fee (4.5%): $${validatedPrices.processingFee.toFixed(2)}
+Total: $${validatedPrices.total.toFixed(2)}
+
+Payment: Net Terms — Invoice ${invoice.invoiceNumber} due ${dueDateFormatted}
+    `.trim(),
+    htmlBody,
+    replyTo: data.email,
+  });
+
+  logger.info('Net terms notification email sent', {
+    orderNumber: order.orderNumber,
+    invoiceNumber: invoice.invoiceNumber,
+    recipient: 'sales@muskingummaterials.com',
+  });
+
+  addBreadcrumb('Email notification sent', 'email', {
+    orderNumber: order.orderNumber,
+    invoiceNumber: invoice.invoiceNumber,
+  });
 }

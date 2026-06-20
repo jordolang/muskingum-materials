@@ -19,6 +19,7 @@ enum PaymentMethod {
   CARD
   NET_TERMS
   PURCHASE_ORDER
+  SAVED_PAYMENT_METHOD
 }
 
 model Lead {
