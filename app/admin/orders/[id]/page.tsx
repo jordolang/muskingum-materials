@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { StatusUpdater } from "@/components/admin/status-updater";
 import { RefundButton } from "@/components/admin/refund-button";
 import { requireAdmin } from "@/lib/admin-auth";
+import { ConfidenceRangeDisplay } from "@/components/order/confidence-range-display";
 
 interface OrderDetailPageProps {
   params: Promise<{ id: string }>;
@@ -82,6 +83,14 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
     quantity: number;
     unit: string;
   }>;
+
+  // Type assertion for confidence range fields (Prisma client types may be stale)
+  const orderWithConfidence = order as typeof order & {
+    projectEstimateTonsLow?: number | null;
+    projectEstimateTonsHigh?: number | null;
+    projectEstimateCubicYardsLow?: number | null;
+    projectEstimateCubicYardsHigh?: number | null;
+  };
 
   const STATUS_OPTIONS = [
     { value: "pending", label: "Pending" },
@@ -178,32 +187,41 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
             )}
             {(order.projectEstimateTons != null ||
               order.projectAreaSqFt != null) && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <>
+                {/* Confidence Range Display */}
                 {order.projectEstimateTons != null && (
-                  <AdminStat
-                    label="Tons (est.)"
-                    value={order.projectEstimateTons.toFixed(1)}
-                  />
+                  <div className="mb-4">
+                    <ConfidenceRangeDisplay
+                      estimate={{
+                        tons: order.projectEstimateTons,
+                        tonsLow: orderWithConfidence.projectEstimateTonsLow ?? undefined,
+                        tonsExpected: order.projectEstimateTons,
+                        tonsHigh: orderWithConfidence.projectEstimateTonsHigh ?? undefined,
+                        cubicYards: order.projectEstimateCubicYards ?? 0,
+                        cubicYardsLow: orderWithConfidence.projectEstimateCubicYardsLow ?? undefined,
+                        cubicYardsExpected: order.projectEstimateCubicYards ?? undefined,
+                        cubicYardsHigh: orderWithConfidence.projectEstimateCubicYardsHigh ?? undefined,
+                        depthVariance: 0.5,
+                      }}
+                    />
+                  </div>
                 )}
-                {order.projectEstimateCubicYards != null && (
-                  <AdminStat
-                    label="Cubic yards"
-                    value={order.projectEstimateCubicYards.toFixed(1)}
-                  />
-                )}
-                {order.projectAreaSqFt != null && (
-                  <AdminStat
-                    label="Area (sq ft)"
-                    value={Math.round(order.projectAreaSqFt).toLocaleString()}
-                  />
-                )}
-                {order.projectDepthInches != null && (
-                  <AdminStat
-                    label="Depth"
-                    value={`${order.projectDepthInches}"`}
-                  />
-                )}
-              </div>
+                {/* Area and Depth Stats */}
+                <div className="grid grid-cols-2 gap-3">
+                  {order.projectAreaSqFt != null && (
+                    <AdminStat
+                      label="Area (sq ft)"
+                      value={Math.round(order.projectAreaSqFt).toLocaleString()}
+                    />
+                  )}
+                  {order.projectDepthInches != null && (
+                    <AdminStat
+                      label="Depth"
+                      value={`${order.projectDepthInches}"`}
+                    />
+                  )}
+                </div>
+              </>
             )}
             <p className="text-xs text-muted-foreground">
               Source:{" "}
