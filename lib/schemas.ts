@@ -160,6 +160,7 @@ export const quoteSchema = z.object({
   ),
   deliveryAddr: z.string().optional(),
   notes: z.string().optional(),
+  projectSite: projectSiteSchema,
 });
 
 // Newsletter subscription schema
