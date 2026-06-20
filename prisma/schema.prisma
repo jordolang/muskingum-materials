@@ -82,6 +82,27 @@ model QuoteRequest {
   deliveryAddr String?  @db.Text
   notes        String?  @db.Text
   status       String   @default("pending")
+
+  // Project site capture from the estimator for quote requests.
+  // Mirrors the Order model's project fields to help staff understand
+  // the scope of work and provide more accurate quotes.
+  projectAddress            String? @db.Text
+  projectLat                Float?
+  projectLng                Float?
+  projectAreaSqFt           Float?
+  projectDepthInches        Float?
+  projectEstimateTons       Float?
+  projectEstimateCubicYards Float?
+  projectEstimateSource     String? // "map" | "dimensions" | "preset"
+  projectPolygons           Json? // Array<Array<{ lat: number; lng: number }>>
+  projectMapImageUrl        String? @db.Text
+
+  // Confidence range for project estimates (low/expected/high).
+  projectEstimateTonsLow        Float?
+  projectEstimateTonsHigh       Float?
+  projectEstimateCubicYardsLow  Float?
+  projectEstimateCubicYardsHigh Float?
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
