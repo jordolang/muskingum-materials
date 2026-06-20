@@ -32,6 +32,7 @@ import {
 } from "@/lib/estimate-calculations";
 import { ConfidenceExplanation } from "./confidence-explanation";
 import { ConfidenceRangeDisplay } from "./confidence-range-display";
+import { RightSizingGuidance } from "./right-sizing-guidance";
 
 declare global {
   interface Window {
@@ -107,10 +108,12 @@ export interface ProjectSiteData {
 
 interface ProjectEstimatorProps {
   onSiteDataChange: (data: ProjectSiteData) => void;
+  materialSlug?: string;
 }
 
 export function ProjectEstimator({
   onSiteDataChange,
+  materialSlug,
 }: ProjectEstimatorProps) {
   // Address state
   const [address, setAddress] = useState("");
@@ -783,6 +786,8 @@ export function ProjectEstimator({
               </div>
 
               <ConfidenceRangeDisplay estimate={estimate} />
+
+              <RightSizingGuidance materialSlug={materialSlug} className="mt-4" />
 
               <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-amber-200/70">
                 <ResultStat
