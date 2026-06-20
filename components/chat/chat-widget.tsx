@@ -19,6 +19,7 @@ export function ChatWidget() {
   const [contactInfo, setContactInfo] = useState({ name: "", email: "", phone: "" });
   const [contactSubmitted, setContactSubmitted] = useState(false);
   const [isAfterHours, setIsAfterHours] = useState(false);
+  const [escalationOffered, setEscalationOffered] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const prevIsOpenRef = useRef(false);
@@ -96,8 +97,12 @@ export function ChatWidget() {
       const data = await response.json();
       addMessage({ role: "assistant", content: data.reply });
 
-      if (messages.length >= CHAT_CONTACT_THRESHOLD && !contactSubmitted && !showContactForm) {
-        setShowContactForm(true);
+      if (messages.length >= CHAT_CONTACT_THRESHOLD && !contactSubmitted && !showContactForm && !escalationOffered) {
+        setEscalationOffered(true);
+        addMessage({
+          role: "assistant",
+          content: "I notice we've been chatting for a bit. Would you like to talk to a person from our team? They can provide more detailed assistance.",
+        });
       }
     } catch {
       toast({
@@ -221,6 +226,19 @@ export function ChatWidget() {
                 </div>
               )}
             </div>
+
+            {escalationOffered && !showContactForm && !contactSubmitted && (
+              <div className="mt-3 p-3 border rounded-lg bg-primary/5 border-primary/20">
+                <Button
+                  onClick={handleTalkToPerson}
+                  size="sm"
+                  className="w-full text-sm gap-2"
+                >
+                  <UserCircle className="h-4 w-4" />
+                  Yes, I&apos;d like to talk to a person
+                </Button>
+              </div>
+            )}
 
             {showContactForm && !contactSubmitted && (
               <div className="mt-3 p-3 border rounded-lg bg-muted/50">
