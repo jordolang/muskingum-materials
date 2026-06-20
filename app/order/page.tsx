@@ -5,6 +5,7 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { PRODUCTS, PRODUCT_IMAGES } from "@/data/business";
+import { auth } from "@clerk/nextjs/server";
 
 export const metadata: Metadata = {
   title: "Order Materials Online",
@@ -80,6 +81,29 @@ async function getOrderableProducts(): Promise<OrderableProduct[]> {
 export default async function OrderPage() {
   const products = await getOrderableProducts();
 
+  // Fetch user profile if authenticated to check for contractor approval
+  const { userId } = await auth();
+  let userProfile = null;
+
+  if (userId) {
+    try {
+      userProfile = await prisma.userProfile.findUnique({
+        where: { userId },
+        select: {
+          isContractor: true,
+          netTermsApproved: true,
+          netTermsCreditLimit: true,
+          netTermsLength: true,
+        },
+      });
+    } catch (error) {
+      logger.warn(
+        "Order page: failed to load user profile, payment options will be limited",
+        error,
+      );
+    }
+  }
+
   return (
     <div className="py-12">
       <div className="container max-w-3xl">
@@ -95,7 +119,7 @@ export default async function OrderPage() {
 
         <ErrorBoundary componentName="OrderForm">
           <Suspense fallback={null}>
-            <OrderForm products={products} />
+            <OrderForm products={products} userProfile={userProfile} />
           </Suspense>
         </ErrorBoundary>
       </div>

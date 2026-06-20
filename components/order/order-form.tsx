@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { checkoutFormSchema } from "@/lib/schemas";
 import {
   ShoppingCart,
   Sparkles,
@@ -51,38 +52,22 @@ export interface OrderableProduct {
   imageAlt?: string;
 }
 
-export const checkoutSchema = z
-  .object({
-    name: z.string().min(2, "Name is required"),
-    email: z.string().email("Valid email is required"),
-    phone: z.string().min(10, "Phone number is required"),
-    smsOptIn: z.boolean().optional(),
-    termsAccepted: z.literal(true, {
-      errorMap: () => ({
-        message: "You must accept the Terms of Service to proceed",
-      }),
-    }),
-    fulfillment: z.enum(["pickup", "delivery"]),
-    deliveryAddress: z.string().optional(),
-    deliveryNotes: z.string().optional(),
-  })
-  .refine(
-    (data) =>
-      data.fulfillment !== "delivery" ||
-      (data.deliveryAddress && data.deliveryAddress.trim().length > 5),
-    {
-      message: "Delivery address is required",
-      path: ["deliveryAddress"],
-    },
-  );
+export interface UserProfile {
+  isContractor: boolean;
+  netTermsApproved: boolean;
+  netTermsCreditLimit: number | null;
+  netTermsLength: number | null;
+}
 
-export type CheckoutData = z.infer<typeof checkoutSchema>;
+// Use the extended schema from lib/schemas.ts which includes payment method fields
+export type CheckoutData = z.infer<typeof checkoutFormSchema>;
 
 interface OrderFormProps {
   products: OrderableProduct[];
+  userProfile: UserProfile | null;
 }
 
-export function OrderForm({ products }: OrderFormProps) {
+export function OrderForm({ products, userProfile }: OrderFormProps) {
   const cart = useCartStore((state) => state.items);
   const addToCart = useCartStore((state) => state.addToCart);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
@@ -161,13 +146,17 @@ export function OrderForm({ products }: OrderFormProps) {
     setValue,
     formState: { errors, isValid },
   } = useForm<CheckoutData>({
-    resolver: zodResolver(checkoutSchema),
+    resolver: zodResolver(checkoutFormSchema),
     mode: "onChange",
-    defaultValues: { fulfillment: "pickup" },
+    defaultValues: {
+      fulfillment: "pickup",
+      paymentMethod: "stripe",
+    },
   });
 
   const fulfillment = watch("fulfillment");
   const deliveryAddress = watch("deliveryAddress");
+  const paymentMethod = watch("paymentMethod");
 
   const totals = useMemo(() => {
     const subtotal = cart.reduce(
@@ -462,9 +451,12 @@ export function OrderForm({ products }: OrderFormProps) {
           <ContactSection
             register={register}
             errors={errors}
+            watch={watch}
             isProcessing={isProcessing}
             total={totals.total}
             canSubmit={hasCart && fulfillmentSelected && isValid}
+            userProfile={userProfile}
+            paymentMethod={paymentMethod}
           />
         </OrderStep>
       </div>
