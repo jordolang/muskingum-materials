@@ -65,7 +65,7 @@ export function isBusinessHours(date?: Date): boolean {
  */
 export function getNextBusinessDay(date?: Date): Date {
   const businessDate = getBusinessTimezoneDate(date);
-  let nextDay = new Date(businessDate);
+  const nextDay = new Date(businessDate);
 
   // Keep adding days until we hit a business day
   do {
