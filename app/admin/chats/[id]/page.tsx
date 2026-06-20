@@ -1,11 +1,12 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, MessageSquare, User, Mail, Phone, Bot } from "lucide-react";
+import { ArrowLeft, MessageSquare, User, Mail, Phone, Bot, Reply } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { prisma } from "@/lib/prisma";
 import { StatusUpdater } from "@/components/admin/status-updater";
+import { ChatReply } from "@/components/admin/chat-reply";
 import { requireAdmin } from "@/lib/admin-auth";
 
 interface ChatDetailPageProps {
@@ -225,6 +226,23 @@ export default async function ChatDetailPage({ params }: ChatDetailPageProps) {
                   })}
                 </p>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Reply Section */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Reply className="h-5 w-5" />
+                Send Reply
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChatReply
+                conversationId={conversation.id}
+                hasEmail={!!conversation.email}
+                hasPhone={!!conversation.phone}
+              />
             </CardContent>
           </Card>
         </div>
