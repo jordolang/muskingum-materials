@@ -212,14 +212,12 @@ export function FulfillmentSection({
             register={register}
             watch={watch}
             setValue={setValue}
-            errors={errors}
           />
 
           <DropLocationCapture
             register={register}
             watch={watch}
             setValue={setValue}
-            errors={errors}
             deliveryAddress={watch("deliveryAddress")}
           />
 

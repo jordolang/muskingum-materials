@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { UseFormRegister, UseFormWatch, UseFormSetValue, FieldErrors } from "react-hook-form";
+import { UseFormRegister, UseFormWatch, UseFormSetValue } from "react-hook-form";
 import { MapPin, Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { Input } from "@/components/ui/input";
+import type { CheckoutData } from "./order-form";
 
 // Extend window for Google Maps callback
 declare global {
@@ -24,14 +25,9 @@ export interface DropLocationData {
 }
 
 interface DropLocationCaptureProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  register: UseFormRegister<any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  watch: UseFormWatch<any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setValue: UseFormSetValue<any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  errors: FieldErrors<any>;
+  register: UseFormRegister<CheckoutData>;
+  watch: UseFormWatch<CheckoutData>;
+  setValue: UseFormSetValue<CheckoutData>;
   deliveryAddress?: string;
 }
 

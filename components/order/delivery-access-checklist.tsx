@@ -1,6 +1,6 @@
 "use client";
 
-import { UseFormRegister, UseFormWatch, UseFormSetValue, FieldErrors } from "react-hook-form";
+import { UseFormRegister, UseFormWatch, UseFormSetValue } from "react-hook-form";
 import { AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { CheckoutData } from "./order-form";
 
 export interface DeliveryAccessChecklistData {
   drivewayWidth?: "10ft_or_more" | "less_than_10ft" | "unknown";
@@ -22,17 +23,15 @@ export interface DeliveryAccessChecklistData {
 }
 
 interface DeliveryAccessChecklistProps {
-  register: UseFormRegister<any>;
-  watch: UseFormWatch<any>;
-  setValue: UseFormSetValue<any>;
-  errors: FieldErrors<any>;
+  register: UseFormRegister<CheckoutData>;
+  watch: UseFormWatch<CheckoutData>;
+  setValue: UseFormSetValue<CheckoutData>;
 }
 
 export function DeliveryAccessChecklist({
   register,
   watch,
   setValue,
-  errors,
 }: DeliveryAccessChecklistProps) {
   const drivewayWidth = watch("deliveryAccessChecklist.drivewayWidth");
   const overheadClearance = watch("deliveryAccessChecklist.overheadClearance");
@@ -68,7 +67,7 @@ export function DeliveryAccessChecklist({
           <Select
             value={drivewayWidth || ""}
             onValueChange={(value) =>
-              setValue("deliveryAccessChecklist.drivewayWidth", value)
+              setValue("deliveryAccessChecklist.drivewayWidth", value as "10ft_or_more" | "less_than_10ft" | "unknown")
             }
           >
             <SelectTrigger id="checklist-driveway-width">
@@ -95,7 +94,7 @@ export function DeliveryAccessChecklist({
           <Select
             value={overheadClearance || ""}
             onValueChange={(value) =>
-              setValue("deliveryAccessChecklist.overheadClearance", value)
+              setValue("deliveryAccessChecklist.overheadClearance", value as "14ft_or_more" | "less_than_14ft" | "unknown")
             }
           >
             <SelectTrigger id="checklist-overhead-clearance">
@@ -122,7 +121,7 @@ export function DeliveryAccessChecklist({
           <Select
             value={turningRoom || ""}
             onValueChange={(value) =>
-              setValue("deliveryAccessChecklist.turningRoom", value)
+              setValue("deliveryAccessChecklist.turningRoom", value as "adequate" | "tight" | "unknown")
             }
           >
             <SelectTrigger id="checklist-turning-room">
@@ -149,7 +148,7 @@ export function DeliveryAccessChecklist({
           <Select
             value={surface || ""}
             onValueChange={(value) =>
-              setValue("deliveryAccessChecklist.surface", value)
+              setValue("deliveryAccessChecklist.surface", value as "paved" | "gravel" | "dirt" | "grass" | "other")
             }
           >
             <SelectTrigger id="checklist-surface">
