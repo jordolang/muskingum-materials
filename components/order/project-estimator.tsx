@@ -33,6 +33,7 @@ import {
 import { ConfidenceExplanation } from "./confidence-explanation";
 import { ConfidenceRangeDisplay } from "./confidence-range-display";
 import { RightSizingGuidance } from "./right-sizing-guidance";
+import { RequestReviewButton } from "./request-review-button";
 
 declare global {
   interface Window {
@@ -815,6 +816,20 @@ export function ProjectEstimator({
               </div>
 
               <ConfidenceExplanation estimate={estimate} className="mt-4" />
+
+              <RequestReviewButton
+                projectSite={{
+                  address,
+                  location: addressLocation,
+                  mode,
+                  depthInches: depth,
+                  lengthFt: parseFloat(length) > 0 ? parseFloat(length) : null,
+                  widthFt: parseFloat(width) > 0 ? parseFloat(width) : null,
+                  totalAreaSqFt: mode === "map" ? drawnAreaSqFt : (parseFloat(length) || 0) * (parseFloat(width) || 0),
+                  polygons: polygonPaths,
+                  estimate,
+                }}
+              />
             </div>
           ) : (
             <div className="rounded-xl border border-dashed bg-muted/30 p-5 text-center text-sm text-muted-foreground">
