@@ -370,4 +370,169 @@ test.describe('Confidence Range Estimate Feature', () => {
     // Verify tips are shown
     await expect(page.getByText(/tip|suggestion|recommendation/i)).toBeVisible();
   });
+
+  test('should complete full order flow with confidence range: estimate → cart → checkout → receipt', async ({ page }) => {
+    // STEP 1: Create estimate with polygon/dimensions
+    const singleCarDrivewayButton = page.getByRole('button', { name: /Single Car Driveway/i });
+    await singleCarDrivewayButton.click();
+
+    // Wait for estimate to display with confidence range
+    await expect(page.getByText('Estimated Material Needed')).toBeVisible();
+    await expect(page.getByText(/tons/i)).toBeVisible();
+    await expect(page.getByText(/cubic yards/i)).toBeVisible();
+
+    // Verify confidence range components are visible
+    await expect(page.getByText(/Understanding Your Estimate Range/i)).toBeVisible();
+    await expect(page.getByText(/Right-Sizing/i)).toBeVisible();
+
+    // STEP 2: Add products to cart
+    const addButton = page.getByRole('button', { name: 'Add' }).first();
+    await addButton.click();
+
+    // Verify cart has item
+    await expect(page.getByRole('button', { name: /checkout/i })).toBeVisible();
+
+    // STEP 3: Complete checkout (test mode)
+    await page.getByRole('button', { name: /checkout/i }).click();
+
+    // Fill contact information
+    await page.getByPlaceholder('Your full name').fill('Complete Flow Test User');
+    await page.getByPlaceholder(/your@email.com/i).fill('complete-flow@example.com');
+    await page.getByPlaceholder(/\(740\)/i).fill('7401234567');
+
+    // Mock the checkout API to capture the payload
+    let capturedCheckoutData: any = null;
+    await page.route('/api/orders/checkout', async (route) => {
+      capturedCheckoutData = route.request().postDataJSON();
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          orderNumber: 'TEST-COMPLETE-FLOW-001',
+        }),
+      });
+    });
+
+    // Submit the order
+    await page.getByRole('button', { name: /Pay \$/i }).click();
+
+    // Verify order confirmation appears
+    await expect(page.getByText(/order confirmed/i)).toBeVisible();
+    await expect(page.getByText('TEST-COMPLETE-FLOW-001')).toBeVisible();
+
+    // Verify checkout payload included project site with confidence range data
+    expect(capturedCheckoutData).toBeTruthy();
+    expect(capturedCheckoutData.projectSite).toBeDefined();
+    expect(capturedCheckoutData.projectSite.estimate).toBeDefined();
+    expect(capturedCheckoutData.projectSite.estimate.tonsLow).toBeDefined();
+    expect(capturedCheckoutData.projectSite.estimate.tonsExpected).toBeDefined();
+    expect(capturedCheckoutData.projectSite.estimate.tonsHigh).toBeDefined();
+    expect(capturedCheckoutData.projectSite.estimate.cubicYardsLow).toBeDefined();
+    expect(capturedCheckoutData.projectSite.estimate.cubicYardsExpected).toBeDefined();
+    expect(capturedCheckoutData.projectSite.estimate.cubicYardsHigh).toBeDefined();
+
+    // STEP 4: View order receipt
+    // Mock the receipt page API to return order with confidence range data
+    await page.route('**/api/orders/TEST-COMPLETE-FLOW-001', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'receipt-test-id',
+          orderNumber: 'TEST-COMPLETE-FLOW-001',
+          status: 'PENDING',
+          customerName: 'Complete Flow Test User',
+          customerEmail: 'complete-flow@example.com',
+          total: 100,
+          items: [
+            {
+              id: 'item-1',
+              productName: '304 Crushed Gravel',
+              quantity: 15,
+              unitType: 'tons',
+              pricePerUnit: 30,
+              subtotal: 450,
+            }
+          ],
+          projectEstimateTonsLow: 12.5,
+          projectEstimateTonsExpected: 14.2,
+          projectEstimateTonsHigh: 16.8,
+          projectEstimateCubicYardsLow: 8.9,
+          projectEstimateCubicYardsExpected: 10.1,
+          projectEstimateCubicYardsHigh: 12.0,
+          projectAddress: '123 Test Street, Cambridge, OH',
+          projectAreaSqFt: 200,
+          projectDepthInches: 3,
+          createdAt: new Date().toISOString(),
+        }),
+      });
+    });
+
+    // Navigate to receipt page
+    await page.goto('/order/TEST-COMPLETE-FLOW-001/receipt');
+
+    // STEP 5: Verify confidence range persisted and displays on receipt
+    await expect(page.getByText('TEST-COMPLETE-FLOW-001')).toBeVisible();
+
+    // Verify confidence range displays on receipt
+    // Should show the ConfidenceRangeDisplay component
+    await expect(page.getByText(/12\.5.*14\.2.*16\.8/)).toBeVisible(); // tons range
+    await expect(page.getByText(/8\.9.*10\.1.*12\.0/)).toBeVisible(); // cubic yards range
+
+    // Verify project site details are shown
+    await expect(page.getByText('123 Test Street, Cambridge, OH')).toBeVisible();
+    await expect(page.getByText(/200.*sq.*ft/i)).toBeVisible();
+    await expect(page.getByText(/3.*inch/i)).toBeVisible();
+
+    // STEP 6: Check admin order view shows range
+    // Mock the admin API (same data)
+    await page.route('**/api/admin/orders/receipt-test-id', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'receipt-test-id',
+          orderNumber: 'TEST-COMPLETE-FLOW-001',
+          status: 'PENDING',
+          customerName: 'Complete Flow Test User',
+          customerEmail: 'complete-flow@example.com',
+          total: 100,
+          items: [
+            {
+              id: 'item-1',
+              productName: '304 Crushed Gravel',
+              quantity: 15,
+              unitType: 'tons',
+              pricePerUnit: 30,
+              subtotal: 450,
+            }
+          ],
+          projectEstimateTonsLow: 12.5,
+          projectEstimateTonsExpected: 14.2,
+          projectEstimateTonsHigh: 16.8,
+          projectEstimateCubicYardsLow: 8.9,
+          projectEstimateCubicYardsExpected: 10.1,
+          projectEstimateCubicYardsHigh: 12.0,
+          projectAddress: '123 Test Street, Cambridge, OH',
+          projectAreaSqFt: 200,
+          projectDepthInches: 3,
+          createdAt: new Date().toISOString(),
+        }),
+      });
+    });
+
+    // Navigate to admin order detail page
+    await page.goto('/admin/orders/receipt-test-id');
+
+    // Verify admin view shows the confidence range
+    await expect(page.getByText('TEST-COMPLETE-FLOW-001')).toBeVisible();
+
+    // Verify confidence range displays in admin view
+    await expect(page.getByText(/12\.5.*14\.2.*16\.8/)).toBeVisible(); // tons range
+    await expect(page.getByText(/8\.9.*10\.1.*12\.0/)).toBeVisible(); // cubic yards range
+
+    // Verify project site information is accessible to staff
+    await expect(page.getByText('123 Test Street, Cambridge, OH')).toBeVisible();
+  });
 });
