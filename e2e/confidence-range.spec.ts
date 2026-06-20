@@ -210,19 +210,40 @@ test.describe('Confidence Range Estimate Feature', () => {
     // This test verifies the fallback behavior when a product doesn't have density range data
     // The system should still calculate using MATERIAL_DENSITY_AVG ± 0.1
 
-    // Use quick preset
+    // Use quick preset to generate an estimate
     const singleCarDrivewayButton = page.getByRole('button', { name: /Single Car Driveway/i });
     await singleCarDrivewayButton.click();
 
-    // Verify estimate still displays
+    // Wait for estimate to render
     await expect(page.getByText('Estimated Material Needed')).toBeVisible();
 
-    // Verify tonnage is shown (even if with narrower confidence range)
+    // Verify tonnage is shown (even with narrower confidence range fallback)
     await expect(page.getByText(/tons/i)).toBeVisible();
 
-    // Verify explanation adapts to mention average density when specific data unavailable
-    // (The actual text will vary based on implementation, but explanation should still render)
+    // Verify cubic yards are also shown
+    await expect(page.getByText(/cubic yards/i)).toBeVisible();
+
+    // Verify the confidence explanation section is present
     await expect(page.getByText(/Understanding Your Estimate Range/i)).toBeVisible();
+
+    // CRITICAL: Verify explanation mentions "average density" or "typical aggregate density"
+    // This is the key indicator of graceful degradation fallback behavior
+    const explanationText = await page.getByText(/average density|typical aggregate density/i);
+    await expect(explanationText).toBeVisible();
+
+    // Verify the explanation mentions the ±0.1 tons/yd³ fallback range
+    await expect(page.getByText(/±0\.1 tons?\/yd³/i)).toBeVisible();
+
+    // Verify the explanation text about conservative estimate is present
+    await expect(page.getByText(/conservative estimate/i)).toBeVisible();
+
+    // Verify depth variance is still explained (that factor always applies)
+    await expect(page.getByText(/depth/i)).toBeVisible();
+
+    // Verify that the estimate still calculates correctly
+    // Even without product-specific density, the calculator should provide a valid range
+    const tonsText = page.getByText(/\d+\.?\d*\s*tons/i).first();
+    await expect(tonsText).toBeVisible();
   });
 
   test('should display confidence factors in explanation', async ({ page }) => {
