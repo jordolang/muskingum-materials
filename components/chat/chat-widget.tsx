@@ -132,6 +132,19 @@ export function ChatWidget() {
         }),
       });
 
+      // Handle rate limiting specifically
+      if (response.status === 429) {
+        const retryAfter = response.headers.get("Retry-After");
+        const retrySeconds = retryAfter ? parseInt(retryAfter, 10) : 60;
+        toast({
+          title: "Too Many Requests",
+          description: `Please wait ${retrySeconds} seconds before trying again. We've received your previous request.`,
+          variant: "destructive",
+        });
+        setShowContactForm(false);
+        return;
+      }
+
       if (!response.ok) {
         throw new Error("Escalation request failed");
       }
