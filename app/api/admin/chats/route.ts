@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
  * GET /api/admin/chats
  * Returns paginated list of chat conversations with message counts
  * Requires admin authentication via Clerk publicMetadata.role
- * Query params: page (optional), limit (optional, max 100), status (optional)
+ * Query params: page (optional), limit (optional, max 100), status (optional), escalated (optional), priority (optional)
  */
 export async function GET(request: Request) {
   try {
@@ -40,15 +40,29 @@ export async function GET(request: Request) {
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20", 10) || 20));
     const status = searchParams.get("status");
+    const escalated = searchParams.get("escalated");
+    const priority = searchParams.get("priority");
 
     // Calculate skip and take for Prisma
     const skip = (page - 1) * limit;
     const take = limit;
 
     // Build where clause for filtering
-    const where: { status?: string } = {};
+    const where: {
+      status?: string;
+      escalatedAt?: { not: null } | null;
+      priority?: string;
+    } = {};
     if (status) {
       where.status = status;
+    }
+    if (escalated === "true") {
+      where.escalatedAt = { not: null };
+    } else if (escalated === "false") {
+      where.escalatedAt = null;
+    }
+    if (priority) {
+      where.priority = priority;
     }
 
     // Get total count for pagination metadata
@@ -68,6 +82,10 @@ export async function GET(request: Request) {
         phone: true,
         status: true,
         metadata: true,
+        escalatedAt: true,
+        priority: true,
+        escalationReason: true,
+        leadId: true,
         createdAt: true,
         updatedAt: true,
         _count: {
