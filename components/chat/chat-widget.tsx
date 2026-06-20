@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Loader2, UserCircle } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, UserCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,6 +18,7 @@ export function ChatWidget() {
   const [showContactForm, setShowContactForm] = useState(false);
   const [contactInfo, setContactInfo] = useState({ name: "", email: "", phone: "" });
   const [contactSubmitted, setContactSubmitted] = useState(false);
+  const [isAfterHours, setIsAfterHours] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const prevIsOpenRef = useRef(false);
@@ -50,6 +51,25 @@ export function ChatWidget() {
     }
     prevIsOpenRef.current = isOpen;
   }, [isOpen, visitorId]);
+
+  useEffect(() => {
+    // Check business hours status client-side
+    async function checkBusinessHours() {
+      try {
+        const response = await fetch("/api/business-hours");
+        if (response.ok) {
+          const data = await response.json();
+          setIsAfterHours(!data.isBusinessHours);
+        }
+      } catch {
+        // Silently fail - default to showing standard message
+      }
+    }
+
+    if (isOpen) {
+      checkBusinessHours();
+    }
+  }, [isOpen]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -93,20 +113,30 @@ export function ChatWidget() {
   async function handleContactSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await fetch("/api/leads", {
+      const response = await fetch("/api/chat/escalate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...contactInfo,
-          source: "chat",
           visitorId,
+          reason: "user_requested",
+          contactInfo: {
+            name: contactInfo.name || undefined,
+            email: contactInfo.email || undefined,
+            phone: contactInfo.phone || undefined,
+          },
         }),
       });
+
+      if (!response.ok) {
+        throw new Error("Escalation request failed");
+      }
+
+      const data = await response.json();
       setContactSubmitted(true);
       setShowContactForm(false);
       addMessage({
         role: "assistant",
-        content: `Thanks${contactInfo.name ? `, ${contactInfo.name}` : ""}! We have your info and will follow up if needed. How else can I help?`,
+        content: data.message || `Thanks${contactInfo.name ? `, ${contactInfo.name}` : ""}! We have your info and someone from our team will follow up.`,
       });
     } catch {
       toast({
@@ -195,8 +225,16 @@ export function ChatWidget() {
             {showContactForm && !contactSubmitted && (
               <div className="mt-3 p-3 border rounded-lg bg-muted/50">
                 <p className="text-xs font-medium mb-2">
-                  Want us to follow up? Leave your info (optional):
+                  Connect with our team! Leave your info and we&apos;ll follow up:
                 </p>
+                {isAfterHours && (
+                  <div className="mb-2 p-2 rounded bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 flex items-start gap-2">
+                    <Clock className="h-3 w-3 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                    <p className="text-xs text-amber-800 dark:text-amber-200">
+                      We&apos;re currently closed. Our team will reach out during business hours (M-F, 7:30 AM - 4:00 PM ET).
+                    </p>
+                  </div>
+                )}
                 <form onSubmit={handleContactSubmit} className="space-y-2">
                   <Input
                     placeholder="Name"
