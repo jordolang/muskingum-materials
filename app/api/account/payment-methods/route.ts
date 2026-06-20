@@ -66,8 +66,36 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = savedPaymentMethodCreateSchema.parse(body);
 
+    // Retrieve full payment method details from Stripe if not provided
+    let paymentMethodData = { ...data };
+
+    if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== "your_stripe_secret_key") {
+      try {
+        const stripe = (await import("stripe")).default;
+        const stripeClient = new stripe(process.env.STRIPE_SECRET_KEY);
+
+        const pm = await stripeClient.paymentMethods.retrieve(data.stripePaymentMethodId);
+
+        // Override with Stripe data if not already provided
+        paymentMethodData = {
+          ...data,
+          brand: data.brand || pm.card?.brand || null,
+          last4: data.last4 || pm.card?.last4 || null,
+          expiryMonth: data.expiryMonth || pm.card?.exp_month || null,
+          expiryYear: data.expiryYear || pm.card?.exp_year || null,
+        };
+      } catch (stripeError) {
+        logger.warn("Failed to retrieve payment method details from Stripe", {
+          userId: session.userId,
+          stripePaymentMethodId: data.stripePaymentMethodId,
+          error: stripeError,
+        });
+        // Continue with provided data
+      }
+    }
+
     // If this is being set as default, unset all other defaults first
-    if (data.isDefault) {
+    if (paymentMethodData.isDefault) {
       await prisma.savedPaymentMethod.updateMany({
         where: { userId: session.userId },
         data: { isDefault: false },
@@ -77,7 +105,7 @@ export async function POST(request: NextRequest) {
     const paymentMethod = await prisma.savedPaymentMethod.create({
       data: {
         userId: session.userId,
-        ...data,
+        ...paymentMethodData,
       },
     });
 

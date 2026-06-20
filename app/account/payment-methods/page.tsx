@@ -5,6 +5,7 @@ import { Loader2, Plus, Trash2, CreditCard, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import AddPaymentMethod from "@/components/account/add-payment-method";
 
 interface PaymentMethod {
   id: string;
@@ -71,13 +72,13 @@ export default function PaymentMethodsPage() {
       </div>
 
       {showForm && (
-        <Card className="border-0 shadow-lg border-t-4 border-t-amber-500">
-          <CardContent className="p-6">
-            <p className="text-sm text-muted-foreground">
-              Add payment method form will be implemented in the next subtask.
-            </p>
-          </CardContent>
-        </Card>
+        <AddPaymentMethod
+          onSuccess={() => {
+            setShowForm(false);
+            loadPaymentMethods();
+          }}
+          onCancel={() => setShowForm(false)}
+        />
       )}
 
       {paymentMethods.length === 0 && !showForm ? (

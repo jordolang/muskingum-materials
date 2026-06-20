@@ -171,6 +171,7 @@ model SavedPaymentMethod {
   id                    String   @id @default(cuid())
   userId                String
   stripePaymentMethodId String   @unique
+  stripeCustomerId      String?
   brand                 String?
   last4                 String?
   expiryMonth           Int?

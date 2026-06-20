@@ -271,6 +271,7 @@ export const campaignSchema = z.object({
 // Saved payment method schema
 export const savedPaymentMethodCreateSchema = z.object({
   stripePaymentMethodId: z.string().min(1, "Stripe payment method ID is required"),
+  stripeCustomerId: z.string().optional(),
   brand: z.string().optional(),
   last4: z.string().optional(),
   expiryMonth: z.number().int().min(1).max(12).optional(),
