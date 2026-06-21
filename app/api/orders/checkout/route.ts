@@ -148,6 +148,12 @@ async function handleCheckout(request: NextRequest) {
           pickupOrDeliver: data.fulfillment,
           deliveryAddress: data.deliveryAddress || null,
           deliveryNotes: data.deliveryNotes || null,
+          deliveryAccessChecklist: data.deliveryAccessChecklist || undefined,
+          dropLocationNotes: data.dropLocation?.notes || null,
+          dropLocationPhotoUrl: data.dropLocation?.photoUrl || null,
+          dropLocationLat: data.dropLocation?.lat ?? null,
+          dropLocationLng: data.dropLocation?.lng ?? null,
+          accessWarningFlags: data.accessWarnings || undefined,
           smsOptIn: data.smsOptIn || false,
           termsAcceptedAt: data.termsAccepted ? new Date() : null,
           status: "pending",
@@ -341,6 +347,51 @@ async function handleCheckout(request: NextRequest) {
       ? `\n\nProject site:\n${siteSummaryLines.join("\n")}`
       : "";
 
+    // Build access warnings section for email
+    const accessWarningsHtml = data.accessWarnings && data.accessWarnings.length > 0
+      ? `
+<div style="background:#fef2f2;border-left:4px solid #dc2626;padding:12px;margin:16px 0;border-radius:4px">
+<h3 style="color:#dc2626;margin-top:0">⚠️ Delivery Access Warnings</h3>
+<ul style="margin:8px 0;padding-left:20px">
+${data.accessWarnings.map(warning => {
+  const labels: Record<string, string> = {
+    narrow_driveway: "Narrow driveway (less than 10ft)",
+    low_clearance: "Low overhead clearance (less than 14ft)",
+    tight_turning: "Tight turning space",
+    poor_surface: "Poor surface condition"
+  };
+  return `<li>${labels[warning] || warning}</li>`;
+}).join("\n")}
+</ul>
+</div>
+`
+      : "";
+
+    // Build access checklist details for email
+    const checklistHtml = data.deliveryAccessChecklist
+      ? `
+<h3>Delivery Access Checklist</h3>
+<ul style="list-style:none;padding-left:0">
+${data.deliveryAccessChecklist.drivewayWidth ? `<li><strong>Driveway Width:</strong> ${data.deliveryAccessChecklist.drivewayWidth.replace(/_/g, " ")}</li>` : ""}
+${data.deliveryAccessChecklist.overheadClearance ? `<li><strong>Overhead Clearance:</strong> ${data.deliveryAccessChecklist.overheadClearance.replace(/_/g, " ")}</li>` : ""}
+${data.deliveryAccessChecklist.turningRoom ? `<li><strong>Turning Room:</strong> ${data.deliveryAccessChecklist.turningRoom}</li>` : ""}
+${data.deliveryAccessChecklist.surface ? `<li><strong>Surface Type:</strong> ${data.deliveryAccessChecklist.surface}</li>` : ""}
+${data.deliveryAccessChecklist.gateCode ? `<li><strong>Gate Code:</strong> ${data.deliveryAccessChecklist.gateCode}</li>` : ""}
+${data.deliveryAccessChecklist.accessInstructions ? `<li><strong>Access Instructions:</strong> ${data.deliveryAccessChecklist.accessInstructions}</li>` : ""}
+</ul>
+`
+      : "";
+
+    // Build drop location section for email
+    const dropLocationHtml = data.dropLocation
+      ? `
+<h3>Drop Location</h3>
+${data.dropLocation.notes ? `<p><strong>Drop Location Notes:</strong> ${data.dropLocation.notes}</p>` : ""}
+${data.dropLocation.lat && data.dropLocation.lng ? `<p><strong>Drop Location Coordinates:</strong> ${data.dropLocation.lat.toFixed(6)}, ${data.dropLocation.lng.toFixed(6)}<br><a href="https://www.google.com/maps?q=${data.dropLocation.lat},${data.dropLocation.lng}" target="_blank">View on Google Maps</a></p>` : ""}
+${data.dropLocation.photoUrl ? `<p><strong>Drop Location Photo:</strong><br><img src="${data.dropLocation.photoUrl}" alt="Drop location reference photo" style="max-width:480px;border:1px solid #d1d5db;border-radius:8px;margin-top:8px"></p>` : ""}
+`
+      : "";
+
     const htmlBody = `
 <!DOCTYPE html>
 <html><body style="font-family: system-ui, -apple-system, sans-serif; color: #1f2937;">
@@ -352,6 +403,9 @@ async function handleCheckout(request: NextRequest) {
 <strong>Fulfillment:</strong> ${data.fulfillment === "pickup" ? "Pickup at yard" : "Delivery"}</p>
 ${data.deliveryAddress ? `<p><strong>Delivery Address:</strong><br>${data.deliveryAddress}</p>` : ""}
 ${data.deliveryNotes ? `<p><strong>Notes:</strong> ${data.deliveryNotes}</p>` : ""}
+${accessWarningsHtml}
+${checklistHtml}
+${dropLocationHtml}
 ${
   site
     ? `
@@ -383,6 +437,41 @@ Processing Fee (4.5%): $${validatedPrices.processingFee.toFixed(2)}<br>
 </body></html>
     `.trim();
 
+    // Build access warnings section for plain text email
+    const accessWarningsText = data.accessWarnings && data.accessWarnings.length > 0
+      ? `\n\n⚠️ DELIVERY ACCESS WARNINGS:\n${data.accessWarnings.map(warning => {
+  const labels: Record<string, string> = {
+    narrow_driveway: "Narrow driveway (less than 10ft)",
+    low_clearance: "Low overhead clearance (less than 14ft)",
+    tight_turning: "Tight turning space",
+    poor_surface: "Poor surface condition"
+  };
+  return `  - ${labels[warning] || warning}`;
+}).join("\n")}`
+      : "";
+
+    // Build access checklist details for plain text email
+    const checklistText = data.deliveryAccessChecklist
+      ? `\n\nDelivery Access Checklist:\n${[
+          data.deliveryAccessChecklist.drivewayWidth && `  Driveway Width: ${data.deliveryAccessChecklist.drivewayWidth.replace(/_/g, " ")}`,
+          data.deliveryAccessChecklist.overheadClearance && `  Overhead Clearance: ${data.deliveryAccessChecklist.overheadClearance.replace(/_/g, " ")}`,
+          data.deliveryAccessChecklist.turningRoom && `  Turning Room: ${data.deliveryAccessChecklist.turningRoom}`,
+          data.deliveryAccessChecklist.surface && `  Surface Type: ${data.deliveryAccessChecklist.surface}`,
+          data.deliveryAccessChecklist.gateCode && `  Gate Code: ${data.deliveryAccessChecklist.gateCode}`,
+          data.deliveryAccessChecklist.accessInstructions && `  Access Instructions: ${data.deliveryAccessChecklist.accessInstructions}`,
+        ].filter(Boolean).join("\n")}`
+      : "";
+
+    // Build drop location section for plain text email
+    const dropLocationText = data.dropLocation
+      ? `\n\nDrop Location:\n${[
+          data.dropLocation.notes && `  Notes: ${data.dropLocation.notes}`,
+          data.dropLocation.lat && data.dropLocation.lng && `  Coordinates: ${data.dropLocation.lat.toFixed(6)}, ${data.dropLocation.lng.toFixed(6)}`,
+          data.dropLocation.lat && data.dropLocation.lng && `  Map: https://www.google.com/maps?q=${data.dropLocation.lat},${data.dropLocation.lng}`,
+          data.dropLocation.photoUrl && `  Photo: ${data.dropLocation.photoUrl}`,
+        ].filter(Boolean).join("\n")}`
+      : "";
+
     await sendEmail({
       to: "sales@muskingummaterials.com",
       subject: `New Online Order ${orderNumber} from ${data.name}`,
@@ -395,7 +484,7 @@ Email: ${data.email}
 Phone: ${data.phone}
 Fulfillment: ${data.fulfillment === "pickup" ? "Pickup at yard" : "Delivery"}
 ${data.deliveryAddress ? `Delivery Address: ${data.deliveryAddress}` : ""}
-${data.deliveryNotes ? `Notes: ${data.deliveryNotes}` : ""}${siteSummaryText}
+${data.deliveryNotes ? `Notes: ${data.deliveryNotes}` : ""}${accessWarningsText}${checklistText}${dropLocationText}${siteSummaryText}
 
 Items:
 ${itemsList}

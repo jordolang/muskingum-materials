@@ -96,3 +96,6 @@ logs/security/
 .vibe/
 .windsurf/
 .zencoder/
+
+# Node.js compile cache (tsx/ts-node runtime)
+.tmp/

@@ -85,6 +85,37 @@ export const projectSiteSchema = z
   })
   .optional();
 
+// Delivery access checklist schema — validates customer's answers to access questions
+// (driveway width, overhead clearance, turning room, surface type, gate codes) to
+// identify potential delivery constraints before checkout.
+export const deliveryAccessChecklistSchema = z
+  .object({
+    drivewayWidth: z.enum(["10ft_or_more", "less_than_10ft", "unknown"]).optional(),
+    overheadClearance: z.enum(["14ft_or_more", "less_than_14ft", "unknown"]).optional(),
+    turningRoom: z.enum(["adequate", "tight", "unknown"]).optional(),
+    surface: z.enum(["paved", "gravel", "dirt", "grass", "other"]).optional(),
+    gateCode: z.string().optional(),
+    accessInstructions: z.string().optional(),
+  })
+  .optional();
+
+// Drop location schema — validates customer's precise drop-location instructions
+// including free-text notes, optional photo, and map pin coordinates.
+export const dropLocationSchema = z
+  .object({
+    notes: z.string().optional(),
+    photoUrl: z.string().optional(),
+    lat: z.number().optional(),
+    lng: z.number().optional(),
+  })
+  .optional();
+
+// Access warning flags schema — array of flagged delivery access issues
+// detected from checklist answers (e.g., narrow_driveway, low_clearance).
+export const accessWarningFlagsSchema = z
+  .array(z.enum(["narrow_driveway", "low_clearance", "tight_turning", "poor_surface"]))
+  .optional();
+
 // Checkout schema (API-side with order details)
 export const checkoutSchema = checkoutFormSchema.extend({
   items: z.array(
@@ -103,6 +134,9 @@ export const checkoutSchema = checkoutFormSchema.extend({
   contractorDiscountRate: z.number().optional(),
   contractorDiscount: z.number().optional(),
   projectSite: projectSiteSchema,
+  deliveryAccessChecklist: deliveryAccessChecklistSchema,
+  dropLocation: dropLocationSchema,
+  accessWarnings: accessWarningFlagsSchema,
 });
 
 // Address schema
@@ -265,3 +299,6 @@ export type ReviewData = z.infer<typeof reviewSchema>;
 export type OrderStatusUpdateData = z.infer<typeof orderStatusUpdateSchema>;
 export type PointRedemptionData = z.infer<typeof pointRedemptionSchema>;
 export type CampaignData = z.infer<typeof campaignSchema>;
+export type DeliveryAccessChecklistData = z.infer<typeof deliveryAccessChecklistSchema>;
+export type DropLocationData = z.infer<typeof dropLocationSchema>;
+export type AccessWarningFlags = z.infer<typeof accessWarningFlagsSchema>;

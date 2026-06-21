@@ -110,8 +110,8 @@ model QuoteRequest {
 }
 
 model Order {
-  id              String    @id @default(cuid())
-  orderNumber     String    @unique
+  id              String  @id @default(cuid())
+  orderNumber     String  @unique
   userId          String?
   name            String
   email           String
@@ -120,10 +120,23 @@ model Order {
   subtotal        Float
   tax             Float
   processingFee   Float
-  deliveryFee     Float     @default(0)
+  deliveryFee     Float   @default(0)
   total           Float
-  deliveryAddress String?   @db.Text
-  deliveryNotes   String?   @db.Text
+  deliveryAddress String? @db.Text
+  deliveryNotes   String? @db.Text
+
+  // Delivery access pre-check and drop-location capture. These fields store
+  // the customer's answers to the delivery-access checklist (driveway width,
+  // overhead clearance, turning room, surface type, gate codes) and their
+  // precise drop-location instructions (notes, photo, map pin) so the driver
+  // knows exactly where to put the material and what access constraints exist.
+  deliveryAccessChecklist Json? // Checklist answers: { drivewayWidth, clearance, turningRoom, surface, gateCode }
+  dropLocationNotes       String? @db.Text
+  dropLocationPhotoUrl    String? @db.Text
+  dropLocationLat         Float?
+  dropLocationLng         Float?
+  accessWarningFlags      Json? // Array of flagged issues: ["narrow_driveway", "low_clearance", ...]
+
   pickupOrDeliver String    @default("pickup")
   status          String    @default("pending")
   paymentStatus   String    @default("unpaid")

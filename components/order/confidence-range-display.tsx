@@ -109,7 +109,7 @@ export function ConfidenceRangeDisplay({
                     ? "material density variation"
                     : "average density"}{" "}
                   and depth measurement variance (±{estimate.depthVariance ?? 0.5}
-                  "). Most projects fall within the expected value.
+                  &quot;). Most projects fall within the expected value.
                 </p>
               </TooltipContent>
             </Tooltip>

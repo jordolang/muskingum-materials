@@ -12,6 +12,7 @@ npm run lint         # next lint (ESLint with next/core-web-vitals + next/typesc
 npm run db:push      # Push prisma/schema.prisma to Neon (uses .env.local via dotenv-cli)
 npm run db:studio    # Open Prisma Studio
 npm run db:seed      # Run prisma/seed.ts via tsx
+npm run sync         # Sync Prisma products/services to Sanity (one-way, preserves marketing fields)
 ```
 
 `postinstall` runs `prisma generate`, so a fresh `npm install` produces a usable client.
@@ -33,9 +34,43 @@ This is the most important thing to understand before editing content-related co
 - **Prisma + Neon Postgres** is the source of truth for `Product`, `Service`, `CostGuide`, plus all transactional models (`Order`, `Lead`, `ContactSubmission`, `QuoteRequest`, `ChatConversation`/`ChatMessage`, `NewsletterSubscriber`, `UserProfile`/`Address`, `ProductComparison`). See `prisma/schema.prisma` and `lib/products.ts` (`getProducts`, `getServices`, `getCostGuides`).
 - **Sanity Studio** holds marketing content: `product`, `service`, `testimonial`, `faq`, `galleryImage`, `page`, `post`, and the singleton `siteSettings`. Schemas live in `sanity/schemaTypes/`, GROQ queries in `lib/sanity/queries.ts`, client in `lib/sanity/client.ts`.
 
-Note that `product` and `service` exist in **both** systems. Prisma is what the app reads at runtime for catalog pages; Sanity is editable via the Studio. When changing product/service shape, decide which store is authoritative for that field and update accordingly — they are not currently synced.
+Note that `product` and `service` exist in **both** systems. Prisma is the source of truth for catalog/pricing/inventory fields; Sanity owns marketing/SEO/media fields. A **one-way sync system** (Prisma → Sanity) keeps catalog fields in sync while preserving marketing content. See the "Prisma ↔ Sanity Sync System" section below for details.
 
 `siteSettings` is a Sanity singleton enforced in `sanity.config.ts` (filters out templates and limits actions to publish/discardChanges/restore).
+
+### Prisma ↔ Sanity Sync System
+
+Products and services exist in both Prisma and Sanity, with **field-level ownership** determining sync direction:
+
+**Sync Architecture:**
+- **Direction**: One-way Prisma → Sanity (catalog fields only)
+- **Trigger**: Manual via `npm run sync` (runs `scripts/sync-to-sanity.ts`)
+- **Mechanism**: Upsert by `slug` — Prisma-owned fields overwrite; Sanity-owned fields are preserved
+- **Idempotent**: Re-running sync is safe and produces the same result
+
+**Field Ownership Rules:**
+
+**Prisma-Owned (synced to Sanity):**
+- Catalog: `name`, `category`, `price`, `unit`, `stockStatus`, `seasonalMessage`, `active`, `sortOrder`, `featured`
+- Market pricing: `marketPriceLowPerTon`, `marketPriceHighPerTon`, etc.
+- Physical properties: `sizeDescription`, `colorDescription`, `densityLow`, `densityHigh`
+- Structured data: `bestFor`, `notFor`, `commonUses`, `pros`, `cons`, `altNames`, `features` (services)
+- Identifiers: `slug` (canonical URL identifier), `id` (maps to `_id` in Sanity)
+
+**Sanity-Owned (never overwritten by sync):**
+- Marketing: `description` (rich text), `shortDescription`
+- Media: `image`, `gallery`, `imageAlt`
+- SEO: `metaTitle`, `metaDescription`, `seo.ogImage`
+- Relations: `relatedProducts`, `icon` (services)
+
+**Workflow:**
+1. **Catalog/pricing changes**: Edit in Prisma Studio (`npm run db:studio`) or seed scripts, then run `npm run sync`
+2. **Marketing/SEO changes**: Edit directly in Sanity Studio (`/studio`)
+3. **Schema changes**: Update both `prisma/schema.prisma` AND `sanity/schemaTypes/`, then decide field ownership and sync behavior
+
+**Reconciliation**: `npm run sync` reports mismatches (records in one store but not the other) but does NOT auto-delete. Orphaned Sanity records require manual cleanup to preserve marketing work.
+
+**Detailed Reference**: See `docs/sync-field-ownership.md` for complete field-by-field ownership map, edge cases, and verification checklist.
 
 ### ISR caching for Sanity content
 
