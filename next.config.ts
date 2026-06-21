@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  optimizeFonts: false, // Disable Google Fonts optimization to avoid network errors during build
   webpack: (config, { isServer }) => {
     if (process.env.ANALYZE === "true") {
       try {
