@@ -15,6 +15,13 @@ enum StockStatus {
   SEASONAL
 }
 
+enum PaymentMethod {
+  CARD
+  NET_TERMS
+  PURCHASE_ORDER
+  SAVED_PAYMENT_METHOD
+}
+
 model Lead {
   id        String   @id @default(cuid())
   name      String
@@ -110,8 +117,8 @@ model QuoteRequest {
 }
 
 model Order {
-  id              String  @id @default(cuid())
-  orderNumber     String  @unique
+  id              String    @id @default(cuid())
+  orderNumber     String    @unique
   userId          String?
   name            String
   email           String
@@ -147,6 +154,12 @@ model Order {
   termsAcceptedAt DateTime?
   completedAt     DateTime?
 
+  // Payment method fields for contractor flexibility
+  paymentMethod        PaymentMethod? @default(CARD)
+  poNumber             String?
+  dueDate              DateTime?
+  savedPaymentMethodId String?
+
   // Project site capture from the on-site map estimator. These fields exist
   // so every residential order without a survey carries the customer's own
   // satellite outline, dimensions, and material estimate — visible to the
@@ -173,6 +186,7 @@ model Order {
 
   statusHistory    OrderStatusHistory[]
   smsNotifications SmsNotification[]
+  invoices         Invoice[]
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
 
@@ -196,6 +210,23 @@ model SavedOrder {
   @@index([userId])
 }
 
+model SavedPaymentMethod {
+  id                    String   @id @default(cuid())
+  userId                String
+  stripePaymentMethodId String   @unique
+  stripeCustomerId      String?
+  brand                 String?
+  last4                 String?
+  expiryMonth           Int?
+  expiryYear            Int?
+  isDefault             Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([userId])
+  @@index([stripePaymentMethodId])
+}
+
 model OrderStatusHistory {
   id        String   @id @default(cuid())
   orderId   String
@@ -208,19 +239,42 @@ model OrderStatusHistory {
   @@index([orderId])
 }
 
+model Invoice {
+  id            String    @id @default(cuid())
+  invoiceNumber String    @unique
+  orderId       String
+  order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount        Float
+  dueDate       DateTime
+  status        String    @default("pending")
+  paidAt        DateTime?
+  notes         String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([orderId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([invoiceNumber])
+}
+
 model UserProfile {
-  id                 String    @id @default(cuid())
-  userId             String    @unique
-  name               String?
-  email              String?
-  phone              String?
-  company            String?
-  isContractor       Boolean   @default(false)
-  contractorDiscount Float?
-  smsOptIn           Boolean   @default(false)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  addresses          Address[]
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  name                String?
+  email               String?
+  phone               String?
+  company             String?
+  isContractor        Boolean   @default(false)
+  contractorDiscount  Float?
+  netTermsApproved    Boolean   @default(false)
+  netTermsCreditLimit Float?
+  netTermsLength      Int?
+  netTermsBalance     Float     @default(0)
+  smsOptIn            Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  addresses           Address[]
 
   @@index([userId])
 }
