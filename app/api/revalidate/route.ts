@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { z } from "zod";
 
 const revalidateSchema = z.object({
@@ -14,7 +14,36 @@ const revalidateSchema = z.object({
     "page",
     "post",
   ]),
+  slug: z.string().optional(),
 });
+
+/**
+ * Maps content type and slug to the corresponding Next.js route path.
+ * Returns undefined for content types that don't have individual pages.
+ */
+function getPathForContent(
+  tag: string,
+  slug: string
+): string | undefined {
+  switch (tag) {
+    case "product":
+      return `/catalog/${slug}`;
+    case "service":
+      return `/services/${slug}`;
+    case "page":
+      return `/${slug}`;
+    case "post":
+      return `/blog/${slug}`;
+    // Content types without individual pages (list-only)
+    case "testimonials":
+    case "faq":
+    case "gallery":
+    case "site-settings":
+      return undefined;
+    default:
+      return undefined;
+  }
+}
 
 /**
  * POST /api/revalidate
@@ -22,17 +51,25 @@ const revalidateSchema = z.object({
  *
  * Integrates with Sanity CMS to trigger cache invalidation when content is updated.
  * Validates a secret token (REVALIDATE_SECRET) to prevent unauthorized revalidation.
- * Revalidates cache tags based on content type using Next.js revalidateTag.
+ * Supports both tag-based revalidation (for lists) and path-based revalidation (for individual pages).
  *
  * Request body:
- * - secret: string (matches REVALIDATE_SECRET env var)
+ * - secret: string (matches SANITY_REVALIDATE_SECRET env var)
  * - tag: "product" | "service" | "testimonials" | "faq" | "gallery" | "site-settings" | "page" | "post"
+ * - slug?: string (optional, triggers path-based revalidation for individual content pages)
+ *
+ * When slug is provided:
+ * - Calls revalidatePath() for the specific content page (/catalog/[slug], /blog/[slug], etc.)
+ * - Also calls revalidateTag() to invalidate list pages
+ *
+ * When slug is omitted:
+ * - Only calls revalidateTag() to invalidate list pages
  *
  * Returns:
- * - 200: { success: true, revalidated: true, type: string, now: number }
+ * - 200: { success: true, revalidated: true, tag: string, path?: string, now: number }
  * - 400: Invalid request data or malformed JSON
  * - 401: Invalid secret token
- * - 500: Server misconfiguration (REVALIDATE_SECRET not set)
+ * - 500: Server misconfiguration (SANITY_REVALIDATE_SECRET not set)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -62,13 +99,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Revalidate the cache tag for the specified content type
+    // Always revalidate the cache tag for list pages
     revalidateTag(data.tag);
+
+    // If slug is provided, also revalidate the specific content page
+    let revalidatedPath: string | undefined;
+    if (data.slug) {
+      const path = getPathForContent(data.tag, data.slug);
+      if (path) {
+        revalidatePath(path);
+        revalidatedPath = path;
+      }
+    }
 
     return NextResponse.json({
       success: true,
       revalidated: true,
       tag: data.tag,
+      ...(revalidatedPath && { path: revalidatedPath }),
       now: Date.now(),
     });
   } catch (error) {
