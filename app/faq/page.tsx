@@ -9,9 +9,7 @@ import { generateFAQMetadata } from "@/lib/seo/metadata";
 import { sanityClient } from "@/lib/sanity/client";
 import { faqQuery, siteSettingsQuery } from "@/lib/sanity/queries";
 
-// TEMPORARY: Force dynamic rendering to allow build to complete for bundle verification
-export const dynamic = 'force-dynamic';
-// export const revalidate = 3600; // Revalidate every hour (ISR)
+export const revalidate = 3600; // Revalidate every hour (ISR)
 
 export const metadata = generateFAQMetadata();
 

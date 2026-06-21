@@ -68,8 +68,7 @@ export default async function ChatDetailPage({ params }: ChatDetailPageProps) {
         messages: {
           orderBy: { createdAt: "asc" },
         },
-        // TEMPORARY: Commented out for bundle verification build (Prisma client issue in worktree)
-        // lead: true,
+        lead: true,
       },
     });
   } catch {
@@ -251,7 +250,6 @@ export default async function ChatDetailPage({ params }: ChatDetailPageProps) {
           </Card>
 
           {/* Linked Lead */}
-          {/* TEMPORARY: Commented out for bundle verification build (Prisma client issue in worktree)
           {conversation.lead && (
             <Card className="border-0 shadow-lg">
               <CardHeader>
@@ -302,7 +300,6 @@ export default async function ChatDetailPage({ params }: ChatDetailPageProps) {
               </CardContent>
             </Card>
           )}
-          */}
 
           {/* Reply Section */}
           <Card className="border-0 shadow-lg">

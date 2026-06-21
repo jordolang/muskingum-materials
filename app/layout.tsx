@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-// TEMPORARY: Google Fonts disabled for bundle verification build
-// import { Inter, Outfit, Anton, JetBrains_Mono } from "next/font/google";
+import { Inter, Outfit, Anton, JetBrains_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
@@ -12,10 +11,6 @@ import { CookieConsent } from "@/components/analytics/cookie-consent";
 import { CinematicIntroOverlay } from "@/components/home/cinematic-hero/cinematic-intro-overlay";
 import "./globals.css";
 
-// TEMPORARY: Force all routes to dynamic rendering for bundle verification build
-// This prevents build-time data fetching which hangs without network access
-export const dynamic = 'force-dynamic';
-
 // Preview Vercel builds don't have NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY set,
 // and ClerkProvider throws "Missing publishableKey" during _not-found
 // prerender. Match the middleware's existing pattern of only engaging
@@ -26,11 +21,30 @@ const hasClerk = Boolean(
     clerkPublishableKey !== "your_clerk_publishable_key",
 );
 
-// TEMPORARY: Using CSS variables with fallback fonts for bundle verification
-const fontSans = { variable: "--font-sans" };
-const fontHeading = { variable: "--font-heading" };
-const fontDisplay = { variable: "--font-anton" };
-const fontTech = { variable: "--font-jetbrains" };
+const fontSans = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
+
+const fontHeading = Outfit({
+  subsets: ["latin"],
+  variable: "--font-heading",
+});
+
+// Cinematic hero typefaces: Anton (industrial display) + JetBrains Mono
+// (technical gauge labels). Used only by the homepage hero.
+const fontDisplay = Anton({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-anton",
+  display: "swap",
+});
+
+const fontTech = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {

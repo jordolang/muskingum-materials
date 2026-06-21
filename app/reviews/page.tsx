@@ -7,9 +7,7 @@ import { urlFor } from "@/lib/sanity/image";
 import { REVIEWS } from "@/data/reviews";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 
-// TEMPORARY: Force dynamic rendering to allow build to complete for bundle verification
-export const dynamic = 'force-dynamic';
-// export const revalidate = 3600; // Revalidate every hour (ISR)
+export const revalidate = 3600; // Revalidate every hour (ISR)
 
 export const metadata: Metadata = {
   title: "Customer Reviews",

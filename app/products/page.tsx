@@ -10,11 +10,9 @@ import { generateProductSchema, toJsonLd } from "@/lib/seo/structured-data";
 import { generateProductsMetadata } from "@/lib/seo/metadata";
 import { AddToCartButton } from "@/components/order/add-to-cart-button";
 
-// TEMPORARY: Force dynamic rendering to skip static generation during bundle verification
-export const dynamic = 'force-dynamic';
 // Revalidate hourly so price/SKU edits in the database surface on the
 // statically generated page within an hour without a redeploy.
-// export const revalidate = 3600;
+export const revalidate = 3600;
 
 export const metadata: Metadata = generateProductsMetadata();
 

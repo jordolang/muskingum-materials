@@ -8,9 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { getCostGuideBySlug, getCostGuides } from "@/lib/products";
 import { BUSINESS_INFO } from "@/data/business";
 
-// TEMPORARY: Force dynamic rendering to skip static generation during bundle verification
-export const dynamic = 'force-dynamic';
-
 interface CostGuidePageProps {
   params: Promise<{ slug: string }>;
 }

@@ -13,11 +13,9 @@ export const metadata: Metadata = {
     "Order sand, gravel, soil, and stone online from Muskingum Materials. Estimate your project, choose products, and pay securely with Stripe.",
 };
 
-// TEMPORARY: Force dynamic rendering to allow build to complete for bundle verification
-export const dynamic = 'force-dynamic';
 // Revalidate every 5 minutes so price edits in Postgres flow to the order
 // page without a redeploy.
-// export const revalidate = 300;
+export const revalidate = 300;
 
 // Static fallback derived from the canonical price list in data/business.ts.
 // If the database is unreachable at build/runtime (e.g. a missing
