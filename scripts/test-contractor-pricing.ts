@@ -3,6 +3,8 @@
  * Run with: npx tsx scripts/test-contractor-pricing.ts
  */
 
+import { TAX_RATE, CREDIT_PROCESSING_FEE } from "@/lib/constants/business-rules";
+
 /**
  * Pricing tier configuration for volume discounts
  */
