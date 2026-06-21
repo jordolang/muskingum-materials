@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { POST } from '../escalate/route';
 import { prisma } from '@/lib/prisma';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { createLeadFromConversation } from '@/lib/chat-escalation';
+import { sendNotificationEmail } from '@/lib/email-service';
 
 // Mock dependencies
 vi.mock('@/lib/prisma', () => ({
@@ -21,10 +23,20 @@ vi.mock('@/lib/prisma', () => ({
 
 vi.mock('@/lib/rate-limit', () => ({
   checkRateLimit: vi.fn(),
+  getClientIdentifier: vi.fn(() => 'test-client'),
 }));
 
 vi.mock('@/lib/email-service', () => ({
-  sendEmail: vi.fn().mockResolvedValue({ success: true }),
+  sendNotificationEmail: vi.fn().mockResolvedValue({ success: true, messageId: 'msg-test' }),
+}));
+
+// The route delegates lead creation and acknowledgment wording to chat-escalation;
+// mock it so these tests stay focused on the route's orchestration logic.
+vi.mock('@/lib/chat-escalation', () => ({
+  createLeadFromConversation: vi.fn(),
+  getEscalationAcknowledgment: vi.fn(
+    () => "Thank you! I've passed your request to our team."
+  ),
 }));
 
 vi.mock('@/lib/logger', () => ({
@@ -34,6 +46,31 @@ vi.mock('@/lib/logger', () => ({
     warn: vi.fn(),
   },
 }));
+
+/**
+ * Builds a mock conversation matching the shape the route reads
+ * (`prisma.chatConversation.findUnique` with `include: { messages }`).
+ */
+function buildConversation(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'conv-123',
+    visitorId: 'visitor-123',
+    name: null,
+    email: null,
+    phone: null,
+    status: 'active',
+    metadata: null,
+    escalatedAt: null,
+    leadId: null,
+    lead: null,
+    priority: null,
+    escalationReason: null,
+    messages: [],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
 
 describe('POST /api/chat/escalate', () => {
   beforeEach(() => {
@@ -46,6 +83,17 @@ describe('POST /api/chat/escalate', () => {
       remaining: 4,
       reset: Date.now() + 60000,
     });
+
+    // Default: escalation succeeds with a normal-priority lead
+    vi.mocked(createLeadFromConversation).mockResolvedValue({
+      leadId: 'lead-123',
+      priority: 'normal',
+    });
+
+    vi.mocked(sendNotificationEmail).mockResolvedValue({
+      success: true,
+      messageId: 'msg-test',
+    });
   });
 
   afterEach(() => {
@@ -53,44 +101,13 @@ describe('POST /api/chat/escalate', () => {
   });
 
   it('creates lead and links to conversation', async () => {
-    // Mock conversation
-    const mockConversation = {
-      id: 'conv-123',
-      visitorId: 'visitor-123',
-      name: null,
-      email: null,
-      phone: null,
-      status: 'active',
-      metadata: null,
-      escalatedAt: null,
-      leadId: null,
-      lead: null,
-      priority: null,
-      escalationReason: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    vi.mocked(prisma.chatConversation.findUnique).mockResolvedValue(
+      buildConversation() as any
+    );
+    vi.mocked(prisma.chatConversation.update).mockResolvedValue(
+      buildConversation({ leadId: 'lead-123', escalatedAt: new Date() }) as any
+    );
 
-    const mockLead = {
-      id: 'lead-123',
-      name: 'Test User',
-      email: 'test@example.com',
-      phone: null,
-      source: 'chat',
-      status: 'new',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    vi.mocked(prisma.chatConversation.findUnique).mockResolvedValue(mockConversation as any);
-    vi.mocked(prisma.lead.create).mockResolvedValue(mockLead as any);
-    vi.mocked(prisma.chatConversation.update).mockResolvedValue({
-      ...mockConversation,
-      leadId: 'lead-123',
-      escalatedAt: new Date(),
-    } as any);
-
-    // Test escalation request
     const request = new Request('http://localhost:3000/api/chat/escalate', {
       method: 'POST',
       headers: {
@@ -111,8 +128,9 @@ describe('POST /api/chat/escalate', () => {
 
     expect(response.status).toBe(200);
     expect(data.success).toBe(true);
-    expect(data.leadId).toBeDefined();
+    expect(data.leadId).toBe('lead-123');
     expect(data.message).toBeDefined();
+    expect(createLeadFromConversation).toHaveBeenCalledWith('conv-123', 'user_requested');
   });
 
   it('enforces rate limiting', async () => {
@@ -178,41 +196,9 @@ describe('POST /api/chat/escalate', () => {
   });
 
   it('handles missing contact info gracefully', async () => {
-    const mockConversation = {
-      id: 'conv-123',
-      visitorId: 'visitor-123',
-      name: null,
-      email: null,
-      phone: null,
-      status: 'active',
-      metadata: null,
-      escalatedAt: null,
-      leadId: null,
-      lead: null,
-      priority: null,
-      escalationReason: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    const mockLead = {
-      id: 'lead-123',
-      name: 'Anonymous',
-      email: null,
-      phone: null,
-      source: 'chat',
-      status: 'new',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    vi.mocked(prisma.chatConversation.findUnique).mockResolvedValue(mockConversation as any);
-    vi.mocked(prisma.lead.create).mockResolvedValue(mockLead as any);
-    vi.mocked(prisma.chatConversation.update).mockResolvedValue({
-      ...mockConversation,
-      leadId: 'lead-123',
-      escalatedAt: new Date(),
-    } as any);
+    vi.mocked(prisma.chatConversation.findUnique).mockResolvedValue(
+      buildConversation() as any
+    );
 
     const request = new Request('http://localhost:3000/api/chat/escalate', {
       method: 'POST',
@@ -231,6 +217,8 @@ describe('POST /api/chat/escalate', () => {
 
     expect(response.status).toBe(200);
     expect(data.success).toBe(true);
+    // No contact info means the conversation should not be updated with contact details.
+    expect(prisma.chatConversation.update).not.toHaveBeenCalled();
   });
 
   it('validates reason enum', async () => {
@@ -251,25 +239,23 @@ describe('POST /api/chat/escalate', () => {
   });
 
   it('prevents duplicate escalation', async () => {
-    // Mock conversation that is already escalated
-    const mockConversation = {
-      id: 'conv-123',
-      visitorId: 'visitor-123',
-      name: 'Test User',
-      email: 'test@example.com',
-      phone: null,
-      status: 'active',
-      metadata: null,
-      escalatedAt: new Date(),
+    // Conversation already escalated; createLeadFromConversation returns the
+    // existing lead without creating a new one.
+    vi.mocked(prisma.chatConversation.findUnique).mockResolvedValue(
+      buildConversation({
+        name: 'Test User',
+        email: 'test@example.com',
+        escalatedAt: new Date(),
+        leadId: 'existing-lead-id',
+        lead: { id: 'existing-lead-id', name: 'Test User' },
+        priority: 'high',
+        escalationReason: 'user_requested',
+      }) as any
+    );
+    vi.mocked(createLeadFromConversation).mockResolvedValue({
       leadId: 'existing-lead-id',
-      lead: { id: 'existing-lead-id', name: 'Test User' },
       priority: 'high',
-      escalationReason: 'user_requested',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    vi.mocked(prisma.chatConversation.findUnique).mockResolvedValue(mockConversation as any);
+    });
 
     const request = new Request('http://localhost:3000/api/chat/escalate', {
       method: 'POST',
@@ -285,50 +271,20 @@ describe('POST /api/chat/escalate', () => {
     const response = await POST(request);
     const data = await response.json();
 
-    // Should return success but not create a new lead
+    // Should return success and reuse the existing lead.
     expect(response.status).toBe(200);
     expect(data.leadId).toBe('existing-lead-id');
     expect(vi.mocked(prisma.lead.create)).not.toHaveBeenCalled();
   });
 
   it('sets high priority for high_intent reason', async () => {
-    const mockConversation = {
-      id: 'conv-123',
-      visitorId: 'visitor-123',
-      name: null,
-      email: null,
-      phone: null,
-      status: 'active',
-      metadata: null,
-      escalatedAt: null,
-      leadId: null,
-      lead: null,
-      priority: null,
-      escalationReason: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    const mockLead = {
-      id: 'lead-123',
-      name: 'Anonymous',
-      email: null,
-      phone: null,
-      source: 'chat',
-      status: 'new',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    vi.mocked(prisma.chatConversation.findUnique).mockResolvedValue(mockConversation as any);
-    vi.mocked(prisma.lead.create).mockResolvedValue(mockLead as any);
-    vi.mocked(prisma.chatConversation.update).mockResolvedValue({
-      ...mockConversation,
+    vi.mocked(prisma.chatConversation.findUnique).mockResolvedValue(
+      buildConversation() as any
+    );
+    vi.mocked(createLeadFromConversation).mockResolvedValue({
       leadId: 'lead-123',
-      escalatedAt: new Date(),
       priority: 'high',
-      escalationReason: 'high_intent',
-    } as any);
+    });
 
     const request = new Request('http://localhost:3000/api/chat/escalate', {
       method: 'POST',
@@ -345,11 +301,11 @@ describe('POST /api/chat/escalate', () => {
 
     expect(response.status).toBe(200);
 
-    // Verify update was called with high priority
-    const updateCall = vi.mocked(prisma.chatConversation.update).mock.calls[0];
-    expect(updateCall[0].data).toMatchObject({
-      priority: 'high',
-      escalationReason: 'high_intent',
-    });
+    // The route forwards the high_intent reason to lead creation, which derives
+    // priority, then flags the staff notification as high priority.
+    expect(createLeadFromConversation).toHaveBeenCalledWith('conv-123', 'high_intent');
+    expect(sendNotificationEmail).toHaveBeenCalledTimes(1);
+    const [subject] = vi.mocked(sendNotificationEmail).mock.calls[0];
+    expect(subject).toContain('HIGH PRIORITY');
   });
 });
