@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Bookmark, Pencil, Trash2, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/lib/use-toast";
 
 interface SavedOrderCardProps {
   savedOrder: {
@@ -21,6 +22,7 @@ interface SavedOrderCardProps {
 export function SavedOrderCard({ savedOrder, onUpdate }: SavedOrderCardProps) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
+  const { toast } = useToast();
 
   function handleUseTemplate(e: React.MouseEvent) {
     e.preventDefault();
@@ -77,7 +79,10 @@ export function SavedOrderCard({ savedOrder, onUpdate }: SavedOrderCardProps) {
         router.refresh();
       }
     } catch (error) {
-      alert("Failed to delete saved order. Please try again.");
+      toast({
+        title: "Failed to delete saved order",
+        description: "Please try again.",
+      });
     } finally {
       setIsDeleting(false);
     }
