@@ -9,17 +9,32 @@ import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { VISITOR_ID_REGEX } from "@/lib/schemas";
 
 const chatSchema = z.object({
+  // Security: min(1) prevents empty message submissions that waste API quota;
+  // max(5000) prevents token exhaustion attacks and DoS via excessively large prompts
   message: z.string().min(1).max(5000),
+  // Security: regex restricts to alphanumeric + safe delimiters to prevent:
+  // - Path traversal attacks (../, ../../)
+  // - SQL injection attempts (quotes, semicolons)
+  // - NoSQL injection (special MongoDB operators)
+  // - Header injection (newlines, control characters)
+  // max(100) prevents buffer overflow and excessive storage consumption
   visitorId: z
     .string()
     .min(1)
     .max(100)
     .regex(VISITOR_ID_REGEX, "visitorId must be alphanumeric (letters, numbers, hyphens, underscores only)")
     .optional(),
+  // Security: max(50) messages prevents DoS attacks via massive history payloads
+  // that would exhaust API token limits, memory, or DB storage
   history: z
     .array(
       z.object({
+        // Security: enum restriction prevents prompt injection attacks where
+        // malicious clients inject "system" role messages to override instructions
+        // or manipulate the AI's behavior context
         role: z.enum(["user", "assistant"]),
+        // Security: max(5000) per history item prevents token exhaustion when
+        // combined with history array limit (50 * 5000 = 250k char max history payload)
         content: z.string().max(5000),
       })
     )
