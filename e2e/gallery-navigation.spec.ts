@@ -7,7 +7,7 @@ test.describe('Gallery Navigation', () => {
 
   test('should display gallery preview section with thumbnails', async ({ page }) => {
     // Verify gallery section heading
-    await expect(page.getByRole('heading', { name: 'Gallery Preview' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'See Our Operation' })).toBeVisible();
 
     // Verify gallery preview description
     await expect(page.getByText('Take a closer look at our facility, equipment, and the quality materials we produce.')).toBeVisible();
@@ -31,7 +31,7 @@ test.describe('Gallery Navigation', () => {
     await expect(page).toHaveURL('/gallery');
 
     // Verify gallery page heading is visible
-    await expect(page.getByRole('heading', { name: 'Photo Gallery' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Gallery' })).toBeVisible();
   });
 
   test('should navigate to gallery page when clicking second thumbnail', async ({ page }) => {
@@ -41,7 +41,7 @@ test.describe('Gallery Navigation', () => {
 
     // Verify navigation to gallery page
     await expect(page).toHaveURL('/gallery');
-    await expect(page.getByRole('heading', { name: 'Photo Gallery' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Gallery' })).toBeVisible();
   });
 
   test('should navigate to gallery page when clicking third thumbnail', async ({ page }) => {
@@ -51,7 +51,7 @@ test.describe('Gallery Navigation', () => {
 
     // Verify navigation to gallery page
     await expect(page).toHaveURL('/gallery');
-    await expect(page.getByRole('heading', { name: 'Photo Gallery' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Gallery' })).toBeVisible();
   });
 
   test('should navigate to gallery page when clicking fourth thumbnail', async ({ page }) => {
@@ -61,7 +61,7 @@ test.describe('Gallery Navigation', () => {
 
     // Verify navigation to gallery page
     await expect(page).toHaveURL('/gallery');
-    await expect(page.getByRole('heading', { name: 'Photo Gallery' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Gallery' })).toBeVisible();
   });
 
   test('should navigate to gallery page when clicking View Full Gallery button', async ({ page }) => {
@@ -71,7 +71,7 @@ test.describe('Gallery Navigation', () => {
 
     // Verify navigation to gallery page
     await expect(page).toHaveURL('/gallery');
-    await expect(page.getByRole('heading', { name: 'Photo Gallery' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Gallery' })).toBeVisible();
   });
 
   test('should display cursor pointer on thumbnail hover', async ({ page }) => {
@@ -106,7 +106,7 @@ test.describe('Gallery Navigation', () => {
     await page.setViewportSize({ width: 375, height: 667 });
 
     // Verify gallery section is still visible on mobile
-    await expect(page.getByRole('heading', { name: 'Gallery Preview' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'See Our Operation' })).toBeVisible();
 
     // Verify thumbnails are visible (should be 2 columns on mobile)
     await expect(page.getByRole('link').filter({ hasText: 'Heavy Equipment' })).toBeVisible();
@@ -168,6 +168,6 @@ test.describe('Gallery Navigation', () => {
     await expect(page).toHaveURL('/');
 
     // Verify gallery preview section is still visible
-    await expect(page.getByRole('heading', { name: 'Gallery Preview' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'See Our Operation' })).toBeVisible();
   });
 });
