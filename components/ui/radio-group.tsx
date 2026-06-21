@@ -26,7 +26,7 @@ const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
               checked: child.props.value === value,
               // @ts-expect-error - passing props to children
               onChange: () => onValueChange?.(child.props.value),
-            } as any);
+            } as React.InputHTMLAttributes<HTMLInputElement>);
           }
           return child;
         })}

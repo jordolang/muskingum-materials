@@ -12,6 +12,16 @@ import { addBreadcrumb, startTransaction } from "@/lib/monitoring";
 import { buildSatelliteMapUrl } from "@/lib/static-map";
 import { ORDER_NUMBER_PREFIX } from "@/lib/constants/business-rules";
 
+type CheckoutPayload = z.infer<typeof checkoutSchema>;
+type CheckoutItem = CheckoutPayload["items"][number];
+type CheckoutSite = CheckoutPayload["projectSite"] | null;
+type OrderEmailPrices = {
+  subtotal: number;
+  tax: number;
+  processingFee: number;
+  total: number;
+};
+
 /**
  * Generates a unique order number for a new order.
  *
@@ -762,14 +772,14 @@ Payment: Pending — Stripe not configured, customer will pay on pickup/delivery
  * Helper function to send email notification for purchase order payments
  */
 async function sendPurchaseOrderEmail(
-  data: any,
-  order: any,
-  validatedPrices: any,
-  site: any,
+  data: CheckoutPayload,
+  order: { orderNumber: string },
+  validatedPrices: OrderEmailPrices,
+  site: CheckoutSite,
   projectMapImageUrl: string | null
 ) {
   const itemsList = data.items
-    .map((i: any) => `  - ${i.name}: ${i.quantity} ${i.unit}(s) @ $${i.price.toFixed(2)} = $${(i.price * i.quantity).toFixed(2)}`)
+    .map((i: CheckoutItem) => `  - ${i.name}: ${i.quantity} ${i.unit}(s) @ $${i.price.toFixed(2)} = $${(i.price * i.quantity).toFixed(2)}`)
     .join("\n");
 
   const siteSummaryLines: string[] = [];
@@ -876,15 +886,15 @@ Payment: Purchase Order ${data.purchaseOrderNumber}
  * Helper function to send email notification for net terms payments
  */
 async function sendNetTermsEmail(
-  data: any,
-  order: any,
-  invoice: any,
-  validatedPrices: any,
-  site: any,
+  data: CheckoutPayload,
+  order: { orderNumber: string },
+  invoice: { invoiceNumber: string; dueDate: Date },
+  validatedPrices: OrderEmailPrices,
+  site: CheckoutSite,
   projectMapImageUrl: string | null
 ) {
   const itemsList = data.items
-    .map((i: any) => `  - ${i.name}: ${i.quantity} ${i.unit}(s) @ $${i.price.toFixed(2)} = $${(i.price * i.quantity).toFixed(2)}`)
+    .map((i: CheckoutItem) => `  - ${i.name}: ${i.quantity} ${i.unit}(s) @ $${i.price.toFixed(2)} = $${(i.price * i.quantity).toFixed(2)}`)
     .join("\n");
 
   const siteSummaryLines: string[] = [];
