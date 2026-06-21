@@ -3,8 +3,9 @@ import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BUSINESS_INFO } from "@/data/business";
+import { BUSINESS_INFO, PRODUCTS } from "@/data/business";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 import { generateProductSchema, toJsonLd } from "@/lib/seo/structured-data";
 import { generateProductsMetadata } from "@/lib/seo/metadata";
 import { AddToCartButton } from "@/components/order/add-to-cart-button";
@@ -24,31 +25,61 @@ interface Product {
   category: string;
 }
 
-export default async function ProductsPage() {
-  const productRows = await prisma.product.findMany({
-    where: { active: true },
-    orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
-    select: {
-      id: true,
-      name: true,
-      shortDescription: true,
-      description: true,
-      price: true,
-      unit: true,
-      category: true,
-    },
-  });
-
-  type ProductRow = typeof productRows[number];
-
-  const products: Product[] = productRows.map((row: ProductRow) => ({
-    _id: row.id,
-    name: row.name,
-    description: row.shortDescription ?? row.description,
-    pricePerTon: row.price ?? 0,
-    unit: row.unit,
-    category: row.category,
+// Static fallback from the canonical price list so the catalog still renders
+// if the database is unreachable (missing DATABASE_URL in a preview deploy,
+// transient Neon outage, etc.) instead of crashing the whole page. Mirrors the
+// graceful-degradation pattern used on the order page.
+function getFallbackProducts(): Product[] {
+  return PRODUCTS.map((product) => ({
+    // Synthetic key, prefixed to stay clearly distinct from DB primary keys.
+    _id: `static-${product.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`,
+    name: product.name,
+    description: product.description,
+    pricePerTon: product.price ?? 0,
+    unit: product.unit,
+    category: product.category,
   }));
+}
+
+async function getCatalogProducts(): Promise<Product[]> {
+  try {
+    const productRows = await prisma.product.findMany({
+      where: { active: true },
+      orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        shortDescription: true,
+        description: true,
+        price: true,
+        unit: true,
+        category: true,
+      },
+    });
+
+    type ProductRow = (typeof productRows)[number];
+
+    const products: Product[] = productRows.map((row: ProductRow) => ({
+      _id: row.id,
+      name: row.name,
+      description: row.shortDescription ?? row.description,
+      pricePerTon: row.price ?? 0,
+      unit: row.unit,
+      category: row.category,
+    }));
+
+    return products.length > 0 ? products : getFallbackProducts();
+  } catch (error) {
+    logger.error(
+      "Products page: failed to load products from database, using static fallback",
+      error,
+    );
+    return getFallbackProducts();
+  }
+}
+
+export default async function ProductsPage() {
+  const products = await getCatalogProducts();
 
   const phone = BUSINESS_INFO.phone;
 

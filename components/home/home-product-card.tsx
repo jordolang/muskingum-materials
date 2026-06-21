@@ -18,7 +18,6 @@ interface HomeProductCardProps {
 }
 
 export function HomeProductCard({
-  id,
   name,
   description,
   pricePerTon,
@@ -33,9 +32,23 @@ export function HomeProductCard({
   const [imgSrc, setImgSrc] = useState(imageUrl || FALLBACK_IMAGE);
 
   return (
-    <Card className="group hover-lift flex h-full flex-col overflow-hidden rounded-3xl border border-stone-200/70 bg-white shadow-float transition-shadow duration-300 hover:shadow-glow">
-      <Link href={detailHref} aria-label={`View ${name}`} className="block">
-        <div className="relative m-2 h-48 overflow-hidden rounded-[1.35rem]">
+    <Card className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-stone-300/70 bg-gradient-to-br from-white via-white to-amber-50/70 shadow-float transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-amber-300/70 hover:shadow-glow motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+      {/* Warm radial glow that blooms in on hover */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        style={{
+          background:
+            "radial-gradient(110% 70% at 50% -10%, rgba(245,158,11,0.16), transparent 60%)",
+        }}
+      />
+
+      <Link
+        href={detailHref}
+        aria-label={`View ${name}`}
+        className="relative z-10 block"
+      >
+        <div className="relative m-2 h-48 overflow-hidden rounded-[1.35rem] ring-1 ring-stone-900/5">
           <Image
             src={imgSrc}
             alt={imageAlt || name}
@@ -43,8 +56,13 @@ export function HomeProductCard({
             onError={() => setImgSrc(FALLBACK_IMAGE)}
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-110"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-          <div className="absolute right-3 top-3 rounded-full bg-amber-600/95 px-3.5 py-1.5 text-white shadow-lg shadow-amber-900/20 backdrop-blur">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+          {/* Light sheen sweeping across on hover */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full motion-reduce:hidden"
+          />
+          <div className="absolute right-3 top-3 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 px-3.5 py-1.5 text-white shadow-lg shadow-amber-900/25 ring-1 ring-white/25 backdrop-blur transition-transform duration-300 group-hover:scale-105">
             {orderable ? (
               <span className="flex items-baseline gap-0.5">
                 <span className="text-base font-bold">${pricePerTon!.toFixed(2)}</span>
@@ -56,7 +74,7 @@ export function HomeProductCard({
           </div>
         </div>
       </Link>
-      <CardContent className="flex flex-1 flex-col px-5 pb-5 pt-3">
+      <CardContent className="relative z-10 flex flex-1 flex-col px-5 pb-5 pt-3">
         <Link href={detailHref}>
           <h3 className="mb-1.5 text-lg font-bold transition-colors group-hover:text-primary">
             {name}
@@ -70,7 +88,7 @@ export function HomeProductCard({
               price={pricePerTon!}
               unit={unit}
               size="sm"
-              className="w-full"
+              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md shadow-amber-900/20 transition-all duration-200 hover:from-amber-600 hover:to-amber-700 hover:shadow-lg hover:shadow-amber-900/30 hover:scale-[1.02] active:scale-95 motion-reduce:transition-none motion-reduce:hover:scale-100"
             />
           </div>
         )}
