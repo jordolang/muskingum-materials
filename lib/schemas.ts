@@ -46,6 +46,27 @@ const checkoutFormBaseSchema = z.object({
       message: "You must accept the Terms of Service to proceed",
     }),
   }),
+  // Delivery access pre-check and drop-location capture (collected on the
+  // client checkout form). Kept in the base schema so both the client form
+  // schema and the API checkout schema validate these fields.
+  deliveryAccessChecklist: z
+    .object({
+      drivewayWidth: z.enum(["10ft_or_more", "less_than_10ft", "unknown"]).optional(),
+      overheadClearance: z.enum(["14ft_or_more", "less_than_14ft", "unknown"]).optional(),
+      turningRoom: z.enum(["adequate", "tight", "unknown"]).optional(),
+      surface: z.enum(["paved", "gravel", "dirt", "grass", "other"]).optional(),
+      gateCode: z.string().optional(),
+      accessInstructions: z.string().optional(),
+    })
+    .optional(),
+  dropLocation: z
+    .object({
+      notes: z.string().optional(),
+      photoUrl: z.string().optional(),
+      lat: z.number().optional(),
+      lng: z.number().optional(),
+    })
+    .optional(),
 });
 
 // Checkout form schema (client-side) with payment method validation

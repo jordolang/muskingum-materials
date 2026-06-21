@@ -79,10 +79,10 @@ export async function POST(request: NextRequest) {
         // Override with Stripe data if not already provided
         paymentMethodData = {
           ...data,
-          brand: data.brand || pm.card?.brand || null,
-          last4: data.last4 || pm.card?.last4 || null,
-          expiryMonth: data.expiryMonth || pm.card?.exp_month || null,
-          expiryYear: data.expiryYear || pm.card?.exp_year || null,
+          brand: data.brand || pm.card?.brand || undefined,
+          last4: data.last4 || pm.card?.last4 || undefined,
+          expiryMonth: data.expiryMonth || pm.card?.exp_month || undefined,
+          expiryYear: data.expiryYear || pm.card?.exp_year || undefined,
         };
       } catch (stripeError) {
         logger.warn("Failed to retrieve payment method details from Stripe", {

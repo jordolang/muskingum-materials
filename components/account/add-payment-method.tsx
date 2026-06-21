@@ -238,7 +238,7 @@ export default function AddPaymentMethod({ onSuccess, onCancel }: AddPaymentMeth
             <Checkbox
               id="set-default"
               checked={isDefault}
-              onCheckedChange={(checked) => setIsDefault(checked === true)}
+              onChange={(e) => setIsDefault(e.target.checked)}
               className="mt-1"
             />
             <label

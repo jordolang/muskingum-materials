@@ -99,7 +99,7 @@ export default async function OrderPage() {
     } catch (error) {
       logger.warn(
         "Order page: failed to load user profile, payment options will be limited",
-        error,
+        { error },
       );
     }
   }
