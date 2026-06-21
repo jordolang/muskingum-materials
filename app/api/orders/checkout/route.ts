@@ -6,7 +6,7 @@ import { checkoutSchema } from "@/lib/schemas";
 import { validateCheckoutPrices } from "@/lib/validate-checkout-prices";
 import { validateCreditLimit } from "@/lib/validate-credit-limit";
 import { generateInvoice } from "@/lib/generate-invoice";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, sendNotificationEmail } from "@/lib/email-service";
 import { logger } from "@/lib/logger";
 import { addBreadcrumb, startTransaction } from "@/lib/monitoring";
 import { buildSatelliteMapUrl } from "@/lib/static-map";
@@ -686,10 +686,9 @@ Processing Fee (4.5%): $${validatedPrices.processingFee.toFixed(2)}<br>
         ].filter(Boolean).join("\n")}`
       : "";
 
-    await sendEmail({
-      to: "sales@muskingummaterials.com",
-      subject: `New Online Order ${orderNumber} from ${data.name}`,
-      textBody: `
+    await sendNotificationEmail(
+      `New Online Order ${orderNumber} from ${data.name}`,
+      `
 New online order received!
 
 Order #: ${orderNumber}
@@ -710,9 +709,19 @@ Total: $${validatedPrices.total.toFixed(2)}
 
 Payment: Pending — Stripe not configured, customer will pay on pickup/delivery.
       `.trim(),
-      htmlBody,
-      replyTo: data.email,
-    });
+      {
+        replyTo: data.email,
+        htmlBody,
+        tag: "order-confirmation",
+        metadata: {
+          orderNumber,
+          customerName: data.name,
+          customerEmail: data.email,
+          fulfillment: data.fulfillment,
+          total: validatedPrices.total.toFixed(2),
+        },
+      }
+    );
 
     logger.info('Order notification email sent', {
       orderNumber,

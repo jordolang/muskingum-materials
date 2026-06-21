@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
-import { sendEmail } from "@/lib/email";
+import { sendEmail } from "@/lib/email-service";
 import { logger } from "@/lib/logger";
 import { BUSINESS_INFO } from "@/data/business";
 

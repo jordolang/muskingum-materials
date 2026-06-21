@@ -3,7 +3,8 @@ import { z } from "zod";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { orderStatusUpdateSchema } from "@/lib/schemas";
-import { sendOrderStatusEmail, type OrderEmailData, type OrderStatus } from "@/lib/email/order-notifications";
+import { sendOrderStatusEmail, type OrderEmailData, type OrderStatus } from "@/lib/email-service";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/account/orders/[orderNumber]
@@ -128,7 +129,7 @@ export async function PUT(
       await sendOrderStatusEmail(emailData);
     } catch (emailError) {
       // Log email error but don't fail the request - order was updated successfully
-      console.error(`Failed to send status update email for order ${orderNumber}:`, emailError);
+      logger.error(`Failed to send status update email for order ${orderNumber}`, emailError);
     }
 
     return NextResponse.json({ order: updatedOrder });
