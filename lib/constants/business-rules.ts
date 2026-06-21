@@ -173,3 +173,107 @@ export function isValidTruckCapacity(tons: number): boolean {
   // Commercial dump trucks typically range from 10 to 30 tons
   return tons >= 10 && tons <= 30;
 }
+
+/**
+ * ============================================================================
+ * CONSTANT USAGE DOCUMENTATION
+ * ============================================================================
+ *
+ * This section documents where each business rule constant is used throughout
+ * the codebase. Update this list when adding new usage locations.
+ *
+ * Last updated: 2024-01-15
+ */
+
+/**
+ * TAX_RATE Usage Locations
+ * -------------------------
+ * Value: 0.0725 (7.25%)
+ *
+ * Files:
+ * 1. data/business.ts
+ *    - Exported as part of BUSINESS_INFO config object
+ *    - Provides tax rate to AI chat system and other components
+ *
+ * 2. components/admin/phone-order-form.tsx
+ *    - Line 56: Calculates sales tax on order subtotals
+ *    - Formula: tax = subtotal * TAX_RATE
+ *
+ * 3. scripts/test-contractor-pricing.ts
+ *    - Used in contractor pricing test scenarios
+ */
+
+/**
+ * CREDIT_PROCESSING_FEE Usage Locations
+ * --------------------------------------
+ * Value: 0.045 (4.5%)
+ *
+ * Files:
+ * 1. data/business.ts
+ *    - Exported as part of BUSINESS_INFO config object
+ *    - Provides credit card fee information to AI chat and checkout flows
+ *
+ * 2. scripts/test-contractor-pricing.ts
+ *    - Used in contractor pricing test scenarios
+ */
+
+/**
+ * MATERIAL_DENSITY_AVG Usage Locations
+ * -------------------------------------
+ * Value: 1.4 (tons per cubic yard)
+ *
+ * Files:
+ * 1. lib/estimate-calculations.ts
+ *    - Lines 130, 133, 137: Core density calculation logic
+ *    - Used with DEFAULT_DENSITY_VARIANCE (±0.1) to calculate confidence ranges
+ *    - Falls back to this value when product-specific density data is unavailable
+ *    - Formula: tonnage = cubic_yards * density
+ *
+ * 2. lib/__tests__/estimate-calculations.test.ts
+ *    - Lines 78-151: Unit tests verifying density calculations
+ *    - Tests fallback behavior when density data is missing
+ *    - Validates confidence range calculations (±0.1 variance)
+ *
+ * 3. e2e/confidence-range.spec.ts
+ *    - Line 211: E2E tests for estimate confidence ranges
+ *    - Verifies that UI correctly displays density-based calculations
+ */
+
+/**
+ * TRUCK_CAPACITY_TONS Usage Locations
+ * ------------------------------------
+ * Value: 20 (tons per truckload)
+ *
+ * Files:
+ * 1. lib/estimate-calculations.ts
+ *    - Lines 148, 156, 163: Calculates number of truckloads needed
+ *    - Formula: truckloads = Math.ceil(tons / TRUCK_CAPACITY_TONS)
+ *    - Applied separately to low/expected/high tonnage estimates
+ *    - Ensures minimum of 1 truckload even for small orders
+ */
+
+/**
+ * CHAT_CONTACT_THRESHOLD Usage Locations
+ * ---------------------------------------
+ * Value: 4 (messages)
+ *
+ * Files:
+ * 1. components/chat/chat-widget.tsx
+ *    - Line 100: Triggers contact form prompt after user engagement
+ *    - Condition: messages.length >= CHAT_CONTACT_THRESHOLD
+ *    - Only prompts if contact not already submitted and escalation not offered
+ *    - Enables lead capture for engaged prospects
+ */
+
+/**
+ * ORDER_NUMBER_PREFIX Usage Locations
+ * ------------------------------------
+ * Value: 'MM' (Muskingum Materials)
+ *
+ * Files:
+ * 1. app/api/orders/checkout/route.ts
+ *    - Line 45: generateOrderNumber() function
+ *    - Creates order IDs in format: MM-YYMMDD-XXXXXXXX
+ *    - Combines prefix with date stamp and unique identifier
+ *    - Example: MM-240115-a7b3c9d2
+ */
