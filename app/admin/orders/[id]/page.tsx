@@ -84,12 +84,18 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
     unit: string;
   }>;
 
-  // Type assertion for confidence range fields (Prisma client types may be stale)
+  // Type assertion for newer fields (Prisma client types may be stale in worktree)
   const orderWithConfidence = order as typeof order & {
     projectEstimateTonsLow?: number | null;
     projectEstimateTonsHigh?: number | null;
     projectEstimateCubicYardsLow?: number | null;
     projectEstimateCubicYardsHigh?: number | null;
+    deliveryAccessChecklist?: Record<string, unknown> | null;
+    dropLocationNotes?: string | null;
+    dropLocationPhotoUrl?: string | null;
+    dropLocationLat?: number | null;
+    dropLocationLng?: number | null;
+    accessWarningFlags?: string[] | null;
   };
 
   const STATUS_OPTIONS = [
@@ -258,11 +264,11 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
       )}
 
       {/* Delivery Access & Drop Location (driver instructions) */}
-      {(order.deliveryAccessChecklist ||
-        order.dropLocationNotes ||
-        order.dropLocationPhotoUrl ||
-        (order.dropLocationLat != null && order.dropLocationLng != null) ||
-        order.accessWarningFlags) && (
+      {(orderWithConfidence.deliveryAccessChecklist ||
+        orderWithConfidence.dropLocationNotes ||
+        orderWithConfidence.dropLocationPhotoUrl ||
+        (orderWithConfidence.dropLocationLat != null && orderWithConfidence.dropLocationLng != null) ||
+        orderWithConfidence.accessWarningFlags) && (
         <Card className="border-0 shadow-lg">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -272,14 +278,14 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Access Checklist */}
-            {order.deliveryAccessChecklist && (
+            {orderWithConfidence.deliveryAccessChecklist && (
               <div className="space-y-2">
                 <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                   Access Checklist
                 </p>
                 <AccessChecklistDisplay
                   checklist={
-                    order.deliveryAccessChecklist as {
+                    orderWithConfidence.deliveryAccessChecklist as {
                       drivewayWidth?: string;
                       clearance?: string;
                       turningRoom?: string;
@@ -292,9 +298,9 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
             )}
 
             {/* Warning Flags */}
-            {order.accessWarningFlags &&
-              Array.isArray(order.accessWarningFlags) &&
-              (order.accessWarningFlags as string[]).length > 0 && (
+            {orderWithConfidence.accessWarningFlags &&
+              Array.isArray(orderWithConfidence.accessWarningFlags) &&
+              (orderWithConfidence.accessWarningFlags as string[]).length > 0 && (
                 <div className="rounded-lg bg-amber-50 border border-amber-200 p-3">
                   <div className="flex items-start gap-2">
                     <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
@@ -303,7 +309,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                         Access Warnings
                       </p>
                       <ul className="text-sm text-amber-800 list-disc list-inside space-y-0.5">
-                        {(order.accessWarningFlags as string[]).map(
+                        {(orderWithConfidence.accessWarningFlags as string[]).map(
                           (flag, idx) => (
                             <li key={idx}>
                               {flag
@@ -319,26 +325,26 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
               )}
 
             {/* Drop Location Notes */}
-            {order.dropLocationNotes && (
+            {orderWithConfidence.dropLocationNotes && (
               <div className="space-y-2">
                 <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                   Drop Location Notes
                 </p>
                 <p className="text-sm bg-muted/30 rounded-lg p-3 whitespace-pre-line">
-                  {order.dropLocationNotes}
+                  {orderWithConfidence.dropLocationNotes}
                 </p>
               </div>
             )}
 
             {/* Drop Location Photo */}
-            {order.dropLocationPhotoUrl && (
+            {orderWithConfidence.dropLocationPhotoUrl && (
               <div className="space-y-2">
                 <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                   Drop Location Photo
                 </p>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={order.dropLocationPhotoUrl}
+                  src={orderWithConfidence.dropLocationPhotoUrl}
                   alt="Drop location marked by customer"
                   className="w-full max-w-xl rounded-lg border"
                 />
@@ -346,20 +352,20 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
             )}
 
             {/* Drop Location Map */}
-            {order.dropLocationLat != null && order.dropLocationLng != null && (
+            {orderWithConfidence.dropLocationLat != null && orderWithConfidence.dropLocationLng != null && (
               <div className="space-y-2">
                 <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                   Drop Location Pin
                 </p>
                 <a
-                  href={`https://www.google.com/maps?q=${order.dropLocationLat},${order.dropLocationLng}`}
+                  href={`https://www.google.com/maps?q=${orderWithConfidence.dropLocationLat},${orderWithConfidence.dropLocationLng}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={`https://maps.googleapis.com/maps/api/staticmap?center=${order.dropLocationLat},${order.dropLocationLng}&zoom=18&size=600x300&maptype=satellite&markers=color:red%7C${order.dropLocationLat},${order.dropLocationLng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
+                    src={`https://maps.googleapis.com/maps/api/staticmap?center=${orderWithConfidence.dropLocationLat},${orderWithConfidence.dropLocationLng}&zoom=18&size=600x300&maptype=satellite&markers=color:red%7C${orderWithConfidence.dropLocationLat},${orderWithConfidence.dropLocationLng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
                     alt="Drop location on map"
                     className="w-full max-w-xl rounded-lg border hover:opacity-90 transition-opacity"
                   />

@@ -18,7 +18,7 @@ export default async function AdminChatsPage({ searchParams }: AdminChatsPagePro
   const searchQuery = params.search || "";
   const statusFilter = params.status || "all";
 
-  let chats: Array<{
+  type ChatWithCount = {
     id: string;
     visitorId: string;
     name: string | null;
@@ -32,7 +32,9 @@ export default async function AdminChatsPage({ searchParams }: AdminChatsPagePro
     _count: {
       messages: number;
     };
-  }> = [];
+  };
+
+  let chats: ChatWithCount[] = [];
   let totalChats = 0;
 
   try {
@@ -62,31 +64,24 @@ export default async function AdminChatsPage({ searchParams }: AdminChatsPagePro
       ];
     }
 
-    // TEMPORARY: Type assertion for bundle verification build (Prisma client issue in worktree)
-    [chats, totalChats] = await Promise.all([
+    // Worktree has Prisma client schema mismatch - using type assertion for bundle analysis build
+    const results = await Promise.all([
       prisma.chatConversation.findMany({
         where,
         orderBy: { updatedAt: "desc" },
         take: CHATS_PER_PAGE,
         skip,
-        select: {
-          id: true,
-          visitorId: true,
-          name: true,
-          email: true,
-          phone: true,
-          status: true,
-          escalatedAt: true,
-          priority: true,
-          createdAt: true,
-          updatedAt: true,
+        include: {
           _count: {
             select: { messages: true },
           },
         },
-      }) as any,
+      }),
       prisma.chatConversation.count({ where }),
     ]);
+
+    chats = results[0] as unknown as ChatWithCount[];
+    totalChats = results[1];
   } catch {
     // DB not ready
   }
