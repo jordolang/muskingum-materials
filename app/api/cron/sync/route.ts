@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
 import { logger } from "@/lib/logger";
 import {
   syncAllProducts,
   syncAllServices,
 } from "@/lib/sync/prisma-to-sanity";
+
+/** Constant-time bearer-token check that tolerates length mismatch. */
+function bearerMatches(authHeader: string | null, secret: string): boolean {
+  const provided = Buffer.from(authHeader ?? "");
+  const expected = Buffer.from(`Bearer ${secret}`);
+  return (
+    provided.length === expected.length && timingSafeEqual(provided, expected)
+  );
+}
 
 /**
  * GET /api/cron/sync
@@ -13,11 +23,20 @@ import {
  * Syncs both products and services from Prisma to Sanity
  */
 export async function GET(request: NextRequest) {
-  // Verify authorization (Vercel Cron sends a specific header)
+  // Verify authorization (Vercel Cron sends a specific header).
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  // Fail closed: a missing secret is a misconfiguration, not an open door.
+  if (!cronSecret) {
+    logger.error("CRON_SECRET not configured — refusing cron sync", null);
+    return NextResponse.json(
+      { error: "Server misconfiguration" },
+      { status: 500 },
+    );
+  }
+
+  if (!bearerMatches(authHeader, cronSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

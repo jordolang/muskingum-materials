@@ -106,7 +106,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update conversation with contact info if provided
+    // Update conversation with contact info if provided.
+    // Only ever FILL BLANK fields — never overwrite contact info already on the
+    // conversation. The conversation is identified solely by a client-held
+    // visitorId, so refusing to clobber existing values prevents a leaked or
+    // replayed visitorId from tampering with another visitor's captured details.
     if (data.contactInfo) {
       const { name, email, phone } = data.contactInfo;
 
@@ -116,9 +120,9 @@ export async function POST(request: NextRequest) {
         phone?: string;
       } = {};
 
-      if (name) updateData.name = name;
-      if (email) updateData.email = email;
-      if (phone) updateData.phone = phone;
+      if (name && !conversation.name) updateData.name = name;
+      if (email && !conversation.email) updateData.email = email;
+      if (phone && !conversation.phone) updateData.phone = phone;
 
       if (Object.keys(updateData).length > 0) {
         await prisma.chatConversation.update({
