@@ -50,7 +50,7 @@ export default async function ReviewsPage() {
       (await sanityClient.fetch<Testimonial[]>(
         testimonialsQuery,
         {},
-        { next: { tags: ["testimonial"] } }
+        { next: { tags: ["testimonials"] } }
       )) ?? [];
   } catch (error) {
     // Silently fall back to static reviews
