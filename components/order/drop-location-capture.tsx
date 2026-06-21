@@ -238,10 +238,14 @@ export function DropLocationCapture({
         </div>
 
         <div>
-          <label className="text-sm font-medium mb-1 block">
+          <label
+            htmlFor="drop-location-photo"
+            className="text-sm font-medium mb-1 block"
+          >
             Photo of Drop Location (Optional)
           </label>
           <ImageUpload
+            id="drop-location-photo"
             value={photoUrl}
             onChange={(base64) => setValue("dropLocation.photoUrl", base64)}
             placeholder="Upload a photo showing where to drop the material"
