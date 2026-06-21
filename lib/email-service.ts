@@ -37,7 +37,8 @@ export type EmailTemplate =
   | "order-confirmation"
   | "newsletter-welcome"
   | "newsletter-broadcast"
-  | "lead-notification";
+  | "lead-notification"
+  | "chat-reply";
 
 /**
  * Gets or creates a Postmark client instance
