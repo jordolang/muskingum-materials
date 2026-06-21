@@ -24,6 +24,7 @@ export async function sendReviewRequests(): Promise<SendReviewRequestsResult> {
     // Find completed orders that:
     // 1. Were completed before the cutoff date
     // 2. Don't already have a review submission
+    // Limit to 100 per run to prevent unbounded queries
     const eligibleOrders = await prisma.order.findMany({
       where: {
         status: "completed",
@@ -32,6 +33,8 @@ export async function sendReviewRequests(): Promise<SendReviewRequestsResult> {
           not: null,
         },
       },
+      orderBy: { completedAt: "asc" }, // Oldest first
+      take: 100,
     });
 
     // Filter out orders that already have review submissions
