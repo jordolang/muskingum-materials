@@ -83,9 +83,9 @@ Sanity-powered pages use **Incremental Static Regeneration (ISR)** to balance pe
 **Webhook setup** (in Sanity Studio dashboard):
 1. Create a webhook pointing to `https://your-domain.com/api/revalidate`
 2. Set the secret to match `SANITY_REVALIDATE_SECRET` in `.env.local`
-3. Configure triggers for `publish` and `unpublish` events on `page`, `post`, `product`, `service`, `faq`, `testimonial`, and other content types that appear on the site
+3. Configure triggers for `publish` and `unpublish` events on the content types the route supports: `product`, `service`, `testimonial`, `faq`, `gallery`, and `siteSettings`. (`page`/`post` are intentionally unsupported — their only reader lives under the build-excluded `src/` tree, so revalidating them would purge nothing.)
 
-The webhook payload includes `_type` and `slug.current` (or similar identifier), which the API route maps to Next.js route patterns. For example, a `page` with slug `about` revalidates `/about`, a `post` with slug `news-update` revalidates `/blog/news-update`.
+The webhook payload includes `_type` (sent as `tag`) and an optional `slug`, which the API route maps **only to routes that actually render that content in `app/`**. `product` revalidates the catalog detail page (`/catalog/<slug>`) plus the `/catalog` and `/products` listings; `service` revalidates the `/services` listing (there is no service detail route). List-only types (`testimonials`, `faq`, `gallery`, `site-settings`) are handled via `revalidateTag()` against the tags those pages fetch with.
 
 **Debugging**: Check webhook delivery logs in Sanity Studio. If revalidation isn't working, verify the secret matches and the API route is accessible (not blocked by middleware or rate limiting).
 
