@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { BUSINESS_INFO } from "@/data/business";
 import { PrintReceiptButton } from "./print-button";
+import { ConfidenceRangeDisplay } from "@/components/order/confidence-range-display";
 
 interface ReceiptPageProps {
   params: Promise<{ orderNumber: string }>;
@@ -50,6 +51,14 @@ export default async function OrderReceiptPage({ params }: ReceiptPageProps) {
     hour: "numeric",
     minute: "2-digit",
   });
+
+  // Type assertion for confidence range fields (Prisma client types may be stale)
+  const orderWithConfidence = order as typeof order & {
+    projectEstimateTonsLow?: number | null;
+    projectEstimateTonsHigh?: number | null;
+    projectEstimateCubicYardsLow?: number | null;
+    projectEstimateCubicYardsHigh?: number | null;
+  };
 
   return (
     <div className="receipt-page py-8 print:py-0">
@@ -146,32 +155,41 @@ export default async function OrderReceiptPage({ params }: ReceiptPageProps) {
               ) : null}
               {(order.projectEstimateTons != null ||
                 order.projectAreaSqFt != null) && (
-                <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                <>
+                  {/* Confidence Range Display */}
                   {order.projectEstimateTons != null && (
-                    <ReceiptStat
-                      label="Tons (est.)"
-                      value={order.projectEstimateTons.toFixed(1)}
-                    />
+                    <div className="mb-4">
+                      <ConfidenceRangeDisplay
+                        estimate={{
+                          tons: order.projectEstimateTons,
+                          tonsLow: orderWithConfidence.projectEstimateTonsLow ?? undefined,
+                          tonsExpected: order.projectEstimateTons,
+                          tonsHigh: orderWithConfidence.projectEstimateTonsHigh ?? undefined,
+                          cubicYards: order.projectEstimateCubicYards ?? 0,
+                          cubicYardsLow: orderWithConfidence.projectEstimateCubicYardsLow ?? undefined,
+                          cubicYardsExpected: order.projectEstimateCubicYards ?? undefined,
+                          cubicYardsHigh: orderWithConfidence.projectEstimateCubicYardsHigh ?? undefined,
+                          depthVariance: 0.5,
+                        }}
+                      />
+                    </div>
                   )}
-                  {order.projectEstimateCubicYards != null && (
-                    <ReceiptStat
-                      label="Cubic yards"
-                      value={order.projectEstimateCubicYards.toFixed(1)}
-                    />
-                  )}
-                  {order.projectAreaSqFt != null && (
-                    <ReceiptStat
-                      label="Area (sq ft)"
-                      value={Math.round(order.projectAreaSqFt).toLocaleString()}
-                    />
-                  )}
-                  {order.projectDepthInches != null && (
-                    <ReceiptStat
-                      label="Depth"
-                      value={`${order.projectDepthInches}"`}
-                    />
-                  )}
-                </dl>
+                  {/* Area and Depth Stats */}
+                  <dl className="grid grid-cols-2 gap-3 text-sm">
+                    {order.projectAreaSqFt != null && (
+                      <ReceiptStat
+                        label="Area (sq ft)"
+                        value={Math.round(order.projectAreaSqFt).toLocaleString()}
+                      />
+                    )}
+                    {order.projectDepthInches != null && (
+                      <ReceiptStat
+                        label="Depth"
+                        value={`${order.projectDepthInches}"`}
+                      />
+                    )}
+                  </dl>
+                </>
               )}
               <p className="text-xs text-muted-foreground mt-3">
                 Estimate source:{" "}

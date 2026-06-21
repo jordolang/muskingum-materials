@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Phone } from "lucide-react";
 import { BUSINESS_INFO } from "@/data/business";
 import { PlannerMap } from "./planner-map";
+import { calculateConfidenceRange, type DensityRange } from "@/lib/estimate-calculations";
+import { ConfidenceRangeDisplay } from "@/components/order/confidence-range-display";
 
 interface Material {
   slug: string;
@@ -25,10 +27,22 @@ interface GravelPlannerProps {
 interface Estimate {
   areaSqFt: number;
   cubicYards: number;
+  cubicYardsLow: number;
+  cubicYardsExpected: number;
+  cubicYardsHigh: number;
+  tons: number;
   tonsLow: number;
+  tonsExpected: number;
   tonsHigh: number;
   costLow: number;
+  costExpected: number;
   costHigh: number;
+  depthVariance?: number;
+  confidenceFactors?: {
+    densityVariation: boolean;
+    depthMeasurementVariance: boolean;
+    materialType?: string;
+  };
 }
 
 const DEPTH_PRESETS = [2, 3, 4, 6];
@@ -75,23 +89,56 @@ export function GravelPlanner({ materials }: GravelPlannerProps) {
       const w = wastePct ?? waste;
       const compaction = COMPACTION_MAP[mat.slug] ?? 5;
 
-      const depthFt = d / 12;
-      let cubicYards = (areaSqFt * depthFt) / 27;
-      cubicYards *= 1 + w / 100;
-      cubicYards *= 1 + compaction / 100;
+      // Build density range for confidence calculations
+      const densityRange: DensityRange = {
+        low: mat.densityLow,
+        avg: (mat.densityLow + mat.densityHigh) / 2,
+        high: mat.densityHigh,
+      };
 
-      const tonsLow = cubicYards * mat.densityLow;
-      const tonsHigh = cubicYards * mat.densityHigh;
+      // Calculate base estimate with confidence range
+      const baseEstimate = calculateConfidenceRange(
+        areaSqFt,
+        d,
+        densityRange,
+        mat.name,
+        "map"
+      );
+
+      // Apply waste and compaction factors to all confidence levels
+      const wasteFactor = 1 + w / 100;
+      const compactionFactor = 1 + compaction / 100;
+      const adjustmentFactor = wasteFactor * compactionFactor;
+
+      const cubicYardsLow = (baseEstimate.cubicYardsLow ?? 0) * adjustmentFactor;
+      const cubicYardsExpected = baseEstimate.cubicYardsExpected! * adjustmentFactor;
+      const cubicYardsHigh = (baseEstimate.cubicYardsHigh ?? 0) * adjustmentFactor;
+
+      const tonsLow = (baseEstimate.tonsLow ?? 0) * adjustmentFactor;
+      const tonsExpected = baseEstimate.tonsExpected! * adjustmentFactor;
+      const tonsHigh = (baseEstimate.tonsHigh ?? 0) * adjustmentFactor;
+
+      // Calculate costs using average price for expected, and range for low/high
+      const avgPrice = (mat.priceLow + mat.priceHigh) / 2;
       const costLow = tonsLow * mat.priceLow;
+      const costExpected = tonsExpected * avgPrice;
       const costHigh = tonsHigh * mat.priceHigh;
 
       setEstimate({
         areaSqFt: Math.round(areaSqFt),
-        cubicYards: Math.round(cubicYards * 100) / 100,
+        cubicYards: Math.round(cubicYardsExpected * 100) / 100,
+        cubicYardsLow: Math.round(cubicYardsLow * 100) / 100,
+        cubicYardsExpected: Math.round(cubicYardsExpected * 100) / 100,
+        cubicYardsHigh: Math.round(cubicYardsHigh * 100) / 100,
+        tons: Math.round(tonsExpected * 10) / 10,
         tonsLow: Math.round(tonsLow * 10) / 10,
+        tonsExpected: Math.round(tonsExpected * 10) / 10,
         tonsHigh: Math.round(tonsHigh * 10) / 10,
         costLow: Math.round(costLow),
+        costExpected: Math.round(costExpected),
         costHigh: Math.round(costHigh),
+        depthVariance: baseEstimate.depthVariance,
+        confidenceFactors: baseEstimate.confidenceFactors,
       });
     },
     [materials, selectedMaterial, depth, waste],
@@ -190,7 +237,7 @@ export function GravelPlanner({ materials }: GravelPlannerProps) {
           </CardHeader>
           <CardContent>
             {estimate ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex justify-between items-center py-2 border-b">
                   <span className="text-sm text-muted-foreground">
                     Total Area
@@ -199,32 +246,24 @@ export function GravelPlanner({ materials }: GravelPlannerProps) {
                     {estimate.areaSqFt.toLocaleString()} ft²
                   </span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-sm text-muted-foreground">
-                    Volume Needed
-                  </span>
-                  <span className="font-semibold">
-                    {estimate.cubicYards} yd³
-                  </span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-sm text-muted-foreground">
-                    Weight to Order
-                  </span>
-                  <span className="font-semibold text-primary">
-                    {estimate.tonsLow}-{estimate.tonsHigh} tons
-                  </span>
-                </div>
-                <div className="flex justify-between items-center py-2">
+
+                <ConfidenceRangeDisplay estimate={estimate} />
+
+                <div className="flex justify-between items-center py-2 border-t pt-3">
                   <span className="text-sm text-muted-foreground">
                     Est. Material Cost
                   </span>
-                  <span className="font-bold text-lg text-primary">
-                    ${estimate.costLow.toLocaleString()}-$
-                    {estimate.costHigh.toLocaleString()}
-                  </span>
+                  <div className="text-right">
+                    <div className="font-bold text-lg text-primary">
+                      ${estimate.costExpected.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      (${estimate.costLow.toLocaleString()}-$
+                      {estimate.costHigh.toLocaleString()})
+                    </div>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground pt-2">
+                <p className="text-xs text-muted-foreground pt-2 border-t">
                   Includes {waste}% waste allowance and compaction factor.
                   Delivery not included.
                 </p>

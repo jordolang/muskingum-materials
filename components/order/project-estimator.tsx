@@ -27,9 +27,13 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
-  MATERIAL_DENSITY_AVG,
-  TRUCK_CAPACITY_TONS,
-} from "@/lib/constants/business-rules";
+  calculateConfidenceRange,
+  calculateFromDimensions as calculateDimensionsWithConfidence,
+} from "@/lib/estimate-calculations";
+import { ConfidenceExplanation } from "./confidence-explanation";
+import { ConfidenceRangeDisplay } from "./confidence-range-display";
+import { RightSizingGuidance } from "./right-sizing-guidance";
+import { RequestReviewButton } from "./request-review-button";
 
 declare global {
   interface Window {
@@ -71,8 +75,23 @@ interface PolygonData {
 interface EstimateResult {
   cubicFeet: number;
   cubicYards: number;
+  cubicYardsLow?: number;
+  cubicYardsExpected?: number;
+  cubicYardsHigh?: number;
   tons: number;
+  tonsLow?: number;
+  tonsExpected?: number;
+  tonsHigh?: number;
   truckloads: number;
+  truckloadsLow?: number;
+  truckloadsExpected?: number;
+  truckloadsHigh?: number;
+  depthVariance?: number;
+  confidenceFactors?: {
+    densityVariation: boolean;
+    depthMeasurementVariance: boolean;
+    materialType?: string;
+  };
   source: "map" | "dimensions";
 }
 
@@ -90,29 +109,12 @@ export interface ProjectSiteData {
 
 interface ProjectEstimatorProps {
   onSiteDataChange: (data: ProjectSiteData) => void;
-}
-
-function calculateFromArea(areaSqFt: number, depthIn: number): EstimateResult {
-  const cubicFeet = areaSqFt * (depthIn / 12);
-  const cubicYards = cubicFeet / 27;
-  const tons = cubicYards * MATERIAL_DENSITY_AVG;
-  const truckloads = Math.max(1, Math.ceil(tons / TRUCK_CAPACITY_TONS));
-  return { cubicFeet, cubicYards, tons, truckloads, source: "map" };
-}
-
-function calculateFromDimensions(
-  lengthFt: number,
-  widthFt: number,
-  depthIn: number,
-): EstimateResult {
-  return {
-    ...calculateFromArea(lengthFt * widthFt, depthIn),
-    source: "dimensions",
-  };
+  materialSlug?: string;
 }
 
 export function ProjectEstimator({
   onSiteDataChange,
+  materialSlug,
 }: ProjectEstimatorProps) {
   // Address state
   const [address, setAddress] = useState("");
@@ -157,13 +159,13 @@ export function ProjectEstimator({
   // Compute the active estimate
   const estimate = useMemo<EstimateResult | null>(() => {
     if (mode === "map" && drawnAreaSqFt > 0) {
-      return calculateFromArea(drawnAreaSqFt, depth);
+      return calculateConfidenceRange(drawnAreaSqFt, depth, undefined, undefined, "map");
     }
     if (mode === "dimensions" || mode === "preset") {
       const l = parseFloat(length);
       const w = parseFloat(width);
       if (l > 0 && w > 0 && depth > 0) {
-        return calculateFromDimensions(l, w, depth);
+        return calculateDimensionsWithConfidence(l, w, depth);
       }
     }
     return null;
@@ -784,16 +786,11 @@ export function ProjectEstimator({
                 </Badge>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <ResultStat
-                  value={estimate.tons.toFixed(1)}
-                  label="Tons"
-                  primary
-                />
-                <ResultStat
-                  value={estimate.cubicYards.toFixed(1)}
-                  label="Cubic Yards"
-                />
+              <ConfidenceRangeDisplay estimate={estimate} />
+
+              <RightSizingGuidance materialSlug={materialSlug} className="mt-4" />
+
+              <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-amber-200/70">
                 <ResultStat
                   value={estimate.cubicFeet.toFixed(0)}
                   label="Cubic Feet"
@@ -817,6 +814,22 @@ export function ProjectEstimator({
                   20-ton trucks.
                 </p>
               </div>
+
+              <ConfidenceExplanation estimate={estimate} className="mt-4" />
+
+              <RequestReviewButton
+                projectSite={{
+                  address,
+                  location: addressLocation,
+                  mode,
+                  depthInches: depth,
+                  lengthFt: parseFloat(length) > 0 ? parseFloat(length) : null,
+                  widthFt: parseFloat(width) > 0 ? parseFloat(width) : null,
+                  totalAreaSqFt: mode === "map" ? drawnAreaSqFt : (parseFloat(length) || 0) * (parseFloat(width) || 0),
+                  polygons: polygonPaths,
+                  estimate,
+                }}
+              />
             </div>
           ) : (
             <div className="rounded-xl border border-dashed bg-muted/30 p-5 text-center text-sm text-muted-foreground">
