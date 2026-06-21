@@ -11,7 +11,7 @@ import {
 } from "@/lib/image-upload";
 import { Button } from "@/components/ui/button";
 
-export interface ImageUploadProps {
+export interface ImageUploadProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
    * Current image value (base64 data URL or regular URL)
    */
