@@ -393,6 +393,31 @@ Muskingum Materials Team
 };
 
 /**
+ * Postmark rejects any email whose metadata value exceeds 80 characters.
+ * Several callers populate metadata from user-controlled fields (name, email,
+ * subject, company), so cap every value defensively before sending. Truncated
+ * values keep the email deliverable; the full data still lives in the body.
+ */
+const POSTMARK_METADATA_VALUE_MAX = 80;
+
+function sanitizeMetadata(
+  metadata: Record<string, string> | undefined
+): Record<string, string> | undefined {
+  if (!metadata) {
+    return undefined;
+  }
+
+  return Object.fromEntries(
+    Object.entries(metadata).map(([key, value]) => [
+      key,
+      value.length > POSTMARK_METADATA_VALUE_MAX
+        ? value.slice(0, POSTMARK_METADATA_VALUE_MAX)
+        : value,
+    ])
+  );
+}
+
+/**
  * Sends an email via Postmark (simple variant - returns boolean)
  * Falls back gracefully if Postmark is not configured
  *
@@ -449,7 +474,7 @@ export async function sendEmail(
       HtmlBody: message.htmlBody,
       ReplyTo: message.replyTo,
       Tag: message.tag,
-      Metadata: message.metadata,
+      Metadata: sanitizeMetadata(message.metadata),
     });
 
     if (isSimpleVariant) {
