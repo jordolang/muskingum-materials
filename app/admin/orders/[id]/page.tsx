@@ -268,7 +268,8 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
         orderWithConfidence.dropLocationNotes ||
         orderWithConfidence.dropLocationPhotoUrl ||
         (orderWithConfidence.dropLocationLat != null && orderWithConfidence.dropLocationLng != null) ||
-        orderWithConfidence.accessWarningFlags) && (
+        (Array.isArray(orderWithConfidence.accessWarningFlags) &&
+          orderWithConfidence.accessWarningFlags.length > 0)) && (
         <Card className="border-0 shadow-lg">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -287,7 +288,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                   checklist={
                     orderWithConfidence.deliveryAccessChecklist as {
                       drivewayWidth?: string;
-                      clearance?: string;
+                      overheadClearance?: string;
                       turningRoom?: string;
                       surface?: string;
                       gateCode?: string;
@@ -528,7 +529,7 @@ function AccessChecklistDisplay({
 }: {
   checklist: {
     drivewayWidth?: string;
-    clearance?: string;
+    overheadClearance?: string;
     turningRoom?: string;
     surface?: string;
     gateCode?: string;
@@ -542,8 +543,8 @@ function AccessChecklistDisplay({
     },
     {
       label: "Overhead Clearance",
-      value: checklist.clearance,
-      warning: ["low", "very_low"],
+      value: checklist.overheadClearance,
+      warning: ["low", "very_low", "less_than"],
     },
     {
       label: "Turning Room",

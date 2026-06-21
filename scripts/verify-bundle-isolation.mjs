@@ -49,12 +49,21 @@ async function analyzeChunk(chunkRelPath) {
   let contents;
   let size = 0;
 
+  // A chunk that cannot be read must NOT be treated as clean — that would let
+  // an unreadable or corrupt bundle silently pass the isolation check. Surface
+  // the failure so the verification fails loudly instead.
   try {
     const stats = await stat(chunkPath);
     size = stats.size;
     contents = await readFile(chunkPath, "utf8");
-  } catch {
-    return { markers: [], size: 0 };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Failed to read chunk "${path.relative(repoRoot, chunkPath)}" while ` +
+        `verifying bundle isolation. The chunk is referenced by the build ` +
+        `manifest but could not be read, so it cannot be confirmed clean.\n` +
+        `Underlying error: ${message}`
+    );
   }
 
   const markers = FORBIDDEN_MARKERS.filter((marker) => contents.includes(marker));

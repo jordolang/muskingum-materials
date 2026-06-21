@@ -152,5 +152,7 @@ App Router pages live under `app/` and follow the README's product map (`product
     - `sanity/desk`, `sanity/structure` — Studio UI components
     - Any `@sanity/vision`, `@sanity/form-builder`, plugin imports
     - `sanity.config.ts` or `sanity.cli.ts` — Studio configuration
-  - **Where Studio code belongs**: Only in `app/studio/[[...tool]]/page.tsx` and `sanity.config.ts`. These files are route-split and never bundled into the main app.
+  - **Where Studio code belongs**:
+    - `app/studio/[[...tool]]/page.tsx` — the only **route-split** Studio entry point. Because it lives under the `/studio` route segment, Next.js code-splits it away from the main app bundle; Studio code reached *only* through this file is never shipped to other routes.
+    - `sanity.config.ts` (and `sanity.cli.ts`) — root-level Studio **config**, NOT route-split. They are not protected by route boundaries, so they require careful import management: import them only from `app/studio/**` (or other Studio-only files). If a non-Studio module imports `sanity.config.ts`, the full Studio package leaks into the main bundle. Treat these config files as Studio-only and never reference them from shared/app code.
   - **Verification**: `npm run build` includes a bundle analysis step that fails if Studio dependencies appear in non-Studio routes. If you see a build error about "sanity in client bundle", audit your imports — you've likely imported Studio code outside `/studio`.
