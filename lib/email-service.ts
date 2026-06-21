@@ -6,6 +6,17 @@
 import { logger } from "@/lib/logger";
 
 /**
+ * Simple email parameters for backward-compatible boolean return variant
+ */
+export interface SimpleEmailParams {
+  to: string;
+  subject: string;
+  textBody: string;
+  htmlBody?: string;
+  replyTo?: string;
+}
+
+/**
  * Email message structure for sending emails
  */
 export interface EmailMessage {
@@ -73,20 +84,46 @@ function getDefaultToEmail(): string {
 }
 
 /**
- * Sends an email via Postmark
+ * Sends an email via Postmark (simple variant - returns boolean)
+ * Falls back gracefully if Postmark is not configured
+ *
+ * @param params - Simple email parameters
+ * @returns true on success, false on failure
+ */
+export async function sendEmail(params: SimpleEmailParams): Promise<boolean>;
+
+/**
+ * Sends an email via Postmark (detailed variant - returns result object)
  * Falls back gracefully if Postmark is not configured
  *
  * @param message - Email message to send
- * @returns Result indicating success or failure
+ * @returns Result indicating success or failure with details
  */
-export async function sendEmail(message: EmailMessage): Promise<EmailSendResult> {
+export async function sendEmail(message: EmailMessage): Promise<EmailSendResult>;
+
+/**
+ * Implementation for both sendEmail variants
+ */
+export async function sendEmail(
+  messageOrParams: EmailMessage | SimpleEmailParams
+): Promise<boolean | EmailSendResult> {
   const client = await getPostmarkClient();
+
+  // Detect which variant is being called based on presence of EmailMessage-specific fields
+  const isSimpleVariant =
+    !("tag" in messageOrParams) &&
+    !("metadata" in messageOrParams) &&
+    !("from" in messageOrParams);
 
   if (!client) {
     logger.error("Email service not configured - POSTMARK_API_TOKEN missing", null, {
-      to: message.to,
-      subject: message.subject,
+      to: messageOrParams.to,
+      subject: messageOrParams.subject,
     });
+
+    if (isSimpleVariant) {
+      return false;
+    }
     return {
       success: false,
       error: "Email service not configured",
@@ -94,6 +131,7 @@ export async function sendEmail(message: EmailMessage): Promise<EmailSendResult>
   }
 
   try {
+    const message = messageOrParams as EmailMessage;
     const response = await client.sendEmail({
       From: message.from || getDefaultFromEmail(),
       To: message.to,
@@ -105,17 +143,23 @@ export async function sendEmail(message: EmailMessage): Promise<EmailSendResult>
       Metadata: message.metadata,
     });
 
+    if (isSimpleVariant) {
+      return true;
+    }
     return {
       success: true,
       messageId: response.MessageID,
     };
   } catch (error) {
     logger.error("Failed to send email via Postmark", error, {
-      to: message.to,
-      subject: message.subject,
-      tag: message.tag,
+      to: messageOrParams.to,
+      subject: messageOrParams.subject,
+      tag: "tag" in messageOrParams ? messageOrParams.tag : undefined,
     });
 
+    if (isSimpleVariant) {
+      return false;
+    }
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
