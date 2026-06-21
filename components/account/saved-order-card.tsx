@@ -82,6 +82,7 @@ export function SavedOrderCard({ savedOrder, onUpdate }: SavedOrderCardProps) {
       toast({
         title: "Failed to delete saved order",
         description: "Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsDeleting(false);
