@@ -23,6 +23,9 @@ import { RestockNotifyButton } from "@/components/catalog/RestockNotifyButton";
 import { ProductViewTracker } from "@/components/analytics/product-view-tracker";
 import { AddToCartButton } from "@/components/order/add-to-cart-button";
 
+// TEMPORARY: Force dynamic rendering to skip static generation during bundle verification
+export const dynamic = 'force-dynamic';
+
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
 }

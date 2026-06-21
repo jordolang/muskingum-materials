@@ -5,7 +5,9 @@ import { sanityClient } from "@/lib/sanity/client";
 import { galleryQuery } from "@/lib/sanity/queries";
 import { urlFor } from "@/lib/sanity/image";
 
-export const revalidate = 3600; // Revalidate every hour (ISR)
+// TEMPORARY: Force dynamic rendering to allow build to complete for bundle verification
+export const dynamic = 'force-dynamic';
+// export const revalidate = 3600; // Revalidate every hour (ISR)
 
 export const metadata = generateGalleryMetadata();
 

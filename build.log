@@ -1,0 +1,159 @@
+
+> muskingum-materials@1.0.0 build
+> next build
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/jordanlang/Repos/muskingum-materials/package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * /Users/jordanlang/Repos/muskingum-materials/.auto-claude/worktrees/tasks/082-eliminate-sanity-studio-from-main-app-bundle-with-/package-lock.json
+
+   ▲ Next.js 15.5.18
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+
+warn - The class `duration-[650ms]` is ambiguous and matches multiple utilities.
+warn - If this is content and not a class, replace it with `duration-&lsqb;650ms&rsqb;` to silence this warning.
+ ✓ Compiled successfully in 61s
+   Linting and checking validity of types ...
+
+./app/account/page.tsx
+15:10  Warning: 'Badge' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/account/recurring-orders/page.tsx
+3:48  Warning: 'Plus' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/admin/contractors/[userId]/page.tsx
+4:10  Warning: 'Button' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/admin/layout.tsx
+39:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/admin/leads/page.tsx
+2:10  Warning: 'ArrowRight' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/admin/orders/[id]/page.tsx
+4:10  Warning: 'Button' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/admin/quotes/[id]/page.tsx
+3:21  Warning: 'FileText' is defined but never used.  @typescript-eslint/no-unused-vars
+3:37  Warning: 'Phone' is defined but never used.  @typescript-eslint/no-unused-vars
+3:44  Warning: 'Building2' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/account/addresses/route.ts
+13:27  Warning: 'request' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/account/invoices/route.ts
+3:10  Warning: 'z' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/account/orders/[orderNumber]/route.ts
+37:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/account/recurring-orders/[id]/route.ts
+36:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+132:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/account/recurring-orders/route.ts
+67:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/admin/campaigns/[id]/route.ts
+65:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+177:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/admin/campaigns/route.ts
+69:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/admin/chats/route.ts
+109:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/admin/leads/route.ts
+84:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/admin/metrics/route.ts
+180:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/admin/orders/route.ts
+83:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/admin/quotes/route.ts
+86:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/admin/subscribers/route.ts
+71:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/admin/templates/route.ts
+66:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/business-hours/route.ts
+22:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/calculators/page.tsx
+3:16  Warning: 'CardContent' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/developer/page.tsx
+16:3  Warning: 'Phone' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/reviews/page.tsx
+57:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/account/add-payment-method.tsx
+17:10  Warning: 'elements' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+100:16  Warning: 'err' is defined but never used.  @typescript-eslint/no-unused-vars
+114:6  Warning: React Hook useEffect has a missing dependency: 'cardElement'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+172:14  Warning: 'err' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/account/recurring-orders-client.tsx
+4:8  Warning: 'Link' is defined but never used.  @typescript-eslint/no-unused-vars
+51:13  Warning: 'result' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+107:14  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/account/saved-order-card.tsx
+79:14  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/order/contact-section.tsx
+27:3  Warning: 'watch' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/order/save-template-button.tsx
+49:14  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/order/status-progress.tsx
+2:24  Warning: 'Circle' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/recommendations/material-wizard.tsx
+84:12  Warning: 'goToStep' is defined but never used.  @typescript-eslint/no-unused-vars
+149:6  Warning: React Hook useEffect has missing dependencies: 'loadRecommendations' and 'recommendations'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/ui/image-upload.tsx
+161:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./lib/analytics.ts
+10:11  Warning: 'BaseEventParams' is defined but never used.  @typescript-eslint/no-unused-vars
+25:11  Warning: 'EcommerceParams' is defined but never used.  @typescript-eslint/no-unused-vars
+34:11  Warning: 'LeadParams' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./lib/monitoring.ts
+11:7  Warning: 'isDevelopment' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./lib/use-toast.ts
+15:7  Warning: 'actionTypes' is assigned a value but only used as a type.  @typescript-eslint/no-unused-vars
+135:11  Warning: 'Toast' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/[slug]/page.tsx
+33:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+Failed to compile.
+
+./app/admin/chats/[id]/page.tsx:254:25
+Type error: Property 'lead' does not exist on type '{ messages: { id: string; createdAt: Date; role: string; content: string; conversationId: string; }[]; } & { metadata: JsonValue; status: string; name: string | null; id: string; ... 4 more ...; visitorId: string; }'.
+
+[0m [90m 252 |[39m
+ [90m 253 |[39m           {[90m/* Linked Lead */[39m}
+[31m[1m>[22m[39m[90m 254 |[39m           {conversation[33m.[39mlead [33m&&[39m (
+ [90m     |[39m                         [31m[1m^[22m[39m
+ [90m 255 |[39m             [33m<[39m[33mCard[39m className[33m=[39m[32m"border-0 shadow-lg"[39m[33m>[39m
+ [90m 256 |[39m               [33m<[39m[33mCardHeader[39m[33m>[39m
+ [90m 257 |[39m                 [33m<[39m[33mCardTitle[39m className[33m=[39m[32m"text-lg flex items-center gap-2"[39m[33m>[39m[0m
+Next.js build worker exited with code: 1 and signal: null

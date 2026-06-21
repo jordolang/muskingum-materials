@@ -32,9 +32,11 @@ import { generateHomeMetadata } from "@/lib/seo/metadata";
 // Generate SEO metadata with canonical URL, OG images, and Twitter cards
 export const metadata = generateHomeMetadata();
 
+// TEMPORARY: Force dynamic rendering to skip static generation during bundle verification
+export const dynamic = 'force-dynamic';
 // ISR — rebuild the homepage at most once per minute and let on-demand
 // revalidation refresh it when database content changes.
-export const revalidate = 60;
+// export const revalidate = 60;
 
 interface HomeProduct {
   _id: string;

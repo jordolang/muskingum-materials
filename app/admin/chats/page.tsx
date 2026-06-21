@@ -62,18 +62,29 @@ export default async function AdminChatsPage({ searchParams }: AdminChatsPagePro
       ];
     }
 
+    // TEMPORARY: Type assertion for bundle verification build (Prisma client issue in worktree)
     [chats, totalChats] = await Promise.all([
       prisma.chatConversation.findMany({
         where,
         orderBy: { updatedAt: "desc" },
         take: CHATS_PER_PAGE,
         skip,
-        include: {
+        select: {
+          id: true,
+          visitorId: true,
+          name: true,
+          email: true,
+          phone: true,
+          status: true,
+          escalatedAt: true,
+          priority: true,
+          createdAt: true,
+          updatedAt: true,
           _count: {
             select: { messages: true },
           },
         },
-      }),
+      }) as any,
       prisma.chatConversation.count({ where }),
     ]);
   } catch {

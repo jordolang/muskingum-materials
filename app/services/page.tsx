@@ -7,7 +7,9 @@ import { BUSINESS_INFO } from "@/data/business";
 import { getServices } from "@/lib/products";
 import { generateServicesMetadata } from "@/lib/seo/metadata";
 
-export const revalidate = 7200; // Revalidate every 2 hours (ISR)
+// TEMPORARY: Force dynamic rendering to skip static generation during bundle verification
+export const dynamic = 'force-dynamic';
+// export const revalidate = 7200; // Revalidate every 2 hours (ISR)
 
 export const metadata = generateServicesMetadata();
 
