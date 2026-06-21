@@ -3,6 +3,11 @@
     {
       "path": "/api/cron/send-review-requests",
       "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/sync",
+      "schedule": "0 2 * * *"
     }
   ]
 }
+
