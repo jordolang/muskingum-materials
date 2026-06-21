@@ -2,35 +2,28 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { CinematicHero } from "../cinematic-hero";
 
 const SEEN_KEY = "mm-intro-seen";
-const INTRO_SRC = "/images/videos/firefly-1.mp4";
-const POSTER = "/frames/firefly-1/0001.webp";
-/** Slight speed-up keeps the firefly footage smooth but snappier (~6.5s). */
-const PLAYBACK_RATE = 1.2;
-/** Hard safety: dismiss even if the video never fires `ended` (e.g. blocked). */
-const SAFETY_MS = 10_000;
-/** Once the footage is clearly rolling, fade the wordmark so it stays in view. */
-const WORDMARK_FADE_MS = 2_200;
+const ACT1_FRAMES = 192;
 
 /**
  * Full-screen intro that loads *over top* of the underlying homepage. Plays the
- * firefly loader footage once per session (sessionStorage) as a smooth,
- * self-advancing clip — no scroll required — then fades to reveal the site.
+ * cinematic hero once per session (sessionStorage), then dismisses to reveal the
+ * real site beneath. Mounted globally in the root layout; it self-gates to the
+ * homepage, skips when reduced motion is requested, and locks page scroll while
+ * up so its own scroll context drives the scrub.
  *
- * Native `<video>` playback (rather than scroll-scrubbed frames) keeps the
- * motion buttery at the source 24fps, and the overlay stays light so the footage
- * is actually visible instead of being buried under a black grade. Mounted
- * globally in the root layout; it self-gates to the homepage, honours reduced
- * motion, and locks page scroll while up.
+ * Before revealing the experience it preloads + decodes Act 1's frames behind a
+ * branded loader, so the very first scroll is buttery rather than streaming in.
  */
 export function CinematicIntroOverlay() {
   const pathname = usePathname();
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const [opaque, setOpaque] = useState(false);
-  const [playing, setPlaying] = useState(false);
-  const [wordmarkOut, setWordmarkOut] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [pct, setPct] = useState(0);
 
   // Decide once on the client: homepage only, once per session, motion allowed.
   useEffect(() => {
@@ -41,38 +34,44 @@ export function CinematicIntroOverlay() {
     setMounted(true);
   }, [pathname]);
 
-  // Fade in, lock the underlying page scroll, and arm a safety auto-dismiss.
+  // Fade in once mounted; lock the underlying page scroll while up.
   useEffect(() => {
     if (!mounted) return;
     const raf = requestAnimationFrame(() => setOpaque(true));
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const safety = window.setTimeout(dismiss, SAFETY_MS);
     return () => {
       cancelAnimationFrame(raf);
-      window.clearTimeout(safety);
       document.body.style.overflow = prevOverflow;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted]);
 
-  // Kick off playback as soon as we're mounted (muted autoplay is allowed).
+  // Preload + decode Act 1 frames behind the loader; reveal when ready (or after
+  // a safety timeout — the canvas falls back to the nearest decoded frame).
   useEffect(() => {
     if (!mounted) return;
-    const v = videoRef.current;
-    if (!v) return;
-    v.playbackRate = PLAYBACK_RATE;
-    v.play().catch(() => {
-      // Autoplay blocked — the poster holds and the Skip button still works.
-    });
+    let cancelled = false;
+    let done = 0;
+    const bump = () => {
+      if (cancelled) return;
+      done += 1;
+      setPct(done / ACT1_FRAMES);
+      if (done >= ACT1_FRAMES) setReady(true);
+    };
+    const imgs: HTMLImageElement[] = [];
+    for (let i = 1; i <= ACT1_FRAMES; i++) {
+      const img = new Image();
+      img.onload = () => (img.decode ? img.decode().then(bump).catch(bump) : bump());
+      img.onerror = bump;
+      img.src = `/frames/firefly-1/${String(i).padStart(4, "0")}.webp`;
+      imgs.push(img);
+    }
+    const safety = window.setTimeout(() => !cancelled && setReady(true), 7000);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(safety);
+    };
   }, [mounted]);
-
-  // Once the footage is clearly rolling, fade the wordmark out of the way.
-  useEffect(() => {
-    if (!playing) return;
-    const t = window.setTimeout(() => setWordmarkOut(true), WORDMARK_FADE_MS);
-    return () => window.clearTimeout(t);
-  }, [playing]);
 
   function dismiss() {
     try {
@@ -81,7 +80,7 @@ export function CinematicIntroOverlay() {
       // sessionStorage can throw in private mode; the intro simply replays.
     }
     setOpaque(false);
-    window.setTimeout(() => setMounted(false), 650);
+    window.setTimeout(() => setMounted(false), 550);
   }
 
   if (!mounted) return null;
@@ -90,61 +89,53 @@ export function CinematicIntroOverlay() {
     <div
       role="dialog"
       aria-label="Muskingum Materials intro"
-      className={`fixed inset-0 z-[120] bg-coal transition-opacity duration-700 ${
+      className={`fixed inset-0 z-[120] bg-coal transition-opacity duration-500 ${
         opaque ? "opacity-100" : "opacity-0"
       }`}
     >
-      {/* Smooth, self-advancing loader footage — native 24fps, fully visible. */}
-      <video
-        ref={videoRef}
-        className="absolute inset-0 h-full w-full object-cover"
-        src={INTRO_SRC}
-        poster={POSTER}
-        muted
-        playsInline
-        autoPlay
-        preload="auto"
-        onPlaying={() => setPlaying(true)}
-        onEnded={dismiss}
-      />
+      {ready ? (
+        // Own scroll context — this is what drives the scrubbed animation.
+        <div
+          ref={scrollRef}
+          className="h-full w-full overflow-y-auto overflow-x-hidden overscroll-contain"
+        >
+          <CinematicHero scrollContainerRef={scrollRef} />
 
-      {/* Light vignette only — edges settle into the page, centre stays clear. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(125% 95% at 50% 45%, transparent 58%, rgba(11,10,9,0.55) 100%)",
-        }}
-      />
-
-      {/* Branded wordmark, lower third — fades back once the footage is rolling. */}
-      <div
-        className={`pointer-events-none absolute inset-x-0 bottom-[12%] flex flex-col items-center px-6 text-center transition-opacity duration-1000 ${
-          wordmarkOut ? "opacity-0" : "opacity-100"
-        }`}
-      >
-        <p className="mb-3 font-tech text-[0.65rem] uppercase tracking-[0.5em] text-caution">
-          Crushed · Graded · Delivered
-        </p>
-        <h2 className="font-display text-4xl uppercase leading-[0.9] text-bone drop-shadow-[0_2px_18px_rgba(0,0,0,0.65)] sm:text-6xl">
-          Muskingum
-          <br />
-          Materials
-        </h2>
-      </div>
-
-      {/* Branded loader — only until the first frames are actually playing. */}
-      {!playing && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-coal/70 px-6 text-center">
-          <div className="hazard mb-7 h-3 w-16" />
-          <h2 className="font-display text-3xl uppercase leading-[0.9] text-bone sm:text-5xl">
+          {/* Closing panel after the experience */}
+          <div className="relative z-10 flex h-[70vh] flex-col items-center justify-center bg-coal px-6 text-center">
+            <p className="font-tech text-xs uppercase tracking-[0.5em] text-caution">
+              Welcome to the yard
+            </p>
+            <h2 className="mt-4 font-display text-5xl uppercase leading-[0.9] text-bone sm:text-7xl">
+              Muskingum
+              <br />
+              Materials
+            </h2>
+            <button
+              onClick={dismiss}
+              className="mt-9 bg-caution px-10 py-4 font-tech text-xs font-bold uppercase tracking-[0.25em] text-coal transition-transform hover:scale-[1.03]"
+            >
+              Enter Site →
+            </button>
+          </div>
+        </div>
+      ) : (
+        // Branded preloader
+        <div className="flex h-full w-full flex-col items-center justify-center px-6 text-center">
+          <div className="hazard mb-8 h-3 w-16" />
+          <h2 className="font-display text-4xl uppercase leading-[0.9] text-bone sm:text-6xl">
             Muskingum
             <br />
             Materials
           </h2>
-          <p className="mt-7 font-tech text-[0.65rem] uppercase tracking-[0.4em] text-grit">
-            <span className="animate-pulse">Loading the yard…</span>
+          <div className="mt-10 h-px w-56 max-w-[70vw] overflow-hidden bg-iron/60">
+            <div
+              className="h-full bg-caution transition-[width] duration-200 ease-out"
+              style={{ width: `${Math.round(pct * 100)}%` }}
+            />
+          </div>
+          <p className="mt-4 font-tech text-[0.65rem] uppercase tracking-[0.4em] text-grit">
+            Loading the yard · {Math.round(pct * 100)}%
           </p>
         </div>
       )}

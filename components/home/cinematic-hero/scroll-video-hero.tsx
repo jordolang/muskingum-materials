@@ -32,7 +32,7 @@ export function ScrollVideoHero({ scrollContainerRef }: ScrollVideoHeroProps) {
 
   const { canvasRef } = useScrubFrames(scrollYProgress, {
     base: "/frames/firefly-1",
-    count: 96,
+    count: 192,
     completeAt: 0.45,
     ease: 0.1,
   });

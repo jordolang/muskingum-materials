@@ -28,7 +28,7 @@ export function RockDumpSection({ scrollContainerRef }: RockDumpSectionProps) {
 
   const { canvasRef } = useScrubFrames(scrollYProgress, {
     base: "/frames/firefly-2",
-    count: 96,
+    count: 192,
     completeAt: 0.55,
     ease: 0.12,
   });
