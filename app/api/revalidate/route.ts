@@ -11,37 +11,38 @@ const revalidateSchema = z.object({
     "faq",
     "gallery",
     "site-settings",
-    "page",
-    "post",
   ]),
   slug: z.string().optional(),
 });
 
 /**
- * Maps content type and slug to the corresponding Next.js route path.
- * Returns undefined for content types that don't have individual pages.
+ * Maps a content type (and optional slug) to the Next.js route path(s) that
+ * actually render that content in `app/`.
+ *
+ * Only routes that exist in the built app are returned. `src/` is excluded from
+ * the build (see tsconfig.json), so document types whose only reader lives there
+ * (e.g. the `post`/`page` reader at `src/app/[slug]`) are intentionally not
+ * supported — revalidating a non-existent route would purge nothing while
+ * reporting success.
  */
-function getPathForContent(
-  tag: string,
-  slug: string
-): string | undefined {
+function getPathsForContent(tag: string, slug?: string): string[] {
   switch (tag) {
     case "product":
-      return `/catalog/${slug}`;
+      // Detail route: app/catalog/[slug]; listings: app/catalog, app/products.
+      return slug
+        ? [`/catalog/${slug}`, "/catalog", "/products"]
+        : ["/catalog", "/products"];
     case "service":
-      return `/services/${slug}`;
-    case "page":
-      return `/${slug}`;
-    case "post":
-      return `/blog/${slug}`;
-    // Content types without individual pages (list-only)
+      // No detail route exists (only app/services/page.tsx) — revalidate the listing.
+      return ["/services"];
+    // Content types rendered only via cache tags on list pages.
     case "testimonials":
     case "faq":
     case "gallery":
     case "site-settings":
-      return undefined;
+      return [];
     default:
-      return undefined;
+      return [];
   }
 }
 
@@ -55,18 +56,17 @@ function getPathForContent(
  *
  * Request body:
  * - secret: string (matches SANITY_REVALIDATE_SECRET env var)
- * - tag: "product" | "service" | "testimonials" | "faq" | "gallery" | "site-settings" | "page" | "post"
+ * - tag: "product" | "service" | "testimonials" | "faq" | "gallery" | "site-settings"
  * - slug?: string (optional, triggers path-based revalidation for individual content pages)
  *
- * When slug is provided:
- * - Calls revalidatePath() for the specific content page (/catalog/[slug], /blog/[slug], etc.)
- * - Also calls revalidateTag() to invalidate list pages
- *
- * When slug is omitted:
- * - Only calls revalidateTag() to invalidate list pages
+ * Revalidation behaviour:
+ * - Always calls revalidateTag(tag) to invalidate tag-backed list pages.
+ * - Additionally calls revalidatePath() for every route that actually renders the
+ *   content in `app/` (detail page when a slug is supplied, plus listing pages).
+ *   Routes that only exist under the build-excluded `src/` tree are not mapped.
  *
  * Returns:
- * - 200: { success: true, revalidated: true, tag: string, path?: string, now: number }
+ * - 200: { success: true, revalidated: true, tag: string, paths?: string[], now: number }
  * - 400: Invalid request data or malformed JSON
  * - 401: Invalid secret token
  * - 500: Server misconfiguration (SANITY_REVALIDATE_SECRET not set)
@@ -99,24 +99,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Always revalidate the cache tag for list pages
+    // Always revalidate the cache tag for tag-backed list pages
     revalidateTag(data.tag);
 
-    // If slug is provided, also revalidate the specific content page
-    let revalidatedPath: string | undefined;
-    if (data.slug) {
-      const path = getPathForContent(data.tag, data.slug);
-      if (path) {
-        revalidatePath(path);
-        revalidatedPath = path;
-      }
+    // Also revalidate every route in `app/` that actually renders this content
+    const paths = getPathsForContent(data.tag, data.slug);
+    for (const path of paths) {
+      revalidatePath(path);
     }
 
     return NextResponse.json({
       success: true,
       revalidated: true,
       tag: data.tag,
-      ...(revalidatedPath && { path: revalidatedPath }),
+      ...(paths.length > 0 && { paths }),
       now: Date.now(),
     });
   } catch (error) {
