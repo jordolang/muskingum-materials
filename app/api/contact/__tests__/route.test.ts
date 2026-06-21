@@ -150,28 +150,56 @@ describe("POST /api/contact", () => {
         To: "sales@muskingummaterials.com",
         Subject: "Website Contact: General Inquiry",
         TextBody: expect.stringContaining("Name: John Doe"),
+        HtmlBody: undefined,
         ReplyTo: "john@example.com",
+        Tag: "contact-form",
+        Metadata: {
+          contactName: "John Doe",
+          contactEmail: "john@example.com",
+          subject: "General Inquiry",
+        },
       });
       expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
         From: "noreply@test.com",
         To: "sales@muskingummaterials.com",
         Subject: "Website Contact: General Inquiry",
         TextBody: expect.stringContaining("Email: john@example.com"),
+        HtmlBody: undefined,
         ReplyTo: "john@example.com",
+        Tag: "contact-form",
+        Metadata: {
+          contactName: "John Doe",
+          contactEmail: "john@example.com",
+          subject: "General Inquiry",
+        },
       });
       expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
         From: "noreply@test.com",
         To: "sales@muskingummaterials.com",
         Subject: "Website Contact: General Inquiry",
         TextBody: expect.stringContaining("Phone: 7403190183"),
+        HtmlBody: undefined,
         ReplyTo: "john@example.com",
+        Tag: "contact-form",
+        Metadata: {
+          contactName: "John Doe",
+          contactEmail: "john@example.com",
+          subject: "General Inquiry",
+        },
       });
       expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
         From: "noreply@test.com",
         To: "sales@muskingummaterials.com",
         Subject: "Website Contact: General Inquiry",
         TextBody: expect.stringContaining("Subject: General Inquiry"),
+        HtmlBody: undefined,
         ReplyTo: "john@example.com",
+        Tag: "contact-form",
+        Metadata: {
+          contactName: "John Doe",
+          contactEmail: "john@example.com",
+          subject: "General Inquiry",
+        },
       });
     });
 
@@ -206,7 +234,14 @@ describe("POST /api/contact", () => {
         To: "sales@muskingummaterials.com",
         Subject: "Website Contact: General Inquiry",
         TextBody: expect.stringContaining("Phone: Not provided"),
+        HtmlBody: undefined,
         ReplyTo: "john@example.com",
+        Tag: "contact-form",
+        Metadata: {
+          contactName: "John Doe",
+          contactEmail: "john@example.com",
+          subject: "General Inquiry",
+        },
       });
     });
 
@@ -571,7 +606,14 @@ describe("POST /api/contact", () => {
         To: "sales@muskingummaterials.com",
         Subject: "Website Contact: General Inquiry",
         TextBody: expect.any(String),
+        HtmlBody: undefined,
         ReplyTo: "john@example.com",
+        Tag: "contact-form",
+        Metadata: {
+          contactName: "John Doe",
+          contactEmail: "john@example.com",
+          subject: "General Inquiry",
+        },
       });
     });
   });

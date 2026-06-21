@@ -307,6 +307,12 @@ describe("POST /api/orders/checkout", () => {
           Subject: expect.stringContaining("New Online Order"),
           TextBody: expect.stringContaining("Fill Dirt"),
           ReplyTo: "john@example.com",
+          Tag: "order-confirmation",
+          Metadata: expect.objectContaining({
+            customerName: "John Doe",
+            customerEmail: "john@example.com",
+            fulfillment: "pickup",
+          }),
         })
       );
     });

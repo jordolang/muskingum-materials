@@ -182,47 +182,44 @@ describe("POST /api/quote", () => {
 
       await POST(request as any);
 
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
+      const expectedEmailFields = {
         From: "noreply@test.com",
         To: "sales@muskingummaterials.com",
         Subject: "Quote Request from John Doe",
+        HtmlBody: undefined,
+        ReplyTo: "john@example.com",
+        Tag: "quote-request",
+        Metadata: {
+          quoteName: "John Doe",
+          quoteEmail: "john@example.com",
+          productCount: "2",
+          company: "Acme Construction",
+        },
+      };
+
+      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
+        ...expectedEmailFields,
         TextBody: expect.stringContaining("Name: John Doe"),
-        ReplyTo: "john@example.com",
       });
       expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        From: "noreply@test.com",
-        To: "sales@muskingummaterials.com",
-        Subject: "Quote Request from John Doe",
+        ...expectedEmailFields,
         TextBody: expect.stringContaining("Email: john@example.com"),
-        ReplyTo: "john@example.com",
       });
       expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        From: "noreply@test.com",
-        To: "sales@muskingummaterials.com",
-        Subject: "Quote Request from John Doe",
+        ...expectedEmailFields,
         TextBody: expect.stringContaining("Phone: 7403190183"),
-        ReplyTo: "john@example.com",
       });
       expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        From: "noreply@test.com",
-        To: "sales@muskingummaterials.com",
-        Subject: "Quote Request from John Doe",
+        ...expectedEmailFields,
         TextBody: expect.stringContaining("Company: Acme Construction"),
-        ReplyTo: "john@example.com",
       });
       expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        From: "noreply@test.com",
-        To: "sales@muskingummaterials.com",
-        Subject: "Quote Request from John Doe",
+        ...expectedEmailFields,
         TextBody: expect.stringContaining("Fill Dirt: 10 tons"),
-        ReplyTo: "john@example.com",
       });
       expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        From: "noreply@test.com",
-        To: "sales@muskingummaterials.com",
-        Subject: "Quote Request from John Doe",
+        ...expectedEmailFields,
         TextBody: expect.stringContaining("Fill Sand: 5 tons"),
-        ReplyTo: "john@example.com",
       });
     });
 
@@ -257,33 +254,36 @@ describe("POST /api/quote", () => {
 
       await POST(request as any);
 
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
+      const expectedMinimalEmailFields = {
         From: "noreply@test.com",
         To: "sales@muskingummaterials.com",
         Subject: "Quote Request from Jane Smith",
+        HtmlBody: undefined,
+        ReplyTo: "jane@example.com",
+        Tag: "quote-request",
+        Metadata: {
+          quoteName: "Jane Smith",
+          quoteEmail: "jane@example.com",
+          productCount: "1",
+          company: "none",
+        },
+      };
+
+      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
+        ...expectedMinimalEmailFields,
         TextBody: expect.stringContaining("Phone: Not provided"),
-        ReplyTo: "jane@example.com",
       });
       expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        From: "noreply@test.com",
-        To: "sales@muskingummaterials.com",
-        Subject: "Quote Request from Jane Smith",
+        ...expectedMinimalEmailFields,
         TextBody: expect.stringContaining("Company: Not provided"),
-        ReplyTo: "jane@example.com",
       });
       expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        From: "noreply@test.com",
-        To: "sales@muskingummaterials.com",
-        Subject: "Quote Request from Jane Smith",
+        ...expectedMinimalEmailFields,
         TextBody: expect.stringContaining("Delivery Address: Pickup"),
-        ReplyTo: "jane@example.com",
       });
       expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        From: "noreply@test.com",
-        To: "sales@muskingummaterials.com",
-        Subject: "Quote Request from Jane Smith",
+        ...expectedMinimalEmailFields,
         TextBody: expect.stringContaining("Notes: None"),
-        ReplyTo: "jane@example.com",
       });
     });
 
