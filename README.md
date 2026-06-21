@@ -194,6 +194,9 @@ npm run db:push          # Push schema changes to Neon
 npm run db:studio        # Open Prisma Studio
 npm run db:seed          # Seed products, cost guides, services, email templates
 
+# Content Sync
+npm run sync             # Sync Prisma products/services to Sanity (one-way, preserves marketing fields)
+
 # Ad-hoc verification (run directly, not via npm)
 node test-order-number.js          # Order number generation
 bash test-protected-routes.sh      # Auth route protection
@@ -208,10 +211,35 @@ bash test-rate-limits.sh           # Rate limiting (429 headers, per-IP isolatio
 
 | Store | Authoritative for |
 |-------|------------------|
-| **Prisma / Neon Postgres** | Products, Services, CostGuides, and all transactional models (Order, Lead, etc.) |
-| **Sanity Studio** | Marketing content — testimonials, FAQs, gallery images, pages, posts, site settings |
+| **Prisma / Neon Postgres** | Catalog/pricing for Products & Services; all transactional models (Order, Lead, etc.); CostGuides |
+| **Sanity Studio** | Marketing content for Products & Services; testimonials, FAQs, gallery images, pages, posts, site settings |
 
-Products and services exist **only in Prisma** at runtime. Sanity's `product` schema was removed; Prisma is the sole catalog authority.
+Products and services exist in **both** stores with field-level ownership: Prisma owns catalog/pricing fields, Sanity owns marketing/SEO content. A one-way sync system (Prisma → Sanity) keeps catalog fields synchronized while preserving marketing content. See the "Prisma ↔ Sanity Sync" section below.
+
+### Prisma ↔ Sanity Sync
+
+Products and services exist in **both** stores with **field-level ownership** determining sync direction:
+
+**Sync Architecture:**
+- **Direction**: One-way Prisma → Sanity (catalog fields only)
+- **Trigger**: Manual via `npm run sync`
+- **Mechanism**: Upsert by `slug` — Prisma-owned fields overwrite; Sanity-owned fields are preserved
+- **Idempotent**: Re-running sync is safe and produces the same result
+
+**Field Ownership:**
+
+| Owner | Fields |
+|-------|--------|
+| **Prisma** (synced to Sanity) | Catalog: `name`, `category`, `price`, `unit`, `stockStatus`, `active`, `featured`<br/>Market pricing: `marketPriceLowPerTon`, `marketPriceHighPerTon`, etc.<br/>Physical: `sizeDescription`, `colorDescription`, `densityLow`, `densityHigh`<br/>Structured: `bestFor`, `notFor`, `commonUses`, `pros`, `cons`, `altNames`, `features` (services) |
+| **Sanity** (never overwritten) | Marketing: `description`, `shortDescription`<br/>Media: `image`, `gallery`, `imageAlt`<br/>SEO: `metaTitle`, `metaDescription`, `seo.ogImage`<br/>Relations: `relatedProducts`, `icon` (services) |
+
+**Workflow:**
+
+1. **Catalog/pricing changes**: Edit in Prisma Studio (`npm run db:studio`) or seed scripts, then run `npm run sync`
+2. **Marketing/SEO changes**: Edit directly in Sanity Studio at `/studio`
+3. **Reconciliation**: Sync reports mismatches (records in one store but not the other) but does NOT auto-delete orphaned records
+
+**Important**: Orphaned Sanity records require manual cleanup to preserve marketing work. See [`docs/sync-field-ownership.md`](docs/sync-field-ownership.md) for complete field-by-field ownership map, edge cases, and verification checklist.
 
 ### Order flow
 

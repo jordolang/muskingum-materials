@@ -124,7 +124,10 @@ describe("checkoutFormSchema", () => {
       };
 
       const result = checkoutFormSchema.parse(validData);
-      expect(result).toEqual(validData);
+      expect(result).toEqual({
+        ...validData,
+        paymentMethod: "stripe", // Default value added by schema
+      });
     });
 
     it("should validate delivery fulfillment with optional fields", () => {
@@ -139,7 +142,10 @@ describe("checkoutFormSchema", () => {
       };
 
       const result = checkoutFormSchema.parse(validData);
-      expect(result).toEqual(validData);
+      expect(result).toEqual({
+        ...validData,
+        paymentMethod: "stripe", // Default value added by schema
+      });
     });
 
     it("should validate with minimum phone length", () => {
@@ -152,7 +158,10 @@ describe("checkoutFormSchema", () => {
       };
 
       const result = checkoutFormSchema.parse(validData);
-      expect(result).toEqual(validData);
+      expect(result).toEqual({
+        ...validData,
+        paymentMethod: "stripe", // Default value added by schema
+      });
     });
   });
 
@@ -229,7 +238,10 @@ describe("checkoutSchema", () => {
       };
 
       const result = checkoutSchema.parse(validData);
-      expect(result).toEqual(validData);
+      expect(result).toEqual({
+        ...validData,
+        paymentMethod: "stripe", // Default value added by schema
+      });
     });
 
     it("should validate with single item", () => {
@@ -248,7 +260,10 @@ describe("checkoutSchema", () => {
       };
 
       const result = checkoutSchema.parse(validData);
-      expect(result).toEqual(validData);
+      expect(result).toEqual({
+        ...validData,
+        paymentMethod: "stripe", // Default value added by schema
+      });
     });
   });
 
