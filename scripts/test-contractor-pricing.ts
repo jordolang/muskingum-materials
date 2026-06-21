@@ -278,8 +278,8 @@ const subtotal = orderQuantity * testProduct.price;
 const volumeSavings = orderCalc.volumeDiscount * orderQuantity;
 const contractorSavings = orderCalc.contractorDiscount * orderQuantity;
 const discountedSubtotal = orderCalc.finalPrice * orderQuantity;
-const tax = discountedSubtotal * 0.0725; // 7.25% tax
-const processingFee = discountedSubtotal * 0.045; // 4.5% fee
+const tax = discountedSubtotal * TAX_RATE;
+const processingFee = discountedSubtotal * CREDIT_PROCESSING_FEE;
 const total = discountedSubtotal + tax + processingFee;
 
 console.log(`Product: ${testProduct.name} - ${orderQuantity} tons`);
