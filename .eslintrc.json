@@ -1,7 +1,48 @@
 {
   "root": true,
   "extends": ["next/core-web-vitals", "next/typescript"],
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "sanity",
+            "message": "Sanity Studio imports are only allowed in app/studio/**, sanity/**, sanity.config.ts, and sanity.cli.ts to prevent bloating the main app bundle. Use @sanity/client or @sanity/image-url for content fetching."
+          },
+          {
+            "name": "@sanity/vision",
+            "message": "Sanity Vision plugin is Studio-only and should not be imported outside app/studio/**, sanity/**, sanity.config.ts, and sanity.cli.ts."
+          },
+          {
+            "name": "@sanity/ui",
+            "message": "Sanity UI components are Studio-only and should not be imported outside app/studio/**, sanity/**, sanity.config.ts, and sanity.cli.ts."
+          },
+          {
+            "name": "styled-components",
+            "message": "styled-components is only used by Sanity Studio and should not be imported outside app/studio/**, sanity/**, sanity.config.ts, and sanity.cli.ts. Use Tailwind CSS for styling in the main app."
+          }
+        ],
+        "patterns": [
+          {
+            "group": ["sanity/*"],
+            "message": "Sanity Studio subpath imports (sanity/structure, sanity/cli, etc.) are only allowed in app/studio/**, sanity/**, sanity.config.ts, and sanity.cli.ts. Use @sanity/client or @sanity/image-url for content fetching."
+          },
+          {
+            "group": ["next-sanity/studio"],
+            "message": "next-sanity/studio is Studio-only and should not be imported outside app/studio/**, sanity/**, sanity.config.ts, and sanity.cli.ts. Use next-sanity for content fetching instead."
+          }
+        ]
+      }
+    ]
+  },
   "overrides": [
+    {
+      "files": ["app/studio/**/*", "sanity/**/*", "sanity.config.ts", "sanity.cli.ts"],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    },
     {
       "files": ["**/__tests__/**/*", "**/*.test.ts", "**/*.test.tsx"],
       "rules": {
