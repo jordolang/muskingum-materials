@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { POST } from "@/app/api/quote/route";
 import { prisma } from "@/lib/prisma";
+import type { EmailSendResult } from "@/lib/email-service";
 
 // Mock dependencies
 vi.mock("@/lib/prisma", () => ({
@@ -11,8 +12,18 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
-// Mock Postmark with a module factory
-vi.mock("postmark");
+// Mock email-service instead of mocking Postmark directly
+vi.mock("@/lib/email-service", () => ({
+  sendNotificationEmail: vi.fn(),
+}));
+
+// Mock logger (if used in route)
+vi.mock("@/lib/logger", () => ({
+  logger: {
+    error: vi.fn(),
+    info: vi.fn(),
+  },
+}));
 
 describe("POST /api/quote", () => {
   const validQuoteData = {
@@ -29,19 +40,18 @@ describe("POST /api/quote", () => {
   };
 
   // Get mock references
-  let mockPostmarkSendEmail: ReturnType<typeof vi.fn>;
+  let mockSendNotificationEmail: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     vi.clearAllMocks();
 
-    // Setup Postmark mock
-    const postmark = await import("postmark");
-    mockPostmarkSendEmail = vi.fn().mockResolvedValue({ MessageID: "test-123" });
-    vi.mocked(postmark.ServerClient).mockImplementation(function () {
-      return {
-        sendEmail: mockPostmarkSendEmail,
-      } as any;
-    } as any);
+    // Setup email-service mock
+    const emailService = await import("@/lib/email-service");
+    mockSendNotificationEmail = vi.mocked(emailService.sendNotificationEmail);
+    mockSendNotificationEmail.mockResolvedValue({
+      success: true,
+      messageId: "test-123"
+    } as EmailSendResult);
 
     // Mock environment variables
     process.env.POSTMARK_API_TOKEN = "test-token";
@@ -62,7 +72,6 @@ describe("POST /api/quote", () => {
       };
 
       vi.mocked(prisma.quoteRequest.create).mockResolvedValue(mockQuoteRequest as any);
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
 
       const request = new Request("http://localhost:3000/api/quote", {
         method: "POST",
@@ -126,7 +135,6 @@ describe("POST /api/quote", () => {
       };
 
       vi.mocked(prisma.quoteRequest.create).mockResolvedValue(mockQuoteRequest as any);
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
 
       const request = new Request("http://localhost:3000/api/quote", {
         method: "POST",
@@ -165,7 +173,7 @@ describe("POST /api/quote", () => {
       });
     });
 
-    it("should send email notification when Postmark is configured", async () => {
+    it("should send email notification via email-service", async () => {
       const mockQuoteRequest = {
         id: "quote_123",
         ...validQuoteData,
@@ -173,7 +181,6 @@ describe("POST /api/quote", () => {
       };
 
       vi.mocked(prisma.quoteRequest.create).mockResolvedValue(mockQuoteRequest as any);
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
 
       const request = new Request("http://localhost:3000/api/quote", {
         method: "POST",
@@ -182,45 +189,29 @@ describe("POST /api/quote", () => {
 
       await POST(request as any);
 
-      const expectedEmailFields = {
-        From: "noreply@test.com",
-        To: "sales@muskingummaterials.com",
-        Subject: "Quote Request from John Doe",
-        HtmlBody: undefined,
-        ReplyTo: "john@example.com",
-        Tag: "quote-request",
-        Metadata: {
-          quoteName: "John Doe",
-          quoteEmail: "john@example.com",
-          productCount: "2",
-          company: "Acme Construction",
-        },
-      };
+      expect(mockSendNotificationEmail).toHaveBeenCalledWith(
+        "Quote Request from John Doe",
+        expect.stringContaining("Name: John Doe"),
+        {
+          replyTo: "john@example.com",
+          tag: "quote-request",
+          metadata: {
+            quoteName: "John Doe",
+            quoteEmail: "john@example.com",
+            productCount: "2",
+            company: "Acme Construction",
+          },
+        }
+      );
 
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        ...expectedEmailFields,
-        TextBody: expect.stringContaining("Name: John Doe"),
-      });
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        ...expectedEmailFields,
-        TextBody: expect.stringContaining("Email: john@example.com"),
-      });
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        ...expectedEmailFields,
-        TextBody: expect.stringContaining("Phone: 7403190183"),
-      });
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        ...expectedEmailFields,
-        TextBody: expect.stringContaining("Company: Acme Construction"),
-      });
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        ...expectedEmailFields,
-        TextBody: expect.stringContaining("Fill Dirt: 10 tons"),
-      });
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        ...expectedEmailFields,
-        TextBody: expect.stringContaining("Fill Sand: 5 tons"),
-      });
+      // Verify all expected content is in the email body
+      const callArgs = mockSendNotificationEmail.mock.calls[0];
+      const emailBody = callArgs[1];
+      expect(emailBody).toContain("Email: john@example.com");
+      expect(emailBody).toContain("Phone: 7403190183");
+      expect(emailBody).toContain("Company: Acme Construction");
+      expect(emailBody).toContain("Fill Dirt: 10 tons");
+      expect(emailBody).toContain("Fill Sand: 5 tons");
     });
 
     it("should include 'Not provided' for missing optional fields in email", async () => {
@@ -245,7 +236,6 @@ describe("POST /api/quote", () => {
       };
 
       vi.mocked(prisma.quoteRequest.create).mockResolvedValue(mockQuoteRequest as any);
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
 
       const request = new Request("http://localhost:3000/api/quote", {
         method: "POST",
@@ -254,61 +244,16 @@ describe("POST /api/quote", () => {
 
       await POST(request as any);
 
-      const expectedMinimalEmailFields = {
-        From: "noreply@test.com",
-        To: "sales@muskingummaterials.com",
-        Subject: "Quote Request from Jane Smith",
-        HtmlBody: undefined,
-        ReplyTo: "jane@example.com",
-        Tag: "quote-request",
-        Metadata: {
-          quoteName: "Jane Smith",
-          quoteEmail: "jane@example.com",
-          productCount: "1",
-          company: "none",
-        },
-      };
+      const callArgs = mockSendNotificationEmail.mock.calls[0];
+      const emailBody = callArgs[1];
+      expect(emailBody).toContain("Phone: Not provided");
+      expect(emailBody).toContain("Company: Not provided");
+      expect(emailBody).toContain("Delivery Address: Pickup");
+      expect(emailBody).toContain("Notes: None");
 
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        ...expectedMinimalEmailFields,
-        TextBody: expect.stringContaining("Phone: Not provided"),
-      });
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        ...expectedMinimalEmailFields,
-        TextBody: expect.stringContaining("Company: Not provided"),
-      });
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        ...expectedMinimalEmailFields,
-        TextBody: expect.stringContaining("Delivery Address: Pickup"),
-      });
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        ...expectedMinimalEmailFields,
-        TextBody: expect.stringContaining("Notes: None"),
-      });
-    });
-
-    it("should not send email when Postmark is not configured", async () => {
-      delete process.env.POSTMARK_API_TOKEN;
-
-      const mockQuoteRequest = {
-        id: "quote_123",
-        ...validQuoteData,
-        createdAt: new Date(),
-      };
-
-      vi.mocked(prisma.quoteRequest.create).mockResolvedValue(mockQuoteRequest as any);
-
-      const request = new Request("http://localhost:3000/api/quote", {
-        method: "POST",
-        body: JSON.stringify(validQuoteData),
-      });
-
-      const response = await POST(request as any);
-      const data = await response.json();
-
-      expect(response.status).toBe(200);
-      expect(data).toMatchObject({ success: true });
-      expect(mockPostmarkSendEmail).not.toHaveBeenCalled();
+      // Verify metadata reflects missing company
+      const emailOptions = callArgs[2];
+      expect(emailOptions?.metadata?.company).toBe("none");
     });
 
     it("should succeed even if email sending fails", async () => {
@@ -319,7 +264,10 @@ describe("POST /api/quote", () => {
       };
 
       vi.mocked(prisma.quoteRequest.create).mockResolvedValue(mockQuoteRequest as any);
-      mockPostmarkSendEmail.mockRejectedValue(new Error("Email service down"));
+      mockSendNotificationEmail.mockResolvedValue({
+        success: false,
+        error: "Email service down"
+      } as EmailSendResult);
 
       const request = new Request("http://localhost:3000/api/quote", {
         method: "POST",
@@ -393,7 +341,6 @@ describe("POST /api/quote", () => {
       };
 
       vi.mocked(prisma.quoteRequest.create).mockResolvedValue(mockQuoteRequest as any);
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
 
       const request = new Request("http://localhost:3000/api/quote", {
         method: "POST",
@@ -480,7 +427,7 @@ describe("POST /api/quote", () => {
 
       await POST(request as any);
 
-      expect(mockPostmarkSendEmail).not.toHaveBeenCalled();
+      expect(mockSendNotificationEmail).not.toHaveBeenCalled();
     });
   });
 
@@ -543,7 +490,6 @@ describe("POST /api/quote", () => {
       };
 
       vi.mocked(prisma.quoteRequest.create).mockResolvedValue(mockQuoteRequest as any);
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
 
       const request = new Request("http://localhost:3000/api/quote", {
         method: "POST",
@@ -574,7 +520,6 @@ describe("POST /api/quote", () => {
       };
 
       vi.mocked(prisma.quoteRequest.create).mockResolvedValue(mockQuoteRequest as any);
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
 
       const request = new Request("http://localhost:3000/api/quote", {
         method: "POST",
@@ -617,7 +562,6 @@ describe("POST /api/quote", () => {
       };
 
       vi.mocked(prisma.quoteRequest.create).mockResolvedValue(mockQuoteRequest as any);
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
 
       const request = new Request("http://localhost:3000/api/quote", {
         method: "POST",
@@ -629,42 +573,6 @@ describe("POST /api/quote", () => {
 
       expect(response.status).toBe(200);
       expect(data).toMatchObject({ success: true });
-    });
-
-    it("should use default from email if not configured", async () => {
-      delete process.env.POSTMARK_FROM_EMAIL;
-
-      const mockQuoteRequest = {
-        id: "quote_123",
-        ...validQuoteData,
-        createdAt: new Date(),
-      };
-
-      vi.mocked(prisma.quoteRequest.create).mockResolvedValue(mockQuoteRequest as any);
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
-
-      const request = new Request("http://localhost:3000/api/quote", {
-        method: "POST",
-        body: JSON.stringify(validQuoteData),
-      });
-
-      await POST(request as any);
-
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        From: "noreply@muskingummaterials.com",
-        To: "sales@muskingummaterials.com",
-        Subject: "Quote Request from John Doe",
-        TextBody: expect.any(String),
-        HtmlBody: undefined,
-        ReplyTo: "john@example.com",
-        Tag: "quote-request",
-        Metadata: {
-          quoteName: "John Doe",
-          quoteEmail: "john@example.com",
-          productCount: "2",
-          company: "Acme Construction",
-        },
-      });
     });
 
     it("should handle long notes content", async () => {
@@ -681,7 +589,6 @@ describe("POST /api/quote", () => {
       };
 
       vi.mocked(prisma.quoteRequest.create).mockResolvedValue(mockQuoteRequest as any);
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
 
       const request = new Request("http://localhost:3000/api/quote", {
         method: "POST",
@@ -693,6 +600,82 @@ describe("POST /api/quote", () => {
 
       expect(response.status).toBe(200);
       expect(data).toMatchObject({ success: true });
+    });
+  });
+
+  describe("email-service integration", () => {
+    it("should pass correct tag and metadata to email-service", async () => {
+      const mockQuoteRequest = {
+        id: "quote_123",
+        ...validQuoteData,
+        createdAt: new Date(),
+      };
+
+      vi.mocked(prisma.quoteRequest.create).mockResolvedValue(mockQuoteRequest as any);
+
+      const request = new Request("http://localhost:3000/api/quote", {
+        method: "POST",
+        body: JSON.stringify(validQuoteData),
+      });
+
+      await POST(request as any);
+
+      expect(mockSendNotificationEmail).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(String),
+        {
+          replyTo: "john@example.com",
+          tag: "quote-request",
+          metadata: {
+            quoteName: "John Doe",
+            quoteEmail: "john@example.com",
+            productCount: "2",
+            company: "Acme Construction",
+          },
+        }
+      );
+    });
+
+    it("should include replyTo in email options", async () => {
+      const mockQuoteRequest = {
+        id: "quote_123",
+        ...validQuoteData,
+        createdAt: new Date(),
+      };
+
+      vi.mocked(prisma.quoteRequest.create).mockResolvedValue(mockQuoteRequest as any);
+
+      const request = new Request("http://localhost:3000/api/quote", {
+        method: "POST",
+        body: JSON.stringify(validQuoteData),
+      });
+
+      await POST(request as any);
+
+      const callArgs = mockSendNotificationEmail.mock.calls[0];
+      const emailOptions = callArgs[2];
+      expect(emailOptions?.replyTo).toBe("john@example.com");
+    });
+
+    it("should include product count in metadata", async () => {
+      const mockQuoteRequest = {
+        id: "quote_123",
+        ...validQuoteData,
+        createdAt: new Date(),
+      };
+
+      vi.mocked(prisma.quoteRequest.create).mockResolvedValue(mockQuoteRequest as any);
+
+      const request = new Request("http://localhost:3000/api/quote", {
+        method: "POST",
+        body: JSON.stringify(validQuoteData),
+      });
+
+      await POST(request as any);
+
+      const callArgs = mockSendNotificationEmail.mock.calls[0];
+      const emailOptions = callArgs[2];
+      expect(emailOptions?.metadata?.productCount).toBe("2");
     });
   });
 });

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { POST } from "@/app/api/contact/route";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import type { EmailSendResult } from "@/lib/email-service";
 
 // Mock dependencies
 vi.mock("@/lib/prisma", () => ({
@@ -12,8 +13,10 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
-// Mock Postmark with a module factory
-vi.mock("postmark");
+// Mock email-service instead of mocking Postmark directly
+vi.mock("@/lib/email-service", () => ({
+  sendNotificationEmail: vi.fn(),
+}));
 
 // Mock logger
 vi.mock("@/lib/logger", () => ({
@@ -32,19 +35,18 @@ describe("POST /api/contact", () => {
   };
 
   // Get mock references
-  let mockPostmarkSendEmail: ReturnType<typeof vi.fn>;
+  let mockSendNotificationEmail: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     vi.clearAllMocks();
 
-    // Setup Postmark mock
-    const postmark = await import("postmark");
-    mockPostmarkSendEmail = vi.fn().mockResolvedValue({ MessageID: "test-123" });
-    vi.mocked(postmark.ServerClient).mockImplementation(function () {
-      return {
-        sendEmail: mockPostmarkSendEmail,
-      } as any;
-    } as any);
+    // Setup email-service mock
+    const emailService = await import("@/lib/email-service");
+    mockSendNotificationEmail = vi.mocked(emailService.sendNotificationEmail);
+    mockSendNotificationEmail.mockResolvedValue({
+      success: true,
+      messageId: "test-123"
+    } as EmailSendResult);
 
     // Mock environment variables
     process.env.POSTMARK_API_TOKEN = "test-token";
@@ -65,7 +67,6 @@ describe("POST /api/contact", () => {
       };
 
       vi.mocked(prisma.contactSubmission.create).mockResolvedValue(mockSubmission as any);
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
 
       const request = new Request("http://localhost:3000/api/contact", {
         method: "POST",
@@ -105,7 +106,6 @@ describe("POST /api/contact", () => {
       };
 
       vi.mocked(prisma.contactSubmission.create).mockResolvedValue(mockSubmission as any);
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
 
       const request = new Request("http://localhost:3000/api/contact", {
         method: "POST",
@@ -128,7 +128,7 @@ describe("POST /api/contact", () => {
       });
     });
 
-    it("should send email notification when Postmark is configured", async () => {
+    it("should send email notification via email-service", async () => {
       const mockSubmission = {
         id: "submission_123",
         ...validContactData,
@@ -136,7 +136,6 @@ describe("POST /api/contact", () => {
       };
 
       vi.mocked(prisma.contactSubmission.create).mockResolvedValue(mockSubmission as any);
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
 
       const request = new Request("http://localhost:3000/api/contact", {
         method: "POST",
@@ -145,62 +144,27 @@ describe("POST /api/contact", () => {
 
       await POST(request as any);
 
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        From: "noreply@test.com",
-        To: "sales@muskingummaterials.com",
-        Subject: "Website Contact: General Inquiry",
-        TextBody: expect.stringContaining("Name: John Doe"),
-        HtmlBody: undefined,
-        ReplyTo: "john@example.com",
-        Tag: "contact-form",
-        Metadata: {
-          contactName: "John Doe",
-          contactEmail: "john@example.com",
-          subject: "General Inquiry",
-        },
-      });
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        From: "noreply@test.com",
-        To: "sales@muskingummaterials.com",
-        Subject: "Website Contact: General Inquiry",
-        TextBody: expect.stringContaining("Email: john@example.com"),
-        HtmlBody: undefined,
-        ReplyTo: "john@example.com",
-        Tag: "contact-form",
-        Metadata: {
-          contactName: "John Doe",
-          contactEmail: "john@example.com",
-          subject: "General Inquiry",
-        },
-      });
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        From: "noreply@test.com",
-        To: "sales@muskingummaterials.com",
-        Subject: "Website Contact: General Inquiry",
-        TextBody: expect.stringContaining("Phone: 7403190183"),
-        HtmlBody: undefined,
-        ReplyTo: "john@example.com",
-        Tag: "contact-form",
-        Metadata: {
-          contactName: "John Doe",
-          contactEmail: "john@example.com",
-          subject: "General Inquiry",
-        },
-      });
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        From: "noreply@test.com",
-        To: "sales@muskingummaterials.com",
-        Subject: "Website Contact: General Inquiry",
-        TextBody: expect.stringContaining("Subject: General Inquiry"),
-        HtmlBody: undefined,
-        ReplyTo: "john@example.com",
-        Tag: "contact-form",
-        Metadata: {
-          contactName: "John Doe",
-          contactEmail: "john@example.com",
-          subject: "General Inquiry",
-        },
-      });
+      expect(mockSendNotificationEmail).toHaveBeenCalledWith(
+        "Website Contact: General Inquiry",
+        expect.stringContaining("Name: John Doe"),
+        {
+          replyTo: "john@example.com",
+          tag: "contact-form",
+          metadata: {
+            contactName: "John Doe",
+            contactEmail: "john@example.com",
+            subject: "General Inquiry",
+          },
+        }
+      );
+
+      // Verify all expected content is in the email body
+      const callArgs = mockSendNotificationEmail.mock.calls[0];
+      const emailBody = callArgs[1];
+      expect(emailBody).toContain("Email: john@example.com");
+      expect(emailBody).toContain("Phone: 7403190183");
+      expect(emailBody).toContain("Subject: General Inquiry");
+      expect(emailBody).toContain("I would like to know more about your products and services.");
     });
 
     it("should include 'Not provided' for missing phone in email", async () => {
@@ -220,7 +184,6 @@ describe("POST /api/contact", () => {
       };
 
       vi.mocked(prisma.contactSubmission.create).mockResolvedValue(mockSubmission as any);
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
 
       const request = new Request("http://localhost:3000/api/contact", {
         method: "POST",
@@ -229,44 +192,9 @@ describe("POST /api/contact", () => {
 
       await POST(request as any);
 
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        From: "noreply@test.com",
-        To: "sales@muskingummaterials.com",
-        Subject: "Website Contact: General Inquiry",
-        TextBody: expect.stringContaining("Phone: Not provided"),
-        HtmlBody: undefined,
-        ReplyTo: "john@example.com",
-        Tag: "contact-form",
-        Metadata: {
-          contactName: "John Doe",
-          contactEmail: "john@example.com",
-          subject: "General Inquiry",
-        },
-      });
-    });
-
-    it("should not send email when Postmark is not configured", async () => {
-      delete process.env.POSTMARK_API_TOKEN;
-
-      const mockSubmission = {
-        id: "submission_123",
-        ...validContactData,
-        createdAt: new Date(),
-      };
-
-      vi.mocked(prisma.contactSubmission.create).mockResolvedValue(mockSubmission as any);
-
-      const request = new Request("http://localhost:3000/api/contact", {
-        method: "POST",
-        body: JSON.stringify(validContactData),
-      });
-
-      const response = await POST(request as any);
-      const data = await response.json();
-
-      expect(response.status).toBe(200);
-      expect(data).toMatchObject({ success: true });
-      expect(mockPostmarkSendEmail).not.toHaveBeenCalled();
+      const callArgs = mockSendNotificationEmail.mock.calls[0];
+      const emailBody = callArgs[1];
+      expect(emailBody).toContain("Phone: Not provided");
     });
 
     it("should succeed even if email sending fails", async () => {
@@ -277,7 +205,10 @@ describe("POST /api/contact", () => {
       };
 
       vi.mocked(prisma.contactSubmission.create).mockResolvedValue(mockSubmission as any);
-      mockPostmarkSendEmail.mockRejectedValue(new Error("Email service down"));
+      mockSendNotificationEmail.mockResolvedValue({
+        success: false,
+        error: "Email service down"
+      } as EmailSendResult);
 
       const request = new Request("http://localhost:3000/api/contact", {
         method: "POST",
@@ -455,13 +386,12 @@ describe("POST /api/contact", () => {
 
       await POST(request as any);
 
-      expect(mockPostmarkSendEmail).not.toHaveBeenCalled();
+      expect(mockSendNotificationEmail).not.toHaveBeenCalled();
     });
   });
 
   describe("error handling", () => {
     it("should return 500 for unexpected errors", async () => {
-      // Force an unexpected error by rejecting the database call
       vi.mocked(prisma.contactSubmission.create).mockRejectedValue(
         new TypeError("Unexpected database error")
       );
@@ -510,7 +440,6 @@ describe("POST /api/contact", () => {
       };
 
       vi.mocked(prisma.contactSubmission.create).mockResolvedValue(mockSubmission as any);
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
 
       const request = new Request("http://localhost:3000/api/contact", {
         method: "POST",
@@ -538,7 +467,6 @@ describe("POST /api/contact", () => {
       };
 
       vi.mocked(prisma.contactSubmission.create).mockResolvedValue(mockSubmission as any);
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
 
       const request = new Request("http://localhost:3000/api/contact", {
         method: "POST",
@@ -568,7 +496,6 @@ describe("POST /api/contact", () => {
       };
 
       vi.mocked(prisma.contactSubmission.create).mockResolvedValue(mockSubmission as any);
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
 
       const request = new Request("http://localhost:3000/api/contact", {
         method: "POST",
@@ -581,10 +508,10 @@ describe("POST /api/contact", () => {
       expect(response.status).toBe(200);
       expect(data).toMatchObject({ success: true });
     });
+  });
 
-    it("should use default from email if not configured", async () => {
-      delete process.env.POSTMARK_FROM_EMAIL;
-
+  describe("email-service integration", () => {
+    it("should pass correct tag and metadata to email-service", async () => {
       const mockSubmission = {
         id: "submission_123",
         ...validContactData,
@@ -592,7 +519,6 @@ describe("POST /api/contact", () => {
       };
 
       vi.mocked(prisma.contactSubmission.create).mockResolvedValue(mockSubmission as any);
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
 
       const request = new Request("http://localhost:3000/api/contact", {
         method: "POST",
@@ -601,20 +527,40 @@ describe("POST /api/contact", () => {
 
       await POST(request as any);
 
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith({
-        From: "noreply@muskingummaterials.com",
-        To: "sales@muskingummaterials.com",
-        Subject: "Website Contact: General Inquiry",
-        TextBody: expect.any(String),
-        HtmlBody: undefined,
-        ReplyTo: "john@example.com",
-        Tag: "contact-form",
-        Metadata: {
-          contactName: "John Doe",
-          contactEmail: "john@example.com",
-          subject: "General Inquiry",
-        },
+      expect(mockSendNotificationEmail).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(String),
+        {
+          replyTo: "john@example.com",
+          tag: "contact-form",
+          metadata: {
+            contactName: "John Doe",
+            contactEmail: "john@example.com",
+            subject: "General Inquiry",
+          },
+        }
+      );
+    });
+
+    it("should include replyTo in email options", async () => {
+      const mockSubmission = {
+        id: "submission_123",
+        ...validContactData,
+        createdAt: new Date(),
+      };
+
+      vi.mocked(prisma.contactSubmission.create).mockResolvedValue(mockSubmission as any);
+
+      const request = new Request("http://localhost:3000/api/contact", {
+        method: "POST",
+        body: JSON.stringify(validContactData),
       });
+
+      await POST(request as any);
+
+      const callArgs = mockSendNotificationEmail.mock.calls[0];
+      const emailOptions = callArgs[2];
+      expect(emailOptions?.replyTo).toBe("john@example.com");
     });
   });
 });

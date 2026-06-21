@@ -3,6 +3,7 @@ import { POST } from "@/app/api/orders/checkout/route";
 import { prisma } from "@/lib/prisma";
 import { validateCheckoutPrices } from "@/lib/validate-checkout-prices";
 import { auth } from "@clerk/nextjs/server";
+import type { EmailSendResult } from "@/lib/email-service";
 
 // Mock dependencies
 vi.mock("@/lib/prisma", () => ({
@@ -39,16 +40,24 @@ vi.mock("stripe", () => ({
   default: MockStripe,
 }));
 
-// Mock Postmark
-const mockPostmarkSendEmail = vi.fn();
-const MockPostmarkClient = vi.fn().mockImplementation(function () {
-  return {
-    sendEmail: mockPostmarkSendEmail,
-  };
-});
+// Mock email-service instead of mocking Postmark directly
+vi.mock("@/lib/email-service", () => ({
+  sendNotificationEmail: vi.fn(),
+}));
 
-vi.mock("postmark", () => ({
-  ServerClient: MockPostmarkClient,
+// Mock logger
+vi.mock("@/lib/logger", () => ({
+  logger: {
+    error: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+  },
+}));
+
+// Mock monitoring
+vi.mock("@/lib/monitoring", () => ({
+  addBreadcrumb: vi.fn(),
+  startTransaction: vi.fn((name, op, callback) => callback()),
 }));
 
 describe("POST /api/orders/checkout", () => {
@@ -74,10 +83,21 @@ describe("POST /api/orders/checkout", () => {
     total: 11.207625,
   };
 
-  beforeEach(() => {
+  // Get mock references
+  let mockSendNotificationEmail: ReturnType<typeof vi.fn>;
+
+  beforeEach(async () => {
     vi.clearAllMocks();
     vi.mocked(validateCheckoutPrices).mockResolvedValue(validatedPrices);
     vi.mocked(auth).mockResolvedValue({ userId: null } as any);
+
+    // Setup email-service mock
+    const emailService = await import("@/lib/email-service");
+    mockSendNotificationEmail = vi.mocked(emailService.sendNotificationEmail);
+    mockSendNotificationEmail.mockResolvedValue({
+      success: true,
+      messageId: "test-123"
+    } as EmailSendResult);
 
     // Mock environment variables
     process.env.STRIPE_SECRET_KEY = "sk_test_123";
@@ -281,14 +301,13 @@ describe("POST /api/orders/checkout", () => {
       delete process.env.STRIPE_SECRET_KEY;
     });
 
-    it("should create order and send email notification", async () => {
+    it("should create order and send email notification via email-service", async () => {
       const mockOrder = {
         id: "order_123",
         orderNumber: "MM-260423-ABCD1234",
       };
 
       vi.mocked(prisma.order.create).mockResolvedValue(mockOrder as any);
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
 
       const request = new Request("http://localhost:3000/api/orders/checkout", {
         method: "POST",
@@ -300,18 +319,19 @@ describe("POST /api/orders/checkout", () => {
 
       expect(response.status).toBe(200);
       expect(data).toMatchObject({ orderNumber: expect.stringMatching(/^MM-\d{6}-[A-Z0-9]{8}$/) });
-      expect(mockPostmarkSendEmail).toHaveBeenCalledWith(
+
+      expect(mockSendNotificationEmail).toHaveBeenCalledWith(
+        expect.stringContaining("New Online Order"),
+        expect.stringContaining("Fill Dirt"),
         expect.objectContaining({
-          From: "noreply@test.com",
-          To: "sales@muskingummaterials.com",
-          Subject: expect.stringContaining("New Online Order"),
-          TextBody: expect.stringContaining("Fill Dirt"),
-          ReplyTo: "john@example.com",
-          Tag: "order-confirmation",
-          Metadata: expect.objectContaining({
+          replyTo: "john@example.com",
+          tag: "order-confirmation",
+          htmlBody: expect.stringContaining("Fill Dirt"),
+          metadata: expect.objectContaining({
             customerName: "John Doe",
             customerEmail: "john@example.com",
             fulfillment: "pickup",
+            orderNumber: expect.stringMatching(/^MM-\d{6}-[A-Z0-9]{8}$/),
           }),
         })
       );
@@ -324,7 +344,10 @@ describe("POST /api/orders/checkout", () => {
       };
 
       vi.mocked(prisma.order.create).mockResolvedValue(mockOrder as any);
-      mockPostmarkSendEmail.mockRejectedValue(new Error("Email service down"));
+      mockSendNotificationEmail.mockResolvedValue({
+        success: false,
+        error: "Email service down"
+      } as EmailSendResult);
 
       const request = new Request("http://localhost:3000/api/orders/checkout", {
         method: "POST",
@@ -348,7 +371,6 @@ describe("POST /api/orders/checkout", () => {
 
       vi.mocked(prisma.order.create).mockResolvedValue(mockOrder as any);
       mockStripeCheckoutSessions.create.mockRejectedValue(new Error("Stripe API error"));
-      mockPostmarkSendEmail.mockResolvedValue({ MessageID: "test-123" });
 
       const request = new Request("http://localhost:3000/api/orders/checkout", {
         method: "POST",
@@ -360,7 +382,7 @@ describe("POST /api/orders/checkout", () => {
 
       expect(response.status).toBe(200);
       expect(data).toMatchObject({ orderNumber: expect.stringMatching(/^MM-\d{6}-[A-Z0-9]{8}$/) });
-      expect(mockPostmarkSendEmail).toHaveBeenCalled();
+      expect(mockSendNotificationEmail).toHaveBeenCalled();
     });
 
     it("should continue if Stripe session ID update fails", async () => {
@@ -697,6 +719,67 @@ describe("POST /api/orders/checkout", () => {
           ]),
         })
       );
+    });
+  });
+
+  describe("email-service integration", () => {
+    beforeEach(() => {
+      delete process.env.STRIPE_SECRET_KEY;
+    });
+
+    it("should pass correct tag and metadata to email-service", async () => {
+      const mockOrder = {
+        id: "order_123",
+        orderNumber: "MM-260423-ABCD1234",
+      };
+
+      vi.mocked(prisma.order.create).mockResolvedValue(mockOrder as any);
+
+      const request = new Request("http://localhost:3000/api/orders/checkout", {
+        method: "POST",
+        body: JSON.stringify(validCheckoutData),
+      });
+
+      await POST(request as any);
+
+      expect(mockSendNotificationEmail).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(String),
+        expect.objectContaining({
+          replyTo: "john@example.com",
+          tag: "order-confirmation",
+          htmlBody: expect.any(String),
+          metadata: expect.objectContaining({
+            customerName: "John Doe",
+            customerEmail: "john@example.com",
+            fulfillment: "pickup",
+            orderNumber: expect.stringMatching(/^MM-\d{6}-[A-Z0-9]{8}$/),
+            total: expect.any(String),
+          }),
+        })
+      );
+    });
+
+    it("should include order number in email subject", async () => {
+      const mockOrder = {
+        id: "order_123",
+        orderNumber: "MM-260423-ABCD1234",
+      };
+
+      vi.mocked(prisma.order.create).mockResolvedValue(mockOrder as any);
+
+      const request = new Request("http://localhost:3000/api/orders/checkout", {
+        method: "POST",
+        body: JSON.stringify(validCheckoutData),
+      });
+
+      await POST(request as any);
+
+      const callArgs = mockSendNotificationEmail.mock.calls[0];
+      const subject = callArgs[0];
+      // Subject should contain "New Online Order" and the order number pattern
+      expect(subject).toContain("New Online Order");
+      expect(subject).toMatch(/MM-\d{6}-[A-Z0-9]{8}/);
     });
   });
 });
