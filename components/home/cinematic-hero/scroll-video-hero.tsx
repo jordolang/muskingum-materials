@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useScrubFrames } from "./use-scrub-frames";
@@ -11,6 +11,11 @@ interface ScrollVideoHeroProps {
    * page); pass the overlay's scroll element to drive the scrub from inside it.
    */
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
+  /**
+   * Reports Act 1 frame-decode progress (0..1) so a host (the intro overlay)
+   * can lift its loader as soon as the opening frames are ready.
+   */
+  onProgress?: (loaded: number) => void;
 }
 
 /**
@@ -22,7 +27,7 @@ interface ScrollVideoHeroProps {
  * off-screen left. All motion completes by ~45% of the scroll, leaving a hold
  * phase before the page un-sticks into Act 2.
  */
-export function ScrollVideoHero({ scrollContainerRef }: ScrollVideoHeroProps) {
+export function ScrollVideoHero({ scrollContainerRef, onProgress }: ScrollVideoHeroProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     container: scrollContainerRef as React.RefObject<HTMLElement | null> | undefined,
@@ -30,12 +35,18 @@ export function ScrollVideoHero({ scrollContainerRef }: ScrollVideoHeroProps) {
     offset: ["start start", "end end"],
   });
 
-  const { canvasRef } = useScrubFrames(scrollYProgress, {
+  const { canvasRef, loaded } = useScrubFrames(scrollYProgress, {
     base: "/frames/firefly-1",
     count: 192,
     completeAt: 0.45,
     ease: 0.1,
   });
+
+  // Surface decode progress so the intro overlay can reveal as soon as the
+  // opening frames are ready (rather than blocking on the whole sequence).
+  useEffect(() => {
+    onProgress?.(loaded);
+  }, [loaded, onProgress]);
 
   // Camera pull-back + receding headline. Clamped, so they "hold" past 0.45.
   // Only GPU-cheap transforms (scale/opacity) — no animated filters.
