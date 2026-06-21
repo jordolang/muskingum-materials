@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { quoteSchema } from "@/lib/schemas";
-import { sendEmail } from "@/lib/email";
+import { sendNotificationEmail } from "@/lib/email-service";
 import { logger } from "@/lib/logger";
 import { buildSatelliteMapUrl } from "@/lib/static-map";
 
@@ -107,10 +107,9 @@ Project Estimate:
       }
     }
 
-    await sendEmail({
-      to: "sales@muskingummaterials.com",
-      subject: `Quote Request from ${data.name}`,
-      textBody: `
+    await sendNotificationEmail(
+      `Quote Request from ${data.name}`,
+      `
 New quote request:
 
 Name: ${data.name}
@@ -124,8 +123,17 @@ ${productList}
 Delivery Address: ${data.deliveryAddr || "Pickup"}
 Notes: ${data.notes || "None"}${projectEstimateSection}
       `.trim(),
-      replyTo: data.email,
-    });
+      {
+        replyTo: data.email,
+        tag: "quote-request",
+        metadata: {
+          quoteName: data.name,
+          quoteEmail: data.email,
+          productCount: data.products.length.toString(),
+          company: data.company || "none",
+        },
+      }
+    );
 
     return NextResponse.json({
       success: true,
