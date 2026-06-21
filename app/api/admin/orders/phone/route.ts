@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
-import { sendEmail } from "@/lib/email";
+import { sendSimpleEmail } from "@/lib/email-service";
 import { logger } from "@/lib/logger";
 import { BUSINESS_INFO } from "@/data/business";
 
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     .map((i) => `  - ${i.name}: ${i.quantity} ${i.unit}(s) @ $${i.price.toFixed(2)} = $${(i.price * i.quantity).toFixed(2)}`)
     .join("\n");
 
-  await sendEmail({
+  await sendSimpleEmail({
     to: "sales@muskingummaterials.com",
     subject: `Phone Order ${orderNumber} — ${data.name}`,
     textBody: `
