@@ -4,7 +4,16 @@ import { z } from "zod";
 
 const revalidateSchema = z.object({
   secret: z.string(),
-  tag: z.enum(["faq", "gallery", "testimonials", "site-settings"]),
+  tag: z.enum([
+    "product",
+    "service",
+    "testimonials",
+    "faq",
+    "gallery",
+    "site-settings",
+    "page",
+    "post",
+  ]),
 });
 
 /**
@@ -17,7 +26,7 @@ const revalidateSchema = z.object({
  *
  * Request body:
  * - secret: string (matches REVALIDATE_SECRET env var)
- * - type: "products" | "services" | "faq" | "gallery" | "testimonials" | "site-settings"
+ * - tag: "product" | "service" | "testimonials" | "faq" | "gallery" | "site-settings" | "page" | "post"
  *
  * Returns:
  * - 200: { success: true, revalidated: true, type: string, now: number }
