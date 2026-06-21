@@ -19,6 +19,8 @@ export function ChatsFilters() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
   const statusFilter = searchParams.get("status") || "all";
+  const escalatedFilter = searchParams.get("escalated") || "all";
+  const priorityFilter = searchParams.get("priority") || "all";
 
   const handleSearchChange = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -31,7 +33,15 @@ export function ChatsFilters() {
     updateFilters({ status });
   };
 
-  const updateFilters = (updates: { search?: string; status?: string }) => {
+  const handleEscalatedChange = (escalated: string) => {
+    updateFilters({ escalated });
+  };
+
+  const handlePriorityChange = (priority: string) => {
+    updateFilters({ priority });
+  };
+
+  const updateFilters = (updates: { search?: string; status?: string; escalated?: string; priority?: string }) => {
     const params = new URLSearchParams(searchParams);
 
     // Update or remove search param
@@ -52,6 +62,24 @@ export function ChatsFilters() {
       }
     }
 
+    // Update or remove escalated param
+    if (updates.escalated !== undefined) {
+      if (updates.escalated && updates.escalated !== "all") {
+        params.set("escalated", updates.escalated);
+      } else {
+        params.delete("escalated");
+      }
+    }
+
+    // Update or remove priority param
+    if (updates.priority !== undefined) {
+      if (updates.priority && updates.priority !== "all") {
+        params.set("priority", updates.priority);
+      } else {
+        params.delete("priority");
+      }
+    }
+
     // Reset to page 1 when filters change
     params.delete("page");
 
@@ -63,7 +91,7 @@ export function ChatsFilters() {
     const params = new URLSearchParams(searchParams);
 
     Object.entries(overrides).forEach(([key, value]) => {
-      if (value === undefined || value === "" || (key === "status" && value === "all")) {
+      if (value === undefined || value === "" || ((key === "status" || key === "escalated" || key === "priority") && value === "all")) {
         params.delete(key);
       } else {
         params.set(key, value);
@@ -105,10 +133,39 @@ export function ChatsFilters() {
               </SelectContent>
             </Select>
           </div>
+
+          {/* Escalated Filter */}
+          <div className="w-full sm:w-48">
+            <Select value={escalatedFilter} onValueChange={handleEscalatedChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by escalated" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Chats</SelectItem>
+                <SelectItem value="true">Escalated</SelectItem>
+                <SelectItem value="false">Not Escalated</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Priority Filter */}
+          <div className="w-full sm:w-48">
+            <Select value={priorityFilter} onValueChange={handlePriorityChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Priorities</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Active Filters Display */}
-        {(searchQuery || statusFilter !== "all") && (
+        {(searchQuery || statusFilter !== "all" || escalatedFilter !== "all" || priorityFilter !== "all") && (
           <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground flex-wrap">
             <span>Active filters:</span>
             {searchQuery && (
@@ -123,6 +180,22 @@ export function ChatsFilters() {
               <Badge variant="secondary" className="gap-1 capitalize">
                 Status: {statusFilter}
                 <Link href={buildQueryString({ status: "all" })} className="ml-1 hover:text-foreground">
+                  ×
+                </Link>
+              </Badge>
+            )}
+            {escalatedFilter !== "all" && (
+              <Badge variant="secondary" className="gap-1 capitalize">
+                Escalated: {escalatedFilter === "true" ? "Yes" : "No"}
+                <Link href={buildQueryString({ escalated: "all" })} className="ml-1 hover:text-foreground">
+                  ×
+                </Link>
+              </Badge>
+            )}
+            {priorityFilter !== "all" && (
+              <Badge variant="secondary" className="gap-1 capitalize">
+                Priority: {priorityFilter}
+                <Link href={buildQueryString({ priority: "all" })} className="ml-1 hover:text-foreground">
                   ×
                 </Link>
               </Badge>

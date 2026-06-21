@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
 import { ChatsFilters } from "./chats-filters";
 
@@ -24,6 +25,8 @@ export default async function AdminChatsPage({ searchParams }: AdminChatsPagePro
     email: string | null;
     phone: string | null;
     status: string;
+    escalatedAt: Date | null;
+    priority: string | null;
     createdAt: Date;
     updatedAt: Date;
     _count: {
@@ -142,6 +145,16 @@ export default async function AdminChatsPage({ searchParams }: AdminChatsPagePro
                             {chat.visitorId}
                           </p>
                           <StatusBadge status={chat.status} />
+                          {chat.escalatedAt && (
+                            <Badge variant="outline" className="text-xs">
+                              Escalated
+                            </Badge>
+                          )}
+                          {chat.priority === "high" && (
+                            <Badge className="text-xs bg-red-100 text-red-800 border-transparent">
+                              High Priority
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-xs text-muted-foreground">
                           Started: {new Date(chat.createdAt).toLocaleDateString("en-US", {

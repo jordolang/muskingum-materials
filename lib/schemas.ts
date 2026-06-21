@@ -271,6 +271,19 @@ export const leadSchema = z.object({
   visitorId: z.string().optional(),
 });
 
+// Chat escalation schema
+export const chatEscalationSchema = z.object({
+  visitorId: z.string().regex(VISITOR_ID_REGEX, "Invalid visitor ID format"),
+  reason: z.enum(["user_requested", "cannot_answer", "high_intent"], {
+    errorMap: () => ({ message: "Reason must be user_requested, cannot_answer, or high_intent" })
+  }),
+  contactInfo: z.object({
+    name: z.string().min(2, "Name is required").optional(),
+    email: z.string().email("Valid email is required").optional(),
+    phone: z.string().optional(),
+  }).optional(),
+});
+
 // Recurring order schemas
 export const createRecurringOrderSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -368,6 +381,7 @@ export type ProfileUpdateData = z.infer<typeof profileUpdateSchema>;
 export type QuoteData = z.infer<typeof quoteSchema>;
 export type NewsletterData = z.infer<typeof newsletterSchema>;
 export type LeadData = z.infer<typeof leadSchema>;
+export type ChatEscalationData = z.infer<typeof chatEscalationSchema>;
 export type CreateRecurringOrderData = z.infer<typeof createRecurringOrderSchema>;
 export type UpdateRecurringOrderData = z.infer<typeof updateRecurringOrderSchema>;
 export type ReviewData = z.infer<typeof reviewSchema>;

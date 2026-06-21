@@ -23,16 +23,17 @@ enum PaymentMethod {
 }
 
 model Lead {
-  id        String   @id @default(cuid())
-  name      String
-  email     String
-  phone     String?
-  company   String?
-  message   String?
-  source    String   @default("website")
-  status    String   @default("new")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String             @id @default(cuid())
+  name               String
+  email              String
+  phone              String?
+  company            String?
+  message            String?
+  source             String             @default("website")
+  status             String             @default("new")
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  chatConversations  ChatConversation[]
 
   @@index([email])
   @@index([status])
@@ -53,18 +54,25 @@ model ContactSubmission {
 }
 
 model ChatConversation {
-  id        String        @id @default(cuid())
-  visitorId String        @unique
-  name      String?
-  email     String?
-  phone     String?
-  status    String        @default("active")
-  metadata  Json?
-  messages  ChatMessage[]
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id               String        @id @default(cuid())
+  visitorId        String        @unique
+  name             String?
+  email            String?
+  phone            String?
+  status           String        @default("active")
+  metadata         Json?
+  escalatedAt      DateTime?
+  leadId           String?
+  lead             Lead?         @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  priority         String?
+  escalationReason String?       @db.Text
+  messages         ChatMessage[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
   @@index([status])
+  @@index([leadId])
+  @@index([escalatedAt])
 }
 
 model ChatMessage {

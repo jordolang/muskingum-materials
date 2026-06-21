@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Loader2 } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, UserCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,6 +18,8 @@ export function ChatWidget() {
   const [showContactForm, setShowContactForm] = useState(false);
   const [contactInfo, setContactInfo] = useState({ name: "", email: "", phone: "" });
   const [contactSubmitted, setContactSubmitted] = useState(false);
+  const [isAfterHours, setIsAfterHours] = useState(false);
+  const [escalationOffered, setEscalationOffered] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const prevIsOpenRef = useRef(false);
@@ -51,6 +53,25 @@ export function ChatWidget() {
     prevIsOpenRef.current = isOpen;
   }, [isOpen, visitorId]);
 
+  useEffect(() => {
+    // Check business hours status client-side
+    async function checkBusinessHours() {
+      try {
+        const response = await fetch("/api/business-hours");
+        if (response.ok) {
+          const data = await response.json();
+          setIsAfterHours(!data.isBusinessHours);
+        }
+      } catch {
+        // Silently fail - default to showing standard message
+      }
+    }
+
+    if (isOpen) {
+      checkBusinessHours();
+    }
+  }, [isOpen]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = input.trim();
@@ -76,8 +97,12 @@ export function ChatWidget() {
       const data = await response.json();
       addMessage({ role: "assistant", content: data.reply });
 
-      if (messages.length >= CHAT_CONTACT_THRESHOLD && !contactSubmitted && !showContactForm) {
-        setShowContactForm(true);
+      if (messages.length >= CHAT_CONTACT_THRESHOLD && !contactSubmitted && !showContactForm && !escalationOffered) {
+        setEscalationOffered(true);
+        addMessage({
+          role: "assistant",
+          content: "I notice we've been chatting for a bit. Would you like to talk to a person from our team? They can provide more detailed assistance.",
+        });
       }
     } catch {
       toast({
@@ -93,20 +118,43 @@ export function ChatWidget() {
   async function handleContactSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await fetch("/api/leads", {
+      const response = await fetch("/api/chat/escalate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...contactInfo,
-          source: "chat",
           visitorId,
+          reason: "user_requested",
+          contactInfo: {
+            name: contactInfo.name || undefined,
+            email: contactInfo.email || undefined,
+            phone: contactInfo.phone || undefined,
+          },
         }),
       });
+
+      // Handle rate limiting specifically
+      if (response.status === 429) {
+        const retryAfter = response.headers.get("Retry-After");
+        const retrySeconds = retryAfter ? parseInt(retryAfter, 10) : 60;
+        toast({
+          title: "Too Many Requests",
+          description: `Please wait ${retrySeconds} seconds before trying again. We've received your previous request.`,
+          variant: "destructive",
+        });
+        setShowContactForm(false);
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error("Escalation request failed");
+      }
+
+      const data = await response.json();
       setContactSubmitted(true);
       setShowContactForm(false);
       addMessage({
         role: "assistant",
-        content: `Thanks${contactInfo.name ? `, ${contactInfo.name}` : ""}! We have your info and will follow up if needed. How else can I help?`,
+        content: data.message || `Thanks${contactInfo.name ? `, ${contactInfo.name}` : ""}! We have your info and someone from our team will follow up.`,
       });
     } catch {
       toast({
@@ -116,6 +164,10 @@ export function ChatWidget() {
       });
       setShowContactForm(false);
     }
+  }
+
+  function handleTalkToPerson() {
+    setShowContactForm(true);
   }
 
   return (
@@ -138,15 +190,27 @@ export function ChatWidget() {
               <p className="font-semibold text-sm">Muskingum Materials</p>
               <p className="text-xs opacity-90">Ask us anything!</p>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleChat}
-              className="text-white hover:bg-white/20 h-8 w-8"
-              aria-label="Close chat"
-            >
-              <X className="h-5 w-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleTalkToPerson}
+                className="text-white hover:bg-white/20 h-8 text-xs gap-1"
+                aria-label="Talk to a person"
+              >
+                <UserCircle className="h-4 w-4" />
+                Talk to a person
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleChat}
+                className="text-white hover:bg-white/20 h-8 w-8"
+                aria-label="Close chat"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
 
           <ScrollArea className="flex-1 p-4 min-h-0 max-h-[400px]" ref={scrollRef}>
@@ -176,11 +240,32 @@ export function ChatWidget() {
               )}
             </div>
 
+            {escalationOffered && !showContactForm && !contactSubmitted && (
+              <div className="mt-3 p-3 border rounded-lg bg-primary/5 border-primary/20">
+                <Button
+                  onClick={handleTalkToPerson}
+                  size="sm"
+                  className="w-full text-sm gap-2"
+                >
+                  <UserCircle className="h-4 w-4" />
+                  Yes, I&apos;d like to talk to a person
+                </Button>
+              </div>
+            )}
+
             {showContactForm && !contactSubmitted && (
               <div className="mt-3 p-3 border rounded-lg bg-muted/50">
                 <p className="text-xs font-medium mb-2">
-                  Want us to follow up? Leave your info (optional):
+                  Connect with our team! Leave your info and we&apos;ll follow up:
                 </p>
+                {isAfterHours && (
+                  <div className="mb-2 p-2 rounded bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 flex items-start gap-2">
+                    <Clock className="h-3 w-3 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                    <p className="text-xs text-amber-800 dark:text-amber-200">
+                      We&apos;re currently closed. Our team will reach out during business hours (M-F, 7:30 AM - 4:00 PM ET).
+                    </p>
+                  </div>
+                )}
                 <form onSubmit={handleContactSubmit} className="space-y-2">
                   <Input
                     placeholder="Name"
