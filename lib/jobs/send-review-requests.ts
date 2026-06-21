@@ -20,33 +20,49 @@ export async function sendReviewRequests(): Promise<SendReviewRequestsResult> {
   const delayMs = delayMinutes * 60 * 1000;
   const cutoffDate = new Date(Date.now() - delayMs);
 
+  // Process at most this many eligible orders per run to keep the job bounded.
+  const BATCH_SIZE = 100;
+
   try {
+    // Order and ReviewSubmission are linked only by the orderNumber string
+    // (there is no Prisma relation between them), so we exclude already-tracked
+    // orders directly in the Order query's `where` clause rather than filtering
+    // in memory after the fact.
+    //
+    // This ordering is critical: the batch limit must be applied AFTER
+    // excluding already-reviewed orders. If we limited first and filtered in
+    // memory afterwards, once the oldest BATCH_SIZE completed orders all had
+    // review-tracking rows the job would keep selecting that same
+    // already-reviewed batch every run, filter them all out, and never reach
+    // newer eligible orders that still need a review email.
+    const trackedSubmissions = await prisma.reviewSubmission.findMany({
+      where: { orderNumber: { not: null } },
+      select: { orderNumber: true },
+    });
+
+    const reviewedOrderNumbers = trackedSubmissions
+      .map((submission) => submission.orderNumber)
+      .filter(
+        (orderNumber): orderNumber is string => orderNumber !== null
+      );
+
     // Find completed orders that:
     // 1. Were completed before the cutoff date
-    // 2. Don't already have a review submission
-    const eligibleOrders = await prisma.order.findMany({
+    // 2. Don't already have a review submission (excluded in the query)
+    // Oldest-first so the longest-waiting customers are contacted first, and
+    // bounded to BATCH_SIZE so each run does a predictable amount of work.
+    const ordersWithoutReviews = await prisma.order.findMany({
       where: {
         status: "completed",
         completedAt: {
           lte: cutoffDate,
           not: null,
         },
+        orderNumber: { notIn: reviewedOrderNumbers },
       },
+      orderBy: { completedAt: "asc" }, // Oldest first
+      take: BATCH_SIZE,
     });
-
-    // Filter out orders that already have review submissions
-    const ordersWithoutReviews = [];
-    for (const order of eligibleOrders) {
-      const existingSubmission = await prisma.reviewSubmission.findFirst({
-        where: {
-          orderNumber: order.orderNumber,
-        },
-      });
-
-      if (!existingSubmission) {
-        ordersWithoutReviews.push(order);
-      }
-    }
 
     // Send review request emails
     if (process.env.POSTMARK_API_TOKEN && ordersWithoutReviews.length > 0) {
