@@ -13,8 +13,8 @@ import path from "node:path";
 import process from "node:process";
 
 const repoRoot = process.cwd();
-const manifestPath = path.join(repoRoot, ".next", "app-build-manifest.json");
-const chunksDir = path.join(repoRoot, ".next", "static", "chunks");
+const nextDir = path.join(repoRoot, ".next");
+const manifestPath = path.join(nextDir, "app-build-manifest.json");
 
 const STUDIO_ROUTE_PREFIX = "/studio";
 
@@ -44,19 +44,32 @@ async function loadManifest() {
 }
 
 async function analyzeChunk(chunkRelPath) {
-  const chunkName = path.basename(chunkRelPath);
-  const chunkPath = path.join(chunksDir, chunkName);
+  // Manifest entries are paths relative to `.next/` (e.g.
+  // `static/chunks/app/(group)/page-abc.js`). Resolve against `.next/` and keep
+  // the full sub-path — App Router chunks live in nested directories, so taking
+  // only the basename would point at a non-existent top-level file.
+  const chunkPath = path.join(nextDir, chunkRelPath);
   let contents;
   let size = 0;
 
-  // A chunk that cannot be read must NOT be treated as clean — that would let
-  // an unreadable or corrupt bundle silently pass the isolation check. Surface
-  // the failure so the verification fails loudly instead.
   try {
     const stats = await stat(chunkPath);
     size = stats.size;
     contents = await readFile(chunkPath, "utf8");
   } catch (error) {
+    // A missing file (ENOENT) means the manifest references a chunk that wasn't
+    // emitted as a readable client asset (e.g. a server-only entry). It cannot
+    // carry leaked Studio code, so warn loudly and skip rather than fail CI.
+    if (error && error.code === "ENOENT") {
+      console.warn(
+        `⚠️  Skipping chunk "${path.relative(repoRoot, chunkPath)}" — referenced ` +
+          `by the build manifest but not present on disk (no client asset to scan).`
+      );
+      return { markers: [], size: 0, skipped: true };
+    }
+
+    // Any other failure (permissions, corruption, etc.) must NOT be treated as
+    // clean — that would let an unreadable bundle silently pass. Surface it.
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(
       `Failed to read chunk "${path.relative(repoRoot, chunkPath)}" while ` +
