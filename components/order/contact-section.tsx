@@ -109,8 +109,11 @@ export function ContactSection({
       {/* Payment Method Selection (only for approved contractors) */}
       {isApprovedContractor && (
         <div className="space-y-3">
-          <Label className="text-sm font-medium">Payment Method *</Label>
+          <label id="payment-method-label" className="text-sm font-medium mb-1 block">
+            Payment Method *
+          </label>
           <RadioGroup
+            aria-labelledby="payment-method-label"
             value={paymentMethod}
             onValueChange={(value) => {
               const event = { target: { name: "paymentMethod", value } };
@@ -155,9 +158,9 @@ export function ContactSection({
           {/* Purchase Order Number Input (conditional) */}
           {paymentMethod === "purchase_order" && (
             <div>
-              <Label htmlFor="purchase-order-number" className="text-sm font-medium mb-1 block">
+              <label htmlFor="purchase-order-number" className="text-sm font-medium mb-1 block">
                 Purchase Order Number *
-              </Label>
+              </label>
               <Input
                 id="purchase-order-number"
                 placeholder="PO-12345"
