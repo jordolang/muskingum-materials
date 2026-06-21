@@ -141,3 +141,18 @@ App Router pages live under `app/` and follow the README's product map (`product
 - **State** (client-side): Zustand stores in `lib/store.ts`.
 - **UI**: Shadcn UI primitives in `components/ui/`, feature components grouped by domain (`components/{chat,contact,gallery,home,layout,order,planner,calculators,account,analytics}`). Tailwind config in `tailwind.config.ts`.
 - **Env loading for scripts**: Prisma scripts run via `dotenv -e .env.local --` because Prisma CLI doesn't auto-load `.env.local`. Follow that pattern for any new `tsx`-based script that needs runtime env vars.
+- **Sanity imports**: **CRITICAL** — only import Sanity runtime libraries in app code, never Studio dependencies. The Studio lives exclusively at `/studio` and must not leak into the main app bundle.
+  - **✅ SAFE** (runtime libraries for querying content):
+    - `@sanity/client` — lightweight client for fetching content
+    - `@sanity/image-url` — image URL builder
+    - `next-sanity` — Next.js integration helpers
+    - GROQ query strings, schemas from `sanity/schemaTypes/` (types only)
+  - **❌ UNSAFE** (Studio code that bloats the bundle):
+    - `sanity` — the full Studio package (~1MB+)
+    - `sanity/desk`, `sanity/structure` — Studio UI components
+    - Any `@sanity/vision`, `@sanity/form-builder`, plugin imports
+    - `sanity.config.ts` or `sanity.cli.ts` — Studio configuration
+  - **Where Studio code belongs**:
+    - `app/studio/[[...tool]]/page.tsx` — the only **route-split** Studio entry point. Because it lives under the `/studio` route segment, Next.js code-splits it away from the main app bundle; Studio code reached *only* through this file is never shipped to other routes.
+    - `sanity.config.ts` (and `sanity.cli.ts`) — root-level Studio **config**, NOT route-split. They are not protected by route boundaries, so they require careful import management: import them only from `app/studio/**` (or other Studio-only files). If a non-Studio module imports `sanity.config.ts`, the full Studio package leaks into the main bundle. Treat these config files as Studio-only and never reference them from shared/app code.
+  - **Verification**: `npm run build` includes a bundle analysis step that fails if Studio dependencies appear in non-Studio routes. If you see a build error about "sanity in client bundle", audit your imports — you've likely imported Studio code outside `/studio`.

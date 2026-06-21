@@ -3,10 +3,17 @@ import { ArrowRight, MessageSquare, ChevronLeft, ChevronRight } from "lucide-rea
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { ChatsFilters } from "./chats-filters";
 
 const CHATS_PER_PAGE = 10;
+
+// Row shape derived directly from the query below so it can't drift from the
+// schema or the selected `_count` relation.
+type ChatWithCount = Prisma.ChatConversationGetPayload<{
+  include: { _count: { select: { messages: true } } };
+}>;
 
 interface AdminChatsPageProps {
   searchParams: Promise<{ page?: string; search?: string; status?: string }>;
@@ -18,21 +25,7 @@ export default async function AdminChatsPage({ searchParams }: AdminChatsPagePro
   const searchQuery = params.search || "";
   const statusFilter = params.status || "all";
 
-  let chats: Array<{
-    id: string;
-    visitorId: string;
-    name: string | null;
-    email: string | null;
-    phone: string | null;
-    status: string;
-    escalatedAt: Date | null;
-    priority: string | null;
-    createdAt: Date;
-    updatedAt: Date;
-    _count: {
-      messages: number;
-    };
-  }> = [];
+  let chats: ChatWithCount[] = [];
   let totalChats = 0;
 
   try {
@@ -62,7 +55,7 @@ export default async function AdminChatsPage({ searchParams }: AdminChatsPagePro
       ];
     }
 
-    [chats, totalChats] = await Promise.all([
+    const [foundChats, chatCount] = await Promise.all([
       prisma.chatConversation.findMany({
         where,
         orderBy: { updatedAt: "desc" },
@@ -76,6 +69,9 @@ export default async function AdminChatsPage({ searchParams }: AdminChatsPagePro
       }),
       prisma.chatConversation.count({ where }),
     ]);
+
+    chats = foundChats;
+    totalChats = chatCount;
   } catch {
     // DB not ready
   }
