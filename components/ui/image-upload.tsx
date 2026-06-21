@@ -11,7 +11,8 @@ import {
 } from "@/lib/image-upload";
 import { Button } from "@/components/ui/button";
 
-export interface ImageUploadProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface ImageUploadProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange' | 'className'> {
   /**
    * Current image value (base64 data URL or regular URL)
    */
