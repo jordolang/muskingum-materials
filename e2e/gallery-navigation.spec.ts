@@ -82,15 +82,19 @@ test.describe('Gallery Navigation', () => {
     await expect(firstThumbnail).toHaveClass(/cursor-pointer/);
   });
 
-  test('should display hover description text on thumbnail hover', async ({ page }) => {
+  test('should reveal hover description text on thumbnail hover', async ({ page }) => {
     // Get the first gallery thumbnail
     const firstThumbnail = page.getByRole('link').filter({ hasText: 'Heavy Equipment' });
+    const hoverDescription = page.getByText('State of the art machinery');
 
-    // Hover over the thumbnail
+    // The description is rendered but visually hidden (opacity-0) until hover.
+    // Assert on opacity rather than visibility: Playwright treats an opacity-0
+    // element as "visible", so toBeVisible() cannot prove the hover-only reveal.
+    await expect(hoverDescription).toHaveCSS('opacity', '0');
+
+    // Hover fades the description in (group-hover:opacity-100)
     await firstThumbnail.hover();
-
-    // Verify description text becomes visible on hover
-    await expect(page.getByText('State of the art machinery')).toBeVisible();
+    await expect(hoverDescription).toHaveCSS('opacity', '1');
   });
 
   test('should display all thumbnail labels correctly', async ({ page }) => {
@@ -102,8 +106,10 @@ test.describe('Gallery Navigation', () => {
   });
 
   test('should display gallery preview section on mobile viewport', async ({ page }) => {
-    // Set mobile viewport
+    // Set mobile viewport BEFORE navigating so the initial render matches mobile
+    // conditions (beforeEach already loaded the page at the default desktop size).
     await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto('/');
 
     // Verify gallery section is still visible on mobile
     await expect(page.getByRole('heading', { name: 'See Our Operation' })).toBeVisible();
@@ -122,8 +128,14 @@ test.describe('Gallery Navigation', () => {
   });
 
   test('should maintain grid layout with 4 thumbnails', async ({ page }) => {
-    // Get all gallery thumbnail links
-    const thumbnails = page.getByRole('link').filter({ has: page.locator('img[alt*="Equipment"], img[alt*="Stockpiles"], img[alt*="Quality"], img[alt*="Processing"]') });
+    // Scope to the gallery preview section (anchored by its heading) so the
+    // count can't accidentally match image links elsewhere on the page.
+    const gallerySection = page
+      .locator('section')
+      .filter({ has: page.getByRole('heading', { name: 'See Our Operation' }) });
+    const thumbnails = gallerySection
+      .getByRole('link')
+      .filter({ has: page.locator('img') });
 
     // Verify there are exactly 4 thumbnails
     await expect(thumbnails).toHaveCount(4);
