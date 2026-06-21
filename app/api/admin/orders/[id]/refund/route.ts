@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
-import { sendSimpleEmail } from "@/lib/email-service";
+import { sendEmail } from "@/lib/email-service";
 import { logger } from "@/lib/logger";
 
 const refundSchema = z.object({
@@ -121,7 +121,7 @@ export async function POST(
     }),
   ]);
 
-  await sendSimpleEmail({
+  await sendEmail({
     to: order.email,
     subject: `Refund issued for order ${order.orderNumber}`,
     textBody: `
