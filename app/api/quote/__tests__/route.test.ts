@@ -655,7 +655,15 @@ describe("POST /api/quote", () => {
         To: "sales@muskingummaterials.com",
         Subject: "Quote Request from John Doe",
         TextBody: expect.any(String),
+        HtmlBody: undefined,
         ReplyTo: "john@example.com",
+        Tag: "quote-request",
+        Metadata: {
+          quoteName: "John Doe",
+          quoteEmail: "john@example.com",
+          productCount: "2",
+          company: "Acme Construction",
+        },
       });
     });
 
