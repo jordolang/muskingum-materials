@@ -21,7 +21,7 @@ export default async function AdminPage() {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    const [ordersThisWeek, allOrders, pendingQuotes, newLeads] = await Promise.all([
+    const [ordersThisWeek, revenueAggregate, pendingQuotes, newLeads] = await Promise.all([
       prisma.order.count({
         where: {
           createdAt: {
@@ -29,8 +29,8 @@ export default async function AdminPage() {
           },
         },
       }),
-      prisma.order.findMany({
-        select: {
+      prisma.order.aggregate({
+        _sum: {
           total: true,
         },
       }),
@@ -46,11 +46,9 @@ export default async function AdminPage() {
       }),
     ]);
 
-    const totalRevenue = allOrders.reduce((sum, order) => sum + order.total, 0);
-
     metrics = {
       ordersThisWeek,
-      totalRevenue,
+      totalRevenue: revenueAggregate._sum.total || 0,
       pendingQuotes,
       newLeads,
     };
