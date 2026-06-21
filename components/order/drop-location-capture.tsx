@@ -256,7 +256,10 @@ export function DropLocationCapture({
         </div>
 
         <div>
-          <label className="text-sm font-medium mb-2 block">
+          <label
+            htmlFor="drop-location-map"
+            className="text-sm font-medium mb-2 block"
+          >
             Pin Drop Location on Map (Optional)
           </label>
 
@@ -313,6 +316,7 @@ export function DropLocationCapture({
           {!loading && !mapError && (
             <div className="space-y-2">
               <div
+                id="drop-location-map"
                 ref={mapContainerRef}
                 className="w-full h-[300px] rounded-lg border-2 border-input"
               />
