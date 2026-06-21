@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/admin/metrics
@@ -178,6 +179,9 @@ export async function GET() {
       },
     });
   } catch (error) {
+    logger.error("Admin metrics API error", error, {
+      operation: "metrics.GET",
+    });
     return NextResponse.json(
       { error: "Failed to fetch metrics" },
       { status: 500 }
