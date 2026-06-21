@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TAX_RATE } from "@/lib/constants/business-rules";
 
 interface ProductOption {
   id: string;
@@ -33,8 +34,6 @@ interface LineItem {
 interface PhoneOrderFormProps {
   products: ProductOption[];
 }
-
-const TAX_RATE = 0.0725;
 
 function emptyItem(): LineItem {
   return { name: "", unit: "ton", quantity: 1, price: 0 };
