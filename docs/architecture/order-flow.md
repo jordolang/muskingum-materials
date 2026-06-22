@@ -89,8 +89,8 @@ sequenceDiagram
     WebhookHandler->>Database: Award loyalty points (if userId exists)
     Database-->>WebhookHandler: Points awarded
     
-    Note over Customer,EmailSMS: STEP 9: Notifications (Email & SMS)
-    WebhookHandler->>EmailSMS: Send SMS confirmation (if opted in)
+    Note over Customer,EmailSMS: STEP 9: Notifications (SMS only)
+    WebhookHandler->>EmailSMS: Send SMS confirmation (if smsOptIn && phone)
     EmailSMS-->>WebhookHandler: SMS sent
     WebhookHandler->>Database: Log SMS notification
     
