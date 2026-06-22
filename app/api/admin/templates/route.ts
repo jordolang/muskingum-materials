@@ -17,11 +17,21 @@ async function checkAdminAuth() {
 }
 
 /**
- * GET /api/admin/templates
- * Returns paginated email/SMS template list for admin management
- * Query params: page (optional, default: 1), limit (optional, default: 20, max: 100)
- * Requires admin authentication via Clerk publicMetadata role
- * Response: { templates: EmailTemplate[], total: number, page: number, limit: number, pages: number }
+ * Admin email template listing endpoint with pagination.
+ *
+ * @access admin
+ * @param request - Incoming request with query parameters:
+ *   - `page` (optional, default: 1) — 1-based page number, coerced to min(1)
+ *   - `limit` (optional, default: 20, max: 100) — items per page, clamped to [1, 100]
+ * @returns 200 `{ templates: EmailTemplate[], total: number, page: number, limit: number, pages: number }`
+ *   where `EmailTemplate` includes id, name, subject, category, active, createdAt, updatedAt
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk authentication fails
+ * @returns 403 `{ error: "Forbidden" }` when user lacks admin role
+ * @returns 500 `{ error: "Failed to fetch templates" }` on database errors
+ * @see checkAdminAuth — admin role validation via Clerk publicMetadata
+ * @see prisma/schema.prisma — EmailTemplate model definition
+ * @remarks Query parameters are sanitized: page uses Math.max(1, ...) to prevent negative/zero values;
+ *   limit uses Math.min(100, Math.max(1, ...)) to clamp to [1, 100]. Invalid numeric inputs fall back to defaults.
  */
 export async function GET(request: NextRequest) {
   try {
