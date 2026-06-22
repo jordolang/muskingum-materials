@@ -841,6 +841,71 @@ If using Sentry's Session Replay or browser-side error tracking (not currently e
 
 ## Integration Architecture
 
+### Service Integration Map
+
+```mermaid
+graph TB
+    subgraph "Next.js Application"
+        MW[Middleware]
+        API[API Routes]
+        PAGES[Page Components]
+        STUDIO[Sanity Studio /studio]
+    end
+    
+    subgraph "External Services"
+        STRIPE[Stripe<br/>Payment Processing]
+        CLERK[Clerk<br/>Authentication]
+        SANITY[Sanity CMS<br/>Content Management]
+        POSTMARK[Postmark<br/>Transactional Email]
+        ANTHROPIC[Anthropic Claude<br/>AI Chat]
+        TWILIO[Twilio<br/>SMS Notifications]
+        UPSTASH[Upstash Redis<br/>Rate Limiting]
+        NEON[Neon PostgreSQL<br/>Database]
+        SENTRY[Sentry<br/>Error Tracking]
+    end
+    
+    %% Middleware connections
+    MW -->|Rate limiting| UPSTASH
+    MW -->|Authentication| CLERK
+    
+    %% API Route connections
+    API -->|Payments| STRIPE
+    API -->|Email notifications| POSTMARK
+    API -->|AI responses| ANTHROPIC
+    API -->|SMS notifications| TWILIO
+    API -->|Data persistence| NEON
+    API -->|Error tracking| SENTRY
+    
+    %% Page Component connections
+    PAGES -->|Content queries| SANITY
+    PAGES -->|Catalog data| NEON
+    PAGES -->|Checkout sessions| STRIPE
+    PAGES -->|User auth| CLERK
+    
+    %% Studio connection
+    STUDIO -->|Content editing| SANITY
+    
+    %% Fallback paths
+    TWILIO -.->|Fallback on failure| POSTMARK
+    
+    style STRIPE fill:#635BFF,color:#fff
+    style CLERK fill:#6C47FF,color:#fff
+    style SANITY fill:#F03E2F,color:#fff
+    style POSTMARK fill:#FFCD00,color:#000
+    style ANTHROPIC fill:#CC9B7A,color:#fff
+    style TWILIO fill:#F22F46,color:#fff
+    style UPSTASH fill:#00E9A3,color:#000
+    style NEON fill:#00E599,color:#000
+    style SENTRY fill:#362D59,color:#fff
+```
+
+**Key Data Flows:**
+- **Middleware** → Upstash (rate limiting checks), Clerk (authentication)
+- **API Routes** → Stripe (payment processing), Postmark (emails), Anthropic (AI chat), Twilio (SMS), Neon (database), Sentry (error tracking)
+- **Page Components** → Sanity (CMS content), Neon (product catalog), Stripe (checkout), Clerk (auth)
+- **Sanity Studio** → Sanity (content editing)
+- **Fallback** → Twilio → Postmark (SMS failures fall back to email)
+
 ### Service Dependency Graph
 
 ```

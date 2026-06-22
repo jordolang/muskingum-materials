@@ -9,13 +9,8 @@ import { checkoutFormSchema } from "@/lib/schemas";
 import {
   ShoppingCart,
   Sparkles,
-  ClipboardList,
   CreditCard,
-  Minus,
-  Plus,
-  X,
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -40,6 +35,7 @@ import {
 } from "./project-estimator";
 import { FulfillmentSection } from "./fulfillment-section";
 import { ContactSection } from "./contact-section";
+import { CartReview } from "./cart-review";
 import { trackAddToCart, trackBeginCheckout, getAnalyticsItemId } from "@/lib/analytics";
 
 export interface OrderableProduct {
@@ -156,6 +152,8 @@ export function OrderForm({ products, userProfile }: OrderFormProps) {
 
   const fulfillment = watch("fulfillment");
   const deliveryAddress = watch("deliveryAddress");
+  const deliveryDate = watch("deliveryDate");
+  const deliveryTimeWindow = watch("deliveryTimeWindow");
   const paymentMethod = watch("paymentMethod");
 
   const totals = useMemo(() => {
@@ -180,7 +178,10 @@ export function OrderForm({ products, userProfile }: OrderFormProps) {
   const hasCart = cart.length > 0;
   const fulfillmentSelected =
     fulfillment === "pickup" ||
-    (fulfillment === "delivery" && (deliveryAddress?.trim().length ?? 0) > 5);
+    (fulfillment === "delivery" &&
+      (deliveryAddress?.trim().length ?? 0) > 5 &&
+      (deliveryDate?.trim().length ?? 0) > 0 &&
+      (deliveryTimeWindow?.trim().length ?? 0) > 0);
 
   const stepStatus = (n: 1 | 2 | 3 | 4): OrderStepStatus => {
     if (n === 1) return hasAddress ? "complete" : "active";
@@ -229,19 +230,29 @@ export function OrderForm({ products, userProfile }: OrderFormProps) {
       })),
     });
     try {
+      const payload = {
+        ...data,
+        items: cart,
+        subtotal: totals.subtotal,
+        volumeDiscount: totals.volumeDiscount,
+        tax: totals.tax,
+        processingFee: totals.processingFee,
+        total: totals.total,
+        projectSite: siteData ?? undefined,
+      };
+
+      // Include scheduling data for delivery orders
+      if (data.fulfillment === "delivery") {
+        Object.assign(payload, {
+          deliveryDate: data.deliveryDate,
+          deliveryTimeWindow: data.deliveryTimeWindow,
+        });
+      }
+
       const response = await fetch("/api/orders/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          items: cart,
-          subtotal: totals.subtotal,
-          volumeDiscount: totals.volumeDiscount,
-          tax: totals.tax,
-          processingFee: totals.processingFee,
-          total: totals.total,
-          projectSite: siteData ?? undefined,
-        }),
+        body: JSON.stringify(payload),
       });
       const result = await response.json();
       if (result.url) {
@@ -462,166 +473,5 @@ export function OrderForm({ products, userProfile }: OrderFormProps) {
       </div>
     </form>
     </>
-  );
-}
-
-interface CartItem {
-  name: string;
-  price: number;
-  unit: string;
-  quantity: number;
-}
-
-interface CartReviewProps {
-  cart: CartItem[];
-  totals: {
-    subtotal: number;
-    volumeDiscount: number;
-    tax: number;
-    processingFee: number;
-    total: number;
-    totalTons: number;
-  };
-  onRemove: (name: string) => void;
-  onUpdateQuantity: (name: string, delta: number) => void;
-}
-
-function CartReview({
-  cart,
-  totals,
-  onRemove,
-  onUpdateQuantity,
-}: CartReviewProps) {
-  return (
-    <div className="space-y-3 p-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-semibold">
-          <ClipboardList className="h-4 w-4 text-amber-600" />
-          Order Summary
-        </div>
-        {cart.length > 0 && (
-          <p className="text-[11px] text-muted-foreground">
-            Hover any line to remove · use ± to adjust
-          </p>
-        )}
-      </div>
-
-      {cart.length === 0 ? (
-        <Card className="bg-muted/30 border-dashed p-4 text-center text-sm text-muted-foreground">
-          Your cart is empty.
-        </Card>
-      ) : (
-        <div className="space-y-1">
-          {cart.map((item) => (
-            <div
-              key={item.name}
-              className="group relative flex items-center gap-3 rounded-md py-2 px-2 -mx-2 text-sm transition-colors hover:bg-muted/50"
-            >
-              {/* Item name + per-unit price */}
-              <div className="flex-1 min-w-0">
-                <p className="font-medium truncate">{item.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  ${item.price.toFixed(2)} per {item.unit}
-                </p>
-              </div>
-
-              {/* Quantity stepper */}
-              <div className="flex items-center gap-1 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => onUpdateQuantity(item.name, -1)}
-                  className="h-11 w-11 inline-flex items-center justify-center rounded-md border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50 shrink-0"
-                  aria-label={`Decrease ${item.name}`}
-                  disabled={item.quantity <= 1}
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <Badge
-                  variant="secondary"
-                  className="min-w-[3.5rem] justify-center font-mono"
-                >
-                  {item.quantity} {item.unit}
-                  {item.quantity !== 1 ? "s" : ""}
-                </Badge>
-                <button
-                  type="button"
-                  onClick={() => onUpdateQuantity(item.name, 1)}
-                  className="h-11 w-11 inline-flex items-center justify-center rounded-md border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground shrink-0"
-                  aria-label={`Increase ${item.name}`}
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-
-              {/* Line total */}
-              <span className="font-semibold tabular-nums w-20 text-right shrink-0">
-                ${(item.price * item.quantity).toFixed(2)}
-              </span>
-
-              {/* Hover-reveal on desktop, always visible on touch devices */}
-              <button
-                type="button"
-                onClick={() => onRemove(item.name)}
-                className="shrink-0 inline-flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-destructive/50 md:opacity-0 md:group-hover:opacity-100"
-                aria-label={`Remove ${item.name} from order`}
-                title={`Remove ${item.name}`}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
-
-          <Separator className="my-3" />
-
-          <div className="space-y-1.5 text-sm">
-            <Row label={`Subtotal (${totals.totalTons} tons)`} value={totals.subtotal} />
-            {totals.volumeDiscount > 0 && (
-              <Row
-                label="Volume Discount"
-                value={-totals.volumeDiscount}
-                accent="positive"
-              />
-            )}
-            <Row label="Tax (7.25%)" value={totals.tax} />
-            <Row label="Card Processing (4.5%)" value={totals.processingFee} />
-            <Separator />
-            <div className="flex justify-between text-base font-bold">
-              <span>Total</span>
-              <span className="text-amber-700 tabular-nums">
-                ${totals.total.toFixed(2)}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function Row({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: number;
-  accent?: "positive";
-}) {
-  const isPositive = accent === "positive";
-  return (
-    <div className="flex justify-between">
-      <span
-        className={isPositive ? "text-green-600 font-medium" : "text-muted-foreground"}
-      >
-        {label}
-      </span>
-      <span
-        className={`tabular-nums ${
-          isPositive ? "text-green-600 font-medium" : ""
-        }`}
-      >
-        {value < 0 ? `-$${Math.abs(value).toFixed(2)}` : `$${value.toFixed(2)}`}
-      </span>
-    </div>
   );
 }

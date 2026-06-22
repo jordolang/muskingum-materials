@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 async function checkAdminAuth() {
   const user = await currentUser();
@@ -74,6 +75,9 @@ export async function GET(request: NextRequest) {
       pages,
     });
   } catch (error) {
+    logger.error("Admin templates API error", error, {
+      operation: "templates.GET",
+    });
     return NextResponse.json({ error: "Failed to fetch templates" }, { status: 500 });
   }
 }

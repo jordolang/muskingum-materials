@@ -3,15 +3,12 @@ import { z } from "zod";
 import { groq } from "next-sanity";
 import { sanityClient } from "@/lib/sanity/client";
 import { BUSINESS_INFO } from "@/data/business";
+import { deliveryFeeSchema } from "@/lib/schemas";
 import {
   calculateDeliveryFeeFromCoordinates,
   type DeliverySettings,
   type Coordinates,
 } from "@/lib/delivery";
-
-const calculateFeeSchema = z.object({
-  address: z.string().min(1, "Address is required"),
-});
 
 interface DeliverySettingsDocument {
   _id: string;
@@ -83,7 +80,7 @@ async function geocodeAddress(address: string): Promise<Coordinates | null> {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const data = calculateFeeSchema.parse(body);
+    const data = deliveryFeeSchema.parse(body);
 
     // Fetch delivery settings from Sanity
     let deliverySettings: DeliverySettings;

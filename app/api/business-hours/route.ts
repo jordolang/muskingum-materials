@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getBusinessHoursStatus } from "@/lib/business-hours";
+import { logger } from "@/lib/logger";
 
 /**
  * Business hours status endpoint.
@@ -17,6 +18,9 @@ export async function GET() {
 
     return NextResponse.json(status);
   } catch (error) {
+    logger.error("Business hours API error", error, {
+      operation: "business-hours.GET",
+    });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

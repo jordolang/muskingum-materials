@@ -21,6 +21,8 @@ import {
 import { BUSINESS_INFO } from "@/data/business";
 import { cn } from "@/lib/utils";
 import type { CheckoutData } from "./order-form";
+import { DeliveryScheduler } from "./delivery-scheduler";
+import { PickupScheduler } from "./pickup-scheduler";
 import { DeliveryAccessChecklist } from "./delivery-access-checklist";
 import { DropLocationCapture } from "./drop-location-capture";
 
@@ -125,13 +127,17 @@ export function FulfillmentSection({
       </div>
 
       {fulfillment === "pickup" && (
-        <div className="rounded-lg bg-muted/50 p-3 text-sm animate-in fade-in slide-in-from-top-1 duration-300">
-          <p className="font-medium text-foreground">Pickup Location</p>
-          <p className="text-muted-foreground">
-            {BUSINESS_INFO.address}, {BUSINESS_INFO.city},{" "}
-            {BUSINESS_INFO.state} {BUSINESS_INFO.zip}
-          </p>
-          <p className="text-muted-foreground">Hours: {BUSINESS_INFO.hours}</p>
+        <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-300">
+          <div className="rounded-lg bg-muted/50 p-3 text-sm">
+            <p className="font-medium text-foreground">Pickup Location</p>
+            <p className="text-muted-foreground">
+              {BUSINESS_INFO.address}, {BUSINESS_INFO.city},{" "}
+              {BUSINESS_INFO.state} {BUSINESS_INFO.zip}
+            </p>
+            <p className="text-muted-foreground">Hours: {BUSINESS_INFO.hours}</p>
+          </div>
+
+          <PickupScheduler setValue={setValue} watch={watch} />
         </div>
       )}
 
@@ -207,6 +213,8 @@ export function FulfillmentSection({
               {...register("deliveryNotes")}
             />
           </div>
+
+          <DeliveryScheduler setValue={setValue} watch={watch} />
 
           <DeliveryAccessChecklist
             register={register}

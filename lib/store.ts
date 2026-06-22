@@ -92,6 +92,30 @@ interface QuoteState {
 /**
  * Zustand store for managing quote request items
  * Allows building a list of products and quantities before submitting a quote request
+ * @example
+ * ```tsx
+ * import { useQuoteStore } from "@/lib/store";
+ *
+ * function QuoteBuilder() {
+ *   const { items, addItem, removeItem, clearItems } = useQuoteStore();
+ *
+ *   const handleAddProduct = () => {
+ *     addItem({ productName: "River Rock", quantity: "5 tons" });
+ *   };
+ *
+ *   return (
+ *     <div>
+ *       {items.map((item, i) => (
+ *         <div key={i}>
+ *           {item.productName} - {item.quantity}
+ *           <button onClick={() => removeItem(i)}>Remove</button>
+ *         </div>
+ *       ))}
+ *       <button onClick={handleAddProduct}>Add Product</button>
+ *     </div>
+ *   );
+ * }
+ * ```
  */
 export const useQuoteStore = create<QuoteState>((set) => ({
   items: [],
@@ -165,6 +189,31 @@ function saveCartToStorage(items: CartItem[]): void {
  * Zustand store for managing shopping cart state with localStorage persistence
  * Automatically syncs cart state to localStorage on every change
  * Supports adding items, updating quantities, and clearing the cart
+ * @example
+ * ```tsx
+ * import { useCartStore } from "@/lib/store";
+ *
+ * function ShoppingCart() {
+ *   const { items, addToCart, updateQuantity, removeFromCart, clearCart } = useCartStore();
+ *
+ *   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+ *
+ *   return (
+ *     <div>
+ *       {items.map((item) => (
+ *         <div key={item.name}>
+ *           {item.name} - ${item.price}/{item.unit} x {item.quantity}
+ *           <button onClick={() => updateQuantity(item.name, 1)}>+</button>
+ *           <button onClick={() => updateQuantity(item.name, -1)}>-</button>
+ *           <button onClick={() => removeFromCart(item.name)}>Remove</button>
+ *         </div>
+ *       ))}
+ *       <p>Total: ${total.toFixed(2)}</p>
+ *       <button onClick={clearCart}>Clear Cart</button>
+ *     </div>
+ *   );
+ * }
+ * ```
  */
 export const useCartStore = create<CartState>((set) => ({
   items: typeof window !== "undefined" ? loadCartFromStorage() : [],

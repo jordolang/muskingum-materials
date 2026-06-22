@@ -11,6 +11,7 @@ import { logger } from "@/lib/logger";
 import { addBreadcrumb, startTransaction } from "@/lib/monitoring";
 import { buildSatelliteMapUrl } from "@/lib/static-map";
 import { ORDER_NUMBER_PREFIX } from "@/lib/constants/business-rules";
+import { isSlotAvailable, bookSlot } from "@/lib/delivery-scheduling";
 
 type CheckoutPayload = z.infer<typeof checkoutSchema>;
 type CheckoutItem = CheckoutPayload["items"][number];
@@ -184,6 +185,49 @@ async function handleCheckout(request: NextRequest) {
       );
     }
 
+    // Validate delivery slot availability if delivery is selected
+    if (data.fulfillment === "delivery" && data.deliveryDate && data.deliveryTimeWindow) {
+      try {
+        const deliveryDate = new Date(data.deliveryDate);
+        const slotAvailable = await isSlotAvailable(deliveryDate, data.deliveryTimeWindow);
+
+        if (!slotAvailable) {
+          logger.warn('Delivery slot not available', {
+            date: data.deliveryDate,
+            window: data.deliveryTimeWindow,
+            email: data.email,
+          });
+
+          return NextResponse.json(
+            { error: "Selected delivery slot is no longer available. Please choose a different date or time window." },
+            { status: 400 }
+          );
+        }
+
+        addBreadcrumb('Delivery slot validated', 'checkout', {
+          date: data.deliveryDate,
+          window: data.deliveryTimeWindow,
+        });
+
+        logger.info('Delivery slot validated', {
+          date: data.deliveryDate,
+          window: data.deliveryTimeWindow,
+          email: data.email,
+        });
+      } catch (slotError) {
+        logger.error('Delivery slot validation failed', slotError, {
+          date: data.deliveryDate,
+          window: data.deliveryTimeWindow,
+          email: data.email,
+        });
+
+        return NextResponse.json(
+          { error: "Failed to validate delivery slot. Please try again or call (740) 319-0183." },
+          { status: 500 }
+        );
+      }
+    }
+
     const orderNumber = generateOrderNumber();
 
     // Build a Static Maps satellite snapshot URL from the project-site data
@@ -269,6 +313,54 @@ async function handleCheckout(request: NextRequest) {
         orderNumber,
         orderId: order.id,
       });
+
+      // Book delivery slot if delivery was selected with a date/time window
+      if (data.fulfillment === "delivery" && data.deliveryDate && data.deliveryTimeWindow) {
+        try {
+          const deliveryDate = new Date(data.deliveryDate);
+          const scheduledSlotId = await bookSlot(order.id, deliveryDate, data.deliveryTimeWindow);
+
+          // Update order with delivery scheduling details
+          await prisma.order.update({
+            where: { id: order.id },
+            data: {
+              deliveryDate,
+              deliveryTimeWindow: data.deliveryTimeWindow,
+              scheduledSlotId,
+            },
+          });
+
+          logger.info('Delivery slot booked successfully', {
+            orderNumber,
+            orderId: order.id,
+            date: data.deliveryDate,
+            window: data.deliveryTimeWindow,
+            slotId: scheduledSlotId,
+          });
+
+          addBreadcrumb('Delivery slot booked', 'checkout', {
+            orderNumber,
+            slotId: scheduledSlotId,
+          });
+        } catch (slotBookingError) {
+          logger.error('Delivery slot booking failed', slotBookingError, {
+            orderNumber,
+            orderId: order.id,
+            date: data.deliveryDate,
+            window: data.deliveryTimeWindow,
+          });
+
+          // Order was created but slot booking failed
+          // Return error but with order number so customer can contact support
+          return NextResponse.json(
+            {
+              error: "Order created but delivery slot booking failed. Please call (740) 319-0183 to schedule your delivery.",
+              orderNumber,
+            },
+            { status: 500 }
+          );
+        }
+      }
     } catch (error) {
       logger.error('Order creation failed', error, {
         orderNumber,
@@ -600,6 +692,29 @@ async function handleCheckout(request: NextRequest) {
       .map((i) => `  - ${i.name}: ${i.quantity} ${i.unit}(s) @ $${i.price.toFixed(2)} = $${(i.price * i.quantity).toFixed(2)}`)
       .join("\n");
 
+    // Format delivery date and time window for email
+    let deliveryScheduleText = "";
+    let deliveryScheduleHtml = "";
+    if (data.fulfillment === "delivery" && data.deliveryDate && data.deliveryTimeWindow) {
+      const deliveryDate = new Date(data.deliveryDate);
+      const formattedDate = deliveryDate.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      const timeWindowMap: Record<string, string> = {
+        morning: "Morning (8 AM - 12 PM)",
+        afternoon: "Afternoon (12 PM - 4 PM)",
+        evening: "Evening (4 PM - 7 PM)",
+      };
+      const formattedWindow = timeWindowMap[data.deliveryTimeWindow] || data.deliveryTimeWindow;
+
+      deliveryScheduleText = `\nScheduled Delivery: ${formattedDate}\nTime Window: ${formattedWindow}`;
+      deliveryScheduleHtml = `<p><strong>Scheduled Delivery:</strong> ${formattedDate}<br><strong>Time Window:</strong> ${formattedWindow}</p>`;
+    }
+
     const siteSummaryLines: string[] = [];
     if (site) {
       if (site.address) {
@@ -672,6 +787,7 @@ ${data.dropLocation.photoUrl ? `<p><strong>Drop Location Photo:</strong><br><img
 <strong>Email:</strong> ${data.email}<br>
 <strong>Phone:</strong> ${data.phone}<br>
 <strong>Fulfillment:</strong> ${data.fulfillment === "pickup" ? "Pickup at yard" : "Delivery"}</p>
+${deliveryScheduleHtml}
 ${data.deliveryAddress ? `<p><strong>Delivery Address:</strong><br>${data.deliveryAddress}</p>` : ""}
 ${data.deliveryNotes ? `<p><strong>Notes:</strong> ${data.deliveryNotes}</p>` : ""}
 ${accessWarningsHtml}
@@ -752,7 +868,7 @@ Order #: ${orderNumber}
 Customer: ${data.name}
 Email: ${data.email}
 Phone: ${data.phone}
-Fulfillment: ${data.fulfillment === "pickup" ? "Pickup at yard" : "Delivery"}
+Fulfillment: ${data.fulfillment === "pickup" ? "Pickup at yard" : "Delivery"}${deliveryScheduleText}
 ${data.deliveryAddress ? `Delivery Address: ${data.deliveryAddress}` : ""}
 ${data.deliveryNotes ? `Notes: ${data.deliveryNotes}` : ""}${accessWarningsText}${checklistText}${dropLocationText}${siteSummaryText}
 

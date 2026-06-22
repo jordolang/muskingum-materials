@@ -176,6 +176,175 @@ Legend:
   ──< = One-to-many relationship
 ```
 
+### Mermaid ER Diagram
+
+The following Mermaid diagram visualizes the key foreign key relationships between models. Dotted lines indicate optional relationships (nullable foreign keys), while solid lines indicate required relationships.
+
+```mermaid
+erDiagram
+    %% Customer Engagement Domain
+    Lead ||--o{ ChatConversation : "has conversations"
+    ChatConversation ||--o{ ChatMessage : "contains messages"
+    
+    %% Order Management Domain
+    Order ||--o{ OrderStatusHistory : "tracks history"
+    Order ||--o{ SmsNotification : "sends notifications"
+    Order ||--o{ Invoice : "generates invoices"
+    
+    %% User Management Domain
+    UserProfile ||--o{ Address : "has addresses"
+    
+    %% Loyalty Program Domain
+    LoyaltyAccount ||--o{ LoyaltyTransaction : "tracks points"
+    
+    %% Product Catalog Domain
+    Product ||--o{ ProductComparison : "compares as product A"
+    Product ||--o{ ProductComparison : "compares as product B"
+    Product ||--o{ RestockNotification : "notifies when restocked"
+    
+    %% Marketing Domain
+    EmailTemplate ||--o{ Campaign : "used in campaigns"
+    
+    %% Entity Definitions
+    Lead {
+        string id PK
+        string email "indexed"
+        string status "indexed"
+        datetime createdAt
+    }
+    
+    ChatConversation {
+        string id PK
+        string visitorId UK "unique"
+        string leadId FK "optional"
+        string status "indexed"
+        datetime escalatedAt "indexed"
+    }
+    
+    ChatMessage {
+        string id PK
+        string conversationId FK
+        string role
+        text content
+        datetime createdAt
+    }
+    
+    Order {
+        string id PK
+        string orderNumber UK "unique, indexed"
+        string userId "indexed, not FK"
+        string email "indexed"
+        string status "indexed"
+        string stripeSessionId "indexed"
+        json items
+        float total
+    }
+    
+    OrderStatusHistory {
+        string id PK
+        string orderId FK
+        string status
+        string changedBy
+        datetime createdAt
+    }
+    
+    SmsNotification {
+        string id PK
+        string orderId FK "optional"
+        string phone "indexed"
+        string status "indexed"
+        text message
+    }
+    
+    Invoice {
+        string id PK
+        string invoiceNumber UK "unique, indexed"
+        string orderId FK
+        float amount
+        datetime dueDate "indexed"
+        string status "indexed"
+    }
+    
+    UserProfile {
+        string id PK
+        string userId UK "unique, indexed"
+        string email
+        boolean isContractor
+        float netTermsBalance
+    }
+    
+    Address {
+        string id PK
+        string userProfileId FK
+        string label
+        boolean isDefault
+    }
+    
+    LoyaltyAccount {
+        string id PK
+        string userId UK "unique, indexed"
+        int points
+        int pointsLifetime
+        string tier
+    }
+    
+    LoyaltyTransaction {
+        string id PK
+        string accountId FK
+        string type
+        int points
+        string orderId "optional, not FK"
+    }
+    
+    Product {
+        string id PK
+        string slug UK "unique, indexed"
+        string category "indexed"
+        boolean active "indexed"
+        StockStatus stockStatus
+        float price
+    }
+    
+    ProductComparison {
+        string id PK
+        string productAId FK
+        string productBId FK
+        text summary
+    }
+    
+    RestockNotification {
+        string id PK
+        string productId FK
+        string email "indexed"
+        string status "indexed"
+    }
+    
+    EmailTemplate {
+        string id PK
+        string name
+        boolean active "indexed"
+        string category "indexed"
+    }
+    
+    Campaign {
+        string id PK
+        string templateId FK "optional"
+        string status "indexed"
+        datetime scheduledAt "indexed"
+        int recipientCount
+    }
+```
+
+**Key Observations:**
+
+- **No UserProfile → Order FK**: The `Order.userId` field is indexed but not a foreign key, allowing guest checkout and preserving orders if user accounts are deleted
+- **No UserProfile → ChatConversation FK**: Conversations are tracked by `visitorId` (anonymous) and optionally linked to `Lead` records, not user accounts
+- **No Payment Model**: Payment information (Stripe session/payment IDs, status) is stored directly on the `Order` model
+- **No OrderItem Model**: Order line items are stored as JSON in `Order.items` rather than normalized child records
+- **Product Comparisons**: Self-referential many-to-many via `ProductComparison` junction table with two foreign keys to `Product`
+- **Cascade Deletes**: Most child records (messages, status history, notifications, invoices, addresses, transactions) cascade delete when parent is removed
+- **Optional FK**: `Campaign.templateId` and `SmsNotification.orderId` use `onDelete: SetNull` to preserve records when parent is deleted
+
 ---
 
 ## Model Definitions
