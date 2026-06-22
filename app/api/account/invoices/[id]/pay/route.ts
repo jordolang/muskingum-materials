@@ -9,19 +9,26 @@ const payInvoiceSchema = z.object({
 });
 
 /**
- * POST /api/account/invoices/[id]/pay
- * Pay an invoice using a saved payment method
+ * Pay an invoice using a saved payment method via Stripe PaymentIntent.
  *
- * Auth: Requires Clerk authentication
- * Request body: { savedPaymentMethodId: string }
- * Returns: { invoice: Invoice, paymentIntentId: string }
- *
- * Flow:
- * 1. Verify invoice belongs to user and is unpaid
- * 2. Verify saved payment method belongs to user
- * 3. Create Stripe PaymentIntent with saved payment method
- * 4. Update invoice status to "paid" and set paidAt
- * 5. Update user's net terms balance
+ * @access authenticated
+ * @param request - Incoming request with body validated against `payInvoiceSchema`
+ *   (savedPaymentMethodId: string). See schema definition above.
+ * @param params - Route parameters containing invoice `id`
+ * @returns 200 `{ invoice: Invoice, paymentIntentId: string }` on successful payment
+ * @returns 401 `{ error: "Unauthorized" }` when not authenticated
+ * @returns 403 `{ error: "Unauthorized" }` when invoice doesn't belong to user
+ * @returns 404 `{ error: "Invoice not found" }` when invoice doesn't exist
+ * @returns 404 `{ error: "Payment method not found" }` when saved payment method is invalid
+ * @returns 400 `{ error: "Invoice already paid" }` when invoice is already paid
+ * @returns 400 `{ error: string }` when payment fails or validation fails
+ * @returns 501 `{ error: "Payment processing not available" }` when Stripe is not configured
+ * @throws 500 `{ error: "Failed to process payment" }` on unexpected errors
+ * @see payInvoiceSchema - Zod schema for request body validation
+ * @see STRIPE_SECRET_KEY - Required environment variable for payment processing
+ * @remarks Performs atomic transaction updating invoice status, order payment status,
+ *   and user's net terms balance. Payment is confirmed synchronously with
+ *   `automatic_payment_methods.allow_redirects: "never"`.
  */
 export async function POST(
   request: NextRequest,
