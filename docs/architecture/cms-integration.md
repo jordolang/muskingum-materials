@@ -13,6 +13,55 @@ Key files:
 - **Client**: `lib/sanity/client.ts`
 - **Embedded Studio**: `app/studio/[[...tool]]/page.tsx`
 
+## Architecture Overview
+
+The following diagram illustrates the complete data flow for Sanity CMS integration, including content reads, updates, and cache invalidation:
+
+```mermaid
+flowchart TB
+    subgraph "Content Read Path"
+        App[Next.js App<br/>Server Components] --> GROQ[GROQ Queries<br/>lib/sanity/queries.ts]
+        GROQ --> Client[sanityClient<br/>lib/sanity/client.ts]
+        Client --> CDN[Sanity CDN<br/>cdn.sanity.io]
+        CDN --> Cache[ISR Cache<br/>1 hour TTL]
+        Cache --> Response[Rendered Page]
+    end
+
+    subgraph "Content Update Path"
+        Studio[Sanity Studio<br/>/studio route] --> Publish[Publish Event]
+        Publish --> Webhook[Webhook Trigger]
+        Webhook --> API[Revalidate API<br/>app/api/revalidate/route.ts]
+        API --> Verify{Verify Secret}
+        Verify -->|Valid| Revalidate[revalidateTag<br/>revalidatePath]
+        Verify -->|Invalid| Reject[401 Unauthorized]
+        Revalidate --> Purge[ISR Cache Purge]
+        Purge --> Regen[Next Request<br/>Regenerates Page]
+    end
+
+    subgraph "Bundle Isolation"
+        StudioBundle[Studio Bundle<br/>styled-components, @sanity/*]
+        StudioRoute[/studio route ONLY]
+        PublicRoutes[Public Routes<br/>NO Studio deps]
+        
+        StudioBundle -.->|isolated to| StudioRoute
+        StudioBundle -.->|NOT included in| PublicRoutes
+    end
+
+    style App fill:#e1f5ff
+    style Studio fill:#ffe1f5
+    style StudioBundle fill:#fff4e1
+    style Purge fill:#d4edda
+    style Reject fill:#f8d7da
+```
+
+**Key Flows:**
+
+1. **Read Path (blue)**: Next.js server components fetch content via GROQ queries through the lightweight `@sanity/client`, which reads from Sanity's CDN. Responses are cached by Next.js ISR with a 1-hour TTL.
+
+2. **Update Path (pink)**: When content is published in Sanity Studio, a webhook triggers the `/api/revalidate` endpoint, which verifies the secret, then calls `revalidateTag()`/`revalidatePath()` to purge affected ISR cache entries. The next request regenerates the page with fresh content.
+
+3. **Bundle Isolation (yellow)**: The full Sanity Studio runtime (including `styled-components` and `@sanity/*` packages) is isolated to the `/studio` route via Next.js code splitting. Public routes use only the lightweight `@sanity/client` (~50KB), not the full Studio bundle (~2MB+). See `docs/bundle-isolation.md` for verification.
+
 ## Parallel Content Stores
 
 This is the **most important architectural concept** to understand:

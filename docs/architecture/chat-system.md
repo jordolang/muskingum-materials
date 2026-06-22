@@ -4,6 +4,98 @@
 
 The AI chat system provides real-time customer support through an intelligent conversational interface powered by Anthropic's Claude API with graceful degradation to static responses. The system handles product inquiries, pricing information, and business hours while capturing conversation data and generating qualified leads.
 
+## Request Flow Diagram
+
+The following sequence diagram illustrates the complete chat interaction flow, including rate limiting, AI generation with fallback, database persistence, and lead capture:
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Widget as ChatWidget<br/>(Client)
+    participant Middleware as Rate Limiter<br/>(Middleware)
+    participant API as Chat API<br/>(/api/chat)
+    participant DB as Database<br/>(Prisma)
+    participant Anthropic as Anthropic API<br/>(Claude Haiku)
+    participant LeadAPI as Lead API<br/>(/api/leads)
+
+    User->>Widget: Types message & submits
+    Widget->>Widget: Add to local history<br/>(optimistic UI)
+    Widget->>API: POST /api/chat<br/>{message, visitorId, history}
+    
+    API->>Middleware: Check rate limit<br/>(5 req/min per IP)
+    
+    alt Rate limit exceeded
+        Middleware-->>API: 429 Too Many Requests<br/>{retryAfter, headers}
+        API-->>Widget: Error response
+        Widget-->>User: Show error + retry timer
+    else Rate limit OK
+        Middleware-->>API: Allow request<br/>{remaining, reset}
+        
+        API->>API: Validate request<br/>(Zod schema)
+        
+        alt Validation fails
+            API-->>Widget: 400 Bad Request<br/>{error, details}
+            Widget-->>User: Show error message
+        else Validation succeeds
+            API->>DB: Fetch active products<br/>& services (catalog)
+            
+            alt Database available
+                DB-->>API: Product & service data
+                API->>API: Build system prompt<br/>(with live catalog)
+            else Database unavailable
+                DB-->>API: Error
+                API->>API: Build prompt with<br/>"catalog unavailable"
+            end
+            
+            alt ANTHROPIC_API_KEY set
+                API->>Anthropic: generateText()<br/>{model, system, messages}
+                Anthropic-->>API: AI-generated response<br/>(max 500 tokens)
+            else API key not set or API fails
+                API->>API: getStaticResponse()<br/>(keyword matching)
+                API->>DB: Fetch products for<br/>pricing queries
+                DB-->>API: Product pricing data
+            end
+            
+            API->>API: Prepare response
+            
+            par Best-effort conversation logging
+                API->>DB: Create/update conversation<br/>(visitorId, userId)
+                API->>DB: Create message records<br/>(user + assistant)
+                
+                alt Database available
+                    DB-->>API: Conversation saved
+                else Database fails
+                    DB-->>API: Error (logged, not thrown)
+                    Note over API,DB: Failure doesn't block response
+                end
+            end
+            
+            API-->>Widget: 200 OK {reply}<br/>+ rate limit headers
+            Widget->>Widget: Add assistant reply<br/>to history
+            Widget-->>User: Display AI response
+            
+            alt Message count ≥ 4
+                Widget->>Widget: Show lead capture form
+                User->>Widget: Submits contact info
+                Widget->>LeadAPI: POST /api/leads<br/>{name, email, phone, source}
+                LeadAPI->>DB: Create lead record
+                DB-->>LeadAPI: Lead saved
+                LeadAPI-->>Widget: Success
+                Widget-->>User: Show confirmation
+            end
+        end
+    end
+```
+
+**Key Flow Characteristics:**
+
+- **Rate Limiting First:** All requests pass through middleware rate limiting before reaching the API handler
+- **Graceful Degradation:** System continues functioning when Anthropic API or database are unavailable
+- **Optimistic UI:** User messages appear immediately; errors roll back the UI state
+- **Best-Effort Persistence:** Database logging failures are logged but don't fail the user's request
+- **Conditional Lead Capture:** Form only appears after 4+ messages to qualify engaged visitors
+- **No Authentication Required:** System uses anonymous `visitorId` tracking; authenticated users get their `userId` linked to conversations
+
 ## System Components
 
 ### 1. Client Layer (Chat Widget)
