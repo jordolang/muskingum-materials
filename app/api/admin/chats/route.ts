@@ -3,10 +3,25 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
 /**
- * GET /api/admin/chats
- * Returns paginated list of chat conversations with message counts
- * Requires admin authentication via Clerk publicMetadata.role
- * Query params: page (optional), limit (optional, max 100), status (optional), escalated (optional), priority (optional)
+ * Admin endpoint for retrieving paginated chat conversations with message counts.
+ *
+ * @access admin - Requires Clerk authentication with `publicMetadata.role === "admin"`
+ * @param request - Incoming request with optional query parameters:
+ *   - `page` (number, default: 1): Page number for pagination (min: 1)
+ *   - `limit` (number, default: 20, max: 100): Results per page (clamped to 1-100)
+ *   - `status` (string, optional): Filter by conversation status
+ *   - `escalated` ("true"|"false", optional): Filter by escalation state
+ *   - `priority` (string, optional): Filter by priority level
+ * @returns 200 `{ conversations: ChatConversation[], total: number, page: number, limit: number, pages: number }`
+ *   with `conversations` containing id, visitorId, name, email, phone, status, metadata, escalatedAt,
+ *   priority, escalationReason, leadId, createdAt, updatedAt, and `_count.messages`
+ * @throws 401 `{ error: "Unauthorized" }` when Clerk session is invalid or missing
+ * @throws 403 `{ error: "Forbidden: Admin access required" }` when user lacks admin role
+ * @throws 500 `{ error: "Failed to fetch chat conversations" }` on database errors
+ * @see ChatConversation model in prisma/schema.prisma for field definitions
+ * @see middleware.ts for rate limiting configuration (not applied to /api/admin/* routes)
+ * @remarks Falls back to 401 when Clerk is not configured. Admin role checked via
+ *   `currentUser().publicMetadata.role`. Conversations ordered by `updatedAt DESC`.
  */
 export async function GET(request: Request) {
   try {
