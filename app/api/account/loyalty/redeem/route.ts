@@ -7,27 +7,27 @@ import { canRedeemPoints, calculateDiscountForPoints } from "@/lib/loyalty";
 import { logger } from "@/lib/logger";
 
 /**
- * POST /api/account/loyalty/redeem
- * Redeems loyalty points for a discount amount
+ * Redeem loyalty points for a discount coupon.
  *
- * Body validation: pointRedemptionSchema
- * - points: number (required) - Must be at least 100 and in multiples of 100
- * - notes: string (optional) - Additional notes for the redemption
- *
- * Redemption Rules:
- * - 100 points = $5 discount
- * - Minimum redemption: 100 points
- * - Points must be redeemed in multiples of 100
- * - User must have sufficient points balance
- *
- * Returns:
- * - success: boolean
- * - account: Updated LoyaltyAccount with new points balance
- * - transaction: LoyaltyTransaction record of the redemption
- * - discountAmount: Dollar value of the discount
- *
- * Uses database transaction to ensure atomicity (points deduction + transaction record creation)
- * Requires authentication via Clerk session
+ * @access authenticated
+ * @param request - Incoming request with body validated against `pointRedemptionSchema`
+ *   (points: number min 100 in multiples of 100; notes: string optional).
+ *   See lib/schemas.ts for shared schema conventions.
+ * @returns 200 `{ success: true, account: LoyaltyAccount, transaction: LoyaltyTransaction, discountAmount: number }`
+ *   with updated points balance and redemption transaction record
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk session is missing
+ * @returns 404 `{ error: "Loyalty account not found" }` when user has no loyalty account
+ * @returns 400 `{ error: "Points must be at least 100 and in multiples of 100" }` when redemption amount is invalid
+ * @returns 400 `{ error: "Insufficient points balance" }` when user doesn't have enough points
+ * @throws 400 `{ error: "Invalid data", details: ZodError[] }` when request validation fails
+ * @throws 500 `{ error: "Failed to redeem points" }` on database transaction failure
+ * @see pointRedemptionSchema in lib/schemas.ts for request validation
+ * @see canRedeemPoints in lib/loyalty.ts — validates minimum 100 points in multiples of 100
+ * @see calculateDiscountForPoints in lib/loyalty.ts — conversion rate: 100 points = $5 discount
+ * @see prisma.$transaction — atomic points deduction + transaction record creation
+ * @remarks Redemption rules: 100 points = $5 discount, minimum 100 points, multiples of 100 only.
+ *   Uses database transaction to ensure atomicity between points deduction and transaction logging.
+ *   Requires authenticated Clerk session with valid userId.
  */
 export async function POST(request: NextRequest) {
   try {
