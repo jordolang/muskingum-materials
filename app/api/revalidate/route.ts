@@ -47,29 +47,24 @@ function getPathsForContent(tag: string, slug?: string): string[] {
 }
 
 /**
- * POST /api/revalidate
- * Next.js ISR (Incremental Static Regeneration) revalidation webhook
+ * Next.js ISR on-demand revalidation webhook for Sanity CMS publish/unpublish events.
  *
- * Integrates with Sanity CMS to trigger cache invalidation when content is updated.
- * Validates a secret token (REVALIDATE_SECRET) to prevent unauthorized revalidation.
- * Supports both tag-based revalidation (for lists) and path-based revalidation (for individual pages).
- *
- * Request body:
- * - secret: string (matches SANITY_REVALIDATE_SECRET env var)
- * - tag: "product" | "service" | "testimonials" | "faq" | "gallery" | "site-settings"
- * - slug?: string (optional, triggers path-based revalidation for individual content pages)
- *
- * Revalidation behaviour:
- * - Always calls revalidateTag(tag) to invalidate tag-backed list pages.
- * - Additionally calls revalidatePath() for every route that actually renders the
- *   content in `app/` (detail page when a slug is supplied, plus listing pages).
- *   Routes that only exist under the build-excluded `src/` tree are not mapped.
- *
- * Returns:
- * - 200: { success: true, revalidated: true, tag: string, paths?: string[], now: number }
- * - 400: Invalid request data or malformed JSON
- * - 401: Invalid secret token
- * - 500: Server misconfiguration (SANITY_REVALIDATE_SECRET not set)
+ * @access public
+ * @param request - Incoming webhook request validated against `revalidateSchema`
+ *   (secret, tag, slug). Webhook signature verified via SANITY_REVALIDATE_SECRET.
+ * @returns 200 `{ success: true, revalidated: true, tag: string, paths?: string[], now: number }` on success
+ * @throws 400 `{ error: "Malformed JSON in request body" }` when JSON parsing fails
+ * @throws 400 `{ error: "Invalid request data", details: ZodError[] }` when validation fails
+ * @throws 401 `{ error: "Invalid secret token" }` when webhook secret doesn't match SANITY_REVALIDATE_SECRET
+ * @throws 500 `{ error: "Server misconfiguration" }` when SANITY_REVALIDATE_SECRET env var is not set
+ * @see getPathsForContent - Maps content types to Next.js routes in `app/` that render them
+ * @see CLAUDE.md ISR caching section - Webhook setup and time-based revalidation fallback (3600s)
+ * @remarks Dual cache invalidation strategy: always calls `revalidateTag(tag)` for tag-backed list pages,
+ *   then calls `revalidatePath(path)` for every route in `app/` that actually renders the content
+ *   (detail page when slug is supplied, plus listing pages like /catalog, /products, /services).
+ *   Routes under build-excluded `src/` tree are intentionally not mapped — revalidating a non-existent
+ *   route would purge nothing while reporting success. Time-based revalidation (3600s on Sanity pages)
+ *   serves as fallback when webhook delivery fails or SANITY_REVALIDATE_SECRET is missing.
  */
 export async function POST(request: NextRequest) {
   try {
