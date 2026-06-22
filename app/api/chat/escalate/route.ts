@@ -11,38 +11,22 @@ import { sendNotificationEmail } from "@/lib/email-service";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 
 /**
- * POST /api/chat/escalate
+ * Chat escalation endpoint - converts conversations into staff leads.
  *
- * Escalates a chat conversation to staff with lead creation and notification
- *
- * @rate-limit 5 requests per minute (chat tier)
- *
- * @request-body {chatEscalationSchema}
- * - visitorId: string - Visitor ID of the conversation to escalate (required)
- * - reason: enum - Reason for escalation: user_requested, cannot_answer, or high_intent (required)
- * - contactInfo?: object - Contact information for follow-up (optional)
- *   - name?: string - Customer name
- *   - email?: string - Customer email
- *   - phone?: string - Customer phone number
- *
- * @response 200 - Success
- * {
- *   success: true,
- *   message: string,
- *   leadId: string
- * }
- *
- * @response 400 - Validation error or conversation not found
- * { error: string, details?: ZodError[] }
- *
- * @response 404 - Conversation not found for the given visitorId
- * { error: string }
- *
- * @response 429 - Rate limit exceeded
- * { error: string, retryAfter: number }
- *
- * @response 500 - Database or server error
- * { error: string }
+ * @access public
+ * @param request - Incoming request with body validated against `chatEscalationSchema`
+ *   (visitorId, reason, optional contactInfo). See lib/schemas.ts for shared schema conventions.
+ * @returns 200 `{ success: true, message: string, leadId: string }` with `X-RateLimit-*` headers on success
+ * @returns 404 `{ error: string }` when conversation not found for the given visitorId
+ * @returns 429 `{ error: string, retryAfter: number }` when rate limit is exceeded
+ * @returns 500 `{ error: string }` when lead creation or database operation fails
+ * @throws 400 `{ error: "Invalid request data", details: ZodError[] }` when validation fails
+ * @see rateLimitedEndpoints in middleware.ts — chat tier (5 req/min per IP)
+ * @see createLeadFromConversation in lib/chat-escalation.ts for lead creation and priority logic
+ * @see chatEscalationSchema in lib/schemas.ts for request validation rules
+ * @remarks Contact info only fills blank fields to prevent tampering via leaked visitorId.
+ *   Email notification failures do not fail the request (best-effort delivery).
+ *   Acknowledgment message is business-hours-aware via getEscalationAcknowledgment.
  */
 export async function POST(request: NextRequest) {
   try {
