@@ -3,12 +3,26 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
 /**
- * GET /api/admin/metrics
- * Returns comprehensive business metrics and KPI dashboard data
- * Requires admin role authentication via Clerk publicMetadata
- * Aggregates data from orders (total/recent/revenue/status), leads, contact submissions,
- * quote requests, chat conversations, and newsletter subscribers
- * Response includes total counts, status breakdowns, and 30-day recent metrics
+ * Admin dashboard metrics and KPI aggregation endpoint.
+ *
+ * @access admin
+ * @returns 200 JSON object with comprehensive business metrics:
+ *   - `orders`: { total, recent, revenue: { total, recent }, byStatus: Record<string, number> }
+ *   - `leads`: { total, byStatus: Record<string, number> }
+ *   - `contactSubmissions`: { total, byStatus: Record<string, number> }
+ *   - `quoteRequests`: { total, byStatus: Record<string, number> }
+ *   - `chatConversations`: { total, active }
+ *   - `newsletterSubscribers`: { total, active }
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk is not configured or user is not authenticated
+ * @returns 403 `{ error: "Forbidden: Admin access required" }` when authenticated user lacks admin role
+ * @returns 500 `{ error: "Failed to fetch metrics" }` when database queries fail
+ * @see middleware.ts — Clerk auth middleware wraps all /api/admin/* routes
+ * @see prisma/schema.prisma — models referenced: Order, Lead, ContactSubmission, QuoteRequest, ChatConversation, NewsletterSubscriber
+ * @remarks Authentication flow: Checks `auth()` session existence, then validates `currentUser().publicMetadata.role === "admin"`.
+ *   Falls back to 401 when Clerk SDK is unconfigured (catch block on auth/currentUser calls).
+ *   All metrics queries run in parallel via `Promise.all` for optimal performance.
+ *   "Recent" metrics use a 30-day rolling window from current date.
+ *   `byStatus` aggregations use Prisma `groupBy` to count records per status enum value.
  */
 export async function GET() {
   try {
