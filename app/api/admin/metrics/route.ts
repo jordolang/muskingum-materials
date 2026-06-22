@@ -21,8 +21,9 @@ export async function GET() {
       session = await auth();
       user = await currentUser();
     } catch (authError) {
-      logger.warn("Clerk authentication not configured in admin metrics", authError, {
+      logger.warn("Clerk authentication not configured in admin metrics", {
         operation: "admin.metrics.GET.auth",
+        authError,
       });
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
