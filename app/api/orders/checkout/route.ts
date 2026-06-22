@@ -411,6 +411,29 @@ async function handleCheckout(request: NextRequest) {
       .map((i) => `  - ${i.name}: ${i.quantity} ${i.unit}(s) @ $${i.price.toFixed(2)} = $${(i.price * i.quantity).toFixed(2)}`)
       .join("\n");
 
+    // Format delivery date and time window for email
+    let deliveryScheduleText = "";
+    let deliveryScheduleHtml = "";
+    if (data.fulfillment === "delivery" && data.deliveryDate && data.deliveryTimeWindow) {
+      const deliveryDate = new Date(data.deliveryDate);
+      const formattedDate = deliveryDate.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      const timeWindowMap: Record<string, string> = {
+        morning: "Morning (8 AM - 12 PM)",
+        afternoon: "Afternoon (12 PM - 4 PM)",
+        evening: "Evening (4 PM - 7 PM)",
+      };
+      const formattedWindow = timeWindowMap[data.deliveryTimeWindow] || data.deliveryTimeWindow;
+
+      deliveryScheduleText = `\nScheduled Delivery: ${formattedDate}\nTime Window: ${formattedWindow}`;
+      deliveryScheduleHtml = `<p><strong>Scheduled Delivery:</strong> ${formattedDate}<br><strong>Time Window:</strong> ${formattedWindow}</p>`;
+    }
+
     const siteSummaryLines: string[] = [];
     if (site) {
       if (site.address) {
@@ -438,6 +461,7 @@ async function handleCheckout(request: NextRequest) {
 <strong>Email:</strong> ${data.email}<br>
 <strong>Phone:</strong> ${data.phone}<br>
 <strong>Fulfillment:</strong> ${data.fulfillment === "pickup" ? "Pickup at yard" : "Delivery"}</p>
+${deliveryScheduleHtml}
 ${data.deliveryAddress ? `<p><strong>Delivery Address:</strong><br>${data.deliveryAddress}</p>` : ""}
 ${data.deliveryNotes ? `<p><strong>Notes:</strong> ${data.deliveryNotes}</p>` : ""}
 ${
@@ -481,7 +505,7 @@ Order #: ${orderNumber}
 Customer: ${data.name}
 Email: ${data.email}
 Phone: ${data.phone}
-Fulfillment: ${data.fulfillment === "pickup" ? "Pickup at yard" : "Delivery"}
+Fulfillment: ${data.fulfillment === "pickup" ? "Pickup at yard" : "Delivery"}${deliveryScheduleText}
 ${data.deliveryAddress ? `Delivery Address: ${data.deliveryAddress}` : ""}
 ${data.deliveryNotes ? `Notes: ${data.deliveryNotes}` : ""}${siteSummaryText}
 
