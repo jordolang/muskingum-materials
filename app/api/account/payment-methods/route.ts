@@ -6,11 +6,16 @@ import { savedPaymentMethodCreateSchema } from "@/lib/schemas";
 import { logger } from "@/lib/logger";
 
 /**
- * GET /api/account/payment-methods
- * Fetches all saved payment methods for the authenticated user
+ * List saved payment methods for authenticated user.
  *
- * Auth: Requires Clerk authentication
- * Returns: { paymentMethods: SavedPaymentMethod[] } sorted by isDefault desc, then createdAt desc
+ * @access authenticated (Clerk)
+ * @returns 200 `{ paymentMethods: SavedPaymentMethod[] }` sorted by isDefault desc, createdAt desc
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk session is missing or invalid
+ * @returns 500 `{ error: "Failed to fetch payment methods" }` on database error
+ * @see prisma.savedPaymentMethod model in schema.prisma for field definitions
+ * @see middleware.ts for Clerk auth configuration
+ * @remarks Results are ordered to show default payment method first, then by creation date.
+ *   Database errors are logged via logger but do not expose internal details to client.
  */
 export async function GET() {
   let session;
@@ -46,14 +51,25 @@ export async function GET() {
 }
 
 /**
- * POST /api/account/payment-methods
- * Creates a new saved payment method for the authenticated user
+ * Create and save a payment method for authenticated user.
  *
- * Auth: Requires Clerk authentication
- * Request body: savedPaymentMethodCreateSchema
- * Returns: { paymentMethod: SavedPaymentMethod }
- *
- * Note: If isDefault is true, all other payment methods for this user are set to isDefault: false
+ * @access authenticated (Clerk)
+ * @param request - Incoming request with body validated against `savedPaymentMethodCreateSchema`
+ *   (stripePaymentMethodId, isDefault, optional brand/last4/expiry). See lib/schemas.ts.
+ * @returns 201 `{ paymentMethod: SavedPaymentMethod }` on successful creation
+ * @returns 400 `{ error: "Invalid data", details: ZodError[] }` when validation fails
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk session is missing or invalid
+ * @returns 500 `{ error: "Failed to create payment method" }` on database or Stripe error
+ * @throws 400 `{ error: "Invalid data", details: ZodError[] }` when schema validation fails
+ * @see savedPaymentMethodCreateSchema in lib/schemas.ts for request body schema
+ * @see middleware.ts for Clerk auth configuration
+ * @see prisma.savedPaymentMethod model in schema.prisma for field definitions
+ * @remarks When `isDefault` is true, automatically sets all other user payment methods to
+ *   `isDefault: false` via `updateMany` before creating the new record. If `STRIPE_SECRET_KEY`
+ *   is configured, enriches the payload with card brand/last4/expiry from Stripe's
+ *   `paymentMethods.retrieve` API; Stripe failures are logged but do not fail the request
+ *   (falls back to client-provided data). Database errors are logged via logger but do not
+ *   expose internal details to client.
  */
 export async function POST(request: NextRequest) {
   let session;
