@@ -3,17 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Loader2, MapPin, DollarSign, AlertCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-const calculatorSchema = z.object({
-  address: z.string().min(3, "Please enter a valid address"),
-});
-
-type CalculatorFormData = z.infer<typeof calculatorSchema>;
+import { deliveryFeeSchema, type DeliveryFeeData } from "@/lib/schemas";
 
 interface DeliveryFeeResult {
   success: boolean;
@@ -53,8 +47,8 @@ export function DeliveryFeeCalculator() {
     handleSubmit,
     formState: { errors, isSubmitting },
     setValue,
-  } = useForm<CalculatorFormData>({
-    resolver: zodResolver(calculatorSchema),
+  } = useForm<DeliveryFeeData>({
+    resolver: zodResolver(deliveryFeeSchema),
   });
 
   // Load Google Maps Places API
@@ -105,7 +99,7 @@ export function DeliveryFeeCalculator() {
     autocompleteRef.current = autocomplete;
   }, [mapsLoaded, setValue]);
 
-  async function onSubmit(data: CalculatorFormData) {
+  async function onSubmit(data: DeliveryFeeData) {
     setError("");
     setResult(null);
 
