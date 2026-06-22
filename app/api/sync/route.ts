@@ -14,22 +14,23 @@ const syncSchema = z.object({
 });
 
 /**
- * POST /api/sync
- * Manual sync endpoint for Prisma → Sanity content synchronization
+ * Manual sync endpoint for Prisma → Sanity content synchronization.
  *
- * Syncs products or services from Prisma database to Sanity CMS.
- * Requires admin authentication via secret token.
- *
- * Request body:
- * - secret: string (matches SANITY_REVALIDATE_SECRET env var)
- * - type: "products" | "services"
- * - dryRun: boolean (optional, default: false) - If true, validates sync without writing to Sanity
- *
- * Returns:
- * - 200: { success: true, type: string, total: number, successful: number, failed: number, errors: [...], dryRun?: boolean }
- * - 400: Invalid request data or malformed JSON
- * - 401: Invalid secret token
- * - 500: Server misconfiguration or sync failure
+ * @access admin (requires SANITY_REVALIDATE_SECRET)
+ * @param request - Incoming request with body validated against the local `syncSchema`
+ *   (secret, type, dryRun). Syncs products or services from Prisma to Sanity CMS.
+ * @returns 200 `{ success: true, type: string, total: number, successful: number, failed: number, errors: Array, dryRun?: boolean, timestamp: number }` on success
+ * @returns 400 `{ error: "Malformed JSON in request body" }` when request body is not valid JSON
+ * @returns 401 `{ error: "Invalid secret token" }` when secret does not match SANITY_REVALIDATE_SECRET
+ * @returns 500 `{ error: "Server misconfiguration" }` when SANITY_REVALIDATE_SECRET is not configured
+ * @throws 400 `{ error: "Invalid request data", details: ZodError[] }` when validation fails
+ * @throws 500 `{ error: "Internal server error" }` when sync operation fails unexpectedly
+ * @see syncAllProducts in lib/sync/prisma-to-sanity.ts — performs product sync
+ * @see syncAllServices in lib/sync/prisma-to-sanity.ts — performs service sync
+ * @see docs/sync-field-ownership.md for field-level ownership rules (Prisma-owned vs Sanity-owned)
+ * @remarks Field-level ownership: Prisma owns catalog/pricing/structured data, Sanity owns marketing/SEO/media.
+ *   Sync is one-way (Prisma → Sanity) and idempotent. Partial failures are logged and captured in monitoring
+ *   but do not fail the request. dryRun mode validates sync without writing to Sanity.
  */
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
