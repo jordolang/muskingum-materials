@@ -10,11 +10,22 @@ const contractorTermsApprovalSchema = z.object({
 });
 
 /**
- * POST /api/admin/contractors/[userId]/approve-terms
- * Admin endpoint - approves contractor for net terms with credit limit and terms length
- * Requires: Admin authentication via requireAdmin()
- * Body: { creditLimit, termsLength } - validated via contractorTermsApprovalSchema
- * Returns: Updated user profile with net terms approved
+ * Admin endpoint to approve or revoke contractor net terms with credit limit and terms length.
+ *
+ * @access admin (requires authentication via requireAdmin())
+ * @param request - Incoming request with body validated against `contractorTermsApprovalSchema`
+ *   ({ creditLimit: number, termsLength: number })
+ * @param params - Route parameters containing `userId` (Next.js 15 async params pattern)
+ * @returns 200 `{ profile: UserProfile }` with updated net terms approval status
+ * @returns 404 `{ error: "User profile not found" }` when userId doesn't exist in database
+ * @throws 400 `{ error: "Invalid request data", details: ZodError[] }` when validation fails
+ * @throws 403 `{ error: "Unauthorized: Admin access required" }` when admin authentication fails
+ * @throws 500 `{ error: "Failed to approve contractor terms" }` on database errors
+ * @see requireAdmin in lib/admin-auth.ts for admin authentication logic
+ * @see UserProfile model in prisma/schema.prisma for net terms fields
+ * @remarks Setting creditLimit to 0 or termsLength to 0 revokes net terms approval.
+ *   The netTermsApproved flag is computed from creditLimit > 0 && termsLength > 0.
+ *   Database failures during the update operation result in a 500 error response.
  */
 export async function POST(
   request: Request,
