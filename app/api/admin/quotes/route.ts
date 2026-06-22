@@ -3,10 +3,24 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
 /**
- * GET /api/admin/quotes
- * Returns paginated list of quote requests with filtering
- * Query params: page (optional, default 1), limit (optional, default 20, max 100), status (optional)
- * Response: { quotes: QuoteRequest[], total: number, page: number, limit: number, pages: number }
+ * Admin endpoint for retrieving paginated quote requests with optional filtering.
+ *
+ * @access restricted (admin role required)
+ * @param request - Incoming request with URL search params:
+ *   - `page` (optional, default 1): Page number for pagination, minimum 1
+ *   - `limit` (optional, default 20, max 100): Records per page, clamped to [1, 100]
+ *   - `status` (optional): Filter by quote request status
+ * @returns 200 `{ quotes: QuoteRequest[], total: number, page: number, limit: number, pages: number }`
+ *   with full quote request details ordered by creation date (newest first)
+ * @returns 401 `{ error: "Unauthorized" }` when authentication fails or Clerk is not configured
+ * @returns 403 `{ error: "Forbidden: Admin access required" }` when authenticated user lacks admin role
+ * @throws 500 `{ error: "Failed to fetch quote requests" }` on database or server errors
+ * @see middleware.ts — auth middleware enforces Clerk session
+ * @see prisma/schema.prisma — QuoteRequest model definition
+ * @remarks Requires Clerk authentication with `publicMetadata.role === "admin"`.
+ *   Returns selected fields: id, name, email, phone, company, products, quantity, deliveryAddr,
+ *   notes, status, createdAt, updatedAt. Page/limit parameters are sanitized to prevent
+ *   excessive database load (max 100 records per request).
  */
 export async function GET(request: Request) {
   try {
