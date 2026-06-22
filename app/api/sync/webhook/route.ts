@@ -13,21 +13,24 @@ const webhookSchema = z.object({
 });
 
 /**
- * POST /api/sync/webhook
- * Webhook endpoint for automated Prisma → Sanity content synchronization
+ * Webhook endpoint for automated Prisma → Sanity content synchronization.
  *
- * Designed to be triggered by external schedulers (Vercel Cron, database triggers)
- * to keep Sanity CMS in sync with Prisma database changes.
- *
- * Request body:
- * - secret: string (matches SANITY_REVALIDATE_SECRET env var)
- * - type: "products" | "services" | "all" (optional, defaults to "all")
- *
- * Returns:
- * - 200: { success: true, synced: { products: {...}, services: {...} } }
- * - 400: Invalid request data or malformed JSON
- * - 401: Invalid secret token
- * - 500: Server misconfiguration or sync failure
+ * @access public
+ * @param request - Incoming request with body validated against the local `webhookSchema`
+ *   (secret, type). Designed to be triggered by external schedulers (Vercel Cron, database
+ *   triggers) to keep Sanity CMS in sync with Prisma database changes.
+ * @returns 200 `{ success: true, synced: { products?: BulkSyncResult, services?: BulkSyncResult }, summary: {...}, timestamp: number }`
+ *   when sync completes successfully
+ * @returns 400 `{ error: "Malformed JSON in request body" }` when request body is not valid JSON
+ * @returns 401 `{ error: "Invalid secret token" }` when secret does not match SANITY_REVALIDATE_SECRET
+ * @throws 400 `{ error: "Invalid request data", details: ZodError[] }` when validation fails
+ * @throws 500 `{ error: "Server misconfiguration" }` when SANITY_REVALIDATE_SECRET is not configured
+ * @throws 500 `{ error: "Internal server error" }` when sync operations fail
+ * @see webhookSchema — validates secret (string) and type ("products" | "services" | "all", defaults to "all")
+ * @see syncAllProducts in lib/sync/prisma-to-sanity — executes product synchronization
+ * @see syncAllServices in lib/sync/prisma-to-sanity — executes service synchronization
+ * @remarks Requires SANITY_REVALIDATE_SECRET environment variable for authentication.
+ *   Sync operations log results but do not halt on individual entity failures.
  */
 export async function POST(request: NextRequest) {
   try {
