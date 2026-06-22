@@ -65,6 +65,8 @@ export const checkoutSchema = z
     fulfillment: z.enum(["pickup", "delivery"]),
     deliveryAddress: z.string().optional(),
     deliveryNotes: z.string().optional(),
+    deliveryDate: z.string().optional(),
+    deliveryTimeWindow: z.string().optional(),
   })
   .refine(
     (data) =>
@@ -73,6 +75,24 @@ export const checkoutSchema = z
     {
       message: "Delivery address is required",
       path: ["deliveryAddress"],
+    },
+  )
+  .refine(
+    (data) =>
+      data.fulfillment !== "delivery" ||
+      (data.deliveryDate && data.deliveryDate.trim().length > 0),
+    {
+      message: "Delivery date is required",
+      path: ["deliveryDate"],
+    },
+  )
+  .refine(
+    (data) =>
+      data.fulfillment !== "delivery" ||
+      (data.deliveryTimeWindow && data.deliveryTimeWindow.trim().length > 0),
+    {
+      message: "Delivery time window is required",
+      path: ["deliveryTimeWindow"],
     },
   );
 
@@ -168,6 +188,8 @@ export function OrderForm({ products }: OrderFormProps) {
 
   const fulfillment = watch("fulfillment");
   const deliveryAddress = watch("deliveryAddress");
+  const deliveryDate = watch("deliveryDate");
+  const deliveryTimeWindow = watch("deliveryTimeWindow");
 
   const totals = useMemo(() => {
     const subtotal = cart.reduce(
@@ -191,7 +213,10 @@ export function OrderForm({ products }: OrderFormProps) {
   const hasCart = cart.length > 0;
   const fulfillmentSelected =
     fulfillment === "pickup" ||
-    (fulfillment === "delivery" && (deliveryAddress?.trim().length ?? 0) > 5);
+    (fulfillment === "delivery" &&
+      (deliveryAddress?.trim().length ?? 0) > 5 &&
+      (deliveryDate?.trim().length ?? 0) > 0 &&
+      (deliveryTimeWindow?.trim().length ?? 0) > 0);
 
   const stepStatus = (n: 1 | 2 | 3 | 4): OrderStepStatus => {
     if (n === 1) return hasAddress ? "complete" : "active";
@@ -240,19 +265,29 @@ export function OrderForm({ products }: OrderFormProps) {
       })),
     });
     try {
+      const payload = {
+        ...data,
+        items: cart,
+        subtotal: totals.subtotal,
+        volumeDiscount: totals.volumeDiscount,
+        tax: totals.tax,
+        processingFee: totals.processingFee,
+        total: totals.total,
+        projectSite: siteData ?? undefined,
+      };
+
+      // Include scheduling data for delivery orders
+      if (data.fulfillment === "delivery") {
+        Object.assign(payload, {
+          deliveryDate: data.deliveryDate,
+          deliveryTimeWindow: data.deliveryTimeWindow,
+        });
+      }
+
       const response = await fetch("/api/orders/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          items: cart,
-          subtotal: totals.subtotal,
-          volumeDiscount: totals.volumeDiscount,
-          tax: totals.tax,
-          processingFee: totals.processingFee,
-          total: totals.total,
-          projectSite: siteData ?? undefined,
-        }),
+        body: JSON.stringify(payload),
       });
       const result = await response.json();
       if (result.url) {
