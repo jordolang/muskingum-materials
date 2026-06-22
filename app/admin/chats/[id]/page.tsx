@@ -1,11 +1,12 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, MessageSquare, User, Mail, Phone, Bot } from "lucide-react";
+import { ArrowLeft, MessageSquare, User, Mail, Phone, Bot, Reply, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { prisma } from "@/lib/prisma";
 import { StatusUpdater } from "@/components/admin/status-updater";
+import { ChatReply } from "@/components/admin/chat-reply";
 import { requireAdmin } from "@/lib/admin-auth";
 
 interface ChatDetailPageProps {
@@ -31,6 +32,25 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function PriorityBadge({ priority }: { priority: string }) {
+  const variants: Record<
+    string,
+    { variant: "default" | "secondary" | "destructive" | "outline"; className?: string }
+  > = {
+    high: { variant: "destructive" },
+    medium: { variant: "outline", className: "bg-yellow-50 text-yellow-700 border-yellow-200" },
+    low: { variant: "outline", className: "bg-gray-50 text-gray-700 border-gray-200" },
+  };
+
+  const config = variants[priority] || { variant: "secondary" as const };
+
+  return (
+    <Badge variant={config.variant} className={config.className}>
+      {priority}
+    </Badge>
+  );
+}
+
 export default async function ChatDetailPage({ params }: ChatDetailPageProps) {
   // Check admin authentication
   const user = await requireAdmin();
@@ -48,6 +68,7 @@ export default async function ChatDetailPage({ params }: ChatDetailPageProps) {
         messages: {
           orderBy: { createdAt: "asc" },
         },
+        lead: true,
       },
     });
   } catch {
@@ -225,6 +246,75 @@ export default async function ChatDetailPage({ params }: ChatDetailPageProps) {
                   })}
                 </p>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Linked Lead */}
+          {conversation.lead && (
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <ExternalLink className="h-5 w-5" />
+                  Linked Lead
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Lead</p>
+                  <Link
+                    href={`/admin/leads/${conversation.leadId}`}
+                    className="font-medium mt-1 text-primary hover:underline inline-flex items-center gap-1"
+                  >
+                    {conversation.lead.name}
+                    <ExternalLink className="h-3 w-3" />
+                  </Link>
+                </div>
+                {conversation.escalationReason && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Escalation Reason</p>
+                    <p className="text-sm mt-1 whitespace-pre-line">{conversation.escalationReason}</p>
+                  </div>
+                )}
+                {conversation.priority && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Priority</p>
+                    <div className="mt-1">
+                      <PriorityBadge priority={conversation.priority} />
+                    </div>
+                  </div>
+                )}
+                {conversation.escalatedAt && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Escalated At</p>
+                    <p className="text-sm mt-1">
+                      {new Date(conversation.escalatedAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Reply Section */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Reply className="h-5 w-5" />
+                Send Reply
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChatReply
+                conversationId={conversation.id}
+                hasEmail={!!conversation.email}
+                hasPhone={!!conversation.phone}
+              />
             </CardContent>
           </Card>
         </div>

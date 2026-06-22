@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, MessageSquare } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface ChatMessage {
   id: string;
@@ -17,6 +18,8 @@ interface ChatConversation {
   email: string | null;
   phone: string | null;
   status: string;
+  escalatedAt: Date | null;
+  priority: string | null;
   metadata: unknown;
   messages: ChatMessage[];
   createdAt: Date;
@@ -62,6 +65,16 @@ export function ChatsTable({ chats }: ChatsTableProps) {
                         {chat.visitorId.slice(0, 12).toUpperCase()}
                       </p>
                       <StatusBadge status={chat.status} />
+                      {chat.escalatedAt && (
+                        <Badge variant="outline" className="text-xs">
+                          Escalated
+                        </Badge>
+                      )}
+                      {chat.priority === "high" && (
+                        <Badge className="text-xs bg-red-100 text-red-800 border-transparent">
+                          High Priority
+                        </Badge>
+                      )}
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 mt-2">
                       <div>

@@ -35,6 +35,7 @@ import {
 } from "@/data/recommendation-mapping";
 import type { ProjectRecommendationResult } from "@/lib/recommendations";
 import { AddToCartButton } from "@/components/order/add-to-cart-button";
+import { useToast } from "@/lib/use-toast";
 
 const PROJECT_TYPE_ICONS: Record<string, typeof Car> = {
   car: Car,
@@ -72,6 +73,7 @@ export function MaterialWizard({ onComplete }: MaterialWizardProps) {
   const [recommendations, setRecommendations] =
     useState<ProjectRecommendationResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const steps: Step[] = ["project-type", "area-size", "delivery", "results"];
   const currentStepIndex = steps.indexOf(step);
@@ -132,11 +134,14 @@ export function MaterialWizard({ onComplete }: MaterialWizardProps) {
         onComplete(result);
       }
     } catch (error) {
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Failed to load recommendations. Please try again."
-      );
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to load recommendations. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

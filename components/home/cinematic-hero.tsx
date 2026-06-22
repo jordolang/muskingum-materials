@@ -8,6 +8,8 @@ interface CinematicHeroProps {
    * element when rendered as an overlay over the site.
    */
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
+  /** Act 1 frame-decode progress (0..1), forwarded for the intro loader. */
+  onActOneProgress?: (loaded: number) => void;
 }
 
 /**
@@ -17,10 +19,10 @@ interface CinematicHeroProps {
  * Rendered two ways: as the /experience page (window scroll) and inside the
  * homepage intro overlay (its own scroll container).
  */
-export function CinematicHero({ scrollContainerRef }: CinematicHeroProps) {
+export function CinematicHero({ scrollContainerRef, onActOneProgress }: CinematicHeroProps) {
   return (
     <div className="relative bg-coal">
-      <ScrollVideoHero scrollContainerRef={scrollContainerRef} />
+      <ScrollVideoHero scrollContainerRef={scrollContainerRef} onProgress={onActOneProgress} />
       <RockDumpSection scrollContainerRef={scrollContainerRef} />
       {/* Hero-scoped grain wash (absolute, not fixed). Normal blend (no
           per-frame mix-blend recomposite) keeps scroll compositing cheap. */}

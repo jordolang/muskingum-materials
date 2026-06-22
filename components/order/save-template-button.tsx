@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Bookmark, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/lib/use-toast";
 
 interface SaveTemplateButtonProps {
   items: Array<{
@@ -20,6 +21,7 @@ export function SaveTemplateButton({
   deliveryAddress,
 }: SaveTemplateButtonProps) {
   const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
   async function handleSaveAsTemplate() {
     const templateName = window.prompt("Enter a name for this template:");
@@ -45,9 +47,16 @@ export function SaveTemplateButton({
         throw new Error("Failed to save template");
       }
 
-      alert(`Template "${templateName}" saved successfully!`);
+      toast({
+        title: "Template saved",
+        description: `"${templateName}" saved successfully!`,
+      });
     } catch (error) {
-      alert("Failed to save template. Please try again.");
+      toast({
+        title: "Error",
+        description: "Failed to save template. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }

@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Package, MapPin, Truck, Mail, Map as MapIcon, Printer, Calendar } from "lucide-react";
+import { ArrowLeft, Package, MapPin, Truck, Mail, Map as MapIcon, Printer, Calendar, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { StatusUpdater } from "@/components/admin/status-updater";
 import { RefundButton } from "@/components/admin/refund-button";
 import { requireAdmin } from "@/lib/admin-auth";
+import { ConfidenceRangeDisplay } from "@/components/order/confidence-range-display";
 
 interface OrderDetailPageProps {
   params: Promise<{ id: string }>;
@@ -82,6 +83,20 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
     quantity: number;
     unit: string;
   }>;
+
+  // Type assertion for newer fields (Prisma client types may be stale in worktree)
+  const orderWithConfidence = order as typeof order & {
+    projectEstimateTonsLow?: number | null;
+    projectEstimateTonsHigh?: number | null;
+    projectEstimateCubicYardsLow?: number | null;
+    projectEstimateCubicYardsHigh?: number | null;
+    deliveryAccessChecklist?: Record<string, unknown> | null;
+    dropLocationNotes?: string | null;
+    dropLocationPhotoUrl?: string | null;
+    dropLocationLat?: number | null;
+    dropLocationLng?: number | null;
+    accessWarningFlags?: string[] | null;
+  };
 
   const STATUS_OPTIONS = [
     { value: "pending", label: "Pending" },
@@ -211,32 +226,41 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
             )}
             {(order.projectEstimateTons != null ||
               order.projectAreaSqFt != null) && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <>
+                {/* Confidence Range Display */}
                 {order.projectEstimateTons != null && (
-                  <AdminStat
-                    label="Tons (est.)"
-                    value={order.projectEstimateTons.toFixed(1)}
-                  />
+                  <div className="mb-4">
+                    <ConfidenceRangeDisplay
+                      estimate={{
+                        tons: order.projectEstimateTons,
+                        tonsLow: orderWithConfidence.projectEstimateTonsLow ?? undefined,
+                        tonsExpected: order.projectEstimateTons,
+                        tonsHigh: orderWithConfidence.projectEstimateTonsHigh ?? undefined,
+                        cubicYards: order.projectEstimateCubicYards ?? 0,
+                        cubicYardsLow: orderWithConfidence.projectEstimateCubicYardsLow ?? undefined,
+                        cubicYardsExpected: order.projectEstimateCubicYards ?? undefined,
+                        cubicYardsHigh: orderWithConfidence.projectEstimateCubicYardsHigh ?? undefined,
+                        depthVariance: 0.5,
+                      }}
+                    />
+                  </div>
                 )}
-                {order.projectEstimateCubicYards != null && (
-                  <AdminStat
-                    label="Cubic yards"
-                    value={order.projectEstimateCubicYards.toFixed(1)}
-                  />
-                )}
-                {order.projectAreaSqFt != null && (
-                  <AdminStat
-                    label="Area (sq ft)"
-                    value={Math.round(order.projectAreaSqFt).toLocaleString()}
-                  />
-                )}
-                {order.projectDepthInches != null && (
-                  <AdminStat
-                    label="Depth"
-                    value={`${order.projectDepthInches}"`}
-                  />
-                )}
-              </div>
+                {/* Area and Depth Stats */}
+                <div className="grid grid-cols-2 gap-3">
+                  {order.projectAreaSqFt != null && (
+                    <AdminStat
+                      label="Area (sq ft)"
+                      value={Math.round(order.projectAreaSqFt).toLocaleString()}
+                    />
+                  )}
+                  {order.projectDepthInches != null && (
+                    <AdminStat
+                      label="Depth"
+                      value={`${order.projectDepthInches}"`}
+                    />
+                  )}
+                </div>
+              </>
             )}
             <p className="text-xs text-muted-foreground">
               Source:{" "}
@@ -268,6 +292,123 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                 </a>
               )}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Delivery Access & Drop Location (driver instructions) */}
+      {(orderWithConfidence.deliveryAccessChecklist ||
+        orderWithConfidence.dropLocationNotes ||
+        orderWithConfidence.dropLocationPhotoUrl ||
+        (orderWithConfidence.dropLocationLat != null && orderWithConfidence.dropLocationLng != null) ||
+        (Array.isArray(orderWithConfidence.accessWarningFlags) &&
+          orderWithConfidence.accessWarningFlags.length > 0)) && (
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Truck className="h-5 w-5" />
+              Delivery Access & Drop Location
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Access Checklist */}
+            {orderWithConfidence.deliveryAccessChecklist && (
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Access Checklist
+                </p>
+                <AccessChecklistDisplay
+                  checklist={
+                    orderWithConfidence.deliveryAccessChecklist as {
+                      drivewayWidth?: string;
+                      overheadClearance?: string;
+                      turningRoom?: string;
+                      surface?: string;
+                      gateCode?: string;
+                    }
+                  }
+                />
+              </div>
+            )}
+
+            {/* Warning Flags */}
+            {orderWithConfidence.accessWarningFlags &&
+              Array.isArray(orderWithConfidence.accessWarningFlags) &&
+              (orderWithConfidence.accessWarningFlags as string[]).length > 0 && (
+                <div className="rounded-lg bg-amber-50 border border-amber-200 p-3">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-amber-900">
+                        Access Warnings
+                      </p>
+                      <ul className="text-sm text-amber-800 list-disc list-inside space-y-0.5">
+                        {(orderWithConfidence.accessWarningFlags as string[]).map(
+                          (flag, idx) => (
+                            <li key={idx}>
+                              {flag
+                                .replace(/_/g, " ")
+                                .replace(/\b\w/g, (l) => l.toUpperCase())}
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            {/* Drop Location Notes */}
+            {orderWithConfidence.dropLocationNotes && (
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Drop Location Notes
+                </p>
+                <p className="text-sm bg-muted/30 rounded-lg p-3 whitespace-pre-line">
+                  {orderWithConfidence.dropLocationNotes}
+                </p>
+              </div>
+            )}
+
+            {/* Drop Location Photo */}
+            {orderWithConfidence.dropLocationPhotoUrl && (
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Drop Location Photo
+                </p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={orderWithConfidence.dropLocationPhotoUrl}
+                  alt="Drop location marked by customer"
+                  className="w-full max-w-xl rounded-lg border"
+                />
+              </div>
+            )}
+
+            {/* Drop Location Map */}
+            {orderWithConfidence.dropLocationLat != null && orderWithConfidence.dropLocationLng != null && (
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Drop Location Pin
+                </p>
+                <a
+                  href={`https://www.google.com/maps?q=${orderWithConfidence.dropLocationLat},${orderWithConfidence.dropLocationLng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://maps.googleapis.com/maps/api/staticmap?center=${orderWithConfidence.dropLocationLat},${orderWithConfidence.dropLocationLng}&zoom=18&size=600x300&maptype=satellite&markers=color:red%7C${orderWithConfidence.dropLocationLat},${orderWithConfidence.dropLocationLng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
+                    alt="Drop location on map"
+                    className="w-full max-w-xl rounded-lg border hover:opacity-90 transition-opacity"
+                  />
+                </a>
+                <p className="text-xs text-muted-foreground">
+                  Click map to open in Google Maps
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -412,6 +553,73 @@ function AdminStat({ label, value }: { label: string; value: string }) {
       <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold mt-0.5">
         {label}
       </p>
+    </div>
+  );
+}
+
+function AccessChecklistDisplay({
+  checklist,
+}: {
+  checklist: {
+    drivewayWidth?: string;
+    overheadClearance?: string;
+    turningRoom?: string;
+    surface?: string;
+    gateCode?: string;
+  };
+}) {
+  const items = [
+    {
+      label: "Driveway Width",
+      value: checklist.drivewayWidth,
+      warning: ["narrow", "very_narrow"],
+    },
+    {
+      label: "Overhead Clearance",
+      value: checklist.overheadClearance,
+      warning: ["low", "very_low", "less_than"],
+    },
+    {
+      label: "Turning Room",
+      value: checklist.turningRoom,
+      warning: ["tight", "very_tight", "none"],
+    },
+    { label: "Surface Type", value: checklist.surface, warning: [] },
+    { label: "Gate Code", value: checklist.gateCode, warning: [] },
+  ];
+
+  return (
+    <div className="space-y-2">
+      {items.map((item, idx) => {
+        if (!item.value) return null;
+
+        const isWarning =
+          item.warning.length > 0 &&
+          item.warning.some((w) =>
+            item.value?.toLowerCase().includes(w.toLowerCase())
+          );
+
+        return (
+          <div
+            key={idx}
+            className="flex items-start justify-between gap-4 text-sm py-2 border-b last:border-0"
+          >
+            <span className="text-muted-foreground font-medium">
+              {item.label}
+            </span>
+            <span className="flex items-center gap-2">
+              {isWarning ? (
+                <XCircle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+              ) : (
+                <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+              )}
+              <span className={isWarning ? "text-amber-900 font-medium" : ""}>
+                {item.value}
+              </span>
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }

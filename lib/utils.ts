@@ -28,6 +28,14 @@ export function cn(...inputs: ClassValue[]) {
  * Formats a number as USD currency
  * @param price - Numeric price value
  * @returns Formatted price string (e.g., "$12.34")
+ * @example
+ * ```ts
+ * formatPrice(12.5)
+ * // Returns: "$12.50"
+ *
+ * formatPrice(1234.99)
+ * // Returns: "$1,234.99"
+ * ```
  */
 export function formatPrice(price: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -41,6 +49,17 @@ export function formatPrice(price: number): string {
  * Formats a phone number string to (XXX) XXX-XXXX format
  * @param phone - Phone number string (digits only or any format)
  * @returns Formatted phone number, or original string if not 10 digits
+ * @example
+ * ```ts
+ * formatPhone("5551234567")
+ * // Returns: "(555) 123-4567"
+ *
+ * formatPhone("555-123-4567")
+ * // Returns: "(555) 123-4567"
+ *
+ * formatPhone("123") // Not 10 digits
+ * // Returns: "123"
+ * ```
  */
 export function formatPhone(phone: string): string {
   const cleaned = phone.replace(/\D/g, "");

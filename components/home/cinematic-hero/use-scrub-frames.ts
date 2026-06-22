@@ -90,6 +90,9 @@ export function useScrubFrames(
     for (let i = 0; i < count; i++) {
       const img = new Image();
       img.decoding = "async";
+      // Fetch the opening frames first so the very first frame paints fast and
+      // the host can lift its loader; later frames stream in at low priority.
+      img.setAttribute("fetchpriority", i < 24 ? "high" : "low");
       const mark = () => {
         if (cancelled) return;
         flags[i] = true;

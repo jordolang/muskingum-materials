@@ -11,6 +11,7 @@ import {
   LogOut,
   Mail,
   UserCheck,
+  UserCog,
 } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { href: "/admin/chats", label: "Chats", icon: MessageSquare },
   { href: "/admin/campaigns", label: "Campaigns", icon: Mail },
   { href: "/admin/subscribers", label: "Subscribers", icon: UserCheck },
+  { href: "/admin/contractors", label: "Contractors", icon: UserCog },
 ];
 
 export function AdminSidebar() {

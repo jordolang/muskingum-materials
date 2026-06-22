@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { quoteSchema } from "@/lib/schemas";
-import { sendEmail } from "@/lib/email";
+import { sendNotificationEmail } from "@/lib/email-service";
 import { logger } from "@/lib/logger";
+import { buildSatelliteMapUrl } from "@/lib/static-map";
 
 /**
  * Submit a quote request for products and services.
@@ -23,6 +24,19 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = quoteSchema.parse(body);
 
+    // Build a Static Maps satellite snapshot URL from the project-site data
+    // the customer captured in the estimator. This URL is what the sales
+    // team sees in their quote request emails and helps them understand
+    // the project scope.
+    const site = data.projectSite ?? null;
+    const projectMapImageUrl = site?.location || (site?.polygons?.length ?? 0) > 0
+      ? buildSatelliteMapUrl({
+          center: site?.location ?? null,
+          zoom: site?.polygons && site.polygons.length > 0 ? undefined : 19,
+          polygons: site?.polygons ?? [],
+        })
+      : null;
+
     try {
       await prisma.quoteRequest.create({
         data: {
@@ -33,6 +47,20 @@ export async function POST(request: NextRequest) {
           products: data.products,
           deliveryAddr: data.deliveryAddr || null,
           notes: data.notes || null,
+          projectAddress: site?.address || null,
+          projectLat: site?.location?.lat ?? null,
+          projectLng: site?.location?.lng ?? null,
+          projectAreaSqFt: site?.totalAreaSqFt ?? null,
+          projectDepthInches: site?.depthInches ?? null,
+          projectEstimateTons: site?.estimate?.tons ?? null,
+          projectEstimateCubicYards: site?.estimate?.cubicYards ?? null,
+          projectEstimateSource: site?.mode ?? null,
+          projectPolygons: site?.polygons?.length ? site.polygons : undefined,
+          projectMapImageUrl,
+          projectEstimateTonsLow: site?.estimate?.tonsLow ?? null,
+          projectEstimateTonsHigh: site?.estimate?.tonsHigh ?? null,
+          projectEstimateCubicYardsLow: site?.estimate?.cubicYardsLow ?? null,
+          projectEstimateCubicYardsHigh: site?.estimate?.cubicYardsHigh ?? null,
         },
       });
     } catch (dbError) {
@@ -49,10 +77,39 @@ export async function POST(request: NextRequest) {
       .map((p) => `  - ${p.productName}: ${p.quantity}`)
       .join("\n");
 
-    await sendEmail({
-      to: "sales@muskingummaterials.com",
-      subject: `Quote Request from ${data.name}`,
-      textBody: `
+    // Build project estimate section for email
+    let projectEstimateSection = "";
+    if (site?.estimate) {
+      const est = site.estimate;
+      projectEstimateSection = `
+
+Project Estimate:
+  - Cubic Yards: ${est.cubicYards.toFixed(1)}${est.cubicYardsLow && est.cubicYardsHigh ? ` (range: ${est.cubicYardsLow.toFixed(1)} - ${est.cubicYardsHigh.toFixed(1)})` : ""}
+  - Tons: ${est.tons.toFixed(1)}${est.tonsLow && est.tonsHigh ? ` (range: ${est.tonsLow.toFixed(1)} - ${est.tonsHigh.toFixed(1)})` : ""}
+  - Truckloads: ${est.truckloads.toFixed(1)}${est.truckloadsLow && est.truckloadsHigh ? ` (range: ${est.truckloadsLow.toFixed(1)} - ${est.truckloadsHigh.toFixed(1)})` : ""}
+  - Source: ${site.mode || "Unknown"}`;
+
+      if (site.address) {
+        projectEstimateSection += `
+  - Address: ${site.address}`;
+      }
+      if (site.totalAreaSqFt) {
+        projectEstimateSection += `
+  - Area: ${site.totalAreaSqFt.toFixed(0)} sq ft`;
+      }
+      if (site.depthInches) {
+        projectEstimateSection += `
+  - Depth: ${site.depthInches}" ${est.depthVariance ? `(variance: ±${est.depthVariance}")` : ""}`;
+      }
+      if (projectMapImageUrl) {
+        projectEstimateSection += `
+  - Map: ${projectMapImageUrl}`;
+      }
+    }
+
+    await sendNotificationEmail(
+      `Quote Request from ${data.name}`,
+      `
 New quote request:
 
 Name: ${data.name}
@@ -64,10 +121,19 @@ Products:
 ${productList}
 
 Delivery Address: ${data.deliveryAddr || "Pickup"}
-Notes: ${data.notes || "None"}
+Notes: ${data.notes || "None"}${projectEstimateSection}
       `.trim(),
-      replyTo: data.email,
-    });
+      {
+        replyTo: data.email,
+        tag: "quote-request",
+        metadata: {
+          quoteName: data.name,
+          quoteEmail: data.email,
+          productCount: data.products.length.toString(),
+          company: data.company || "none",
+        },
+      }
+    );
 
     return NextResponse.json({
       success: true,

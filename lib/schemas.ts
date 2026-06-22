@@ -21,8 +21,16 @@ export const contactSchema = z.object({
   message: z.string().min(10, "Message must be at least 10 characters"),
 });
 
-// Checkout form schema (client-side)
-export const checkoutFormSchema = z.object({
+// Payment method enum for checkout
+export const paymentMethodEnum = z.enum([
+  "stripe",
+  "purchase_order",
+  "net_terms",
+  "saved_payment_method",
+]);
+
+// Base checkout form schema (without refinements, for extending)
+const checkoutFormBaseSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Valid email is required"),
   phone: z.string().min(10, "Phone number is required"),
@@ -31,13 +39,66 @@ export const checkoutFormSchema = z.object({
   deliveryNotes: z.string().optional(),
   deliveryDate: z.string().optional(), // ISO date string
   deliveryTimeWindow: z.string().optional(), // e.g., "morning", "afternoon"
+  pickupDate: z.string().optional(), // ISO date string (pickup scheduling)
+  pickupTimeWindow: z.string().optional(),
   smsOptIn: z.boolean().optional(),
+  paymentMethod: paymentMethodEnum.default("stripe"),
+  purchaseOrderNumber: z.string().optional(),
+  savedPaymentMethodId: z.string().optional(),
   termsAccepted: z.literal(true, {
     errorMap: () => ({
       message: "You must accept the Terms of Service to proceed",
     }),
   }),
+  // Delivery access pre-check and drop-location capture (collected on the
+  // client checkout form). Kept in the base schema so both the client form
+  // schema and the API checkout schema validate these fields.
+  deliveryAccessChecklist: z
+    .object({
+      drivewayWidth: z.enum(["10ft_or_more", "less_than_10ft", "unknown"]).optional(),
+      overheadClearance: z.enum(["14ft_or_more", "less_than_14ft", "unknown"]).optional(),
+      turningRoom: z.enum(["adequate", "tight", "unknown"]).optional(),
+      surface: z.enum(["paved", "gravel", "dirt", "grass", "other"]).optional(),
+      gateCode: z.string().optional(),
+      accessInstructions: z.string().optional(),
+    })
+    .optional(),
+  dropLocation: z
+    .object({
+      notes: z.string().optional(),
+      photoUrl: z.string().optional(),
+      lat: z.number().optional(),
+      lng: z.number().optional(),
+    })
+    .optional(),
 });
+
+// Checkout form schema (client-side) with payment method validation
+export const checkoutFormSchema = checkoutFormBaseSchema.refine(
+  (data) => {
+    // Require PO number when payment method is purchase_order
+    if (data.paymentMethod === "purchase_order" && !data.purchaseOrderNumber) {
+      return false;
+    }
+    return true;
+  },
+  {
+    message: "Purchase order number is required for PO payments",
+    path: ["purchaseOrderNumber"],
+  }
+).refine(
+  (data) => {
+    // Require saved payment method ID when payment method is saved_payment_method
+    if (data.paymentMethod === "saved_payment_method" && !data.savedPaymentMethodId) {
+      return false;
+    }
+    return true;
+  },
+  {
+    message: "Saved payment method ID is required",
+    path: ["savedPaymentMethodId"],
+  }
+);
 
 // Project site data schema — captures the customer's outline, address,
 // and material estimate from the on-site map estimator so the same data
@@ -61,8 +122,25 @@ export const projectSiteSchema = z
       .object({
         cubicFeet: z.number(),
         cubicYards: z.number(),
+        cubicYardsLow: z.number().optional(),
+        cubicYardsExpected: z.number().optional(),
+        cubicYardsHigh: z.number().optional(),
         tons: z.number(),
+        tonsLow: z.number().optional(),
+        tonsExpected: z.number().optional(),
+        tonsHigh: z.number().optional(),
         truckloads: z.number(),
+        truckloadsLow: z.number().optional(),
+        truckloadsExpected: z.number().optional(),
+        truckloadsHigh: z.number().optional(),
+        depthVariance: z.number().optional(),
+        confidenceFactors: z
+          .object({
+            densityVariation: z.boolean(),
+            depthMeasurementVariance: z.boolean(),
+            materialType: z.string().optional(),
+          })
+          .optional(),
         source: z.enum(["map", "dimensions"]),
       })
       .nullable()
@@ -70,8 +148,39 @@ export const projectSiteSchema = z
   })
   .optional();
 
+// Delivery access checklist schema — validates customer's answers to access questions
+// (driveway width, overhead clearance, turning room, surface type, gate codes) to
+// identify potential delivery constraints before checkout.
+export const deliveryAccessChecklistSchema = z
+  .object({
+    drivewayWidth: z.enum(["10ft_or_more", "less_than_10ft", "unknown"]).optional(),
+    overheadClearance: z.enum(["14ft_or_more", "less_than_14ft", "unknown"]).optional(),
+    turningRoom: z.enum(["adequate", "tight", "unknown"]).optional(),
+    surface: z.enum(["paved", "gravel", "dirt", "grass", "other"]).optional(),
+    gateCode: z.string().optional(),
+    accessInstructions: z.string().optional(),
+  })
+  .optional();
+
+// Drop location schema — validates customer's precise drop-location instructions
+// including free-text notes, optional photo, and map pin coordinates.
+export const dropLocationSchema = z
+  .object({
+    notes: z.string().optional(),
+    photoUrl: z.string().optional(),
+    lat: z.number().optional(),
+    lng: z.number().optional(),
+  })
+  .optional();
+
+// Access warning flags schema — array of flagged delivery access issues
+// detected from checklist answers (e.g., narrow_driveway, low_clearance).
+export const accessWarningFlagsSchema = z
+  .array(z.enum(["narrow_driveway", "low_clearance", "tight_turning", "poor_surface"]))
+  .optional();
+
 // Checkout schema (API-side with order details)
-export const checkoutSchema = checkoutFormSchema.extend({
+export const checkoutSchema = checkoutFormBaseSchema.extend({
   items: z.array(
     z.object({
       name: z.string(),
@@ -88,6 +197,9 @@ export const checkoutSchema = checkoutFormSchema.extend({
   contractorDiscountRate: z.number().optional(),
   contractorDiscount: z.number().optional(),
   projectSite: projectSiteSchema,
+  deliveryAccessChecklist: deliveryAccessChecklistSchema,
+  dropLocation: dropLocationSchema,
+  accessWarnings: accessWarningFlagsSchema,
 });
 
 // Address schema
@@ -145,12 +257,20 @@ export const quoteSchema = z.object({
   ),
   deliveryAddr: z.string().optional(),
   notes: z.string().optional(),
+  projectSite: projectSiteSchema,
 });
 
 // Newsletter subscription schema
 export const newsletterSchema = z.object({
   email: z.string().email("Valid email is required"),
   name: z.string().optional(),
+});
+
+// Delivery fee calculation schema
+// Shared by the public calculator UI (components/delivery/delivery-fee-calculator.tsx)
+// and the calculate-fee API route so client and server validate the address identically.
+export const deliveryFeeSchema = z.object({
+  address: z.string().min(3, "Please enter a valid address"),
 });
 
 // Lead capture schema
@@ -160,6 +280,19 @@ export const leadSchema = z.object({
   phone: z.string().optional(),
   source: z.string().default("chat"),
   visitorId: z.string().optional(),
+});
+
+// Chat escalation schema
+export const chatEscalationSchema = z.object({
+  visitorId: z.string().regex(VISITOR_ID_REGEX, "Invalid visitor ID format"),
+  reason: z.enum(["user_requested", "cannot_answer", "high_intent"], {
+    errorMap: () => ({ message: "Reason must be user_requested, cannot_answer, or high_intent" })
+  }),
+  contactInfo: z.object({
+    name: z.string().min(2, "Name is required").optional(),
+    email: z.string().email("Valid email is required").optional(),
+    phone: z.string().optional(),
+  }).optional(),
 });
 
 // Recurring order schemas
@@ -257,7 +390,23 @@ export const deliveryConfigSchema = z.object({
   ).min(1),
 });
 
+// Saved payment method schema
+export const savedPaymentMethodCreateSchema = z.object({
+  stripePaymentMethodId: z.string().min(1, "Stripe payment method ID is required"),
+  stripeCustomerId: z.string().optional(),
+  brand: z.string().optional(),
+  last4: z.string().optional(),
+  expiryMonth: z.number().int().min(1).max(12).optional(),
+  expiryYear: z.number().int().min(2024).optional(),
+  isDefault: z.boolean().optional(),
+});
+
+export const savedPaymentMethodUpdateSchema = z.object({
+  isDefault: z.boolean().optional(),
+});
+
 // Type exports for convenience
+export type PaymentMethod = z.infer<typeof paymentMethodEnum>;
 export type ContactFormData = z.infer<typeof contactSchema>;
 export type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
 export type CheckoutData = z.infer<typeof checkoutSchema>;
@@ -267,7 +416,9 @@ export type ProfileData = z.infer<typeof profileSchema>;
 export type ProfileUpdateData = z.infer<typeof profileUpdateSchema>;
 export type QuoteData = z.infer<typeof quoteSchema>;
 export type NewsletterData = z.infer<typeof newsletterSchema>;
+export type DeliveryFeeData = z.infer<typeof deliveryFeeSchema>;
 export type LeadData = z.infer<typeof leadSchema>;
+export type ChatEscalationData = z.infer<typeof chatEscalationSchema>;
 export type CreateRecurringOrderData = z.infer<typeof createRecurringOrderSchema>;
 export type UpdateRecurringOrderData = z.infer<typeof updateRecurringOrderSchema>;
 export type ReviewData = z.infer<typeof reviewSchema>;
@@ -275,3 +426,8 @@ export type OrderStatusUpdateData = z.infer<typeof orderStatusUpdateSchema>;
 export type PointRedemptionData = z.infer<typeof pointRedemptionSchema>;
 export type CampaignData = z.infer<typeof campaignSchema>;
 export type DeliveryConfigData = z.infer<typeof deliveryConfigSchema>;
+export type SavedPaymentMethodCreateData = z.infer<typeof savedPaymentMethodCreateSchema>;
+export type SavedPaymentMethodUpdateData = z.infer<typeof savedPaymentMethodUpdateSchema>;
+export type DeliveryAccessChecklistData = z.infer<typeof deliveryAccessChecklistSchema>;
+export type DropLocationData = z.infer<typeof dropLocationSchema>;
+export type AccessWarningFlags = z.infer<typeof accessWarningFlagsSchema>;

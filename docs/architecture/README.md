@@ -62,6 +62,58 @@ Muskingum Materials is a full-stack e-commerce platform built on **Next.js 15** 
 └────────────────┘         └──────────────────┘         └─────────────────┘
 ```
 
+### System Architecture Diagram
+
+```mermaid
+flowchart TD
+    Client[Client Browser] --> AppRouter[Next.js 15 App Router<br/>Vercel Deployment]
+    
+    AppRouter --> Public[Public Routes<br/>/, /products, /contact, /chat]
+    AppRouter --> Protected[Protected Routes<br/>/account, /order]
+    AppRouter --> Admin[Admin Routes<br/>/admin, /studio]
+    
+    Public --> Middleware
+    Protected --> Middleware
+    Admin --> Middleware
+    
+    Middleware[Middleware Layer<br/>1. Rate Limiting<br/>2. Clerk Authentication] --> DataStores
+    
+    subgraph DataStores [Data & Services Layer]
+        direction TB
+        
+        Prisma[(Neon Postgres<br/>via Prisma<br/>23 Models)]
+        
+        subgraph External [External Services - 8 Total]
+            Stripe[Stripe<br/>Payments]
+            Clerk[Clerk<br/>Auth]
+            Postmark[Postmark<br/>Email]
+            Anthropic[Anthropic<br/>AI Chat]
+            Twilio[Twilio<br/>SMS]
+            Upstash[Upstash Redis<br/>Rate Limiting]
+            Sentry[Sentry<br/>Error Tracking]
+            Google[Google Maps<br/>Analytics]
+        end
+        
+        Sanity[(Sanity CMS<br/>Headless)]
+    end
+    
+    Middleware -.->|Transactional Data| Prisma
+    Middleware -.->|Payments/Auth/Email/Chat/SMS/Cache/Errors| External
+    Middleware -.->|Marketing Content| Sanity
+    
+    Prisma --> |Products<br/>Services<br/>Orders<br/>Users<br/>Chat History| DB1[23 Prisma Models]
+    
+    External --> |Checkout Sessions<br/>SSO/OAuth<br/>Transactional Email<br/>Claude AI<br/>Notifications<br/>Caching<br/>Monitoring<br/>Maps/Analytics| Services[8 Integrations]
+    
+    Sanity --> |Testimonials<br/>FAQs<br/>Gallery<br/>Site Settings<br/>Pages/Posts| CMS[Marketing Content]
+    
+    style Middleware fill:#4f46e5,stroke:#312e81,color:#fff
+    style Prisma fill:#16a34a,stroke:#166534,color:#fff
+    style Sanity fill:#f59e0b,stroke:#b45309,color:#fff
+    style External fill:#dc2626,stroke:#991b1b,color:#fff
+    style AppRouter fill:#2563eb,stroke:#1e40af,color:#fff
+```
+
 ### Data Store Authority
 
 | Store | Authoritative For | Access Pattern |

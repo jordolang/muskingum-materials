@@ -23,6 +23,8 @@ import { cn } from "@/lib/utils";
 import type { CheckoutData } from "./order-form";
 import { DeliveryScheduler } from "./delivery-scheduler";
 import { PickupScheduler } from "./pickup-scheduler";
+import { DeliveryAccessChecklist } from "./delivery-access-checklist";
+import { DropLocationCapture } from "./drop-location-capture";
 
 interface SavedAddress {
   id: string;
@@ -213,6 +215,19 @@ export function FulfillmentSection({
           </div>
 
           <DeliveryScheduler setValue={setValue} watch={watch} />
+
+          <DeliveryAccessChecklist
+            register={register}
+            watch={watch}
+            setValue={setValue}
+          />
+
+          <DropLocationCapture
+            register={register}
+            watch={watch}
+            setValue={setValue}
+            deliveryAddress={watch("deliveryAddress")}
+          />
 
           <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 space-y-2">
             <p className="font-semibold text-sm">Delivery Notice &amp; Payment Terms</p>

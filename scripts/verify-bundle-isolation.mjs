@@ -8,13 +8,13 @@
  * See docs/bundle-isolation.md for context.
  */
 
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
 const repoRoot = process.cwd();
-const manifestPath = path.join(repoRoot, ".next", "app-build-manifest.json");
-const chunksDir = path.join(repoRoot, ".next", "static", "chunks");
+const nextDir = path.join(repoRoot, ".next");
+const manifestPath = path.join(nextDir, "app-build-manifest.json");
 
 const STUDIO_ROUTE_PREFIX = "/studio";
 
@@ -25,6 +25,8 @@ const FORBIDDEN_MARKERS = [
   "sanity/structure",
   "next-sanity/studio",
 ];
+
+const VERBOSE = process.argv.includes("--verbose") || process.argv.includes("-v");
 
 async function loadManifest() {
   try {
@@ -41,16 +43,52 @@ async function loadManifest() {
   }
 }
 
-async function chunkContainsAnyMarker(chunkRelPath) {
-  const chunkName = path.basename(chunkRelPath);
-  const chunkPath = path.join(chunksDir, chunkName);
+async function analyzeChunk(chunkRelPath) {
+  // Manifest entries are paths relative to `.next/` (e.g.
+  // `static/chunks/app/(group)/page-abc.js`). Resolve against `.next/` and keep
+  // the full sub-path — App Router chunks live in nested directories, so taking
+  // only the basename would point at a non-existent top-level file.
+  const chunkPath = path.join(nextDir, chunkRelPath);
   let contents;
+  let size = 0;
+
   try {
+    const stats = await stat(chunkPath);
+    size = stats.size;
     contents = await readFile(chunkPath, "utf8");
-  } catch {
-    return [];
+  } catch (error) {
+    // A missing file (ENOENT) means the manifest references a chunk that wasn't
+    // emitted as a readable client asset (e.g. a server-only entry). It cannot
+    // carry leaked Studio code, so warn loudly and skip rather than fail CI.
+    if (error && error.code === "ENOENT") {
+      console.warn(
+        `⚠️  Skipping chunk "${path.relative(repoRoot, chunkPath)}" — referenced ` +
+          `by the build manifest but not present on disk (no client asset to scan).`
+      );
+      return { markers: [], size: 0, skipped: true };
+    }
+
+    // Any other failure (permissions, corruption, etc.) must NOT be treated as
+    // clean — that would let an unreadable bundle silently pass. Surface it.
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Failed to read chunk "${path.relative(repoRoot, chunkPath)}" while ` +
+        `verifying bundle isolation. The chunk is referenced by the build ` +
+        `manifest but could not be read, so it cannot be confirmed clean.\n` +
+        `Underlying error: ${message}`
+    );
   }
-  return FORBIDDEN_MARKERS.filter((marker) => contents.includes(marker));
+
+  const markers = FORBIDDEN_MARKERS.filter((marker) => contents.includes(marker));
+  return { markers, size };
+}
+
+function formatBytes(bytes) {
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
 }
 
 function isStudioRoute(routeKey) {
@@ -72,48 +110,140 @@ async function main() {
     process.exit(2);
   }
 
-  const chunkMarkerCache = new Map();
+  console.log("=".repeat(80));
+  console.log("SANITY STUDIO BUNDLE ISOLATION ANALYSIS");
+  console.log("=".repeat(80));
+  console.log();
+
+  const chunkAnalysisCache = new Map();
   const leaks = [];
+  const routeDetails = [];
   let routesChecked = 0;
   let studioRoutesSkipped = 0;
+  let totalChunksAnalyzed = 0;
+  let totalCleanChunks = 0;
+  let totalContaminatedChunks = 0;
+  let totalBytesAnalyzed = 0;
 
   for (const [routeKey, chunkList] of routeEntries) {
     if (isStudioRoute(routeKey)) {
       studioRoutesSkipped += 1;
       continue;
     }
+
     routesChecked += 1;
+    const routeChunks = [];
+    let routeTotalSize = 0;
+
     for (const chunkRelPath of chunkList) {
       if (!chunkRelPath.endsWith(".js")) continue;
-      let markers = chunkMarkerCache.get(chunkRelPath);
-      if (!markers) {
-        markers = await chunkContainsAnyMarker(chunkRelPath);
-        chunkMarkerCache.set(chunkRelPath, markers);
+
+      let analysis = chunkAnalysisCache.get(chunkRelPath);
+      if (!analysis) {
+        analysis = await analyzeChunk(chunkRelPath);
+        chunkAnalysisCache.set(chunkRelPath, analysis);
+        totalChunksAnalyzed += 1;
+        totalBytesAnalyzed += analysis.size;
+
+        if (analysis.markers.length > 0) {
+          totalContaminatedChunks += 1;
+        } else {
+          totalCleanChunks += 1;
+        }
       }
-      if (markers.length > 0) {
-        leaks.push({ route: routeKey, chunk: chunkRelPath, markers });
+
+      routeTotalSize += analysis.size;
+      routeChunks.push({
+        path: chunkRelPath,
+        size: analysis.size,
+        markers: analysis.markers,
+      });
+
+      if (analysis.markers.length > 0) {
+        leaks.push({
+          route: routeKey,
+          chunk: chunkRelPath,
+          markers: analysis.markers,
+          size: analysis.size,
+        });
       }
     }
+
+    routeDetails.push({
+      route: routeKey,
+      chunks: routeChunks,
+      totalSize: routeTotalSize,
+      chunkCount: routeChunks.length,
+    });
   }
 
-  if (leaks.length > 0) {
-    console.error("Sanity Studio bundle leakage detected:\n");
-    for (const { route, chunk, markers } of leaks) {
-      console.error(`  route=${route}`);
-      console.error(`    chunk=${chunk}`);
-      console.error(`    markers=${markers.join(", ")}\n`);
+  if (VERBOSE) {
+    console.log("ROUTE-BY-ROUTE BREAKDOWN:");
+    console.log("-".repeat(80));
+    for (const { route, chunks, totalSize, chunkCount } of routeDetails) {
+      console.log(`\nRoute: ${route}`);
+      console.log(`  Total size: ${formatBytes(totalSize)} (${chunkCount} chunks)`);
+      for (const { path: chunkPath, size, markers } of chunks) {
+        const status = markers.length > 0 ? "❌ CONTAMINATED" : "✓ clean";
+        console.log(`    ${status} ${path.basename(chunkPath)} (${formatBytes(size)})`);
+        if (markers.length > 0) {
+          console.log(`      markers: ${markers.join(", ")}`);
+        }
+      }
     }
-    console.error(
-      "See docs/bundle-isolation.md for remediation guidance. " +
-        "Usually this means a shared module now imports Sanity Studio code."
-    );
+    console.log();
+    console.log("=".repeat(80));
+  }
+
+  console.log("\nCHUNK ANALYSIS SUMMARY:");
+  console.log("-".repeat(80));
+  console.log(`Total routes analyzed:      ${routesChecked}`);
+  console.log(`Studio routes skipped:      ${studioRoutesSkipped}`);
+  console.log(`Unique chunks scanned:      ${totalChunksAnalyzed}`);
+  console.log(`  Clean chunks:             ${totalCleanChunks}`);
+  console.log(`  Contaminated chunks:      ${totalContaminatedChunks}`);
+  console.log(`Total bundle size analyzed: ${formatBytes(totalBytesAnalyzed)}`);
+  console.log();
+
+  if (leaks.length > 0) {
+    console.log("=".repeat(80));
+    console.error("❌ SANITY STUDIO BUNDLE LEAKAGE DETECTED\n");
+    console.error(`Found ${leaks.length} contaminated chunk(s) in non-Studio routes:\n`);
+
+    const leaksByChunk = new Map();
+    for (const { chunk, route, markers, size } of leaks) {
+      if (!leaksByChunk.has(chunk)) {
+        leaksByChunk.set(chunk, { routes: [], markers, size });
+      }
+      leaksByChunk.get(chunk).routes.push(route);
+    }
+
+    for (const [chunk, { routes, markers, size }] of leaksByChunk) {
+      console.error(`  Chunk: ${path.basename(chunk)}`);
+      console.error(`    Size: ${formatBytes(size)}`);
+      console.error(`    Markers: ${markers.join(", ")}`);
+      console.error(`    Affected routes (${routes.length}):`);
+      for (const route of routes) {
+        console.error(`      - ${route}`);
+      }
+      console.error();
+    }
+
+    console.error("See docs/bundle-isolation.md for remediation guidance.");
+    console.error("Usually this means a shared module now imports Sanity Studio code.");
+    console.log("=".repeat(80));
     process.exit(1);
   }
 
-  console.log(
-    `Bundle isolation OK. Checked ${routesChecked} non-Studio routes; ` +
-      `skipped ${studioRoutesSkipped} Studio route(s); scanned ${chunkMarkerCache.size} unique chunks.`
-  );
+  console.log("=".repeat(80));
+  console.log("✓ BUNDLE ISOLATION OK");
+  console.log("=".repeat(80));
+  console.log();
+  console.log("No Sanity Studio dependencies found in non-Studio routes.");
+  console.log("All forbidden markers are properly isolated to /studio routes.");
+  console.log();
+  console.log("Run with --verbose flag for detailed chunk-by-chunk analysis.");
+  console.log();
 }
 
 main().catch((error) => {

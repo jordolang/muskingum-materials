@@ -12,6 +12,7 @@ npm run lint         # next lint (ESLint with next/core-web-vitals + next/typesc
 npm run db:push      # Push prisma/schema.prisma to Neon (uses .env.local via dotenv-cli)
 npm run db:studio    # Open Prisma Studio
 npm run db:seed      # Run prisma/seed.ts via tsx
+npm run sync         # Sync Prisma products/services to Sanity (one-way, preserves marketing fields)
 ```
 
 `postinstall` runs `prisma generate`, so a fresh `npm install` produces a usable client.
@@ -33,9 +34,43 @@ This is the most important thing to understand before editing content-related co
 - **Prisma + Neon Postgres** is the source of truth for `Product`, `Service`, `CostGuide`, plus all transactional models (`Order`, `Lead`, `ContactSubmission`, `QuoteRequest`, `ChatConversation`/`ChatMessage`, `NewsletterSubscriber`, `UserProfile`/`Address`, `ProductComparison`). See `prisma/schema.prisma` and `lib/products.ts` (`getProducts`, `getServices`, `getCostGuides`).
 - **Sanity Studio** holds marketing content: `product`, `service`, `testimonial`, `faq`, `galleryImage`, `page`, `post`, and the singleton `siteSettings`. Schemas live in `sanity/schemaTypes/`, GROQ queries in `lib/sanity/queries.ts`, client in `lib/sanity/client.ts`.
 
-Note that `product` and `service` exist in **both** systems. Prisma is what the app reads at runtime for catalog pages; Sanity is editable via the Studio. When changing product/service shape, decide which store is authoritative for that field and update accordingly — they are not currently synced.
+Note that `product` and `service` exist in **both** systems. Prisma is the source of truth for catalog/pricing/inventory fields; Sanity owns marketing/SEO/media fields. A **one-way sync system** (Prisma → Sanity) keeps catalog fields in sync while preserving marketing content. See the "Prisma ↔ Sanity Sync System" section below for details.
 
 `siteSettings` is a Sanity singleton enforced in `sanity.config.ts` (filters out templates and limits actions to publish/discardChanges/restore).
+
+### Prisma ↔ Sanity Sync System
+
+Products and services exist in both Prisma and Sanity, with **field-level ownership** determining sync direction:
+
+**Sync Architecture:**
+- **Direction**: One-way Prisma → Sanity (catalog fields only)
+- **Trigger**: Manual via `npm run sync` (runs `scripts/sync-to-sanity.ts`)
+- **Mechanism**: Upsert by `slug` — Prisma-owned fields overwrite; Sanity-owned fields are preserved
+- **Idempotent**: Re-running sync is safe and produces the same result
+
+**Field Ownership Rules:**
+
+**Prisma-Owned (synced to Sanity):**
+- Catalog: `name`, `category`, `price`, `unit`, `stockStatus`, `seasonalMessage`, `active`, `sortOrder`, `featured`
+- Market pricing: `marketPriceLowPerTon`, `marketPriceHighPerTon`, etc.
+- Physical properties: `sizeDescription`, `colorDescription`, `densityLow`, `densityHigh`
+- Structured data: `bestFor`, `notFor`, `commonUses`, `pros`, `cons`, `altNames`, `features` (services)
+- Identifiers: `slug` (canonical URL identifier), `id` (maps to `_id` in Sanity)
+
+**Sanity-Owned (never overwritten by sync):**
+- Marketing: `description` (rich text), `shortDescription`
+- Media: `image`, `gallery`, `imageAlt`
+- SEO: `metaTitle`, `metaDescription`, `seo.ogImage`
+- Relations: `relatedProducts`, `icon` (services)
+
+**Workflow:**
+1. **Catalog/pricing changes**: Edit in Prisma Studio (`npm run db:studio`) or seed scripts, then run `npm run sync`
+2. **Marketing/SEO changes**: Edit directly in Sanity Studio (`/studio`)
+3. **Schema changes**: Update both `prisma/schema.prisma` AND `sanity/schemaTypes/`, then decide field ownership and sync behavior
+
+**Reconciliation**: `npm run sync` reports mismatches (records in one store but not the other) but does NOT auto-delete. Orphaned Sanity records require manual cleanup to preserve marketing work.
+
+**Detailed Reference**: See `docs/sync-field-ownership.md` for complete field-by-field ownership map, edge cases, and verification checklist.
 
 ### ISR caching for Sanity content
 
@@ -48,9 +83,9 @@ Sanity-powered pages use **Incremental Static Regeneration (ISR)** to balance pe
 **Webhook setup** (in Sanity Studio dashboard):
 1. Create a webhook pointing to `https://your-domain.com/api/revalidate`
 2. Set the secret to match `SANITY_REVALIDATE_SECRET` in `.env.local`
-3. Configure triggers for `publish` and `unpublish` events on `page`, `post`, `product`, `service`, `faq`, `testimonial`, and other content types that appear on the site
+3. Configure triggers for `publish` and `unpublish` events on the content types the route supports: `product`, `service`, `testimonial`, `faq`, `gallery`, and `siteSettings`. (`page`/`post` are intentionally unsupported — their only reader lives under the build-excluded `src/` tree, so revalidating them would purge nothing.)
 
-The webhook payload includes `_type` and `slug.current` (or similar identifier), which the API route maps to Next.js route patterns. For example, a `page` with slug `about` revalidates `/about`, a `post` with slug `news-update` revalidates `/blog/news-update`.
+The webhook payload includes `_type` (sent as `tag`) and an optional `slug`, which the API route maps **only to routes that actually render that content in `app/`**. `product` revalidates the catalog detail page (`/catalog/<slug>`) plus the `/catalog` and `/products` listings; `service` revalidates the `/services` listing (there is no service detail route). List-only types (`testimonials`, `faq`, `gallery`, `site-settings`) are handled via `revalidateTag()` against the tags those pages fetch with.
 
 **Debugging**: Check webhook delivery logs in Sanity Studio. If revalidation isn't working, verify the secret matches and the API route is accessible (not blocked by middleware or rate limiting).
 
@@ -106,3 +141,18 @@ App Router pages live under `app/` and follow the README's product map (`product
 - **State** (client-side): Zustand stores in `lib/store.ts`.
 - **UI**: Shadcn UI primitives in `components/ui/`, feature components grouped by domain (`components/{chat,contact,gallery,home,layout,order,planner,calculators,account,analytics}`). Tailwind config in `tailwind.config.ts`.
 - **Env loading for scripts**: Prisma scripts run via `dotenv -e .env.local --` because Prisma CLI doesn't auto-load `.env.local`. Follow that pattern for any new `tsx`-based script that needs runtime env vars.
+- **Sanity imports**: **CRITICAL** — only import Sanity runtime libraries in app code, never Studio dependencies. The Studio lives exclusively at `/studio` and must not leak into the main app bundle.
+  - **✅ SAFE** (runtime libraries for querying content):
+    - `@sanity/client` — lightweight client for fetching content
+    - `@sanity/image-url` — image URL builder
+    - `next-sanity` — Next.js integration helpers
+    - GROQ query strings, schemas from `sanity/schemaTypes/` (types only)
+  - **❌ UNSAFE** (Studio code that bloats the bundle):
+    - `sanity` — the full Studio package (~1MB+)
+    - `sanity/desk`, `sanity/structure` — Studio UI components
+    - Any `@sanity/vision`, `@sanity/form-builder`, plugin imports
+    - `sanity.config.ts` or `sanity.cli.ts` — Studio configuration
+  - **Where Studio code belongs**:
+    - `app/studio/[[...tool]]/page.tsx` — the only **route-split** Studio entry point. Because it lives under the `/studio` route segment, Next.js code-splits it away from the main app bundle; Studio code reached *only* through this file is never shipped to other routes.
+    - `sanity.config.ts` (and `sanity.cli.ts`) — root-level Studio **config**, NOT route-split. They are not protected by route boundaries, so they require careful import management: import them only from `app/studio/**` (or other Studio-only files). If a non-Studio module imports `sanity.config.ts`, the full Studio package leaks into the main bundle. Treat these config files as Studio-only and never reference them from shared/app code.
+  - **Verification**: `npm run build` includes a bundle analysis step that fails if Studio dependencies appear in non-Studio routes. If you see a build error about "sanity in client bundle", audit your imports — you've likely imported Studio code outside `/studio`.

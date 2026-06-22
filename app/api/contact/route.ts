@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { contactSchema } from "@/lib/schemas";
 import { logger } from "@/lib/logger";
-import { sendEmail } from "@/lib/email";
+import { sendNotificationEmail } from "@/lib/email-service";
 
 /**
  * Handle contact form submissions from the website.
@@ -46,11 +46,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Send email via Postmark
-    await sendEmail({
-      to: "sales@muskingummaterials.com",
-      subject: `Website Contact: ${data.subject}`,
-      textBody: `
+    // Send email notification to sales team
+    await sendNotificationEmail(
+      `Website Contact: ${data.subject}`,
+      `
 New contact form submission:
 
 Name: ${data.name}
@@ -61,8 +60,16 @@ Subject: ${data.subject}
 Message:
 ${data.message}
       `.trim(),
-      replyTo: data.email,
-    });
+      {
+        replyTo: data.email,
+        tag: "contact-form",
+        metadata: {
+          contactName: data.name,
+          contactEmail: data.email,
+          subject: data.subject,
+        },
+      }
+    );
 
     return NextResponse.json({
       success: true,

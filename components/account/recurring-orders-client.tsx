@@ -6,6 +6,7 @@ import { ArrowRight, Edit, Pause, Play, Trash2, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/lib/use-toast";
 import { RecurringOrderForm } from "./recurring-order-form";
 
 interface RecurringOrder {
@@ -32,6 +33,7 @@ export function RecurringOrdersClient({ orders }: RecurringOrdersClientProps) {
   const [editingOrder, setEditingOrder] = useState<RecurringOrder | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   async function handlePauseResume(order: RecurringOrder) {
     const newStatus = order.status === "active" ? "paused" : "active";
@@ -53,7 +55,11 @@ export function RecurringOrdersClient({ orders }: RecurringOrdersClientProps) {
         prev.map((o) => (o.id === order.id ? { ...o, status: newStatus } : o))
       );
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to update order");
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update order",
+        variant: "destructive",
+      });
     } finally {
       setProcessingId(null);
     }
@@ -77,7 +83,11 @@ export function RecurringOrdersClient({ orders }: RecurringOrdersClientProps) {
 
       setRecurringOrders((prev) => prev.filter((o) => o.id !== orderId));
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to cancel order");
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to cancel order",
+        variant: "destructive",
+      });
     } finally {
       setProcessingId(null);
     }
