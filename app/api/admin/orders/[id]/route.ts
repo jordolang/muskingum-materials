@@ -2,18 +2,27 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
+import { releaseSlot, bookSlot, isSlotAvailable } from "@/lib/delivery-scheduling";
 
-// Schema for order status update
+// Schema for order updates
 const orderUpdateSchema = z.object({
-  status: z.enum(["pending", "confirmed", "processing", "ready", "completed", "canceled"]),
+  status: z.enum(["pending", "confirmed", "processing", "ready", "completed", "canceled"]).optional(),
+  deliveryDate: z.string().datetime().optional(),
+  deliveryTimeWindow: z.string().optional(),
 });
 
 /**
  * PATCH /api/admin/orders/[id]
- * Admin endpoint - updates order status
+ * Admin endpoint - updates order status and/or reschedules delivery
  * Requires: Admin authentication via requireAdmin()
- * Body: { status } - validated via orderUpdateSchema (see also orderStatusUpdateSchema in lib/schemas.ts)
+ * Body: { status?, deliveryDate?, deliveryTimeWindow? } - validated via orderUpdateSchema
  * Returns: Updated order with full details
+ *
+ * Rescheduling behavior:
+ * - Both deliveryDate and deliveryTimeWindow must be provided together
+ * - Releases the old delivery slot (if one exists)
+ * - Validates and books the new delivery slot
+ * - Updates order with new delivery details and slot ID
  */
 export async function PATCH(
   request: Request,
@@ -32,16 +41,31 @@ export async function PATCH(
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Invalid status value", details: validation.error.errors },
+        { error: "Invalid request data", details: validation.error.errors },
         { status: 400 }
       );
     }
 
-    const { status } = validation.data;
+    const { status, deliveryDate, deliveryTimeWindow } = validation.data;
+
+    // Validate that deliveryDate and deliveryTimeWindow are provided together
+    if ((deliveryDate && !deliveryTimeWindow) || (!deliveryDate && deliveryTimeWindow)) {
+      return NextResponse.json(
+        { error: "Both deliveryDate and deliveryTimeWindow must be provided together" },
+        { status: 400 }
+      );
+    }
 
     // Check if order exists
     const existingOrder = await prisma.order.findUnique({
       where: { id },
+      select: {
+        id: true,
+        orderNumber: true,
+        deliveryDate: true,
+        deliveryTimeWindow: true,
+        scheduledSlotId: true,
+      },
     });
 
     if (!existingOrder) {
@@ -51,10 +75,50 @@ export async function PATCH(
       );
     }
 
-    // Update order status
+    // Prepare update data
+    const updateData: {
+      status?: string;
+      deliveryDate?: Date;
+      deliveryTimeWindow?: string;
+      scheduledSlotId?: string;
+    } = {};
+
+    // Handle status update
+    if (status !== undefined) {
+      updateData.status = status;
+    }
+
+    // Handle delivery rescheduling
+    if (deliveryDate && deliveryTimeWindow) {
+      const newDeliveryDate = new Date(deliveryDate);
+
+      // Validate that the new slot is available
+      const slotAvailable = await isSlotAvailable(newDeliveryDate, deliveryTimeWindow);
+      if (!slotAvailable) {
+        return NextResponse.json(
+          { error: `Delivery slot ${deliveryDate} ${deliveryTimeWindow} is not available` },
+          { status: 409 }
+        );
+      }
+
+      // Release old slot if order has one
+      if (existingOrder.deliveryDate && existingOrder.deliveryTimeWindow) {
+        await releaseSlot(id);
+      }
+
+      // Book new slot
+      const newSlotId = await bookSlot(id, newDeliveryDate, deliveryTimeWindow);
+
+      // Add delivery fields to update data
+      updateData.deliveryDate = newDeliveryDate;
+      updateData.deliveryTimeWindow = deliveryTimeWindow;
+      updateData.scheduledSlotId = newSlotId;
+    }
+
+    // Update order
     const updatedOrder = await prisma.order.update({
       where: { id },
-      data: { status },
+      data: updateData,
       select: {
         id: true,
         orderNumber: true,
@@ -73,6 +137,9 @@ export async function PATCH(
         pickupOrDeliver: true,
         status: true,
         paymentStatus: true,
+        deliveryDate: true,
+        deliveryTimeWindow: true,
+        scheduledSlotId: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -84,6 +151,13 @@ export async function PATCH(
       return NextResponse.json(
         { error: "Unauthorized: Admin access required" },
         { status: 403 }
+      );
+    }
+
+    if (error instanceof Error && error.message.includes("not available")) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 409 }
       );
     }
 
