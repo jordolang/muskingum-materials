@@ -5,10 +5,20 @@ import { newsletterSchema } from "@/lib/schemas";
 import { logger } from "@/lib/logger";
 
 /**
- * POST /api/newsletter
- * Subscribes or resubscribes an email to the newsletter
- * Request body: { email: string, name?: string }
- * Response: { success: true } | { error: string }
+ * Newsletter subscription endpoint.
+ *
+ * @access public
+ * @param request - Incoming request with body validated against `newsletterSchema`
+ *   ({ email: string, name?: string }). See lib/schemas.ts for shared schema conventions.
+ * @returns 200 `{ success: true }` with `X-RateLimit-*` headers on successful subscription or reactivation
+ * @returns 429 `{ error: string, retryAfter: number }` when rate limit is exceeded
+ * @throws 400 `{ error: "Invalid email" }` when Zod validation fails
+ * @throws 500 `{ error: "Failed to subscribe to newsletter" }` on database errors
+ * @see rateLimitedEndpoints in middleware.ts — leads-newsletter tier (20 req/hour per IP)
+ * @see RATE_LIMIT_TIERS in lib/rate-limit.ts for tier configuration
+ * @see newsletterSchema in lib/schemas.ts for request body validation schema
+ * @remarks Upserts the subscriber — reactivates previously unsubscribed emails by setting
+ *   `active: true`. Database failures during upsert return 500 but do not fail silently.
  */
 export async function POST(request: NextRequest) {
   try {
