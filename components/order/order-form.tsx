@@ -152,6 +152,8 @@ export function OrderForm({ products, userProfile }: OrderFormProps) {
 
   const fulfillment = watch("fulfillment");
   const deliveryAddress = watch("deliveryAddress");
+  const deliveryDate = watch("deliveryDate");
+  const deliveryTimeWindow = watch("deliveryTimeWindow");
   const paymentMethod = watch("paymentMethod");
 
   const totals = useMemo(() => {
@@ -176,7 +178,10 @@ export function OrderForm({ products, userProfile }: OrderFormProps) {
   const hasCart = cart.length > 0;
   const fulfillmentSelected =
     fulfillment === "pickup" ||
-    (fulfillment === "delivery" && (deliveryAddress?.trim().length ?? 0) > 5);
+    (fulfillment === "delivery" &&
+      (deliveryAddress?.trim().length ?? 0) > 5 &&
+      (deliveryDate?.trim().length ?? 0) > 0 &&
+      (deliveryTimeWindow?.trim().length ?? 0) > 0);
 
   const stepStatus = (n: 1 | 2 | 3 | 4): OrderStepStatus => {
     if (n === 1) return hasAddress ? "complete" : "active";
@@ -225,19 +230,29 @@ export function OrderForm({ products, userProfile }: OrderFormProps) {
       })),
     });
     try {
+      const payload = {
+        ...data,
+        items: cart,
+        subtotal: totals.subtotal,
+        volumeDiscount: totals.volumeDiscount,
+        tax: totals.tax,
+        processingFee: totals.processingFee,
+        total: totals.total,
+        projectSite: siteData ?? undefined,
+      };
+
+      // Include scheduling data for delivery orders
+      if (data.fulfillment === "delivery") {
+        Object.assign(payload, {
+          deliveryDate: data.deliveryDate,
+          deliveryTimeWindow: data.deliveryTimeWindow,
+        });
+      }
+
       const response = await fetch("/api/orders/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          items: cart,
-          subtotal: totals.subtotal,
-          volumeDiscount: totals.volumeDiscount,
-          tax: totals.tax,
-          processingFee: totals.processingFee,
-          total: totals.total,
-          projectSite: siteData ?? undefined,
-        }),
+        body: JSON.stringify(payload),
       });
       const result = await response.json();
       if (result.url) {

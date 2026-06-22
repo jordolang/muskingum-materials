@@ -37,6 +37,10 @@ const checkoutFormBaseSchema = z.object({
   fulfillment: z.enum(["pickup", "delivery"]),
   deliveryAddress: z.string().optional(),
   deliveryNotes: z.string().optional(),
+  deliveryDate: z.string().optional(), // ISO date string
+  deliveryTimeWindow: z.string().optional(), // e.g., "morning", "afternoon"
+  pickupDate: z.string().optional(), // ISO date string (pickup scheduling)
+  pickupTimeWindow: z.string().optional(),
   smsOptIn: z.boolean().optional(),
   paymentMethod: paymentMethodEnum.default("stripe"),
   purchaseOrderNumber: z.string().optional(),
@@ -361,6 +365,31 @@ export const campaignSchema = z.object({
   recipientFilter: z.string().optional(),
 });
 
+// Delivery config schema
+export const deliveryConfigSchema = z.object({
+  availableDays: z.object({
+    monday: z.boolean(),
+    tuesday: z.boolean(),
+    wednesday: z.boolean(),
+    thursday: z.boolean(),
+    friday: z.boolean(),
+    saturday: z.boolean(),
+    sunday: z.boolean(),
+  }),
+  blackoutDates: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
+  slotsPerDay: z.number().int().min(1).max(20),
+  capacityPerSlot: z.number().int().min(1).max(50),
+  leadTimeDays: z.number().int().min(0).max(30),
+  timeWindows: z.array(
+    z.object({
+      key: z.string().min(1),
+      label: z.string().min(1),
+      start: z.string().regex(/^\d{2}:\d{2}$/),
+      end: z.string().regex(/^\d{2}:\d{2}$/),
+    })
+  ).min(1),
+});
+
 // Saved payment method schema
 export const savedPaymentMethodCreateSchema = z.object({
   stripePaymentMethodId: z.string().min(1, "Stripe payment method ID is required"),
@@ -396,6 +425,7 @@ export type ReviewData = z.infer<typeof reviewSchema>;
 export type OrderStatusUpdateData = z.infer<typeof orderStatusUpdateSchema>;
 export type PointRedemptionData = z.infer<typeof pointRedemptionSchema>;
 export type CampaignData = z.infer<typeof campaignSchema>;
+export type DeliveryConfigData = z.infer<typeof deliveryConfigSchema>;
 export type SavedPaymentMethodCreateData = z.infer<typeof savedPaymentMethodCreateSchema>;
 export type SavedPaymentMethodUpdateData = z.infer<typeof savedPaymentMethodUpdateSchema>;
 export type DeliveryAccessChecklistData = z.infer<typeof deliveryAccessChecklistSchema>;
