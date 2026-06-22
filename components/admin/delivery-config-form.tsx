@@ -178,8 +178,8 @@ export function DeliveryConfigForm() {
                 <Checkbox
                   id={`day-${day.key}`}
                   checked={availableDays[day.key]}
-                  onCheckedChange={(checked) =>
-                    setValue(`availableDays.${day.key}`, checked === true)
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setValue(`availableDays.${day.key}`, e.target.checked)
                   }
                 />
                 <Label
