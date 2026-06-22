@@ -262,6 +262,13 @@ export const newsletterSchema = z.object({
   name: z.string().optional(),
 });
 
+// Delivery fee calculation schema
+// Shared by the public calculator UI (components/delivery/delivery-fee-calculator.tsx)
+// and the calculate-fee API route so client and server validate the address identically.
+export const deliveryFeeSchema = z.object({
+  address: z.string().min(3, "Please enter a valid address"),
+});
+
 // Lead capture schema
 export const leadSchema = z.object({
   name: z.string().optional(),
@@ -380,6 +387,7 @@ export type ProfileData = z.infer<typeof profileSchema>;
 export type ProfileUpdateData = z.infer<typeof profileUpdateSchema>;
 export type QuoteData = z.infer<typeof quoteSchema>;
 export type NewsletterData = z.infer<typeof newsletterSchema>;
+export type DeliveryFeeData = z.infer<typeof deliveryFeeSchema>;
 export type LeadData = z.infer<typeof leadSchema>;
 export type ChatEscalationData = z.infer<typeof chatEscalationSchema>;
 export type CreateRecurringOrderData = z.infer<typeof createRecurringOrderSchema>;
