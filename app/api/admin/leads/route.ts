@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/admin/leads
@@ -17,8 +18,10 @@ export async function GET(request: Request) {
     try {
       session = await auth();
       user = await currentUser();
-    } catch {
-      // Clerk not configured
+    } catch (authError) {
+      logger.error("Admin leads auth error", authError, {
+        operation: "admin.leads.auth",
+      });
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -49,27 +52,53 @@ export async function GET(request: Request) {
     const where = source ? { source } : {};
 
     // Get total count for pagination metadata
-    const total = await prisma.lead.count({ where });
+    let total: number;
+    try {
+      total = await prisma.lead.count({ where });
+    } catch (dbError) {
+      logger.error("Database error counting leads", dbError, {
+        operation: "lead.count",
+        where,
+      });
+      return NextResponse.json(
+        { error: "Failed to fetch leads" },
+        { status: 500 }
+      );
+    }
 
     // Fetch paginated leads
-    const leads = await prisma.lead.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      skip,
-      take,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        company: true,
-        message: true,
-        source: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    let leads;
+    try {
+      leads = await prisma.lead.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          company: true,
+          message: true,
+          source: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+    } catch (dbError) {
+      logger.error("Database error fetching leads", dbError, {
+        operation: "lead.findMany",
+        where,
+        skip,
+        take,
+      });
+      return NextResponse.json(
+        { error: "Failed to fetch leads" },
+        { status: 500 }
+      );
+    }
 
     // Calculate total pages
     const pages = Math.ceil(total / limit);
@@ -82,6 +111,9 @@ export async function GET(request: Request) {
       pages
     });
   } catch (error) {
+    logger.error("Admin leads API error", error, {
+      operation: "admin.leads.GET",
+    });
     return NextResponse.json({ error: "Failed to fetch leads" }, { status: 500 });
   }
 }

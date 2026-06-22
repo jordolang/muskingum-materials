@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +49,10 @@ export async function GET() {
       },
     });
     return NextResponse.json({ products });
-  } catch {
+  } catch (error) {
+    logger.error("Database error fetching products", error, {
+      operation: "product.findMany",
+    });
     return NextResponse.json({ products: [] });
   }
 }

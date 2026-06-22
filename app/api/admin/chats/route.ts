@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/admin/chats
@@ -17,8 +18,10 @@ export async function GET(request: Request) {
     try {
       session = await auth();
       user = await currentUser();
-    } catch {
-      // Clerk not configured
+    } catch (authError) {
+      logger.error("Clerk authentication error in admin chats", authError, {
+        operation: "admin.chats.GET.auth",
+      });
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -107,6 +110,9 @@ export async function GET(request: Request) {
       pages
     });
   } catch (error) {
+    logger.error("Admin chats API error", error, {
+      operation: "admin.chats.GET",
+    });
     return NextResponse.json({ error: "Failed to fetch chat conversations" }, { status: 500 });
   }
 }
