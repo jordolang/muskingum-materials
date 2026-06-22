@@ -9,11 +9,22 @@ const orderUpdateSchema = z.object({
 });
 
 /**
- * PATCH /api/admin/orders/[id]
- * Admin endpoint - updates order status
- * Requires: Admin authentication via requireAdmin()
- * Body: { status } - validated via orderUpdateSchema (see also orderStatusUpdateSchema in lib/schemas.ts)
- * Returns: Updated order with full details
+ * Admin endpoint for updating order status.
+ *
+ * @access admin
+ * @param request - Incoming request with body validated against `orderUpdateSchema`
+ *   (status enum: pending, confirmed, processing, ready, completed, canceled)
+ * @param params - Route parameters containing the order ID to update
+ * @returns 200 `{ order: Order }` with updated order details on success
+ * @returns 400 `{ error: string, details: ZodError[] }` when status validation fails
+ * @returns 403 `{ error: string }` when admin authentication fails
+ * @returns 404 `{ error: string }` when order ID does not exist
+ * @returns 500 `{ error: string }` on database or unexpected errors
+ * @throws 400 when request body fails Zod validation (invalid status value)
+ * @see requireAdmin in lib/admin-auth.ts for authentication implementation
+ * @see orderStatusUpdateSchema in lib/schemas.ts for shared order status validation
+ * @remarks Next.js 15 pattern: params is a Promise and must be awaited before use.
+ *   Order existence is verified before update to provide clear 404 responses.
  */
 export async function PATCH(
   request: Request,
