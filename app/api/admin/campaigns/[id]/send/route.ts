@@ -19,18 +19,27 @@ async function checkAdminAuth() {
 }
 
 /**
- * POST /api/admin/campaigns/[id]/send
- * Sends a campaign to all active newsletter subscribers
- * Requires: Admin authentication (Clerk role: admin)
- * Params: id (campaign ID)
- * Process:
- *   1. Validates campaign exists and is not already sent/sending
- *   2. Fetches all active newsletter subscribers
- *   3. Updates campaign status to "sending"
- *   4. Sends personalized emails with unsubscribe URLs
- *   5. Updates campaign with delivery metrics (success/failure counts)
- * Restrictions: Cannot send campaigns with status "sent" or "sending"
- * Returns: Campaign with send results (totalRecipients, successCount, failureCount, status)
+ * Send marketing campaign to all active newsletter subscribers via Postmark.
+ *
+ * @access private - Admin authentication required (Clerk role: admin)
+ * @param _request - Not used (preserved for Next.js handler signature)
+ * @param params - Route params containing campaign ID
+ * @returns 200 `{ campaign: Campaign, result: { totalRecipients, successCount, failureCount, status } }` on success
+ * @returns 401 `{ error: "Unauthorized" }` when user is not authenticated
+ * @returns 403 `{ error: "Forbidden" }` when authenticated user is not an admin
+ * @returns 404 `{ error: "Campaign not found" }` when campaign ID does not exist
+ * @throws 400 `{ error: "Campaign has already been sent" }` when campaign status is "sent"
+ * @throws 400 `{ error: "Campaign is already being sent" }` when campaign status is "sending"
+ * @throws 400 `{ error: "No active subscribers found" }` when no active subscribers exist
+ * @throws 500 `{ error: "Failed to send campaign" }` on unexpected errors
+ * @see sendMarketingEmail in lib/email-service.ts — Postmark email delivery
+ * @see checkAdminAuth — Clerk-based admin role verification
+ * @remarks Process flow: (1) validates campaign exists and is not already sent/sending,
+ *   (2) fetches all active newsletter subscribers, (3) updates campaign status to "sending",
+ *   (4) sends personalized emails with unsubscribe URLs (replaces `{{unsubscribe_url}}` placeholder),
+ *   (5) updates campaign with delivery metrics (successCount, failureCount, status).
+ *   Campaign status becomes "sent" on partial/full success or "failed" if all emails fail.
+ *   Errors are logged but do not halt sending; partial failures are tracked in campaign.metrics.
  */
 export async function POST(
   _request: NextRequest,
