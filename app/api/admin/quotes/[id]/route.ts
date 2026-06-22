@@ -9,11 +9,21 @@ const quoteUpdateSchema = z.object({
 });
 
 /**
- * PATCH /api/admin/quotes/[id]
- * Updates quote request status
- * Requires admin authentication
- * Body: { status: "pending" | "reviewed" | "quoted" | "accepted" | "declined" }
- * Response: { quote: QuoteRequest }
+ * Admin quote request status update endpoint.
+ *
+ * @access admin
+ * @param request - Incoming request with body validated against the local `quoteUpdateSchema`
+ *   (status: "pending" | "reviewed" | "quoted" | "accepted" | "declined")
+ * @param params - Next.js dynamic route params containing the quote request ID
+ * @returns 200 `{ quote: QuoteRequest }` with updated quote request on success
+ * @returns 404 `{ error: "Quote request not found" }` when quote ID doesn't exist
+ * @throws 400 `{ error: "Invalid status value", details: ZodError[] }` when validation fails
+ * @throws 403 `{ error: "Unauthorized: Admin access required" }` when admin auth fails
+ * @throws 500 `{ error: "Failed to update quote request" }` on database or server errors
+ * @see requireAdmin in lib/admin-auth.ts — Clerk-based admin role verification
+ * @see quoteUpdateSchema — Zod schema enforcing valid status enum values
+ * @remarks Status transitions are not enforced — any valid status can transition to any other.
+ *   Future enhancement: add status transition rules (e.g., pending → reviewed → quoted).
  */
 export async function PATCH(
   request: Request,
