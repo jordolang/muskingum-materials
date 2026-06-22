@@ -10,13 +10,15 @@ import { sendNotificationEmail } from "@/lib/email-service";
  *
  * @access public
  * @param request - Incoming request with body validated against {@link contactSchema} in lib/schemas.ts
- * @returns 200 `{ success: true, analytics: { subject: string } }`
+ * @returns 200 `{ success: true, analytics: { subject: string } }` on success
+ * @returns 429 `{ error: string, retryAfter: number }` when rate limit is exceeded
  * @throws 400 `{ error: "Invalid form data", details: ZodError[] }` when validation fails
  * @throws 500 `{ error: "Failed to save contact submission" }` on database error
- * @throws 500 `{ error: "Internal server error" }` on unexpected error
+ * @throws 500 `{ error: "Internal server error" }` on unexpected error (including email delivery failures)
  * @see contactSchema in lib/schemas.ts for request body shape
  * @see rateLimitedEndpoints in middleware.ts — contact-quote tier (10 req/hr)
- * @see {@link https://postmarkapp.com} — email notification sent to sales team on success
+ * @see RATE_LIMIT_TIERS in lib/rate-limit.ts for tier configuration
+ * @see sendNotificationEmail in lib/email-service.ts — sends notification to sales team
  */
 export async function POST(request: NextRequest) {
   try {
