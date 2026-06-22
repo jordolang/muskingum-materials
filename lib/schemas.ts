@@ -232,6 +232,31 @@ export const campaignSchema = z.object({
   recipientFilter: z.string().optional(),
 });
 
+// Delivery config schema
+export const deliveryConfigSchema = z.object({
+  availableDays: z.object({
+    monday: z.boolean(),
+    tuesday: z.boolean(),
+    wednesday: z.boolean(),
+    thursday: z.boolean(),
+    friday: z.boolean(),
+    saturday: z.boolean(),
+    sunday: z.boolean(),
+  }),
+  blackoutDates: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
+  slotsPerDay: z.number().int().min(1).max(20),
+  capacityPerSlot: z.number().int().min(1).max(50),
+  leadTimeDays: z.number().int().min(0).max(30),
+  timeWindows: z.array(
+    z.object({
+      key: z.string().min(1),
+      label: z.string().min(1),
+      start: z.string().regex(/^\d{2}:\d{2}$/),
+      end: z.string().regex(/^\d{2}:\d{2}$/),
+    })
+  ).min(1),
+});
+
 // Type exports for convenience
 export type ContactFormData = z.infer<typeof contactSchema>;
 export type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
@@ -249,3 +274,4 @@ export type ReviewData = z.infer<typeof reviewSchema>;
 export type OrderStatusUpdateData = z.infer<typeof orderStatusUpdateSchema>;
 export type PointRedemptionData = z.infer<typeof pointRedemptionSchema>;
 export type CampaignData = z.infer<typeof campaignSchema>;
+export type DeliveryConfigData = z.infer<typeof deliveryConfigSchema>;
