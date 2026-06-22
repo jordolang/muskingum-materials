@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Package, MapPin, Truck, Mail, Map as MapIcon, Printer } from "lucide-react";
+import { ArrowLeft, Package, MapPin, Truck, Mail, Map as MapIcon, Printer, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -147,6 +147,39 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
             resourceId={order.id}
             resourceType="orders"
           />
+        </CardContent>
+      </Card>
+
+      {/* Delivery Scheduling */}
+      <Card className="border-0 shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Delivery Schedule
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {order.deliveryDate && order.deliveryTimeWindow ? (
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-muted-foreground">Delivery Date</p>
+                <p className="font-medium">
+                  {new Date(order.deliveryDate).toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Time Window</p>
+                <p className="font-medium">{order.deliveryTimeWindow}</p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Not scheduled</p>
+          )}
         </CardContent>
       </Card>
 
