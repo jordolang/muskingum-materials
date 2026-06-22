@@ -171,6 +171,75 @@ return hasClerk ? <ClerkProvider>{tree}</ClerkProvider> : tree;
 
 **Why conditional?** Vercel preview builds and local dev may not have Clerk credentials. The app must render without Clerk to avoid build failures.
 
+### Authentication Flow Diagram
+
+The following sequence diagram illustrates the complete authentication flow, including both regular user authentication and admin role verification:
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant App as Protected Route
+    participant MW as Middleware
+    participant RL as Rate Limiter
+    participant Clerk
+    participant SSO as SSO Provider
+    participant DB as Profile Sync
+
+    User->>App: Request protected route
+    App->>MW: Process request
+    
+    alt Rate Limited Endpoint
+        MW->>RL: Check rate limit
+        alt Limit Exceeded
+            RL-->>User: 429 Too Many Requests
+        else Within Limit
+            RL-->>MW: Continue
+        end
+    end
+    
+    MW->>Clerk: Check authentication
+    
+    alt Not Authenticated
+        Clerk-->>User: Redirect to /sign-in
+        User->>Clerk: Submit credentials
+        
+        alt SSO Enabled
+            Clerk->>SSO: Initiate SSO flow
+            SSO->>User: SSO provider login
+            User->>SSO: Authenticate
+            SSO-->>Clerk: SSO token
+        end
+        
+        Clerk->>DB: Sync user profile
+        DB-->>Clerk: Profile synced
+        Clerk-->>User: Redirect to original route
+        User->>App: Re-request protected route
+        App->>MW: Process request
+        MW->>Clerk: Check authentication
+    end
+    
+    Clerk-->>MW: Session valid
+    MW-->>App: Continue to route handler
+    
+    alt Admin Route
+        App->>Clerk: Check publicMetadata.role
+        alt Role !== "admin"
+            Clerk-->>User: 403 Forbidden
+        else Role === "admin"
+            Clerk-->>App: Admin verified
+            App-->>User: Access Granted (Admin)
+        end
+    else Regular Protected Route
+        App-->>User: Access Granted (User)
+    end
+```
+
+**Flow branches:**
+- **Rate limiting** (first): Public API endpoints are checked before authentication to prevent abuse
+- **Authentication**: Unauthenticated users are redirected to sign-in (with SSO support)
+- **Profile sync**: After successful authentication, user profile is synced to the session
+- **Admin check**: Admin routes perform an additional `publicMetadata.role` check after authentication
+
 ### Middleware Integration
 
 **File:** `middleware.ts`
