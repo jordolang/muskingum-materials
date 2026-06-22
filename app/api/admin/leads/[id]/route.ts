@@ -9,10 +9,20 @@ const leadUpdateSchema = z.object({
 });
 
 /**
- * PATCH /api/admin/leads/[id]
- * Updates lead status for the specified lead ID
- * Requires admin authentication
- * Request body: { status: "new" | "contacted" | "qualified" | "converted" | "closed" }
+ * Admin-only lead status update endpoint.
+ *
+ * @access admin
+ * @param request - Incoming request with body validated against `leadUpdateSchema`
+ *   (status: "new" | "contacted" | "qualified" | "converted" | "closed")
+ * @param params - Route parameters containing lead ID
+ * @returns 200 `{ lead: Lead }` with updated lead record on success
+ * @returns 400 `{ error: string, details: ZodError[] }` when status validation fails
+ * @returns 403 `{ error: string }` when admin authentication fails
+ * @returns 404 `{ error: string }` when lead ID is not found
+ * @returns 500 `{ error: string }` on database or server errors
+ * @see requireAdmin in lib/admin-auth.ts for authentication implementation
+ * @remarks Lead status transitions track the sales pipeline from initial contact through
+ *   conversion. All status updates are logged with timestamps via Prisma's updatedAt.
  */
 export async function PATCH(
   request: Request,
