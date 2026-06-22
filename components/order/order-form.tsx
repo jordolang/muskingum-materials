@@ -67,6 +67,8 @@ export const checkoutSchema = z
     deliveryNotes: z.string().optional(),
     deliveryDate: z.string().optional(),
     deliveryTimeWindow: z.string().optional(),
+    pickupDate: z.string().optional(),
+    pickupTimeWindow: z.string().optional(),
   })
   .refine(
     (data) =>
