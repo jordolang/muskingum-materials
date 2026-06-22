@@ -8,7 +8,7 @@ import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { Toaster } from "@/components/ui/toaster";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { CookieConsent } from "@/components/analytics/cookie-consent";
-import { CinematicIntroOverlay } from "@/components/home/cinematic-hero/cinematic-intro-overlay";
+import { SmoothScroll } from "@/components/smooth-scroll";
 import "./globals.css";
 
 // Preview Vercel builds don't have NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY set,
@@ -88,6 +88,7 @@ export default function RootLayout({
   const tree = (
     <html lang="en" suppressHydrationWarning>
       <body className={`${fontSans.variable} ${fontHeading.variable} ${fontDisplay.variable} ${fontTech.variable} font-sans antialiased`}>
+        <SmoothScroll />
         <div className="flex min-h-screen flex-col">
           <Navbar />
           <main className="flex-1">{children}</main>
@@ -96,7 +97,6 @@ export default function RootLayout({
           </div>
         </div>
         <div className="print:hidden">
-          <CinematicIntroOverlay />
           <ErrorBoundary componentName="ChatWidget">
             <ChatWidgetLoader />
           </ErrorBoundary>

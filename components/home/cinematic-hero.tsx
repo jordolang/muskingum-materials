@@ -1,5 +1,6 @@
 import { ScrollVideoHero } from "./cinematic-hero/scroll-video-hero";
-import { RockDumpSection } from "./cinematic-hero/rock-dump-section";
+import { FeatureSection } from "./cinematic-hero/feature-section";
+import { CtaSection } from "./cinematic-hero/cta-section";
 
 interface CinematicHeroProps {
   /**
@@ -13,8 +14,12 @@ interface CinematicHeroProps {
 }
 
 /**
- * The cinematic, scroll-driven hero: Act 1 (loader pull-back) into Act 2 (rock
- * dump filling the word AGGREGATE). Film grain is scoped to this block only.
+ * The cinematic, scroll-driven hero in three acts:
+ *   Act 1 — camera pull-back over the quarry ("MOVE THE EARTH.")
+ *   Act 2 — slogan over the processing footage ("CRUSHED ON SITE.")
+ *   Act 3 — the call to action over the golden-hour yard ("LOAD UP.")
+ * All three scrub Higgsfield footage seeded from the company's real site. Film
+ * grain is scoped to this block only.
  *
  * Rendered two ways: as the /experience page (window scroll) and inside the
  * homepage intro overlay (its own scroll container).
@@ -23,7 +28,8 @@ export function CinematicHero({ scrollContainerRef, onActOneProgress }: Cinemati
   return (
     <div className="relative bg-coal">
       <ScrollVideoHero scrollContainerRef={scrollContainerRef} onProgress={onActOneProgress} />
-      <RockDumpSection scrollContainerRef={scrollContainerRef} />
+      <FeatureSection scrollContainerRef={scrollContainerRef} />
+      <CtaSection scrollContainerRef={scrollContainerRef} />
       {/* Hero-scoped grain wash (absolute, not fixed). Normal blend (no
           per-frame mix-blend recomposite) keeps scroll compositing cheap. */}
       <div

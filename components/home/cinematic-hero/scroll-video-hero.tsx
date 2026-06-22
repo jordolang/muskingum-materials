@@ -21,8 +21,9 @@ interface ScrollVideoHeroProps {
 /**
  * Act 1 — a 300vh scroll container pinning a 100vh stage.
  *
- * Scroll drives the loader footage (firefly-1, a decoded image sequence drawn to
- * a canvas) while the camera "pulls back" (background zooms out 1.25 → 1), the
+ * Scroll drives the hero footage (Higgsfield clip seeded from the company's real
+ * quarry — excavators working the pond — decoded as an image sequence drawn to a
+ * canvas) while the camera "pulls back" (background zooms out 1.25 → 1), the
  * headline recedes (scales to 0.9, fades to 0.4) and a spec plate slides in from
  * off-screen left. All motion completes by ~45% of the scroll, leaving a hold
  * phase before the page un-sticks into Act 2.
@@ -36,10 +37,10 @@ export function ScrollVideoHero({ scrollContainerRef, onProgress }: ScrollVideoH
   });
 
   const { canvasRef, loaded } = useScrubFrames(scrollYProgress, {
-    base: "/frames/firefly-1",
-    count: 192,
-    completeAt: 0.45,
-    ease: 0.1,
+    base: "/frames/hero",
+    count: 121,
+    completeAt: 0.7,
+    ease: 0.18,
   });
 
   // Surface decode progress so the intro overlay can reveal as soon as the
@@ -50,20 +51,20 @@ export function ScrollVideoHero({ scrollContainerRef, onProgress }: ScrollVideoH
 
   // Camera pull-back + receding headline. Clamped, so they "hold" past 0.45.
   // Only GPU-cheap transforms (scale/opacity) — no animated filters.
-  const bgScale = useTransform(scrollYProgress, [0, 0.45], [1.25, 1]);
-  const textScale = useTransform(scrollYProgress, [0, 0.45], [1, 0.9]);
-  const textOpacity = useTransform(scrollYProgress, [0, 0.45], [1, 0.4]);
+  const bgScale = useTransform(scrollYProgress, [0, 0.7], [1.25, 1]);
+  const textScale = useTransform(scrollYProgress, [0, 0.7], [1, 0.9]);
+  const textOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0.4]);
 
   // Foreground spec plate slides in from the left.
-  const plateX = useTransform(scrollYProgress, [0.05, 0.45], ["-115%", "0%"]);
-  const plateOpacity = useTransform(scrollYProgress, [0.05, 0.18], [0, 1]);
+  const plateX = useTransform(scrollYProgress, [0.08, 0.7], ["-115%", "0%"]);
+  const plateOpacity = useTransform(scrollYProgress, [0.08, 0.25], [0, 1]);
 
   // Grade deepens as we settle; scroll cue fades immediately.
-  const gradeOpacity = useTransform(scrollYProgress, [0, 0.45], [0.5, 0.82]);
-  const cueOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
+  const gradeOpacity = useTransform(scrollYProgress, [0, 0.7], [0.5, 0.82]);
+  const cueOpacity = useTransform(scrollYProgress, [0, 0.12], [1, 0]);
 
   return (
-    <section ref={containerRef} className="relative h-[300vh] bg-coal">
+    <section ref={containerRef} className="relative h-[250vh] bg-coal">
       <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden">
         {/* Equipment backdrop — scrubbed loader footage drawn to canvas */}
         <motion.div style={{ scale: bgScale }} className="absolute inset-0">
@@ -91,7 +92,7 @@ export function ScrollVideoHero({ scrollContainerRef, onProgress }: ScrollVideoH
           className="relative z-10 max-w-5xl px-6 text-center will-change-transform"
         >
           <p className="mb-5 font-tech text-xs uppercase tracking-[0.5em] text-caution">
-            Crushed · Graded · Delivered
+            01 — Dug · Crushed · Graded · Delivered
           </p>
           <h1 className="font-display text-[18vw] leading-[0.82] tracking-tight text-bone uppercase sm:text-[15vw] lg:text-[11rem]">
             Move the

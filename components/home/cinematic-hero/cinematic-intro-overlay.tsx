@@ -105,19 +105,15 @@ export function CinematicIntroOverlay() {
       >
         <CinematicHero scrollContainerRef={scrollRef} onActOneProgress={setLoaded} />
 
-        {/* Closing beat — reaching the bottom hands off to the site automatically */}
-        <div className="relative z-10 flex h-[85vh] flex-col items-center justify-center bg-coal px-6 text-center">
-          <p className="font-tech text-xs uppercase tracking-[0.5em] text-caution">
-            Welcome to the yard
+        {/* Slim closing beat after the CTA act — gives scroll room so reaching the
+            bottom hands off to the live site automatically. */}
+        <div className="relative z-10 flex h-[55vh] flex-col items-center justify-center bg-coal px-6 text-center">
+          <p className="font-tech text-[0.7rem] uppercase tracking-[0.45em] text-grit">
+            Muskingum Materials · Southeast Ohio
           </p>
-          <h2 className="mt-4 font-display text-5xl uppercase leading-[0.9] text-bone sm:text-7xl">
-            Muskingum
-            <br />
-            Materials
-          </h2>
-          <p className="mt-9 flex items-center gap-3 font-tech text-[0.65rem] uppercase tracking-[0.4em] text-grit">
+          <p className="mt-6 flex items-center gap-3 font-tech text-[0.65rem] uppercase tracking-[0.4em] text-dust/70">
             <span className="h-px w-8 bg-grit/60" />
-            Keep scrolling to enter
+            Keep scrolling to enter the site
             <span className="h-px w-8 bg-grit/60" />
           </p>
           <span className="mt-4 animate-bounce text-caution">↓</span>

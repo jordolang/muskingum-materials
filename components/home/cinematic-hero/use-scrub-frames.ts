@@ -40,6 +40,9 @@ export function useScrubFrames(
   const current = useRef(0);
   const lastDrawn = useRef(-1);
   const [loaded, setLoaded] = useState(0);
+  // Defer decoding a sequence until its canvas is near the viewport, so the
+  // homepage doesn't decode all three acts' frames at once on first paint.
+  const [shouldLoad, setShouldLoad] = useState(false);
 
   const nearestReady = useCallback(
     (idx: number): number => {
@@ -78,8 +81,32 @@ export function useScrubFrames(
     [nearestReady],
   );
 
+  // Begin loading once the canvas is within ~1.5 viewports of the scroll
+  // position. Act 1 is on screen at load and starts immediately; Acts 2–3 start
+  // as you approach, which smooths the initial page load.
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setShouldLoad(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setShouldLoad(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "150% 0px" },
+    );
+    io.observe(canvas);
+    return () => io.disconnect();
+  }, []);
+
   // Preload + decode every frame.
   useEffect(() => {
+    if (!shouldLoad) return;
     let cancelled = false;
     let done = 0;
     const imgs: HTMLImageElement[] = new Array(count);
@@ -114,7 +141,7 @@ export function useScrubFrames(
       frames.current = [];
       ready.current = [];
     };
-  }, [base, count, pad, draw]);
+  }, [base, count, pad, draw, shouldLoad]);
 
   // Map scroll → target frame index.
   useMotionValueEvent(progress, "change", (v) => {

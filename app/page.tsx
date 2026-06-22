@@ -9,7 +9,6 @@ import {
   Clock,
   MapPin,
   Camera,
-  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +21,7 @@ import { ReviewsCarousel } from "@/components/home/reviews-carousel";
 import { HomepageFAQ } from "@/components/home/homepage-faq";
 import { HomeProductCard } from "@/components/home/home-product-card";
 import { ServicesBento } from "@/components/home/services-bento";
+import { CinematicHero } from "@/components/home/cinematic-hero";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { sanityClient } from "@/lib/sanity/client";
@@ -208,68 +208,12 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: toJsonLd(localBusinessSchema) }}
       />
 
-      {/* Hero — floating rounded panel */}
-      <section className="ambient-glow px-3 pt-3 sm:px-5 sm:pt-4">
-        <div className="relative mx-auto flex min-h-[560px] max-w-7xl items-center overflow-hidden rounded-[2rem] shadow-float">
-          <Image
-            src="/images/photos/aerial.jpg"
-            alt="Muskingum Materials aerial view"
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 hero-gradient" />
-          <div className="relative z-10 grid w-full items-center gap-10 px-7 py-20 sm:px-12 lg:grid-cols-2 lg:px-16">
-            <div className="max-w-2xl text-white">
-              <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-xs font-medium uppercase tracking-wider backdrop-blur">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                Family-owned · Southeast Ohio
-              </span>
-              <h1 className="mb-4 font-heading text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
-                Sand, Soil &<br />Gravel Delivered
-              </h1>
-              <p className="mb-7 max-w-lg text-lg text-white/90 md:text-xl">
-                {BUSINESS_INFO.tagline}. Family-owned, fair pricing, and serving
-                Southeast Ohio since day one.
-              </p>
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Link href="/recommendations">
-                  <Button
-                    size="lg"
-                    className="gap-2 bg-amber-600 font-semibold text-white shadow-glow hover:bg-amber-700"
-                  >
-                    <Sparkles className="h-4 w-4" />
-                    Find Your Material
-                  </Button>
-                </Link>
-                <Link href="/products">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="gap-2 border-white/30 bg-white/10 font-semibold text-white backdrop-blur hover:bg-white/20 hover:text-white"
-                  >
-                    View Products & Pricing
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-            <div className="hidden justify-center lg:flex">
-              <Image
-                src="/muskingum-materials-logo.png"
-                alt="Muskingum Materials"
-                width={600}
-                height={400}
-                priority
-                className="w-full max-w-lg drop-shadow-2xl"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Hero — cinematic 3-act scroll experience (also served standalone at
+          /experience). Replaces the former static image hero. */}
+      <CinematicHero />
 
-      {/* Trust Badges — floating glass pill overlapping the hero */}
-      <section className="relative z-20 -mt-7 px-3 sm:px-5">
+      {/* Trust Badges — glass pill below the cinematic hero */}
+      <section className="relative z-20 px-3 pt-3 sm:px-5 sm:pt-4">
         <div className="glass-dark mx-auto grid max-w-5xl grid-cols-2 gap-2 rounded-3xl bg-stone-900/85 p-3 text-white shadow-float md:grid-cols-4">
           {[
             { icon: Shield, label: "Family Owned" },
