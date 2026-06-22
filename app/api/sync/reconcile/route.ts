@@ -13,25 +13,25 @@ const reconcileSchema = z.object({
 });
 
 /**
- * POST /api/sync/reconcile
- * Reconciliation endpoint for Prisma ↔ Sanity content comparison
+ * Prisma ↔ Sanity reconciliation endpoint.
  *
- * Compares records between Prisma and Sanity to identify:
- * - Records in Prisma but not in Sanity (need sync)
- * - Records in Sanity but not in Prisma (orphaned)
- * - Records in both stores (successfully synced)
- *
- * This is a read-only operation - it never modifies data.
- *
- * Request body:
- * - secret: string (matches SANITY_REVALIDATE_SECRET env var)
- * - type: "products" | "services" | "all" (optional, default: "all")
- *
- * Returns:
- * - 200: { success: true, results: {...} }
- * - 400: Invalid request data or malformed JSON
- * - 401: Invalid secret token
- * - 500: Server misconfiguration or reconciliation failure
+ * @access protected (requires SANITY_REVALIDATE_SECRET)
+ * @param request - Incoming request with body validated against the local `reconcileSchema`
+ *   (secret, type). This is a read-only comparison operation that never modifies data.
+ * @returns 200 `{ success: true, type: string, results: {...}, summary: {...}, durationMs: number }`
+ *   - results.products/services: `{ onlyInPrisma: string[], onlyInSanity: string[], inBoth: string[] }`
+ *   - summary: count statistics for each category (onlyInPrisma, onlyInSanity, inBoth)
+ * @returns 401 `{ error: "Invalid secret" }` when secret does not match SANITY_REVALIDATE_SECRET
+ * @throws 400 `{ error: "Invalid request data", details: ZodError[] }` when validation fails
+ * @throws 400 `{ error: "Malformed JSON in request body" }` when JSON parsing fails
+ * @throws 500 `{ error: "Server misconfiguration" }` when SANITY_REVALIDATE_SECRET is not configured
+ * @throws 500 `{ error: "Internal server error" }` when reconciliation operation fails
+ * @see reconcileProducts in lib/sync/reconcile.ts — compares Product records across stores
+ * @see reconcileServices in lib/sync/reconcile.ts — compares Service records across stores
+ * @see reconcileSchema — validates secret (string) and type ("products" | "services" | "all", default: "all")
+ * @remarks Identifies sync mismatches without modifying data. Use this before running sync
+ *   to preview what changes would be made. Records "onlyInPrisma" need sync; records
+ *   "onlyInSanity" are orphaned and may need manual cleanup.
  */
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
