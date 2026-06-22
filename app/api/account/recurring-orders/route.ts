@@ -5,11 +5,22 @@ import { createRecurringOrderSchema } from "@/lib/schemas";
 import { z } from "zod";
 
 /**
- * GET /api/account/recurring-orders
- * Returns paginated list of recurring order subscriptions for authenticated user
- * Query params: page (default: 1), limit (default: 20, max: 100)
- * Recurring orders support frequencies: daily, weekly, biweekly, monthly
- * Status values: active, paused, cancelled
+ * List recurring order subscriptions for authenticated user with pagination.
+ *
+ * @access authenticated - Requires valid Clerk session
+ * @param request - Incoming request with optional query params:
+ *   - `page` (default: 1): Page number for pagination (min: 1)
+ *   - `limit` (default: 20, max: 100): Number of results per page
+ * @returns 200 `{ recurringOrders: RecurringOrder[], total: number, page: number, limit: number, pages: number }`
+ *   with recurringOrders ordered by createdAt desc. Each recurring order includes:
+ *   id, name, email, phone, company, items, deliveryAddress, deliveryNotes,
+ *   frequency (daily | weekly | biweekly | monthly), nextDeliveryDate,
+ *   status (active | paused | cancelled), createdAt
+ * @returns 401 `{ error: "Unauthorized" }` when session is missing or invalid
+ * @returns 500 `{ error: "Failed to fetch recurring orders" }` on database errors
+ * @see prisma/schema.prisma RecurringOrder model for field definitions
+ * @remarks Query params are sanitized: page forced to >= 1, limit clamped to 1-100 range.
+ *   Total count and pages calculated for client-side pagination UI.
  */
 export async function GET(request: Request) {
   try {
@@ -70,11 +81,29 @@ export async function GET(request: Request) {
 }
 
 /**
- * POST /api/account/recurring-orders
- * Creates a new recurring order subscription (validated by createRecurringOrderSchema)
- * Required: name, email, phone, items, deliveryAddress, frequency, nextDeliveryDate
- * Frequency options: daily, weekly, biweekly, monthly
- * Status is initialized as 'active'
+ * Create a new recurring order subscription for authenticated user.
+ *
+ * @access authenticated - Requires valid Clerk session
+ * @param request - Incoming request with JSON body validated against `createRecurringOrderSchema`:
+ *   - `name` (required): Customer contact name
+ *   - `email` (required): Contact email address
+ *   - `phone` (required): Contact phone number
+ *   - `company` (optional): Company name if applicable
+ *   - `items` (required): JSON array of ordered items with product details
+ *   - `deliveryAddress` (required): Full delivery address object
+ *   - `deliveryNotes` (optional): Special delivery instructions
+ *   - `frequency` (required): Delivery frequency (daily | weekly | biweekly | monthly)
+ *   - `nextDeliveryDate` (required): ISO 8601 date string for first delivery
+ * @returns 201 `{ recurringOrder: RecurringOrder }` with newly created subscription.
+ *   Status is initialized as 'active' and userId is set from authenticated session
+ * @returns 401 `{ error: "Unauthorized" }` when session is missing or invalid
+ * @throws 400 `{ error: "Validation failed", details: ZodError[] }` when request body fails schema validation
+ * @returns 500 `{ error: "Failed to create recurring order" }` on database errors
+ * @see createRecurringOrderSchema in lib/schemas.ts for complete validation rules
+ * @see prisma/schema.prisma RecurringOrder model for field definitions and constraints
+ * @remarks Recurring orders enable customers to schedule automatic repeat deliveries.
+ *   The subscription remains active until explicitly paused or cancelled via the
+ *   PATCH /api/account/recurring-orders/:id endpoint.
  */
 export async function POST(request: Request) {
   try {
