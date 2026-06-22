@@ -47,17 +47,74 @@ function generateOrderNumber(): string {
 }
 
 /**
- * Checkout endpoint for processing customer orders with Stripe payment integration
- * Handles:
- * - checkoutSchema validation (name, email, phone, items, fulfillment, project site data)
- * - Order number generation in format MM-YYMMDD-XXXXXXXX
- * - Authenticated user detection and contractor discount application
- * - Price validation against product catalog (prevents client-side price manipulation)
- * - Project site data capture with satellite map URL generation for estimator-drawn polygons
- * - Database order creation with full project details and calculated totals
- * - Stripe Checkout Session creation with line items for products, tax, and processing fee
- * - Email notification to sales@muskingummaterials.com with order details and site map
- * - Fallback to pay-on-pickup flow when Stripe is not configured
+ * Checkout endpoint for processing customer orders with multiple payment methods.
+ *
+ * @access public
+ * @param request - Incoming request with body validated against `checkoutSchema`
+ *   (name, email, phone, items, fulfillment, deliveryAddress, deliveryNotes,
+ *   deliveryAccessChecklist, dropLocation, accessWarnings, projectSite, paymentMethod,
+ *   purchaseOrderNumber, savedPaymentMethodId, smsOptIn, termsAccepted).
+ *   See lib/schemas.ts for the complete schema definition.
+ *
+ * @returns 200 `{ url: string, analytics: object }` for Stripe Checkout flow - redirects to Stripe
+ * @returns 200 `{ orderNumber: string, paymentMethod: 'purchase_order', analytics: object }` for PO flow
+ * @returns 200 `{ orderNumber: string, invoiceNumber: string, dueDate: Date, paymentMethod: 'net_terms', analytics: object }` for net terms flow
+ * @returns 200 `{ orderNumber: string, analytics: object }` for pay-on-pickup fallback when Stripe is not configured
+ *
+ * @throws 400 `{ error: string }` when price validation fails (client-supplied prices don't match product catalog)
+ * @throws 400 `{ error: "Invalid order data", details: ZodError[] }` when validation fails
+ * @throws 400 `{ error: string }` when credit limit is exceeded for net terms payment
+ * @throws 401 `{ error: "You must be logged in to use net terms payment" }` when net terms requested without authentication
+ * @throws 500 `{ error: "Failed to create order..." }` when database order creation fails
+ * @throws 500 `{ error: "Failed to create invoice..." }` when invoice generation fails for net terms
+ * @throws 500 `{ error: "Checkout failed..." }` for unexpected errors
+ * @throws 501 `{ error: "Saved payment method checkout is not yet available..." }` when saved payment method is requested (not yet implemented)
+ *
+ * @see rateLimitedEndpoints in middleware.ts — contact-quote tier (10 req/hour per IP)
+ * @see RATE_LIMIT_TIERS in lib/rate-limit.ts for tier configuration
+ * @see validateCheckoutPrices in lib/validate-checkout-prices.ts — trust boundary for price validation
+ * @see checkoutSchema in lib/schemas.ts for request validation schema
+ *
+ * @remarks
+ * Payment Methods:
+ * - **stripe** (default): Creates Stripe Checkout Session with line items for products, tax (7.25%),
+ *   and processing fee (4.5%). Redirects to Stripe hosted checkout. Order marked as "unpaid"/"pending"
+ *   until webhook confirms payment. Mapped to PaymentMethod.CARD in database.
+ * - **purchase_order**: Skips Stripe, records PO number, sends email notification to sales team.
+ *   No upfront payment required. Mapped to PaymentMethod.PURCHASE_ORDER.
+ * - **net_terms**: Requires authentication. Validates credit limit, creates invoice with due date based
+ *   on contractor's netTermsLength (e.g., Net 30), increments contractor's netTermsBalance, sends invoice
+ *   email. Mapped to PaymentMethod.NET_TERMS.
+ * - **saved_payment_method**: Not yet implemented (returns 501). Will charge saved card via Stripe
+ *   PaymentIntent. Mapped to PaymentMethod.SAVED_PAYMENT_METHOD.
+ *
+ * Security:
+ * - Never trusts client-supplied prices — always validates against Prisma Product table via
+ *   `validateCheckoutPrices` to prevent price manipulation attacks.
+ * - Contractor discounts (if authenticated and profile.isContractor) are applied server-side during validation.
+ * - Rate limiting enforced by middleware (10 requests/hour per IP).
+ *
+ * Stripe Integration:
+ * - Creates Checkout Session with `payment_method_types: ["card"]` and line items for products, tax, processing fee.
+ * - Stores session ID in order.stripeSessionId for reconciliation.
+ * - Webhook at /api/orders/webhook handles checkout.session.completed to update order status and payment details.
+ * - Gracefully falls back to pay-on-pickup flow if STRIPE_SECRET_KEY is missing or session creation fails.
+ *
+ * Project Site Capture:
+ * - Captures customer-drawn polygons or location pins from material estimator.
+ * - Generates satellite map image URL via `buildSatelliteMapUrl` for order confirmation, admin views, emails.
+ * - Stores project area, depth, estimated tons/cubic yards, and polygon coordinates in order record.
+ *
+ * Email Notifications:
+ * - Stripe: No immediate email (webhook sends confirmation after payment).
+ * - Purchase Order: Sends email to sales@muskingummaterials.com with order details and PO number.
+ * - Net Terms: Sends email to sales@muskingummaterials.com with invoice number and due date.
+ * - Pay-on-pickup: Sends email to sales@muskingummaterials.com with order details.
+ *
+ * Monitoring:
+ * - Wrapped in Sentry transaction for performance tracking.
+ * - Breadcrumbs logged for checkout flow, order creation, Stripe session, email notifications.
+ * - DB and Stripe failures logged with full context for debugging.
  */
 export async function POST(request: NextRequest) {
   return startTransaction('checkout', 'http.request', () => {
@@ -894,7 +951,29 @@ Payment: Pending — Stripe not configured, customer will pay on pickup/delivery
 }
 
 /**
- * Helper function to send email notification for purchase order payments
+ * Sends email notification to sales@muskingummaterials.com for purchase order payments.
+ *
+ * Email includes:
+ * - Order number and PO number
+ * - Customer contact info (name, email, phone)
+ * - Fulfillment method (pickup or delivery) with address and delivery notes
+ * - Project site details: address, area estimate (tons/cubic yards), satellite map image
+ * - Line items with quantities, unit prices, and totals
+ * - Price breakdown (subtotal, tax, processing fee, total)
+ * - Payment method: "Purchase Order {poNumber}"
+ *
+ * @param data - Validated checkout payload from checkoutSchema
+ * @param order - Order record with orderNumber (minimal shape for flexibility)
+ * @param validatedPrices - Server-validated price breakdown (subtotal, tax, processingFee, total)
+ * @param site - Project site data captured from material estimator (address, location, polygons, estimates)
+ * @param projectMapImageUrl - Satellite map URL with drawn polygons, or null if no project site data
+ *
+ * @remarks
+ * - Sent via `sendEmail` from lib/email-service.ts (Postmark or fallback)
+ * - Reply-To set to customer's email for easy response
+ * - Includes both plain text and HTML body for email client compatibility
+ * - DB failures during email send do not fail the checkout request (best-effort)
+ * - Logs success/failure to logger with orderNumber context
  */
 async function sendPurchaseOrderEmail(
   data: CheckoutPayload,
@@ -1008,7 +1087,31 @@ Payment: Purchase Order ${data.purchaseOrderNumber}
 }
 
 /**
- * Helper function to send email notification for net terms payments
+ * Sends email notification to sales@muskingummaterials.com for net terms payments.
+ *
+ * Email includes:
+ * - Order number, invoice number, and formatted due date
+ * - Customer contact info (name, email, phone)
+ * - Fulfillment method (pickup or delivery) with address and delivery notes
+ * - Project site details: address, area estimate (tons/cubic yards), satellite map image
+ * - Line items with quantities, unit prices, and totals
+ * - Price breakdown (subtotal, tax, processing fee, total)
+ * - Payment method: "Net Terms — Invoice {invoiceNumber} due {dueDate}"
+ *
+ * @param data - Validated checkout payload from checkoutSchema
+ * @param order - Order record with orderNumber (minimal shape for flexibility)
+ * @param invoice - Invoice record with invoiceNumber and dueDate from generateInvoice
+ * @param validatedPrices - Server-validated price breakdown (subtotal, tax, processingFee, total)
+ * @param site - Project site data captured from material estimator (address, location, polygons, estimates)
+ * @param projectMapImageUrl - Satellite map URL with drawn polygons, or null if no project site data
+ *
+ * @remarks
+ * - Sent via `sendEmail` from lib/email-service.ts (Postmark or fallback)
+ * - Reply-To set to customer's email for easy response
+ * - Includes both plain text and HTML body for email client compatibility
+ * - Due date formatted as "Month DD, YYYY" (e.g., "June 21, 2026")
+ * - DB failures during email send do not fail the checkout request (best-effort)
+ * - Logs success/failure to logger with orderNumber and invoiceNumber context
  */
 async function sendNetTermsEmail(
   data: CheckoutPayload,

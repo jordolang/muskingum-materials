@@ -12,17 +12,28 @@ const orderUpdateSchema = z.object({
 });
 
 /**
- * PATCH /api/admin/orders/[id]
- * Admin endpoint - updates order status and/or reschedules delivery
- * Requires: Admin authentication via requireAdmin()
- * Body: { status?, deliveryDate?, deliveryTimeWindow? } - validated via orderUpdateSchema
- * Returns: Updated order with full details
+ * PATCH /api/admin/orders/[id] — admin endpoint for updating order status and
+ * rescheduling delivery.
  *
- * Rescheduling behavior:
- * - Both deliveryDate and deliveryTimeWindow must be provided together
- * - Releases the old delivery slot (if one exists)
- * - Validates and books the new delivery slot
- * - Updates order with new delivery details and slot ID
+ * @access admin
+ * @param request - Incoming request with body validated against `orderUpdateSchema`
+ *   (status enum: pending, confirmed, processing, ready, completed, canceled;
+ *   optional deliveryDate and deliveryTimeWindow for rescheduling)
+ * @param params - Route parameters containing the order ID to update
+ * @returns 200 `{ order: Order }` with updated order details on success
+ * @returns 400 `{ error: string, details: ZodError[] }` when validation fails
+ * @returns 403 `{ error: string }` when admin authentication fails
+ * @returns 404 `{ error: string }` when order ID does not exist
+ * @returns 500 `{ error: string }` on database or unexpected errors
+ * @throws 400 when request body fails Zod validation (invalid status value)
+ * @see requireAdmin in lib/admin-auth.ts for authentication implementation
+ * @see orderStatusUpdateSchema in lib/schemas.ts for shared order status validation
+ * @remarks Next.js 15 pattern: params is a Promise and must be awaited before use.
+ *   Order existence is verified before update to provide clear 404 responses.
+ * @remarks Rescheduling behavior: both deliveryDate and deliveryTimeWindow must be
+ *   provided together; the old delivery slot (if any) is released, the new slot is
+ *   validated and booked, and the order is updated with the new delivery details
+ *   and slot ID.
  */
 export async function PATCH(
   request: Request,

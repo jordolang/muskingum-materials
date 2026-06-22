@@ -3,11 +3,17 @@ import { auth } from "@clerk/nextjs/server";
 import { logger } from "@/lib/logger";
 
 /**
- * POST /api/account/payment-methods/setup-intent
- * Creates a Stripe SetupIntent for adding a new payment method
+ * Creates a Stripe SetupIntent for adding a new payment method to the user's account.
  *
- * Auth: Requires Clerk authentication
- * Returns: { clientSecret: string, customerId?: string }
+ * @access authenticated
+ * @returns 200 `{ clientSecret: string, customerId?: string }` on success
+ * @returns 401 `{ error: "Unauthorized" }` when user is not authenticated
+ * @returns 503 `{ error: "Payment processing is not configured" }` when Stripe is not configured
+ * @returns 500 `{ error: "Failed to initialize payment method setup" }` on Stripe API or database errors
+ * @see SavedPaymentMethod in prisma/schema.prisma for payment method storage
+ * @remarks Creates a new Stripe customer if one doesn't exist for the user.
+ *   Customer ID is retrieved from existing payment methods or created via Stripe API.
+ *   Gracefully handles missing Stripe configuration by returning 503.
  */
 export async function POST() {
   let session;

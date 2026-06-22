@@ -28,10 +28,20 @@ const updateCampaignSchema = z.object({
 });
 
 /**
- * GET /api/admin/campaigns/[id]
- * Returns a single campaign by ID with template details
- * Requires: Admin authentication (Clerk role: admin)
- * Params: id (campaign ID)
+ * Fetch a single email campaign by ID with template details.
+ *
+ * @access admin-only
+ * @param _request - Incoming Next.js request (unused, auth handled by checkAdminAuth)
+ * @param params - Route parameters containing the campaign ID
+ * @returns 200 `{ campaign: Campaign & { template: { id, name } | null } }` on success
+ * @returns 401 `{ error: "Unauthorized" }` when user is not authenticated
+ * @returns 403 `{ error: "Forbidden" }` when user lacks admin role in Clerk publicMetadata
+ * @returns 404 `{ error: "Campaign not found" }` when campaign ID does not exist
+ * @returns 500 `{ error: "Failed to fetch campaign" }` on database errors
+ * @see checkAdminAuth - Clerk-based admin role verification
+ * @see prisma.campaign.findUnique - includes template relation for associated email template metadata
+ * @remarks Admin access is verified via Clerk `publicMetadata.role === "admin"`.
+ *   The template relation is populated for campaigns using reusable email templates.
  */
 export async function GET(
   _request: NextRequest,
@@ -68,12 +78,26 @@ export async function GET(
 }
 
 /**
- * PATCH /api/admin/campaigns/[id]
- * Updates an existing campaign (draft or scheduled campaigns only)
- * Requires: Admin authentication (Clerk role: admin)
- * Validates: updateCampaignSchema (name, subject, htmlContent, textContent, templateId, status, scheduledAt)
- * Params: id (campaign ID)
- * Restrictions: Cannot edit campaigns with status "sent"
+ * Update an existing email campaign (draft or scheduled only).
+ *
+ * @access admin-only
+ * @param request - Incoming request with body validated against `updateCampaignSchema`
+ *   (name, subject, htmlContent, textContent, templateId, status, scheduledAt — all optional).
+ * @param params - Route parameters containing the campaign ID
+ * @returns 200 `{ campaign: Campaign & { template: { id, name } | null } }` on successful update
+ * @returns 400 `{ error: "Cannot edit a sent campaign" }` when attempting to modify a sent campaign
+ * @returns 400 `{ error: "Invalid data", details: ZodError[] }` when validation fails
+ * @returns 401 `{ error: "Unauthorized" }` when user is not authenticated
+ * @returns 403 `{ error: "Forbidden" }` when user lacks admin role in Clerk publicMetadata
+ * @returns 404 `{ error: "Campaign not found" }` when campaign ID does not exist
+ * @returns 500 `{ error: "Failed to update campaign" }` on database errors
+ * @throws 400 `{ error: "Invalid data", details: ZodError[] }` when request body fails Zod validation
+ * @see updateCampaignSchema - Zod schema enforcing min(3) for name/subject to prevent accidental blank campaigns,
+ *   min(10) for htmlContent to ensure minimal template structure, enum for status to prevent invalid states
+ * @see checkAdminAuth - Clerk-based admin role verification
+ * @remarks Sent campaigns are immutable — this prevents accidental modification of historical campaign records
+ *   and preserves audit integrity for compliance. Only draft/scheduled/sending/failed campaigns can be edited.
+ *   Template relation is re-fetched to provide updated template metadata in the response.
  */
 export async function PATCH(
   request: NextRequest,
@@ -135,11 +159,22 @@ export async function PATCH(
 }
 
 /**
- * DELETE /api/admin/campaigns/[id]
- * Deletes a campaign (draft or scheduled campaigns only)
- * Requires: Admin authentication (Clerk role: admin)
- * Params: id (campaign ID)
- * Restrictions: Cannot delete campaigns with status "sent"
+ * Delete an email campaign (draft or scheduled only).
+ *
+ * @access admin-only
+ * @param _request - Incoming Next.js request (unused, auth handled by checkAdminAuth)
+ * @param params - Route parameters containing the campaign ID
+ * @returns 200 `{ success: true }` on successful deletion
+ * @returns 400 `{ error: "Cannot delete a sent campaign" }` when attempting to delete a sent campaign
+ * @returns 401 `{ error: "Unauthorized" }` when user is not authenticated
+ * @returns 403 `{ error: "Forbidden" }` when user lacks admin role in Clerk publicMetadata
+ * @returns 404 `{ error: "Campaign not found" }` when campaign ID does not exist
+ * @returns 500 `{ error: "Failed to delete campaign" }` on database errors
+ * @see checkAdminAuth - Clerk-based admin role verification
+ * @remarks Sent campaigns cannot be deleted to preserve historical records and maintain audit trails
+ *   for compliance/analytics. This is a hard delete operation — consider implementing soft deletes
+ *   for draft campaigns if undo functionality is needed. Related template associations are automatically
+ *   handled by Prisma cascade rules (or foreign key constraints).
  */
 export async function DELETE(
   _request: NextRequest,

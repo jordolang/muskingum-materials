@@ -32,13 +32,21 @@ function generateOrderNumber(): string {
 }
 
 /**
- * POST /api/admin/orders/phone
- * Admin endpoint - creates an order from a phone call
- * Requires: Admin authentication via requireAdmin()
- * Body: { name, email, phone, items[], fulfillment, deliveryAddress?, deliveryNotes?, notes? }
- * Creates order with "confirmed" status and "unpaid" payment status
- * Sends email notification to sales@muskingummaterials.com
- * Returns: { orderNumber, orderId }
+ * Admin endpoint for creating orders from phone calls.
+ *
+ * @access restricted (admin only via requireAdmin)
+ * @param request - Incoming request with body validated against the local `phoneOrderSchema`
+ *   (name, email, phone, items[], fulfillment, deliveryAddress?, deliveryNotes?, notes?).
+ * @returns 200 `{ orderNumber: string, orderId: string }` on successful order creation
+ * @returns 403 `{ error: "Unauthorized" }` when admin authentication fails
+ * @returns 400 `{ error: "Invalid JSON" }` when request body is not valid JSON
+ * @throws 400 `{ error: "Invalid request", details: ZodError[] }` when validation fails
+ * @throws 500 `{ error: "Failed to create order. Please try again." }` when database operation fails
+ * @see requireAdmin in lib/admin-auth.ts for authentication mechanism
+ * @see phoneOrderSchema for complete request body validation rules
+ * @remarks Creates order with "confirmed" status and "unpaid" payment status.
+ *   Sends email notification to sales@muskingummaterials.com with order details.
+ *   Order number format: MM-YYMMDD-{8-char-UUID}. Email send failures do not fail the request.
  */
 export async function POST(request: NextRequest) {
   try {

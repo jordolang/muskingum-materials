@@ -11,13 +11,21 @@ import { buildSatelliteMapUrl } from "@/lib/static-map";
  *
  * @access public
  * @param request - Incoming request with body validated against {@link quoteSchema} in lib/schemas.ts
+ *   (name, email, phone, company, products, deliveryAddr, notes, projectSite). The optional `projectSite`
+ *   field captures customer-drawn polygons or a geocoded location from the project estimator UI.
  * @returns 200 `{ success: true, analytics: { productCount: number, leadSource: "quote_form" } }`
  * @throws 400 `{ error: "Invalid data", details: ZodError[] }` when validation fails
  * @throws 500 `{ error: "Failed to save quote request" }` on database error
  * @throws 500 `{ error: "Internal server error" }` on unexpected error
  * @see quoteSchema in lib/schemas.ts for request body shape
  * @see rateLimitedEndpoints in middleware.ts — contact-quote tier (10 req/hr)
+ * @see buildSatelliteMapUrl in lib/static-map.ts — converts project site to embedded map image URL
  * @see {@link https://postmarkapp.com} — email notification sent to sales team on success
+ * @remarks When `projectSite` is provided, the handler builds a satellite map snapshot URL via
+ *   {@link buildSatelliteMapUrl} that visualizes the customer-drawn area or geocoded location.
+ *   This map URL, along with project estimates (area, depth, tons, cubic yards, truckloads), is
+ *   persisted to the database and included in the sales team email notification to help scope the job.
+ *   Project site data is entirely optional — customers can submit a simple product list without estimates.
  */
 export async function POST(request: NextRequest) {
   try {

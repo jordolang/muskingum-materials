@@ -11,14 +11,23 @@ const refundSchema = z.object({
 });
 
 /**
- * POST /api/admin/orders/[id]/refund
- * Admin endpoint - processes full or partial refund via Stripe
- * Requires: Admin authentication via requireAdmin()
- * Body: { amount, reason }
- * Validates: Order exists, is paid, has Stripe payment ID, amount <= total
- * Creates Stripe refund, updates order paymentStatus (refunded or partially_refunded)
- * Records status history and sends email notification to customer
- * Returns: { success, refundId, newPaymentStatus }
+ * Admin endpoint for processing full or partial refunds via Stripe.
+ *
+ * @access admin-only (enforced via requireAdmin())
+ * @param request - Incoming request with body validated against `refundSchema` (amount, reason)
+ * @param params - Route params containing order ID
+ * @returns 200 `{ success: true, refundId: string, newPaymentStatus: string }` on success
+ * @returns 403 `{ error: "Unauthorized" }` when admin authentication fails
+ * @returns 404 `{ error: "Order not found" }` when order ID is invalid
+ * @throws 400 `{ error: "Invalid JSON" }` when request body is malformed
+ * @throws 400 `{ error: "Invalid request", details: ZodError[] }` when validation fails
+ * @throws 400 `{ error: string }` when order is not paid, missing Stripe payment ID, or refund amount exceeds total
+ * @throws 502 `{ error: string }` when Stripe refund API call fails
+ * @see refundSchema - Validates amount (positive number) and reason (1-500 chars)
+ * @see requireAdmin in lib/admin-auth.ts - Admin authentication enforcer
+ * @remarks Creates Stripe refund, updates order status (refunded/partially_refunded),
+ *   records status history, and sends email notification. Full refunds also set order status to 'canceled'.
+ *   Requires STRIPE_SECRET_KEY env var.
  */
 export async function POST(
   request: NextRequest,

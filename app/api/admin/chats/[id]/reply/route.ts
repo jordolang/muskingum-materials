@@ -13,10 +13,26 @@ const replySchema = z.object({
 });
 
 /**
- * POST /api/admin/chats/[id]/reply
- * Sends a staff reply via email or SMS and appends it to the conversation
- * Requires admin authentication
- * Request body: { replyMessage: string, method: "email" | "sms" }
+ * Admin endpoint to send staff replies to chat conversations via email or SMS.
+ *
+ * @access admin
+ * @param request - Incoming request with body validated against `replySchema`
+ *   (replyMessage, method). See local schema definition for validation rules.
+ * @param params - Dynamic route parameters containing the conversation `id`
+ * @returns 200 `{ success: true, method: string, messageId?: string, message: ChatMessage }`
+ *   when reply is sent successfully and appended to conversation
+ * @returns 400 `{ error: "Invalid request body", details: ZodError[] }` when validation fails
+ * @returns 400 `{ error: string }` when conversation lacks required contact info (email/phone)
+ * @returns 403 `{ error: "Unauthorized: Admin access required" }` when admin auth fails
+ * @returns 404 `{ error: "Conversation not found" }` when conversation ID doesn't exist
+ * @returns 500 `{ error: string }` when email/SMS delivery fails or unexpected error occurs
+ * @throws Error with "Unauthorized" message when `requireAdmin()` check fails
+ * @see requireAdmin in lib/admin-auth.ts — admin authentication enforcement
+ * @see sendTransactionalEmail in lib/email-service.ts — email delivery via Postmark
+ * @see sendSMS in lib/sms.ts — SMS delivery via Twilio
+ * @remarks Creates an assistant-role message in the conversation after successful delivery.
+ *   Logs errors without failing the request when message creation fails. Returns the
+ *   messageId from the delivery service (Postmark/Twilio) for tracking.
  */
 export async function POST(
   request: Request,

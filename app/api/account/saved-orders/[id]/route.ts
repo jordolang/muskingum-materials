@@ -4,11 +4,18 @@ import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
 /**
- * PATCH /api/account/saved-orders/[id]
- * Updates an existing saved order template for the authenticated user
- * Request body: { name?: string, items?: any, deliveryAddress?: string, pickupOrDeliver?: "pickup" | "deliver" }
- * Returns: Updated saved order object
- * Auth: Requires Clerk authentication and order ownership
+ * Update saved order template endpoint.
+ *
+ * @access protected
+ * @param request - Incoming request with optional body fields (name, items, deliveryAddress, pickupOrDeliver)
+ * @param params - Route parameters containing the saved order ID
+ * @returns 200 `{ savedOrder: SavedOrder }` on successful update
+ * @returns 401 `{ error: "Unauthorized" }` when not authenticated
+ * @returns 404 `{ error: "Saved order not found" }` when order doesn't exist or doesn't belong to user
+ * @throws 500 `{ error: "Failed to update saved order" }` on database errors
+ * @see SavedOrder model in prisma/schema.prisma
+ * @remarks Requires Clerk authentication. Only the order owner can update their saved templates.
+ *   All body fields are optional — only provided fields will be updated.
  */
 export async function PATCH(
   request: NextRequest,
@@ -58,10 +65,18 @@ export async function PATCH(
 }
 
 /**
- * DELETE /api/account/saved-orders/[id]
- * Deletes a saved order template for the authenticated user
- * Returns: { success: true }
- * Auth: Requires Clerk authentication and order ownership
+ * Delete saved order template endpoint.
+ *
+ * @access protected
+ * @param _request - Incoming request (unused)
+ * @param params - Route parameters containing the saved order ID
+ * @returns 200 `{ success: true }` on successful deletion
+ * @returns 401 `{ error: "Unauthorized" }` when not authenticated
+ * @returns 404 `{ error: "Saved order not found" }` when order doesn't exist or doesn't belong to user
+ * @throws 500 `{ error: "Failed to delete saved order" }` on database errors
+ * @see SavedOrder model in prisma/schema.prisma
+ * @remarks Requires Clerk authentication. Only the order owner can delete their saved templates.
+ *   Deletion is permanent and cannot be undone.
  */
 export async function DELETE(
   _request: NextRequest,

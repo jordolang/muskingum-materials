@@ -4,18 +4,24 @@ import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
 /**
- * GET /api/account/loyalty
- * Returns the authenticated user's loyalty account including current points balance and transaction history
+ * Loyalty account and transaction history retrieval endpoint.
  *
- * Loyalty Program Details:
- * - Earn 1 point per $1 spent
- * - Redeem 100 points = $5 discount
- * - Tiered benefits based on annual spending
- *
- * Returns:
- * - account: LoyaltyAccount with current points balance and transactions array
- *
- * Requires authentication via Clerk session
+ * @access authenticated
+ * @returns 200 `{ account: LoyaltyAccount | null }` with account details including
+ *   points balance and transaction history (ordered by createdAt desc), or null if
+ *   no loyalty account exists for the user
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk session is missing or invalid
+ * @returns 500 `{ error: "Failed to fetch loyalty account" }` when database query fails
+ * @see auth from @clerk/nextjs/server for session verification
+ * @see prisma.loyaltyAccount for schema definition
+ * @see lib/logger.ts for error logging conventions
+ * @remarks **Loyalty Program Details:**
+ *   - Earn 1 point per $1 spent on orders
+ *   - Redeem 100 points = $5 discount on next purchase
+ *   - Tiered benefits unlock based on annual spending
+ *   - Transactions include both points earned (order completions) and points redeemed
+ *   - DB query failures are logged with operation context but do not expose internal
+ *     error details to the client
  */
 export async function GET() {
   try {

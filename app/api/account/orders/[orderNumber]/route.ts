@@ -7,9 +7,18 @@ import { sendOrderStatusEmail, type OrderEmailData, type OrderStatus } from "@/l
 import { logger } from "@/lib/logger";
 
 /**
- * GET /api/account/orders/[orderNumber]
- * Retrieves a specific order by order number for the authenticated user
- * Response: { order: Order }
+ * Retrieve a specific order by order number for the authenticated user.
+ *
+ * @access authenticated (Clerk session required)
+ * @param _request - Incoming request (unused, params extracted from route context)
+ * @param params - Route parameters containing orderNumber (e.g., "MUS-20231201-1234")
+ * @returns 200 `{ order: Order }` when order found and owned by the authenticated user
+ * @returns 401 `{ error: "Unauthorized" }` when no valid Clerk session
+ * @returns 404 `{ error: "Order not found" }` when order doesn't exist or belongs to another user
+ * @throws 500 `{ error: "Failed to fetch order" }` on database errors
+ * @see middleware.ts — Clerk auth middleware ensures session exists before route handler runs
+ * @remarks User isolation enforced via Prisma query filter on `userId: session.userId`.
+ *   Order numbers are globally unique but user-scoped access prevents data leaks.
  */
 export async function GET(
   _request: NextRequest,
@@ -41,11 +50,24 @@ export async function GET(
 }
 
 /**
- * PUT /api/account/orders/[orderNumber]
- * Updates order status (admin only)
- * Request body: { status: OrderStatus, statusNotes?: string }
- * Creates status history entry and sends email notification
- * Response: { order: Order }
+ * Update order status with audit trail and email notification (admin-only).
+ *
+ * @access admin (requires Clerk session + `publicMetadata.role === 'admin'`)
+ * @param request - Incoming request with body validated against `orderStatusUpdateSchema`
+ *   from lib/schemas.ts ({ status: OrderStatus, statusNotes?: string })
+ * @param params - Route parameters containing orderNumber (e.g., "MUS-20231201-1234")
+ * @returns 200 `{ order: Order }` when status update succeeds (email failure is logged, not thrown)
+ * @returns 401 `{ error: "Unauthorized" }` when no valid Clerk session
+ * @returns 403 `{ error: "Forbidden: Admin access required..." }` when user lacks admin role
+ * @returns 404 `{ error: "Order not found" }` when orderNumber doesn't exist
+ * @throws 400 `{ error: "Invalid status data", details: ZodError[] }` when body validation fails
+ * @throws 500 `{ error: "Failed to update order status" }` on database transaction errors
+ * @see orderStatusUpdateSchema in lib/schemas.ts — validation schema for request body
+ * @see sendOrderStatusEmail in lib/email-service.ts — Postmark-based notification
+ * @see OrderStatusHistory model in prisma/schema.prisma — audit trail with changedBy field
+ * @remarks Transaction ensures atomic creation of status history entry + order update.
+ *   Email failures are logged but do NOT rollback the database transaction or fail the request.
+ *   Admin role check uses Clerk `publicMetadata.role` — set via Clerk dashboard or API.
  */
 export async function PUT(
   request: NextRequest,

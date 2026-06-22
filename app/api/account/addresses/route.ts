@@ -6,9 +6,17 @@ import { addressSchema, addressUpdateSchema } from "@/lib/schemas";
 import { logger } from "@/lib/logger";
 
 /**
- * GET /api/account/addresses
- * Returns all saved addresses for the authenticated user
- * Requires: User authentication via Clerk
+ * Fetch all saved addresses for the authenticated user.
+ *
+ * @access private
+ * @param request - Incoming request (no body/query validation required)
+ * @returns 200 `{ addresses: Address[] }` sorted by default flag (desc), then createdAt (desc)
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk session is missing
+ * @throws 500 `{ error: "Failed to fetch addresses" }` on database errors
+ * @see addressSchema in lib/schemas.ts — Address shape includes label, street, city, state, zip, isDefault
+ * @see prisma/schema.prisma — Address model with userProfileId foreign key
+ * @remarks Returns empty array when user has no profile (profile creation is lazy, triggered by POST).
+ *   Default addresses sort first for UI convenience (pre-select default in forms).
  */
 export async function GET(request: NextRequest) {
   let session;
@@ -44,11 +52,21 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/account/addresses
- * Creates a new address for the authenticated user
- * Requires: User authentication via Clerk
- * Body: addressSchema (label, street, city, state, zip, isDefault)
- * Handles default address logic (unsets other defaults if isDefault=true)
+ * Create a new address for the authenticated user.
+ *
+ * @access private
+ * @param request - Incoming request with JSON body validated against `addressSchema`
+ *   (label, street, city, state, zip, isDefault)
+ * @returns 200 `{ address: Address }` with the newly created address
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk session is missing
+ * @throws 400 `{ error: "Invalid data", details: ZodError[] }` when validation fails
+ * @throws 500 `{ error: "Failed to create address" }` on database errors
+ * @see addressSchema in lib/schemas.ts — includes string length limits, regex validation for zip/state
+ * @see prisma/schema.prisma — Address model with unique constraint on (userProfileId, label) pair
+ * @remarks **Default address logic**: If `isDefault: true`, atomically unsets `isDefault` on all
+ *   other addresses for this user via `updateMany` before creating the new record. Ensures at most
+ *   one default address per user. UserProfile is upserted (created if missing) to handle first-time
+ *   address creation without requiring separate profile setup flow.
  */
 export async function POST(request: NextRequest) {
   let session;
@@ -106,12 +124,24 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * PUT /api/account/addresses
- * Updates an existing address for the authenticated user
- * Requires: User authentication via Clerk
- * Body: addressUpdateSchema (id required, other fields optional)
- * Validates address ownership before updating
- * Handles default address logic (unsets other defaults if isDefault=true)
+ * Update an existing address for the authenticated user.
+ *
+ * @access private
+ * @param request - Incoming request with JSON body validated against `addressUpdateSchema`
+ *   (id required; label, street, city, state, zip, isDefault optional)
+ * @returns 200 `{ address: Address }` with the updated address
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk session is missing
+ * @returns 404 `{ error: "Profile not found" }` when user has no profile (should not happen in practice)
+ * @returns 404 `{ error: "Address not found" }` when address ID doesn't exist or doesn't belong to user
+ * @throws 400 `{ error: "Invalid data", details: ZodError[] }` when validation fails
+ * @throws 500 `{ error: "Failed to update address" }` on database errors
+ * @see addressUpdateSchema in lib/schemas.ts — partial update schema with required id field
+ * @see prisma/schema.prisma — Address.userProfileId enforces ownership boundary
+ * @remarks **Ownership validation**: Queries `findFirst` with both address ID and userProfileId to
+ *   prevent horizontal privilege escalation (users editing other users' addresses). **Default address
+ *   logic**: If `isDefault: true`, atomically unsets `isDefault` on all other addresses for this user
+ *   (excluding current address ID) before applying the update. Partial updates are supported — only
+ *   fields present in the request body are modified.
  */
 export async function PUT(request: NextRequest) {
   let session;
@@ -168,11 +198,21 @@ export async function PUT(request: NextRequest) {
 }
 
 /**
- * DELETE /api/account/addresses
- * Deletes an address for the authenticated user
- * Requires: User authentication via Clerk
- * Query params: id (required) - Address ID to delete
- * Validates address ownership before deletion
+ * Delete an address for the authenticated user.
+ *
+ * @access private
+ * @param request - Incoming request with query param `?id=<addressId>` (no body validation)
+ * @returns 200 `{ success: true }` on successful deletion
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk session is missing
+ * @returns 400 `{ error: "Address ID required" }` when id query param is missing
+ * @returns 404 `{ error: "Profile not found" }` when user has no profile
+ * @throws 500 `{ error: "Failed to delete address" }` on database errors
+ * @see prisma/schema.prisma — Address.userProfileId enforces ownership boundary
+ * @remarks **Ownership validation**: Uses `deleteMany` with both address ID and userProfileId filter
+ *   to prevent horizontal privilege escalation (users deleting other users' addresses). If the address
+ *   doesn't exist or doesn't belong to the user, the operation silently succeeds (deleteMany returns 0
+ *   affected rows but doesn't throw). This is idempotent and safe — no 404 distinction between
+ *   "doesn't exist" and "not yours" prevents enumeration attacks.
  */
 export async function DELETE(request: NextRequest) {
   let session;

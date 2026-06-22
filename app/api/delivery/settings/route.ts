@@ -20,11 +20,19 @@ const deliverySettingsQuery = groq`
 `;
 
 /**
- * GET /api/delivery/settings
- * Retrieves delivery configuration settings from Sanity CMS
- * Returns delivery zone radius, base fee, and per-mile rate
- * Falls back to default settings if not configured in Sanity
- * Response: { success: boolean, settings: DeliverySettings }
+ * Delivery pricing settings retrieval endpoint.
+ *
+ * @access public
+ * @returns 200 `{ success: true, settings: DeliverySettings }` with delivery zone radius,
+ *   base fee, and per-mile rate sourced from Sanity CMS
+ * @returns 500 `{ error: "Internal server error" }` when settings fetch fails unexpectedly
+ * @see lib/delivery.ts for DeliverySettings type definition
+ * @see sanity/schemaTypes/deliverySettings.ts for Sanity schema (if defined)
+ * @remarks Falls back to default settings (25 mile radius, $20 base, $1.50/mile) when
+ *   Sanity document is missing or CMS is unreachable. Graceful degradation ensures
+ *   delivery calculator remains functional even without CMS configuration.
+ * @remarks Not rate-limited — settings are static configuration data with minimal
+ *   server cost. See rateLimitedEndpoints in middleware.ts for rate-limited routes.
  */
 export async function GET() {
   try {

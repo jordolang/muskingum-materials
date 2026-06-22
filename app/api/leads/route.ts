@@ -5,29 +5,17 @@ import { leadSchema } from "@/lib/schemas";
 import { logger } from "@/lib/logger";
 
 /**
- * POST /api/leads
+ * Lead capture endpoint for website interactions.
  *
- * Creates a new lead record from website interactions (chat, forms, etc.)
- *
- * @rate-limit 20 requests per hour (leads-newsletter tier)
- *
- * @request-body {leadSchema}
- * - name?: string - Lead's name (optional)
- * - email?: string - Lead's email address (optional, must be valid email)
- * - phone?: string - Lead's phone number (optional)
- * - source?: string - Lead source identifier (defaults to "chat")
- * - visitorId?: string - Anonymous visitor tracking ID (optional)
- *
- * At least one of name, email, or phone must be provided.
- *
- * @response 200 - Success
- * { success: true }
- *
- * @response 400 - Validation error or missing required fields
- * { error: string, details?: ZodError[] }
- *
- * @response 500 - Database or server error
- * { error: string }
+ * @access public
+ * @param request - Incoming request with body validated against `leadSchema`
+ *   (name, email, phone, source, visitorId). At least one of name/email/phone required.
+ * @returns 200 `{ success: true }` on successful lead creation
+ * @returns 400 `{ error: string, details?: ZodError[] }` when validation fails or no contact fields provided
+ * @returns 500 `{ error: string }` on database or server error
+ * @see rateLimitedEndpoints in middleware.ts — leads-newsletter tier (20 req/hour per IP)
+ * @see leadSchema in lib/schemas.ts for request body schema
+ * @remarks Creates Lead record with source tracking. DB errors return 500 without exposing internals.
  */
 export async function POST(request: NextRequest) {
   try {

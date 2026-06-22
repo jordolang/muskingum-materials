@@ -5,10 +5,20 @@ import { newsletterSchema } from "@/lib/schemas";
 import { logger } from "@/lib/logger";
 
 /**
- * POST /api/newsletter/unsubscribe
- * Unsubscribes an email from the newsletter
- * Request body: { email: string, name?: string }
- * Response: { success: true } | { error: string }
+ * Newsletter unsubscribe endpoint.
+ *
+ * @access public
+ * @param request - Incoming request with body validated against `newsletterSchema`
+ *   (email, name?). See lib/schemas.ts for shared schema conventions.
+ * @returns 200 `{ success: true }` when subscriber is successfully deactivated
+ * @returns 404 `{ error: "Email not found in subscriber list" }` when email is not subscribed
+ * @returns 400 `{ error: "Invalid email" }` when validation fails
+ * @throws 500 `{ error: "Failed to unsubscribe from newsletter" }` on database errors
+ * @throws 500 `{ error: "Internal server error" }` on unexpected errors
+ * @see rateLimitedEndpoints in middleware.ts — leads-newsletter tier (20 req/hour per IP)
+ * @see RATE_LIMIT_TIERS in lib/rate-limit.ts for tier configuration
+ * @remarks Sets `active: false` on the NewsletterSubscriber record rather than deleting it,
+ *   preserving subscription history for audit purposes.
  */
 export async function POST(request: NextRequest) {
   try {

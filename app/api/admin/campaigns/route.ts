@@ -19,10 +19,19 @@ async function checkAdminAuth() {
 }
 
 /**
- * GET /api/admin/campaigns
- * Returns paginated list of email marketing campaigns
- * Requires: Admin authentication (Clerk role: admin)
- * Query params: page (default: 1), limit (default: 20, max: 100)
+ * Email marketing campaigns list endpoint.
+ *
+ * @access admin-only
+ * @param request - Incoming request with optional query params:
+ *   `page` (default: 1, min: 1) and `limit` (default: 20, min: 1, max: 100)
+ * @returns 200 `{ campaigns: Campaign[], total: number, page: number, limit: number, pages: number }`
+ *   with paginated campaign list ordered by creation date (newest first)
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk authentication fails
+ * @returns 403 `{ error: "Forbidden" }` when user lacks admin role in Clerk publicMetadata
+ * @throws 500 `{ error: "Failed to fetch campaigns" }` on database errors
+ * @see campaignSchema in lib/schemas.ts for campaign data structure
+ * @remarks Pagination bounds are automatically clamped: page ≥ 1, 1 ≤ limit ≤ 100.
+ *   Returns minimal campaign fields (excludes full HTML/text content for performance).
  */
 export async function GET(request: NextRequest) {
   try {
@@ -72,11 +81,19 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/admin/campaigns
- * Creates a new email marketing campaign in draft status
- * Requires: Admin authentication (Clerk role: admin)
- * Validates: campaignSchema (subject, body, templateId, scheduledFor)
- * Body: { subject: string, body: string, templateId?: string, scheduledFor?: Date }
+ * Email campaign creation endpoint.
+ *
+ * @access admin-only
+ * @param request - Incoming request with body validated against `campaignSchema`
+ *   (subject, body, templateId?, scheduledFor?). See lib/schemas.ts for schema definition.
+ * @returns 201 `{ campaign: Campaign }` with newly created campaign in draft status
+ * @returns 400 `{ error: "Invalid data", details: ZodError[] }` when validation fails
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk authentication fails
+ * @returns 403 `{ error: "Forbidden" }` when user lacks admin role in Clerk publicMetadata
+ * @throws 500 `{ error: "Failed to create campaign" }` on database errors
+ * @see campaignSchema in lib/schemas.ts for request body validation rules
+ * @remarks Campaign is created with status: "draft", recipientCount: 0, and name derived from subject.
+ *   Both htmlContent and textContent are initially set to the provided body (admin can edit later).
  */
 export async function POST(request: NextRequest) {
   try {

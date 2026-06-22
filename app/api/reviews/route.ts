@@ -7,10 +7,20 @@ import { reviewSchema } from "@/lib/schemas";
 import { logger } from "@/lib/logger";
 
 /**
- * POST /api/reviews
- * Accepts customer review submissions with reviewSchema validation
- * Request body: name, email (optional), rating (1-5), text, projectType (driveway|patio|landscaping|commercial|other), orderNumber (optional)
- * Creates testimonial in Sanity (approved: false), tracks submission in database, sends notification email
+ * Customer review submission endpoint.
+ *
+ * @access public
+ * @param request - Incoming request with body validated against `reviewSchema`
+ *   (name, email, rating 1-5, text, projectType, orderNumber). See lib/schemas.ts.
+ * @returns 201 `{ success: true, id: string }` when review is successfully created
+ * @returns 500 `{ error: "Failed to save review" }` when Sanity testimonial creation fails
+ * @throws 400 `{ error: "Invalid form data", details: ZodError[] }` when validation fails
+ * @see reviewSchema in lib/schemas.ts for field constraints
+ * @see previewClient - Sanity client used to create testimonial documents with approved: false
+ * @remarks Creates Sanity testimonial document (type: "testimonial", approved: false), stores
+ *   tracking record in Prisma ReviewSubmission table, and sends email notification via Postmark
+ *   if POSTMARK_API_TOKEN is configured. DB failures during ReviewSubmission creation do not
+ *   fail the request (logged only). Email send failures do not fail the request.
  */
 export async function POST(request: NextRequest) {
   try {

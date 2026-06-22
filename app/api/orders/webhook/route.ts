@@ -7,20 +7,29 @@ import { addBreadcrumb } from "@/lib/monitoring";
 import * as Sentry from "@sentry/nextjs";
 
 /**
- * Stripe webhook endpoint for payment and order status updates
+ * Stripe webhook endpoint for payment and order status updates.
  *
- * Handles:
- * - checkout.session.completed: Confirms payment, updates order status to paid/confirmed,
- *   retrieves Stripe receipt URL, awards loyalty points for logged-in customers,
- *   and sends SMS notifications for opted-in customers
- * - checkout.session.expired: Marks order as expired/canceled and logs payment failure
- * - order.completed: Custom event to mark order as completed with timestamp
+ * @access public
+ * @param request - Incoming webhook request from Stripe. Body is raw text verified
+ *   against the `stripe-signature` header using `STRIPE_WEBHOOK_SECRET` to prevent
+ *   tampering. No body schema validation — event structure is verified by Stripe SDK.
+ * @returns 200 `{ received: true }` on successful webhook processing
+ * @returns 400 `{ error: "No signature" }` when `stripe-signature` header is missing
+ * @returns 400 `{ error: "Webhook verification failed" }` when signature validation fails
+ * @returns 501 `{ error: "Not configured" }` when `STRIPE_SECRET_KEY` or `STRIPE_WEBHOOK_SECRET` env vars are missing
+ * @see https://stripe.com/docs/webhooks/signatures — webhook signature verification
+ * @see app/api/orders/checkout/route.ts — creates checkout sessions with orderNumber metadata
+ * @remarks Event types handled:
+ *   - `checkout.session.completed`: Confirms payment, updates order to paid/confirmed,
+ *     retrieves Stripe receipt URL, awards loyalty points for logged-in customers,
+ *     and sends SMS notifications for opted-in customers
+ *   - `checkout.session.expired`: Marks order as expired/canceled, logs payment failure to Sentry
+ *   - `order.completed` (custom event): Marks order as completed with timestamp
  *
- * Security:
- * - Validates Stripe webhook signature using STRIPE_WEBHOOK_SECRET
- * - Rejects requests without valid signature (400 Bad Request)
- * - Uses secure webhook event construction to prevent tampering
- * - Logs all webhook events and failures for audit trail
+ *   Security: Validates Stripe webhook signature using `STRIPE_WEBHOOK_SECRET` before
+ *   processing. Rejects requests without valid signature (400 Bad Request). Uses secure
+ *   `webhooks.constructEvent()` to prevent tampering. All webhook events and failures
+ *   are logged for audit trail via logger and Sentry breadcrumbs.
  */
 export async function POST(request: NextRequest) {
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {

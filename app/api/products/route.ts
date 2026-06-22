@@ -5,27 +5,27 @@ import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/products
- * Returns the public product catalog with all active products
- * Public read-only endpoint used by client components (recurring orders form, future widgets)
- * that can't run Prisma directly. Runs per-request so price edits show up immediately.
- * Degrades gracefully to empty list when DATABASE_URL is unavailable.
+ * Public product catalog endpoint.
  *
- * Query params: None
- *
- * Response shape: {
- *   products: Array<{
- *     id: string,
- *     slug: string,
- *     name: string,
- *     category: string,
- *     shortDescription: string,
- *     price: number,
- *     unit: string,
- *     imageUrl: string | null,
- *     imageAlt: string | null
- *   }>
- * }
+ * @access public
+ * @returns 200 `{ products: Array<{
+ *   id: string,
+ *   slug: string,
+ *   name: string,
+ *   category: string,
+ *   shortDescription: string,
+ *   price: number,
+ *   unit: string,
+ *   imageUrl: string | null,
+ *   imageAlt: string | null
+ * }> }` with all active products sorted by sortOrder ascending
+ * @see prisma.product.findMany — source of truth for active products
+ * @see dynamic = "force-dynamic" — disables Next.js caching to reflect price edits immediately
+ * @remarks Read-only endpoint used by client components (recurring orders form, future widgets)
+ *   that can't run Prisma directly. Degrades gracefully to `{ products: [] }` when
+ *   `DATABASE_URL` is unavailable or when database queries fail. All errors return 200
+ *   with empty array rather than throwing — this prevents client-side errors when the
+ *   database is temporarily unreachable.
  */
 export async function GET() {
   if (!process.env.DATABASE_URL) {

@@ -9,9 +9,19 @@ const chatUpdateSchema = z.object({
 });
 
 /**
- * GET /api/admin/chats/[id]
- * Returns full chat conversation details including all messages
- * Requires admin authentication
+ * Fetch full chat conversation details with all messages.
+ *
+ * @access admin
+ * @param request - Incoming request (authentication validated via requireAdmin)
+ * @param params - Route params containing conversation `id`
+ * @returns 200 `{ conversation: ChatConversation }` with full conversation object including messages array (ordered by createdAt ASC)
+ * @returns 403 `{ error: "Unauthorized: Admin access required" }` when authentication fails
+ * @returns 404 `{ error: "Chat conversation not found" }` when conversation ID doesn't exist
+ * @returns 500 `{ error: "Failed to fetch chat conversation" }` on unexpected errors
+ * @see requireAdmin in lib/admin-auth.ts — Clerk-based admin authentication guard
+ * @see ChatConversation schema in prisma/schema.prisma
+ * @remarks Returns complete conversation object with nested messages. Messages are ordered chronologically.
+ *   Used by admin dashboard to view customer support chat history and context.
  */
 export async function GET(
   request: Request,
@@ -72,10 +82,23 @@ export async function GET(
 }
 
 /**
- * PATCH /api/admin/chats/[id]
- * Updates chat conversation status (active, closed, archived)
- * Requires admin authentication
- * Request body: { status: "active" | "closed" | "archived" }
+ * Update chat conversation status.
+ *
+ * @access admin
+ * @param request - Incoming request with body validated against local `chatUpdateSchema`
+ *   (status: "active" | "closed" | "archived")
+ * @param params - Route params containing conversation `id`
+ * @returns 200 `{ conversation: ChatConversation }` with updated conversation object including messages
+ * @returns 400 `{ error: "Invalid status value", details: ZodError[] }` when validation fails
+ * @returns 403 `{ error: "Unauthorized: Admin access required" }` when authentication fails
+ * @returns 404 `{ error: "Chat conversation not found" }` when conversation ID doesn't exist
+ * @returns 500 `{ error: "Failed to update chat conversation" }` on unexpected errors
+ * @throws 400 when request body doesn't match `chatUpdateSchema` (status must be "active", "closed", or "archived")
+ * @see requireAdmin in lib/admin-auth.ts — Clerk-based admin authentication guard
+ * @see chatUpdateSchema — local schema enforcing status enum constraint
+ * @see ChatConversation schema in prisma/schema.prisma
+ * @remarks Used by admin dashboard to manage conversation lifecycle (triage active chats, close resolved ones, archive old ones).
+ *   Returns full updated conversation object for immediate UI refresh.
  */
 export async function PATCH(
   request: Request,

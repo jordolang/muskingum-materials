@@ -6,11 +6,19 @@ import { savedPaymentMethodUpdateSchema } from "@/lib/schemas";
 import { logger } from "@/lib/logger";
 
 /**
- * GET /api/account/payment-methods/[id]
- * Fetches a specific saved payment method for the authenticated user
+ * Fetch a specific saved payment method.
  *
- * Auth: Requires Clerk authentication and ownership of the payment method
- * Returns: { paymentMethod: SavedPaymentMethod }
+ * @access protected (Clerk authentication required)
+ * @param request - Incoming request (unused but required by Next.js signature)
+ * @param params - Route parameters containing the payment method ID
+ * @param params.params.id - Payment method UUID to retrieve
+ * @returns 200 `{ paymentMethod: SavedPaymentMethod }` on success
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk session is missing
+ * @returns 404 `{ error: "Payment method not found" }` when ID doesn't exist or user doesn't own it
+ * @returns 500 `{ error: "Failed to fetch payment method" }` on database errors
+ * @see prisma/schema.prisma SavedPaymentMethod model for returned shape
+ * @remarks Security: Verifies ownership via `userId` match before returning data.
+ *   Non-owners receive 404 (not 403) to avoid leaking existence of payment method IDs.
  */
 export async function GET(
   request: NextRequest,
@@ -57,14 +65,25 @@ export async function GET(
 }
 
 /**
- * PATCH /api/account/payment-methods/[id]
- * Updates a saved payment method for the authenticated user
+ * Update a saved payment method.
  *
- * Auth: Requires Clerk authentication and ownership of the payment method
- * Request body: savedPaymentMethodUpdateSchema (currently only isDefault)
- * Returns: { paymentMethod: SavedPaymentMethod }
- *
- * Note: If isDefault is set to true, all other payment methods are set to isDefault: false
+ * @access protected (Clerk authentication required)
+ * @param request - Incoming request with JSON body validated against `savedPaymentMethodUpdateSchema`
+ * @param params - Route parameters containing the payment method ID
+ * @param params.params.id - Payment method UUID to update
+ * @returns 200 `{ paymentMethod: SavedPaymentMethod }` with updated payment method on success
+ * @returns 400 `{ error: "Invalid data", details: ZodError[] }` when validation fails
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk session is missing
+ * @returns 404 `{ error: "Payment method not found" }` when ID doesn't exist or user doesn't own it
+ * @returns 500 `{ error: "Failed to update payment method" }` on database errors
+ * @see lib/schemas.ts savedPaymentMethodUpdateSchema for request body validation
+ * @see prisma/schema.prisma SavedPaymentMethod model for returned shape
+ * @remarks **Default payment method behavior**: When `isDefault: true` is set, this endpoint
+ *   automatically unsets `isDefault` on all other payment methods for the user, ensuring
+ *   exactly one default exists. This is implemented via a transaction-safe `updateMany`
+ *   before the final update.
+ * @remarks Security: Verifies ownership via `userId` match before allowing updates.
+ *   Non-owners receive 404 to avoid leaking existence of payment method IDs.
  */
 export async function PATCH(
   request: NextRequest,
@@ -138,11 +157,21 @@ export async function PATCH(
 }
 
 /**
- * DELETE /api/account/payment-methods/[id]
- * Deletes a saved payment method for the authenticated user
+ * Delete a saved payment method.
  *
- * Auth: Requires Clerk authentication and ownership of the payment method
- * Returns: { success: true }
+ * @access protected (Clerk authentication required)
+ * @param request - Incoming request (unused but required by Next.js signature)
+ * @param params - Route parameters containing the payment method ID
+ * @param params.params.id - Payment method UUID to delete
+ * @returns 200 `{ success: true }` when deletion succeeds
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk session is missing
+ * @returns 404 `{ error: "Payment method not found" }` when ID doesn't exist or user doesn't own it
+ * @returns 500 `{ error: "Failed to delete payment method" }` on database errors
+ * @see prisma/schema.prisma SavedPaymentMethod model for database schema
+ * @remarks Security: Verifies ownership via `userId` match before allowing deletion.
+ *   Non-owners receive 404 to avoid leaking existence of payment method IDs.
+ * @remarks **No cascade implications**: Deleting a payment method does not affect existing
+ *   orders or subscriptions that reference it; those retain their payment details at creation time.
  */
 export async function DELETE(
   request: NextRequest,

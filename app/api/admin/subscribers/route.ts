@@ -17,10 +17,22 @@ async function checkAdminAuth() {
 }
 
 /**
- * GET /api/admin/subscribers
- * Returns paginated list of newsletter subscribers with optional filtering
- * Requires admin authentication via Clerk publicMetadata role
- * Query params: page (optional, default: 1), limit (optional, default: 20, max: 100), active (optional, boolean filter)
+ * Paginated newsletter subscriber listing for admin dashboard.
+ *
+ * @access admin (requires Clerk publicMetadata.role === "admin")
+ * @param request - Incoming request with URL search params:
+ *   - `page` (optional, default: 1, min: 1): Page number for pagination
+ *   - `limit` (optional, default: 20, min: 1, max: 100): Items per page
+ *   - `active` (optional, boolean string): Filter by subscriber active status ("true" | "false")
+ * @returns 200 `{ subscribers: Array, total: number, page: number, limit: number, pages: number }` on success
+ * @returns 401 `{ error: "Unauthorized" }` when user is not authenticated via Clerk
+ * @returns 403 `{ error: "Forbidden" }` when authenticated user lacks admin role
+ * @returns 500 `{ error: "Failed to fetch subscribers" }` on database errors
+ * @see checkAdminAuth — shared admin authentication helper for this endpoint
+ * @see prisma.newsletterSubscriber — source table in schema.prisma
+ * @remarks Returns subscribers ordered by createdAt DESC. Query params are sanitized:
+ *   page/limit are coerced to safe integers within bounds. DB failures return 500 without
+ *   exposing internal error details.
  */
 export async function GET(request: NextRequest) {
   try {

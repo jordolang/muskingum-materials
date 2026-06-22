@@ -4,10 +4,28 @@ import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
 /**
- * GET /api/admin/leads
- * Returns paginated list of leads with optional source filtering
- * Requires admin authentication via Clerk publicMetadata role
- * Query params: page (optional, default 1), limit (optional, default 20, max 100), source (optional)
+ * Admin endpoint for retrieving paginated lead submissions with optional filtering.
+ *
+ * @access admin-only (requires Clerk authentication with publicMetadata.role === "admin")
+ * @param request - Incoming request with optional query parameters:
+ *   - `page` (number, optional, default: 1): Page number for pagination (min: 1)
+ *   - `limit` (number, optional, default: 20): Results per page (min: 1, max: 100)
+ *   - `source` (string, optional): Filter leads by source field (e.g., "contact_form", "chat", "quote_request")
+ * @returns 200 `{ leads: Lead[], total: number, page: number, limit: number, pages: number }` on success
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk authentication fails or session is missing
+ * @returns 403 `{ error: "Forbidden: Admin access required" }` when authenticated user lacks admin role
+ * @throws 500 `{ error: "Failed to fetch leads" }` on database query failure or unexpected errors
+ * @see Lead model in prisma/schema.prisma for full lead schema
+ * @see middleware.ts for Clerk authentication flow
+ * @remarks
+ * - Authentication: Checks Clerk session userId AND user.publicMetadata.role === "admin"
+ * - Pagination: Uses Prisma skip/take with calculated offset (page-1)*limit
+ * - Filtering: Optional `source` filter applied via Prisma where clause
+ * - Sorting: Results ordered by createdAt DESC (newest first)
+ * - Response includes pagination metadata (total count, current page, total pages)
+ * - Page numbers are 1-indexed (page=1 is first page)
+ * - Limit is clamped to [1, 100] to prevent excessive DB load
+ * - When Clerk is not configured, returns 401 without throwing exceptions
  */
 export async function GET(request: Request) {
   try {

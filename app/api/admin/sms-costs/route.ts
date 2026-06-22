@@ -7,9 +7,22 @@ import { logger } from "@/lib/logger";
 const SMS_COST_PER_MESSAGE = 0.0075;
 
 /**
- * GET /api/admin/sms-costs
- * Returns SMS cost reporting and usage statistics
- * Query params: startDate (optional), endDate (optional)
+ * SMS cost analytics and usage reporting endpoint (admin-only).
+ *
+ * @access admin
+ * @param request - Incoming request with optional query params: `startDate` (ISO 8601 date string),
+ *   `endDate` (ISO 8601 date string). When both are omitted, returns all-time statistics.
+ * @returns 200 `{ summary: {...}, breakdown: {...}, dateRange: {...} }` with aggregated SMS cost data:
+ *   - summary: totalMessages, sentMessages, deliveredMessages, failedMessages, totalCost, deliveryRate
+ *   - breakdown: byDate (daily message counts), byStatus (status distribution)
+ *   - dateRange: start and end dates applied to the query
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk session is missing
+ * @returns 403 `{ error: "Forbidden: Admin access required" }` when user is not in ADMIN_USER_IDS
+ * @throws 500 `{ error: "Failed to generate SMS cost report" }` on database or processing errors
+ * @see ADMIN_USER_IDS in .env — comma-separated list of Clerk user IDs with admin access
+ * @see SMS_COST_PER_MESSAGE — fixed Twilio rate ($0.0075/message) applied to sent/delivered messages only
+ * @remarks Admin verification via `auth().userId` checked against ADMIN_USER_IDS env var.
+ *   Date filters are inclusive (endDate set to 23:59:59.999). Costs exclude pending/failed messages.
  */
 export async function GET(request: NextRequest) {
   try {

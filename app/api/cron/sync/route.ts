@@ -16,11 +16,20 @@ function bearerMatches(authHeader: string | null, secret: string): boolean {
 }
 
 /**
- * GET /api/cron/sync
- * Cron job endpoint that triggers automated Prisma → Sanity content synchronization
- * Runs on a schedule defined in vercel.json (default: daily at 2 AM)
- * Requires authorization via Bearer token (CRON_SECRET environment variable)
- * Syncs both products and services from Prisma to Sanity
+ * Automated Prisma → Sanity content synchronization cron job.
+ *
+ * @access restricted - requires Bearer token authentication
+ * @param request - Incoming request with Authorization header (Bearer CRON_SECRET)
+ * @returns 200 `{ success: true, synced: { products, services }, summary, timestamp }` on successful sync
+ * @returns 401 `{ error: "Unauthorized" }` when Bearer token is missing or invalid
+ * @returns 500 `{ error: "Server misconfiguration" }` when CRON_SECRET is not configured
+ * @returns 500 `{ success: false, error: "Internal server error", timestamp }` when sync fails
+ * @see vercel.json — cron schedule configuration (default: daily at 2 AM)
+ * @see lib/sync/prisma-to-sanity.ts — syncAllProducts, syncAllServices implementation
+ * @see CLAUDE.md "Prisma ↔ Sanity Sync System" — field ownership rules and one-way sync architecture
+ * @remarks Syncs both products and services from Prisma to Sanity in a single job.
+ *   Authorization uses constant-time comparison to prevent timing attacks.
+ *   Sync failures are logged but do not halt the entire job.
  */
 export async function GET(request: NextRequest) {
   // Verify authorization (Vercel Cron sends a specific header).
