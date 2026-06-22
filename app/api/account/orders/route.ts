@@ -4,10 +4,18 @@ import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
 /**
- * GET /api/account/orders
- * Returns paginated list of orders for the authenticated user
- * Query params: page (optional, default: 1), limit (optional, default: 20, max: 100)
- * Response: { orders: Order[], total: number, page: number, limit: number, pages: number }
+ * Authenticated user's order history endpoint with pagination support.
+ *
+ * @access protected - requires Clerk authentication
+ * @param request - Incoming request with optional query params: `page` (default: 1), `limit` (default: 20, max: 100)
+ * @returns 200 `{ orders: Order[], total: number, page: number, limit: number, pages: number }` on success
+ * @returns 401 `{ error: "Unauthorized" }` when not authenticated
+ * @throws 500 `{ error: "Failed to fetch orders" }` when database query fails
+ * @see auth() from @clerk/nextjs/server for authentication implementation
+ * @remarks Pagination: page/limit clamped to safe bounds (page ≥ 1, 1 ≤ limit ≤ 100).
+ *   Orders sorted by createdAt DESC. Only returns orders owned by the authenticated user.
+ *   Response includes full order details: orderNumber, items, pricing breakdown (subtotal, tax, processingFee, deliveryFee),
+ *   delivery method, status, and payment status.
  */
 export async function GET(request: Request) {
   let session;
