@@ -5,9 +5,19 @@ import { updateRecurringOrderSchema } from "@/lib/schemas";
 import { z } from "zod";
 
 /**
- * GET /api/account/recurring-orders/[id]
- * Returns a single recurring order subscription by ID for authenticated user
- * Verifies ownership before returning the order details
+ * Fetch a single recurring order subscription by ID.
+ *
+ * @access public
+ * @param _request - Incoming NextRequest (unused; auth handled via Clerk session)
+ * @param params - Route parameters containing the recurring order ID
+ * @returns 200 `{ recurringOrder: RecurringOrder }` on success
+ * @returns 401 `{ error: "Unauthorized" }` when user is not authenticated
+ * @returns 404 `{ error: "Recurring order not found" }` when order doesn't exist or doesn't belong to user
+ * @returns 500 `{ error: "Failed to fetch recurring order" }` on database or server errors
+ * @see updateRecurringOrderSchema in lib/schemas.ts for the recurring order data structure
+ * @remarks Verifies ownership by matching `userId` from Clerk session against the order's `userId` field
+ *   before returning. Returns 404 for both non-existent orders and unauthorized access to prevent
+ *   enumeration attacks.
  */
 export async function GET(
   _request: NextRequest,
@@ -39,11 +49,22 @@ export async function GET(
 }
 
 /**
- * PATCH /api/account/recurring-orders/[id]
- * Updates a recurring order subscription (validated by updateRecurringOrderSchema)
- * All fields are optional: name, email, phone, company, items, deliveryAddress, deliveryNotes, frequency, nextDeliveryDate
- * Status management: can update status to 'active', 'paused', or 'cancelled'
- * Verifies ownership before allowing update
+ * Update a recurring order subscription.
+ *
+ * @access public
+ * @param request - Incoming request with JSON body validated against `updateRecurringOrderSchema`.
+ *   Optional fields: name, email, phone, company, items, deliveryAddress, deliveryNotes,
+ *   frequency, nextDeliveryDate, status (active/paused/cancelled).
+ * @param params - Route parameters containing the recurring order ID
+ * @returns 200 `{ recurringOrder: RecurringOrder }` with updated order on success
+ * @returns 400 `{ error: "Validation failed", details: ZodError[] }` when request body fails schema validation
+ * @returns 401 `{ error: "Unauthorized" }` when user is not authenticated
+ * @returns 404 `{ error: "Recurring order not found" }` when order doesn't exist or doesn't belong to user
+ * @returns 500 `{ error: "Failed to update recurring order" }` on database or server errors
+ * @throws 400 when `updateRecurringOrderSchema.parse()` rejects malformed or invalid input
+ * @see updateRecurringOrderSchema in lib/schemas.ts for field-level validation rules
+ * @remarks Verifies ownership before update. Only provided fields are updated; omitted fields remain
+ *   unchanged. Status transitions allow pausing or canceling active subscriptions without data loss.
  */
 export async function PATCH(
   request: NextRequest,
@@ -97,10 +118,18 @@ export async function PATCH(
 }
 
 /**
- * DELETE /api/account/recurring-orders/[id]
- * Permanently deletes a recurring order subscription (hard delete)
- * Verifies ownership before allowing deletion
- * Returns success confirmation on successful deletion
+ * Permanently delete a recurring order subscription.
+ *
+ * @access public
+ * @param _request - Incoming NextRequest (unused; auth handled via Clerk session)
+ * @param params - Route parameters containing the recurring order ID
+ * @returns 200 `{ success: true, message: "Recurring order deleted" }` on successful deletion
+ * @returns 401 `{ error: "Unauthorized" }` when user is not authenticated
+ * @returns 404 `{ error: "Recurring order not found" }` when order doesn't exist or doesn't belong to user
+ * @returns 500 `{ error: "Failed to delete recurring order" }` on database or server errors
+ * @remarks Hard delete operation — the recurring order record is permanently removed from the database.
+ *   Verifies ownership before deletion. Consider setting `status: 'cancelled'` via PATCH instead to
+ *   preserve order history for auditing or reactivation.
  */
 export async function DELETE(
   _request: NextRequest,
