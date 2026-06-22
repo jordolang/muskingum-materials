@@ -21,6 +21,7 @@ import {
 import { BUSINESS_INFO } from "@/data/business";
 import { cn } from "@/lib/utils";
 import type { CheckoutData } from "./order-form";
+import { DeliveryScheduler } from "./delivery-scheduler";
 
 interface SavedAddress {
   id: string;
@@ -205,6 +206,8 @@ export function FulfillmentSection({
               {...register("deliveryNotes")}
             />
           </div>
+
+          <DeliveryScheduler setValue={setValue} watch={watch} />
 
           <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 space-y-2">
             <p className="font-semibold text-sm">Delivery Notice &amp; Payment Terms</p>
