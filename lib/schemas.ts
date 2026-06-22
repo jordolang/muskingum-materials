@@ -29,6 +29,8 @@ export const checkoutFormSchema = z.object({
   fulfillment: z.enum(["pickup", "delivery"]),
   deliveryAddress: z.string().optional(),
   deliveryNotes: z.string().optional(),
+  deliveryDate: z.string().optional(), // ISO date string
+  deliveryTimeWindow: z.string().optional(), // e.g., "morning", "afternoon"
   smsOptIn: z.boolean().optional(),
   termsAccepted: z.literal(true, {
     errorMap: () => ({
