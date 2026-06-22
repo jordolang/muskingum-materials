@@ -9,11 +9,20 @@ const querySchema = z.object({
 });
 
 /**
- * GET /api/recommendations
- * Returns product and service recommendations based on project type and area size
- * Uses an algorithm to match project requirements with appropriate products and services
- * Query params: projectType (required), areaSize (required)
- * Response: { success: boolean, data?: { products: Product[], services: Service[], ... }, error?: string }
+ * Product and service recommendation engine endpoint.
+ *
+ * @access public
+ * @param request - Incoming request with query params validated against the local `querySchema`
+ *   (projectType, areaSize). Both parameters are required to generate recommendations.
+ * @returns 200 `{ success: true, data: { products: Product[], services: Service[], estimatedCost: number, ... } }`
+ *   with matched recommendations based on project type and area size
+ * @returns 404 `{ success: false, error: string }` when no recommendations are found for the given project type
+ * @throws 400 `{ success: false, error: "projectType and areaSize are required" }` when validation fails
+ * @throws 500 `{ success: false, error: "Failed to load recommendations" }` on server/database errors
+ * @see getCompleteRecommendations in lib/recommendations.ts — core recommendation algorithm
+ * @remarks This endpoint is not rate-limited (not listed in middleware.ts rateLimitedEndpoints).
+ *   Query params are validated via Zod; type-casting occurs after successful parse.
+ *   DB failures during recommendation fetch return 500 but are logged for monitoring.
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
