@@ -5,15 +5,23 @@ import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
 /**
- * GET /api/account/invoices
- * Fetches invoices for the authenticated user
+ * Contractor invoice listing endpoint with pagination and filtering.
  *
- * Auth: Requires Clerk authentication
- * Query params:
- *   - status: optional filter by status (pending|paid|overdue)
- *   - limit: optional limit number of results (default: 50)
- *   - offset: optional offset for pagination (default: 0)
- * Returns: { invoices: Invoice[], total: number }
+ * @access authenticated (Clerk userId required)
+ * @param request - Incoming request with query params:
+ *   - `status` (optional): Filter by invoice status (pending|paid|overdue)
+ *   - `limit` (optional): Maximum number of invoices to return (default: 50, validated as integer)
+ *   - `offset` (optional): Number of invoices to skip for pagination (default: 0, validated as integer)
+ * @returns 200 `{ invoices: Invoice[], total: number }` with full invoice records including nested order details
+ *   (order.id, order.orderNumber, order.items, order.total, order.createdAt)
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk session is missing or userId is not present
+ * @throws 500 `{ error: "Failed to fetch invoices" }` on database query failures or unexpected errors
+ * @see Invoice model in prisma/schema.prisma for full record structure
+ * @see Order model in prisma/schema.prisma for nested order details
+ * @remarks Invoices are scoped to the authenticated user via `order.userId` join.
+ *   Results are ordered by `dueDate DESC`. The `total` count respects status filtering but ignores pagination.
+ *   Database errors are logged but do not expose internal details to the client.
+ *   No rate limiting is applied (authenticated endpoints are assumed to be protected by Clerk session limits).
  */
 export async function GET(request: NextRequest) {
   let session;
