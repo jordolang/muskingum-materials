@@ -18,6 +18,87 @@ The order flow spans **4 main files** and **9 steps** from cart creation to deli
 
 ### End-to-End Flow Diagram
 
+```mermaid
+sequenceDiagram
+    participant Customer
+    participant OrderForm as Order Form<br/>(order-form.tsx)
+    participant CheckoutAPI as Checkout API<br/>(/api/orders/checkout)
+    participant PriceValidator as Price Validator<br/>(validate-checkout-prices.ts)
+    participant Database as Database<br/>(Prisma)
+    participant Stripe
+    participant WebhookHandler as Webhook Handler<br/>(/api/orders/webhook)
+    participant EmailSMS as Email/SMS<br/>(Postmark/Twilio)
+
+    Note over Customer,EmailSMS: STEP 1: Cart Management (Client-side)
+    Customer->>OrderForm: Add products to cart
+    OrderForm->>OrderForm: Calculate totals (subtotal, tax, fees)
+    
+    Note over Customer,EmailSMS: STEP 2: Project Estimator (Optional)
+    Customer->>OrderForm: Draw polygons on map
+    OrderForm->>OrderForm: Calculate area → estimate tonnage
+    
+    Note over Customer,EmailSMS: STEP 3: Fulfillment & Contact Info
+    Customer->>OrderForm: Choose pickup/delivery
+    Customer->>OrderForm: Enter contact info + SMS opt-in
+    Customer->>OrderForm: Accept terms
+    
+    Note over Customer,EmailSMS: STEP 4: Checkout API Request
+    OrderForm->>CheckoutAPI: POST checkout data<br/>(items, totals, contact, projectSite)
+    
+    Note over Customer,EmailSMS: STEP 5: Server-side Validation & Order Creation
+    CheckoutAPI->>CheckoutAPI: Validate schema (Zod)
+    CheckoutAPI->>Database: Fetch user profile (contractor discount)
+    Database-->>CheckoutAPI: User data
+    
+    CheckoutAPI->>PriceValidator: Validate prices
+    PriceValidator->>Database: Fetch product catalog
+    Database-->>PriceValidator: Product prices
+    PriceValidator->>PriceValidator: Reject "call for pricing" items
+    PriceValidator->>PriceValidator: Calculate expected prices (volume tiers)
+    PriceValidator->>PriceValidator: Apply contractor discount
+    PriceValidator->>PriceValidator: Validate totals (±2¢ tolerance)
+    PriceValidator-->>CheckoutAPI: Validated prices ✓
+    
+    CheckoutAPI->>CheckoutAPI: Generate order number (MM-YYMMDD-RANDOMHEX)
+    CheckoutAPI->>CheckoutAPI: Build project map image URL
+    
+    CheckoutAPI->>Database: Create order (status: pending, paymentStatus: unpaid)
+    Database-->>CheckoutAPI: Order created
+    
+    Note over Customer,EmailSMS: STEP 6: Stripe Checkout Session
+    CheckoutAPI->>Stripe: Create checkout session<br/>(line items: products + tax + fee)
+    Stripe-->>CheckoutAPI: session.url
+    CheckoutAPI->>Database: Update order.stripeSessionId
+    CheckoutAPI-->>OrderForm: { url: session.url }
+    OrderForm->>Customer: Redirect to Stripe
+    
+    Note over Customer,EmailSMS: STEP 7: Stripe Hosted Checkout
+    Customer->>Stripe: Enter payment info
+    Stripe->>Stripe: Process payment
+    Stripe-->>Customer: Redirect to success page
+    
+    Note over Customer,EmailSMS: STEP 8: Stripe Webhook (Payment Fulfillment)
+    Stripe->>WebhookHandler: POST checkout.session.completed
+    WebhookHandler->>WebhookHandler: Verify webhook signature
+    WebhookHandler->>Stripe: Fetch receipt URL
+    Stripe-->>WebhookHandler: charge.receipt_url
+    
+    WebhookHandler->>Database: Update order<br/>(paymentStatus: paid, status: confirmed)
+    Database-->>WebhookHandler: Order updated
+    
+    WebhookHandler->>Database: Award loyalty points (if userId exists)
+    Database-->>WebhookHandler: Points awarded
+    
+    Note over Customer,EmailSMS: STEP 9: Notifications (Email & SMS)
+    WebhookHandler->>EmailSMS: Send SMS confirmation (if opted in)
+    EmailSMS-->>WebhookHandler: SMS sent
+    WebhookHandler->>Database: Log SMS notification
+    
+    Note over Customer,OrderForm: Order complete! Customer receives confirmation.
+```
+
+### Detailed Flow Breakdown
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                           ORDER FLOW (9 STEPS)                              │
