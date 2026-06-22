@@ -6,11 +6,14 @@ import { profileUpdateSchema } from "@/lib/schemas";
 import { logger } from "@/lib/logger";
 
 /**
- * GET /api/account/profile
- * Fetches the authenticated user's profile including addresses
+ * Fetches the authenticated user's profile including addresses.
  *
- * Auth: Requires Clerk authentication
- * Returns: { profile: UserProfile | null } with included addresses sorted by isDefault
+ * @access public
+ * @returns 200 `{ profile: UserProfile | null }` with included addresses sorted by isDefault (desc)
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk session is missing or invalid
+ * @throws 500 `{ error: "Failed to fetch profile" }` when database query fails
+ * @remarks Requires Clerk authentication. Addresses are ordered with default address first.
+ *   Database failures are logged but do not expose internal error details to the client.
  */
 export async function GET() {
   let session;
@@ -41,14 +44,21 @@ export async function GET() {
 }
 
 /**
- * PUT /api/account/profile
- * Creates or updates the authenticated user's profile
+ * Creates or updates the authenticated user's profile.
  *
- * Auth: Requires Clerk authentication
- * Request body: profileUpdateSchema (name, email, phone, company, isContractor, contractorDiscount, smsOptIn)
- * Returns: { profile: UserProfile } with included addresses
- *
- * Note: Supports contractor status management via isContractor and contractorDiscount fields
+ * @access public
+ * @param request - Incoming request with body validated against `profileUpdateSchema`
+ *   (name, email, phone, company, isContractor, contractorDiscount, smsOptIn).
+ *   See lib/schemas.ts for schema definition.
+ * @returns 200 `{ profile: UserProfile }` with included addresses on success
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk session is missing or invalid
+ * @throws 400 `{ error: "Invalid data", details: ZodError[] }` when validation fails
+ * @throws 500 `{ error: "Failed to update profile" }` when database operation fails
+ * @see profileUpdateSchema in lib/schemas.ts for request body validation rules
+ * @remarks Requires Clerk authentication. Uses Prisma upsert to create or update profile.
+ *   Supports contractor status management via isContractor and contractorDiscount fields.
+ *   Validation errors are logged and returned with details; database failures are logged
+ *   but do not expose internal error details to the client.
  */
 export async function PUT(request: NextRequest) {
   let session;
