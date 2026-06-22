@@ -62,12 +62,23 @@ async function geocodeAddress(address: string): Promise<Coordinates | null> {
 }
 
 /**
- * POST /api/delivery/calculate-fee
- * Calculates delivery fee for a given address
- * Request body: { address: string }
- * Geocodes the address via Google Maps API, calculates distance from business location,
- * and computes fee based on delivery settings (base fee + per-mile rate)
- * Response: { success: boolean, address: string, withinZone: boolean, distance: number, fee: number, breakdown: object, settings: DeliverySettings }
+ * Delivery fee calculation endpoint.
+ *
+ * @access public
+ * @param request - Incoming request with body validated against the local `calculateFeeSchema`
+ *   (address). Geocodes the address via Google Maps API, calculates distance from business
+ *   location, and computes fee based on delivery settings (base fee + per-mile rate).
+ * @returns 200 `{ success: true, address: string, withinZone: boolean, distance: number, fee: number, breakdown: object, settings: DeliverySettings }` on successful calculation
+ * @returns 400 `{ error: "Unable to find location for the provided address" }` when geocoding fails
+ * @returns 503 `{ error: "Geocoding service not configured" }` when `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` is missing
+ * @throws 400 `{ error: "Invalid request data", details: ZodError[] }` when validation fails
+ * @throws 500 `{ error: "Internal server error" }` for unexpected errors
+ * @see calculateDeliveryFeeFromCoordinates in lib/delivery.ts for fee calculation logic
+ * @see geocodeAddress helper function for Google Maps API integration
+ * @see BUSINESS_INFO in data/business.ts for business coordinates source
+ * @remarks Delivery settings are fetched from Sanity CMS with fallback to defaults
+ *   (25 mile zone, $20 base fee, $1.50/mile). Sanity fetch failures do not fail the request.
+ *   Distance is calculated using Haversine formula for great-circle distance between coordinates.
  */
 export async function POST(request: NextRequest) {
   try {
