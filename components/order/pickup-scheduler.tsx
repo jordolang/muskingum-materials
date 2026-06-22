@@ -43,7 +43,7 @@ export function PickupScheduler({ setValue, watch }: PickupSchedulerProps) {
   const slots: PickupSlot[] = [];
   const today = new Date();
   let daysAdded = 0;
-  let currentDate = new Date(today);
+  const currentDate = new Date(today);
 
   while (daysAdded < 14) {
     currentDate.setDate(today.getDate() + daysAdded);
@@ -95,7 +95,7 @@ export function PickupScheduler({ setValue, watch }: PickupSchedulerProps) {
       <div className="rounded-lg bg-muted/50 p-3 text-sm">
         <p className="text-muted-foreground">
           Select a preferred date and time to pick up your materials. If you
-          don't select a time, you can arrange pickup when your order is ready.
+          don&apos;t select a time, you can arrange pickup when your order is ready.
         </p>
       </div>
 
