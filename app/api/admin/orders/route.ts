@@ -3,11 +3,22 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
 /**
- * GET /api/admin/orders
- * Admin endpoint - lists all orders with pagination
- * Requires: Clerk authentication with admin role in publicMetadata
- * Query params: page (default: 1), limit (default: 20, max: 100)
- * Returns: Paginated order list with total count and page metadata
+ * Admin order listing endpoint with pagination and filtering.
+ *
+ * @access admin
+ * @param request - Incoming request with optional query parameters:
+ *   - `page` (default: 1, min: 1) — page number for pagination
+ *   - `limit` (default: 20, min: 1, max: 100) — items per page
+ * @returns 200 `{ orders: Order[], total: number, page: number, limit: number, pages: number }`
+ *   with paginated order list, total count, and metadata
+ * @returns 401 `{ error: "Unauthorized" }` when Clerk session is missing or invalid
+ * @returns 403 `{ error: "Forbidden: Admin access required" }` when user lacks admin role
+ * @returns 500 `{ error: "Failed to fetch orders" }` on database or unexpected errors
+ * @see currentUser from @clerk/nextjs/server — admin role verified via publicMetadata.role === "admin"
+ * @see prisma.order.findMany — fetches orders ordered by createdAt DESC with pagination
+ * @remarks Falls back to 401 when Clerk is not configured. Query params are clamped to safe ranges
+ *   (page min: 1, limit min: 1, max: 100) to prevent pagination attacks. Returns all orders
+ *   across all users (not filtered by userId) for admin oversight.
  */
 export async function GET(request: Request) {
   try {
