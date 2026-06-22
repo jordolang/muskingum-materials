@@ -1,15 +1,17 @@
 import Link from "next/link";
-import { Calendar, Settings, ChevronLeft, ChevronRight, Truck, Package, Clock } from "lucide-react";
+import { Calendar, Settings, ChevronLeft, ChevronRight, Truck, Package, Clock, LayoutGrid, List } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
+import { DeliveryCalendar } from "@/components/admin/delivery-calendar";
 
 interface AdminDeliveryPageProps {
   searchParams: Promise<{
     date?: string;
     startDate?: string;
     endDate?: string;
+    view?: "calendar" | "list";
   }>;
 }
 
@@ -18,19 +20,37 @@ export default async function AdminDeliveryPage({
 }: AdminDeliveryPageProps) {
   const params = await searchParams;
 
-  // Default to showing deliveries for the next 14 days
+  const view = params.view || "calendar";
+
+  // Default to showing deliveries for the next 14 days (list view)
+  // or current month (calendar view)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const defaultEndDate = new Date(today);
-  defaultEndDate.setDate(defaultEndDate.getDate() + 14);
+  let startDate: Date;
+  let endDate: Date;
 
-  const startDate = params.startDate
-    ? new Date(params.startDate)
-    : today;
-  const endDate = params.endDate
-    ? new Date(params.endDate)
-    : defaultEndDate;
+  if (view === "calendar") {
+    // For calendar view, show full month
+    const currentMonth = params.startDate
+      ? new Date(params.startDate)
+      : new Date();
+    startDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+    endDate = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth() + 1,
+      0,
+      23,
+      59,
+      59
+    );
+  } else {
+    // For list view, show 14-day range
+    const defaultEndDate = new Date(today);
+    defaultEndDate.setDate(defaultEndDate.getDate() + 14);
+    startDate = params.startDate ? new Date(params.startDate) : today;
+    endDate = params.endDate ? new Date(params.endDate) : defaultEndDate;
+  }
 
   // Fetch orders with scheduled deliveries
   let scheduledOrders: Array<{
@@ -50,6 +70,7 @@ export default async function AdminDeliveryPage({
 
   let deliveryConfig: {
     timeWindows: unknown;
+    capacityPerSlot: number;
   } | null = null;
 
   try {
@@ -81,6 +102,7 @@ export default async function AdminDeliveryPage({
       prisma.deliveryConfig.findFirst({
         select: {
           timeWindows: true,
+          capacityPerSlot: true,
         },
       }),
     ]);
@@ -142,217 +164,282 @@ export default async function AdminDeliveryPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold font-heading">Delivery Calendar</h1>
           <p className="text-sm text-muted-foreground">
-            Scheduled deliveries for{" "}
-            {startDate.toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-            })}{" "}
-            -{" "}
-            {endDate.toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
+            {view === "calendar"
+              ? "Monthly calendar view"
+              : `Scheduled deliveries for ${startDate.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })} - ${endDate.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}`}
           </p>
         </div>
-        <Link href="/admin/delivery/config">
-          <Button className="gap-2">
-            <Settings className="h-4 w-4" />
-            Configure Delivery
-          </Button>
-        </Link>
-      </div>
-
-      {/* Date Range Navigation */}
-      <div className="flex items-center justify-between">
-        <Link
-          href={`/admin/delivery${buildQueryString({
-            startDate: prevWeekStart.toISOString().split("T")[0],
-            endDate: prevWeekEnd.toISOString().split("T")[0],
-          })}`}
-        >
-          <Button variant="outline" size="sm" className="gap-1">
-            <ChevronLeft className="h-4 w-4" />
-            Previous Week
-          </Button>
-        </Link>
-
-        <Link href="/admin/delivery">
-          <Button variant="outline" size="sm">
-            Today
-          </Button>
-        </Link>
-
-        <Link
-          href={`/admin/delivery${buildQueryString({
-            startDate: nextWeekStart.toISOString().split("T")[0],
-            endDate: nextWeekEnd.toISOString().split("T")[0],
-          })}`}
-        >
-          <Button variant="outline" size="sm" className="gap-1">
-            Next Week
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </Link>
-      </div>
-
-      {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-0 shadow-md">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Truck className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Deliveries</p>
-                <p className="text-2xl font-bold">{scheduledOrders.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-md">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500/10 rounded-lg">
-                <Calendar className="h-5 w-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Days with Deliveries</p>
-                <p className="text-2xl font-bold">{sortedDates.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-md">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-500/10 rounded-lg">
-                <Package className="h-5 w-5 text-green-500" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Avg per Day</p>
-                <p className="text-2xl font-bold">
-                  {sortedDates.length > 0
-                    ? (scheduledOrders.length / sortedDates.length).toFixed(1)
-                    : "0"}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Deliveries by Date */}
-      {sortedDates.length === 0 ? (
-        <Card className="border-0 shadow-lg">
-          <CardContent className="p-12 text-center">
-            <Calendar className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">No deliveries scheduled</h2>
-            <p className="text-muted-foreground mb-6">
-              No deliveries are scheduled in this date range.
-            </p>
-            <Link href="/admin/orders">
-              <Button variant="outline">View All Orders</Button>
+        <div className="flex items-center gap-2">
+          {/* View Toggle */}
+          <div className="flex items-center gap-1 border rounded-lg p-1">
+            <Link href="/admin/delivery?view=calendar">
+              <Button
+                variant={view === "calendar" ? "default" : "ghost"}
+                size="sm"
+                className="gap-1"
+              >
+                <LayoutGrid className="h-4 w-4" />
+                <span className="hidden sm:inline">Calendar</span>
+              </Button>
             </Link>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-6">
-          {sortedDates.map((dateKey) => {
-            const date = new Date(dateKey + "T00:00:00");
-            const orders = ordersByDate.get(dateKey) || [];
-
-            return (
-              <div key={dateKey} className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-lg font-semibold font-heading">
-                    {date.toLocaleDateString("en-US", {
-                      weekday: "long",
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </h2>
-                  <Badge variant="secondary">{orders.length} deliveries</Badge>
-                </div>
-
-                <div className="space-y-2">
-                  {orders.map((order) => {
-                    const items = order.items as Array<{
-                      name: string;
-                      quantity: number;
-                      unit: string;
-                    }>;
-
-                    return (
-                      <Link key={order.id} href={`/admin/orders/${order.id}`}>
-                        <Card className="border-0 shadow-sm hover:shadow-md transition-all cursor-pointer">
-                          <CardContent className="p-4">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <p className="font-bold font-mono text-sm">
-                                    {order.orderNumber}
-                                  </p>
-                                  <Badge
-                                    variant={
-                                      order.status === "completed"
-                                        ? "default"
-                                        : order.status === "pending"
-                                          ? "secondary"
-                                          : "outline"
-                                    }
-                                  >
-                                    {order.status}
-                                  </Badge>
-                                  <Badge variant="outline" className="gap-1">
-                                    <Clock className="h-3 w-3" />
-                                    {getTimeWindowLabel(order.deliveryTimeWindow)}
-                                  </Badge>
-                                </div>
-                                <p className="text-sm font-medium">
-                                  {order.name}
-                                  <span className="text-muted-foreground text-xs ml-2">
-                                    {order.email}
-                                  </span>
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {items
-                                    .map(
-                                      (i) =>
-                                        `${i.name} (${i.quantity} ${i.unit}${i.quantity !== 1 ? "s" : ""})`,
-                                    )
-                                    .join(", ")}
-                                </p>
-                                {order.deliveryAddress && (
-                                  <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-                                    📍 {order.deliveryAddress}
-                                  </p>
-                                )}
-                              </div>
-                              <div className="text-right">
-                                <p className="text-lg font-bold">
-                                  ${order.total.toFixed(2)}
-                                </p>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+            <Link href="/admin/delivery?view=list">
+              <Button
+                variant={view === "list" ? "default" : "ghost"}
+                size="sm"
+                className="gap-1"
+              >
+                <List className="h-4 w-4" />
+                <span className="hidden sm:inline">List</span>
+              </Button>
+            </Link>
+          </div>
+          <Link href="/admin/delivery/config">
+            <Button className="gap-2">
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Configure Delivery</span>
+            </Button>
+          </Link>
         </div>
+      </div>
+
+      {/* Calendar View */}
+      {view === "calendar" && (
+        <DeliveryCalendar
+          orders={scheduledOrders.map((order) => ({
+            ...order,
+            items: order.items as Array<{
+              name: string;
+              quantity: number;
+              unit: string;
+            }>,
+          }))}
+          deliveryConfig={
+            deliveryConfig
+              ? {
+                  capacityPerSlot: deliveryConfig.capacityPerSlot,
+                  timeWindows: deliveryConfig.timeWindows as Array<{
+                    key: string;
+                    label: string;
+                  }>,
+                }
+              : null
+          }
+          currentMonth={startDate}
+        />
+      )}
+
+      {/* List View */}
+      {view === "list" && (
+        <>
+          {/* Date Range Navigation */}
+          <div className="flex items-center justify-between">
+            <Link
+              href={`/admin/delivery${buildQueryString({
+                startDate: prevWeekStart.toISOString().split("T")[0],
+                endDate: prevWeekEnd.toISOString().split("T")[0],
+              })}`}
+            >
+              <Button variant="outline" size="sm" className="gap-1">
+                <ChevronLeft className="h-4 w-4" />
+                Previous Week
+              </Button>
+            </Link>
+
+            <Link href="/admin/delivery">
+              <Button variant="outline" size="sm">
+                Today
+              </Button>
+            </Link>
+
+            <Link
+              href={`/admin/delivery${buildQueryString({
+                startDate: nextWeekStart.toISOString().split("T")[0],
+                endDate: nextWeekEnd.toISOString().split("T")[0],
+              })}`}
+            >
+              <Button variant="outline" size="sm" className="gap-1">
+                Next Week
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+
+          {/* Stats Summary */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="border-0 shadow-md">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Truck className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Total Deliveries
+                    </p>
+                    <p className="text-2xl font-bold">{scheduledOrders.length}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-md">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-500/10 rounded-lg">
+                    <Calendar className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Days with Deliveries
+                    </p>
+                    <p className="text-2xl font-bold">{sortedDates.length}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-md">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-500/10 rounded-lg">
+                    <Package className="h-5 w-5 text-green-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Avg per Day</p>
+                    <p className="text-2xl font-bold">
+                      {sortedDates.length > 0
+                        ? (scheduledOrders.length / sortedDates.length).toFixed(
+                            1
+                          )
+                        : "0"}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Deliveries by Date */}
+          {sortedDates.length === 0 ? (
+            <Card className="border-0 shadow-lg">
+              <CardContent className="p-12 text-center">
+                <Calendar className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
+                <h2 className="text-xl font-semibold mb-2">
+                  No deliveries scheduled
+                </h2>
+                <p className="text-muted-foreground mb-6">
+                  No deliveries are scheduled in this date range.
+                </p>
+                <Link href="/admin/orders">
+                  <Button variant="outline">View All Orders</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-6">
+              {sortedDates.map((dateKey) => {
+                const date = new Date(dateKey + "T00:00:00");
+                const orders = ordersByDate.get(dateKey) || [];
+
+                return (
+                  <div key={dateKey} className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-lg font-semibold font-heading">
+                        {date.toLocaleDateString("en-US", {
+                          weekday: "long",
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </h2>
+                      <Badge variant="secondary">{orders.length} deliveries</Badge>
+                    </div>
+
+                    <div className="space-y-2">
+                      {orders.map((order) => {
+                        const items = order.items as Array<{
+                          name: string;
+                          quantity: number;
+                          unit: string;
+                        }>;
+
+                        return (
+                          <Link key={order.id} href={`/admin/orders/${order.id}`}>
+                            <Card className="border-0 shadow-sm hover:shadow-md transition-all cursor-pointer">
+                              <CardContent className="p-4">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <p className="font-bold font-mono text-sm">
+                                        {order.orderNumber}
+                                      </p>
+                                      <Badge
+                                        variant={
+                                          order.status === "completed"
+                                            ? "default"
+                                            : order.status === "pending"
+                                              ? "secondary"
+                                              : "outline"
+                                        }
+                                      >
+                                        {order.status}
+                                      </Badge>
+                                      <Badge variant="outline" className="gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        {getTimeWindowLabel(
+                                          order.deliveryTimeWindow
+                                        )}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-sm font-medium">
+                                      {order.name}
+                                      <span className="text-muted-foreground text-xs ml-2">
+                                        {order.email}
+                                      </span>
+                                    </p>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      {items
+                                        .map(
+                                          (i) =>
+                                            `${i.name} (${i.quantity} ${i.unit}${i.quantity !== 1 ? "s" : ""})`
+                                        )
+                                        .join(", ")}
+                                    </p>
+                                    {order.deliveryAddress && (
+                                      <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                                        📍 {order.deliveryAddress}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-lg font-bold">
+                                      ${order.total.toFixed(2)}
+                                    </p>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
