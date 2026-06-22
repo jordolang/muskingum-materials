@@ -4,10 +4,18 @@ import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
 /**
- * GET /api/account/saved-orders
- * Retrieves all saved order templates for the authenticated user
- * Returns: Array of saved orders with items, delivery info, and metadata
- * Auth: Requires Clerk authentication
+ * Retrieves all saved order templates for the authenticated user.
+ *
+ * @access authenticated - Requires Clerk session
+ * @returns 200 `{ savedOrders: SavedOrder[] }` with array of saved order templates
+ *   ordered by creation date (newest first)
+ * @returns 401 `{ error: "Unauthorized" }` when user is not authenticated
+ * @throws 500 `{ error: "Failed to fetch saved orders" }` when database query fails
+ * @see auth() from @clerk/nextjs/server for authentication mechanism
+ * @see SavedOrder model in prisma/schema.prisma for full field definitions
+ * @remarks Returned SavedOrder objects include: id, userId, name, items (JSON),
+ *   deliveryAddress, pickupOrDeliver, createdAt, updatedAt.
+ *   DB failures are logged but do not expose internal details to client.
  */
 export async function GET() {
   try {
@@ -41,11 +49,25 @@ export async function GET() {
 }
 
 /**
- * POST /api/account/saved-orders
- * Creates a new saved order template for the authenticated user
- * Request body: { name: string, items: any, deliveryAddress?: string, pickupOrDeliver?: "pickup" | "deliver" }
- * Returns: Created saved order object
- * Auth: Requires Clerk authentication
+ * Creates a new saved order template for the authenticated user.
+ *
+ * @access authenticated - Requires Clerk session
+ * @param request - Incoming request with JSON body:
+ *   `{ name: string, items: any, deliveryAddress?: string, pickupOrDeliver?: "pickup" | "deliver" }`
+ *   - name: Display name for the saved order template (required)
+ *   - items: Cart items data structure (required, stored as JSON)
+ *   - deliveryAddress: Optional delivery address string
+ *   - pickupOrDeliver: Order fulfillment method, defaults to "pickup"
+ * @returns 201 `{ savedOrder: SavedOrder }` with newly created saved order template
+ * @returns 401 `{ error: "Unauthorized" }` when user is not authenticated
+ * @returns 400 `{ error: "Name and items are required" }` when required fields are missing
+ * @throws 500 `{ error: "Failed to create saved order" }` when database insert fails
+ * @see auth() from @clerk/nextjs/server for authentication mechanism
+ * @see SavedOrder model in prisma/schema.prisma for schema definition
+ * @remarks No explicit Zod validation is performed; validation relies on null checks
+ *   for required fields (name, items). The pickupOrDeliver field defaults to "pickup"
+ *   if not provided. deliveryAddress defaults to null. DB failures are logged but
+ *   do not expose internal details to client.
  */
 export async function POST(request: Request) {
   try {
