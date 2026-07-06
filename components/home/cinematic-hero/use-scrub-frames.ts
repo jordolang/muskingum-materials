@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useMotionValueEvent, type MotionValue } from "motion/react";
 
 interface ScrubFramesOptions {
-  /** Folder of zero-padded frames, e.g. "/frames/firefly-1". */
+  /** Folder of zero-padded frames, e.g. "/frames/hero". */
   base: string;
   /** Number of frames (e.g. 96 → 0001.webp … 0096.webp). */
   count: number;

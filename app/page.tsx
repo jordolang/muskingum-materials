@@ -21,7 +21,8 @@ import { ReviewsCarousel } from "@/components/home/reviews-carousel";
 import { HomepageFAQ } from "@/components/home/homepage-faq";
 import { HomeProductCard } from "@/components/home/home-product-card";
 import { ServicesBento } from "@/components/home/services-bento";
-import { CinematicHero } from "@/components/home/cinematic-hero";
+import { HeroSwitch } from "@/components/home/hero-switch";
+import { StaticHero } from "@/components/home/cinematic-hero/static-hero";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { sanityClient } from "@/lib/sanity/client";
@@ -208,9 +209,10 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: toJsonLd(localBusinessSchema) }}
       />
 
-      {/* Hero — cinematic 3-act scroll experience (also served standalone at
-          /experience). Replaces the former static image hero. */}
-      <CinematicHero />
+      {/* Hero — mobile/touch gets a fast static hero (the LCP-critical path);
+          desktop pointers swap in the cinematic 3-act scroll experience (also
+          served standalone at /experience). See HeroSwitch. */}
+      <HeroSwitch staticHero={<StaticHero />} />
 
       {/* Trust Badges — glass pill below the cinematic hero */}
       <section className="relative z-20 px-3 pt-3 sm:px-5 sm:pt-4">
