@@ -28,6 +28,10 @@ export function StaticHero() {
         priority
         fetchPriority="high"
         sizes="100vw"
+        // The poster sits under heavy coal-toned gradients + a vignette, so a
+        // lower quality is visually indistinguishable but meaningfully lighter —
+        // shrinking the LCP resource's download time on throttled mobile.
+        quality={55}
         className="object-cover"
       />
 

@@ -52,10 +52,13 @@ export function GoogleAnalytics() {
         `}
       </Script>
 
-      {/* 2. Load the Google tag (gtag.js) — async, processes the queued commands above. */}
+      {/* 2. Load the Google tag (gtag.js). `lazyOnload` defers the ~heavy GTM
+             download until the browser is idle, keeping it off the initial load
+             path (analytics is not needed for first paint). The consent init
+             above still runs first and queues commands into dataLayer. */}
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-        strategy="afterInteractive"
+        strategy="lazyOnload"
       />
     </>
   );
