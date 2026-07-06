@@ -57,6 +57,10 @@ export function HomeProductCard({
             // assumes 100vw and serves an oversized file for every card; this
             // lets it pick a right-sized image per breakpoint.
             sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+            // Thumbnail-scale product photos under a gradient scrim — a lower
+            // quality is imperceptible here but cuts the bulk of the wasted
+            // image bytes PageSpeed flags for these cards.
+            quality={60}
             onError={() => setImgSrc(FALLBACK_IMAGE)}
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-110"
           />
