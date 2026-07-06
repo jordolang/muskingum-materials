@@ -21,29 +21,36 @@ const hasClerk = Boolean(
     clerkPublishableKey !== "your_clerk_publishable_key",
 );
 
+// Inter is the body font — the only one used for above-the-fold body copy on
+// every route — so it stays preloaded (the default) to avoid a text flash.
 const fontSans = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
 });
 
+// Outfit (section headings), Anton (hero display) and JetBrains Mono (technical
+// labels) are not part of the LCP element, so we skip preloading them. That
+// frees the throttled-mobile connection to fetch the LCP hero image first;
+// these fonts still load and swap in via `display: swap`.
 const fontHeading = Outfit({
   subsets: ["latin"],
   variable: "--font-heading",
+  preload: false,
 });
 
-// Cinematic hero typefaces: Anton (industrial display) + JetBrains Mono
-// (technical gauge labels). Used only by the homepage hero.
 const fontDisplay = Anton({
   subsets: ["latin"],
   weight: "400",
   variable: "--font-anton",
   display: "swap",
+  preload: false,
 });
 
 const fontTech = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-jetbrains",
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {

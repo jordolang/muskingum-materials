@@ -53,6 +53,10 @@ export function HomeProductCard({
             src={imgSrc}
             alt={imageAlt || name}
             fill
+            // Grid is 1/2/3 columns (mobile/sm/lg). Without `sizes`, next/image
+            // assumes 100vw and serves an oversized file for every card; this
+            // lets it pick a right-sized image per breakpoint.
+            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
             onError={() => setImgSrc(FALLBACK_IMAGE)}
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-110"
           />

@@ -300,6 +300,9 @@ export default async function HomePage() {
                   src={`/images/photos/${item.img}.jpg`}
                   alt={item.label}
                   fill
+                  // 2 columns on mobile, 4 on md+ — size accordingly so the
+                  // optimizer doesn't ship full-width files for thumbnails.
+                  sizes="(min-width: 768px) 25vw, 50vw"
                   className="object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 {/* Permanent gradient overlay */}
@@ -340,8 +343,12 @@ export default async function HomePage() {
             src="/images/photos/piles-close-up.jpg"
             alt=""
             fill
-            className="object-cover"
+            // Rendered at 5% opacity as a pure background texture, so a small,
+            // low-quality file is all that's needed.
+            sizes="100vw"
+            quality={30}
             aria-hidden
+            className="object-cover"
           />
         </div>
         <div className="container relative z-10">
