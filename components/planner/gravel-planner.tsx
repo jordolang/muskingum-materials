@@ -60,7 +60,6 @@ const COMPACTION_MAP: Record<string, number> = {
   "oversized-gravel-washed": 5,
   "304-limestone": 12,
   "57-limestone": 5,
-  "crushed-concrete": 15,
 };
 
 export function GravelPlanner({ materials }: GravelPlannerProps) {

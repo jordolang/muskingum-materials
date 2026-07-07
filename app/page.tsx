@@ -11,21 +11,20 @@ import {
   Map,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BUSINESS_INFO } from "@/data/business";
+import { BUSINESS_INFO, PRODUCTS, PRODUCT_IMAGES } from "@/data/business";
 import { generateLocalBusinessSchema, toJsonLd } from "@/lib/seo/structured-data";
 import { generateHomeMetadata } from "@/lib/seo/metadata";
 
 // Generate SEO metadata with canonical URL, OG images, and Twitter cards
 export const metadata = generateHomeMetadata();
 
-// The simplified homepage is fully static — no database or CMS content.
-const PRODUCT_LIST = [
-  { name: "Sand", note: "Washed fill sand" },
-  { name: "Gravel", note: "Washed and crushed, multiple sizes" },
-  { name: "State Approved Aggregate", note: "ODOT approved" },
-  { name: "Oversized Aggregate", note: "Heavy drainage and erosion control" },
-  { name: "Crushed Concrete", note: "Base material and road fill" },
-];
+// The simplified homepage is fully static — materials render from the
+// canonical PRODUCTS list, no database or CMS content. No pricing shown.
+const MATERIAL_CATEGORIES = [
+  { key: "fill", label: "Sand & Fill" },
+  { key: "gravel", label: "Gravel" },
+  { key: "limestone", label: "Limestone" },
+] as const;
 
 const TRUST_BADGES = [
   { icon: Shield, label: "ODOT Approved Materials" },
@@ -123,26 +122,54 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Products — simple list, no pricing */}
+      {/* Materials — every product with a material-accurate photo, no pricing */}
       <section className="py-16 sm:py-20">
-        <div className="container max-w-3xl">
+        <div className="container">
           <h2 className="mb-8 text-center font-heading text-3xl font-bold">
             Materials
           </h2>
-          <ul className="divide-y rounded-2xl border bg-background shadow-sm">
-            {PRODUCT_LIST.map((product) => (
-              <li
-                key={product.name}
-                className="flex items-baseline justify-between gap-4 px-6 py-4"
-              >
-                <span className="font-semibold">{product.name}</span>
-                <span className="text-sm text-muted-foreground">
-                  {product.note}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-6 flex flex-col items-center gap-3">
+          {MATERIAL_CATEGORIES.map((category) => {
+            const group = PRODUCTS.filter((p) => p.category === category.key);
+            if (group.length === 0) return null;
+            return (
+              <div key={category.key} className="mb-12 last:mb-0">
+                <h3 className="mb-5 font-heading text-xl font-bold text-muted-foreground">
+                  {category.label}
+                </h3>
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {group.map((product) => (
+                    <div
+                      key={product.name}
+                      className="flex h-full flex-col overflow-hidden rounded-3xl border border-stone-300/70 bg-background shadow-sm"
+                    >
+                      <div className="relative m-2 h-44 overflow-hidden rounded-[1.35rem] ring-1 ring-stone-900/5">
+                        <Image
+                          src={
+                            PRODUCT_IMAGES[product.name] ??
+                            "/images/photos/piles.jpg"
+                          }
+                          alt={product.name}
+                          fill
+                          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                          quality={60}
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex flex-1 flex-col px-5 pb-5 pt-2">
+                        <h4 className="mb-1 text-lg font-bold">
+                          {product.name}
+                        </h4>
+                        <p className="flex-1 text-sm leading-relaxed text-muted-foreground">
+                          {product.description}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+          <div className="mt-10 flex flex-col items-center gap-3">
             <p className="text-sm text-muted-foreground">
               Call for pricing and availability.
             </p>

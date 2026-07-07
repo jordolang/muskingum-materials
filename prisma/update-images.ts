@@ -2,62 +2,61 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+// Local, material-accurate product photography. Each image matches the
+// gradation, angularity, and color documented for that product in
+// docs/material-image-research.md (ODOT Item 703 / producer references).
 const IMAGE_MAP: Record<string, { url: string; alt: string }> = {
   "bank-run": {
-    url: "https://images.unsplash.com/photo-1586157522512-fbd89f0a6c3c?w=800&q=80&auto=format&fit=crop",
-    alt: "Natural bank run gravel with mixed sand and small stones",
+    url: "/images/products/bank-run.jpg",
+    alt: "Unprocessed bank run — brown sand and rounded river gravel mix straight from the bank",
   },
   "fill-dirt": {
-    url: "https://images.unsplash.com/photo-1474220603372-f05977f8a805?w=800&q=80&auto=format&fit=crop",
-    alt: "Tan fill dirt subsoil material",
+    url: "/images/products/fill-dirt.jpg",
+    alt: "Clean brown fill dirt subsoil, free of organic matter, screened of debris",
   },
   "fill-sand-washed": {
-    url: "https://images.unsplash.com/photo-1622405422946-5a9bd32e97e5?w=800&q=80&auto=format&fit=crop",
-    alt: "Clean washed fill sand for construction and bedding",
+    url: "/images/products/fill-sand-washed.jpg",
+    alt: "Washed fill sand — clean tan construction sand for backfill and bedding",
   },
   "topsoil-unprocessed": {
-    url: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80&auto=format&fit=crop",
-    alt: "Rich dark brown unprocessed topsoil for landscaping",
+    url: "/images/products/topsoil-unprocessed.jpg",
+    alt: "Dark brown unprocessed topsoil for landscaping and lawn establishment",
   },
   "asphalt-millings": {
-    url: "https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=800&q=80&auto=format&fit=crop",
-    alt: "Dark gray asphalt millings recycled pavement material",
+    url: "/images/products/asphalt-millings.jpg",
+    alt: "Black recycled asphalt millings with visible bitumen-coated aggregate",
   },
   "9-gravel-washed": {
-    url: "https://images.unsplash.com/photo-1559621768-63898afd1de8?w=800&q=80&auto=format&fit=crop",
-    alt: "Fine washed #9 gravel for pipe bedding and drainage",
+    url: "/images/products/9-gravel-washed.jpg",
+    alt: "Washed #9 gravel — fine 1/8 to 3/16 inch pea-sized aggregate for pipe bedding",
   },
   "8-gravel-washed": {
-    url: "https://images.unsplash.com/photo-1559621768-63898afd1de8?w=800&q=80&auto=format&fit=crop",
-    alt: "Washed #8 gravel, 3/8 to 1/2 inch angular crushed stone",
+    url: "/images/products/8-gravel-washed.jpg",
+    alt: "Washed #8 gravel — 3/8 inch rounded river gravel for walkways and paver bases",
   },
   "57-gravel-washed": {
-    url: "https://images.unsplash.com/photo-1631407251568-1d7d46fefe08?w=800&q=80&auto=format&fit=crop",
-    alt: "Washed #57 gravel stones, 3/4 to 1 inch angular crushed stone",
+    url: "/images/products/57-gravel-washed.jpg",
+    alt: "Washed #57 gravel — 3/4 to 1 inch mixed-color rounded river gravel",
   },
   "304-crushed-gravel": {
-    url: "https://images.unsplash.com/photo-1632787955081-7b2b401f0d45?w=800&q=80&auto=format&fit=crop",
-    alt: "Crushed 304s gravel aggregate that compacts solid",
+    url: "/images/products/304-crushed-gravel.jpg",
+    alt: "Crushed 304s gravel — dense-graded angular gravel with fines that compacts solid",
   },
   "4-crushed-gravel": {
-    url: "https://images.unsplash.com/photo-1631407251568-1d7d46fefe08?w=800&q=80&auto=format&fit=crop",
-    alt: "Crushed #4 gravel, 1.5 to 2.5 inches angular stone",
+    url: "/images/products/4-crushed-gravel.jpg",
+    alt: "Crushed #4 gravel — angular fractured stone 1.5 to 2.5 inches",
   },
   "oversized-gravel-washed": {
-    url: "https://images.unsplash.com/photo-1700758193234-7cc3ded52ff8?w=800&q=80&auto=format&fit=crop",
-    alt: "Large oversized washed gravel stones for drainage and erosion control",
+    url: "/images/products/oversized-gravel-washed.jpg",
+    alt: "Washed oversized gravel — large smooth river rock for drainage and erosion control",
   },
   "304-limestone": {
-    url: "https://images.unsplash.com/photo-1601274173564-4fc9c4f31f80?w=800&q=80&auto=format&fit=crop",
-    alt: "Crushed #304 limestone aggregate for driveways and road base",
+    url: "/images/products/304-limestone.jpg",
+    alt: "ODOT #304 crushed limestone — gray dense-graded aggregate with fines for road base",
   },
   "57-limestone": {
-    url: "https://images.unsplash.com/photo-1601274173564-4fc9c4f31f80?w=800&q=80&auto=format&fit=crop",
-    alt: "Premium #57 crushed limestone aggregate",
-  },
-  "crushed-concrete": {
-    url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80&auto=format&fit=crop",
-    alt: "Recycled crushed concrete aggregate for base material and road fill",
+    url: "/images/products/57-limestone.jpg",
+    alt: "Washed #57 crushed limestone — light gray angular 3/4 to 1 inch aggregate",
   },
 };
 
