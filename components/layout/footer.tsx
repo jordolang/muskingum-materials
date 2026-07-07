@@ -60,8 +60,8 @@ export function Footer() {
               <Image
                 src="/muskingum-materials-logo-red.png"
                 alt="Muskingum Materials"
-                width={320}
-                height={168}
+                width={515}
+                height={123}
                 className="h-16 w-auto"
               />
             </Link>
