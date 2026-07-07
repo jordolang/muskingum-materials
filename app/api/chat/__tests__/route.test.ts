@@ -226,9 +226,12 @@ describe("POST /api/chat", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.reply).toContain("Bank Run");
-      expect(data.reply).toContain("$2.00/ton");
+      // Pricing is intentionally never quoted in chat — the static response
+      // directs callers to the office phone for a free estimate.
+      expect(data.reply).toContain("quoted by phone");
+      expect(data.reply).toContain("free estimate");
       expect(data.reply).toContain("(740) 319-0183");
+      expect(data.reply).not.toMatch(/\$\d/);
     });
 
     it("should return static delivery response", async () => {
@@ -254,7 +257,7 @@ describe("POST /api/chat", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.reply).toContain("delivery");
+      expect(data.reply).toContain("deliver");
       expect(data.reply).toContain("20 tons");
       expect(data.reply).toContain("(740) 319-0183");
     });
@@ -312,7 +315,10 @@ describe("POST /api/chat", () => {
       expect(response.status).toBe(200);
       expect(data.reply).toContain("Visa");
       expect(data.reply).toContain("cash");
-      expect(data.reply).toContain("4.5%");
+      // Card processing fees are no longer surfaced in chat — fee questions
+      // are directed to the office phone.
+      expect(data.reply).not.toContain("4.5%");
+      expect(data.reply).toContain("(740) 319-0183");
     });
 
     it("should return default static response for unknown questions", async () => {
