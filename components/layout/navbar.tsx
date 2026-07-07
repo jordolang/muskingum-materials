@@ -187,10 +187,10 @@ export function Navbar() {
         <div className="glass shadow-float relative flex h-16 items-center justify-between gap-3 rounded-full pl-5 pr-2.5">
           <Link href="/" className="shrink-0">
             <Image
-              src="/muskingum-materials-logo.png"
+              src="/muskingum-materials-logo-red.png"
               alt="Muskingum Materials"
-              width={300}
-              height={200}
+              width={320}
+              height={168}
               className="h-11 w-auto"
               priority
             />
