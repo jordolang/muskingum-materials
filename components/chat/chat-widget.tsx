@@ -41,7 +41,7 @@ export function ChatWidget() {
       addMessage({
         role: "assistant",
         content:
-          "Hi there! Welcome to Muskingum Materials. I can help you with product information, pricing, delivery questions, or anything else. What can I help you with today?",
+          "Hi there! Welcome to Muskingum Materials. I can help with product information, material availability, delivery, and hours. For pricing, give us a call at (740) 319-0183. What can I help you with?",
       });
     }
   }, [isOpen, messages.length, addMessage]);

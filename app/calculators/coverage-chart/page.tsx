@@ -22,8 +22,6 @@ export default async function CoverageChartPage() {
     name: p.name,
     densityLow: p.densityLow ?? 1.4,
     densityHigh: p.densityHigh ?? 1.5,
-    priceLow: p.marketPriceLowPerTon ?? p.price ?? 20,
-    priceHigh: p.marketPriceHighPerTon ?? p.price ?? 40,
   }));
 
   return (

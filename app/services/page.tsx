@@ -3,53 +3,46 @@ import Link from "next/link";
 import { CheckCircle, Phone, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { BUSINESS_INFO } from "@/data/business";
-import { getServices } from "@/lib/products";
+import { BUSINESS_INFO, SERVICES } from "@/data/business";
 import { generateServicesMetadata } from "@/lib/seo/metadata";
-
-export const revalidate = 7200; // Revalidate every 2 hours (ISR)
 
 export const metadata = generateServicesMetadata();
 
 // Rotate through on-site photos when services don't have their own image
 const SERVICE_FALLBACK_IMAGES = [
-  "/images/photos/equipment.jpg",
   "/images/photos/piles-4.jpg",
   "/images/photos/piles-close-up.jpg",
+  "/images/photos/equipment.jpg",
   "/images/photos/feeding-equipment.jpg",
 ] as const;
 
-export default async function ServicesPage() {
-  const services = await getServices();
-  type Service = Awaited<ReturnType<typeof getServices>>[number];
+export default function ServicesPage() {
+  // Services copy is intentionally static (data/business.ts) rather than
+  // database-driven: it is positioning copy, not catalog data.
+  const services = SERVICES;
   const phone = BUSINESS_INFO.phone;
 
   return (
     <div className="py-12">
       <div className="container">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold font-heading mb-3">Our Services</h1>
+          <h1 className="text-4xl font-bold font-heading mb-3">Services</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            From material sales to delivery, we provide everything you need for
-            your construction and landscaping projects.
+            Material supply, delivery, and on-site loading for contractors,
+            municipalities, and commercial customers.
           </p>
         </div>
 
-        {services.length === 0 ? (
-          <p className="text-center text-muted-foreground">
-            Services are currently unavailable. Please call {phone} for
-            assistance.
-          </p>
-        ) : (
+        {
           <div className="space-y-12">
-            {services.map((service: Service, i: number) => {
+            {services.map((service, i) => {
               const imageSrc =
                 SERVICE_FALLBACK_IMAGES[i % SERVICE_FALLBACK_IMAGES.length];
               const isReversed = i % 2 === 1;
 
               return (
                 <div
-                  key={service.id}
+                  key={service.title}
                   className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center"
                 >
                   <div className={isReversed ? "lg:order-2" : ""}>
@@ -86,7 +79,7 @@ export default async function ServicesPage() {
               );
             })}
           </div>
-        )}
+        }
 
         {/* Why Choose Us */}
         <div className="mt-16 bg-muted/50 rounded-lg p-8">
@@ -118,7 +111,7 @@ export default async function ServicesPage() {
             </a>
             <Link href="/contact">
               <Button size="lg" variant="outline" className="gap-2">
-                Request a Quote
+                Request Information
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>

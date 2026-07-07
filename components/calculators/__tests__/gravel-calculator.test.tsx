@@ -7,8 +7,6 @@ interface GravelProduct {
   name: string;
   densityLow: number;
   densityHigh: number;
-  priceLow: number;
-  priceHigh: number;
 }
 
 const mockProducts: GravelProduct[] = [
@@ -17,16 +15,12 @@ const mockProducts: GravelProduct[] = [
     name: "Fill Dirt",
     densityLow: 1.3,
     densityHigh: 1.5,
-    priceLow: 20,
-    priceHigh: 25,
   },
   {
     slug: "gravel-57",
     name: "#57 Gravel",
     densityLow: 1.4,
     densityHigh: 1.6,
-    priceLow: 30,
-    priceHigh: 35,
   },
 ];
 
@@ -159,7 +153,7 @@ describe("GravelCalculator", () => {
       expect(screen.getByText(`${tonsLow}-${tonsHigh}`)).toBeInTheDocument();
     });
 
-    it("should calculate cost correctly", () => {
+    it("should show the phone pricing note instead of a cost estimate", () => {
       render(<GravelCalculator products={mockProducts} />);
 
       const lengthInput = screen.getByPlaceholderText("e.g. 50");
@@ -170,18 +164,8 @@ describe("GravelCalculator", () => {
       fireEvent.change(widthInput, { target: { value: "12" } });
       fireEvent.click(calculateButton);
 
-      const areaSqFt = 50 * 12;
-      const depthFeet = 4 / 12;
-      const cubicFeet = areaSqFt * depthFeet;
-      const cubicYards = cubicFeet / 27;
-      const cubicYardsWithOverage = cubicYards * 1.1;
-
-      const tonsLow = cubicYardsWithOverage * mockProducts[0].densityLow;
-      const tonsHigh = cubicYardsWithOverage * mockProducts[0].densityHigh;
-      const costLow = Math.round(tonsLow * mockProducts[0].priceLow);
-      const costHigh = Math.round(tonsHigh * mockProducts[0].priceHigh);
-
-      expect(screen.getByText(`$${costLow}-$${costHigh}`)).toBeInTheDocument();
+      expect(screen.getByText(/\(740\) 319-0183/)).toBeInTheDocument();
+      expect(screen.queryByText(/\$\d/)).not.toBeInTheDocument();
     });
   });
 
@@ -324,7 +308,7 @@ describe("GravelCalculator", () => {
   });
 
   describe("product selection", () => {
-    it("should calculate with different product densities and prices", () => {
+    it("should calculate with different product densities", () => {
       render(<GravelCalculator products={mockProducts} />);
 
       const lengthInput = screen.getByPlaceholderText("e.g. 50");
@@ -475,7 +459,7 @@ describe("GravelCalculator", () => {
       expect(tonsHigh.toString()).toMatch(/^\d+\.\d$/);
     });
 
-    it("should round cost to whole dollars", () => {
+    it("should not display any dollar amounts", () => {
       render(<GravelCalculator products={mockProducts} />);
 
       const lengthInput = screen.getByPlaceholderText("e.g. 50");
@@ -486,8 +470,7 @@ describe("GravelCalculator", () => {
       fireEvent.change(widthInput, { target: { value: "12" } });
       fireEvent.click(calculateButton);
 
-      const costText = screen.getByText(/^\$\d+-\$\d+$/);
-      expect(costText).toBeInTheDocument();
+      expect(screen.queryByText(/\$\d+/)).not.toBeInTheDocument();
     });
   });
 });

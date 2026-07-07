@@ -28,6 +28,32 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "images.unsplash.com" },
     ],
   },
+  // Retail/e-commerce surfaces are hidden, not deleted: the page code stays
+  // in the repo (dormant) but every route is 301'd away so the pages are
+  // unreachable and search engines drop the old pricing/ordering URLs.
+  async redirects() {
+    return [
+      { source: "/order/:path*", destination: "/contact", permanent: true },
+      { source: "/catalog", destination: "/products", permanent: true },
+      { source: "/catalog/:path*", destination: "/products", permanent: true },
+      { source: "/costs", destination: "/contact", permanent: true },
+      { source: "/costs/:path*", destination: "/contact", permanent: true },
+      { source: "/planner", destination: "/calculators", permanent: true },
+      { source: "/recommendations", destination: "/products", permanent: true },
+      { source: "/rewards", destination: "/", permanent: true },
+      { source: "/account", destination: "/", permanent: true },
+      { source: "/account/:path*", destination: "/", permanent: true },
+      { source: "/sign-in/:path*", destination: "/", permanent: true },
+      { source: "/sign-up/:path*", destination: "/", permanent: true },
+      { source: "/sign-in", destination: "/", permanent: true },
+      { source: "/sign-up", destination: "/", permanent: true },
+      { source: "/reviews", destination: "/", permanent: true },
+      { source: "/reviews/:path*", destination: "/", permanent: true },
+      { source: "/returns", destination: "/contact", permanent: true },
+      { source: "/delivery", destination: "/services", permanent: true },
+      { source: "/experience", destination: "/", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

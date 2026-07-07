@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Calculator, MapPinned, Phone, Sparkles } from "lucide-react";
+import { ArrowRight, Calculator, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BUSINESS_INFO } from "@/data/business";
 import { STATIC_FAQS } from "@/data/faqs";
@@ -77,32 +77,15 @@ export default async function FAQPage() {
       />
       <div className="container">
         <div className="mx-auto mb-10 max-w-4xl text-center">
-          <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
-            <Sparkles className="h-4 w-4" />
-            Materials, delivery, coverage, and project know-how
-          </div>
           <h1 className="text-balance text-4xl font-bold font-heading md:text-6xl">
             Frequently Asked Questions
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-muted-foreground md:text-lg">
-            A field guide for choosing the right gravel, limestone, sand, soil, coverage depth, delivery plan, and order size before the truck rolls.
+            Delivery, pickup, hours, and ordering.
           </p>
         </div>
 
-        <div className="mb-10 grid gap-4 md:grid-cols-3">
-          <Link
-            href="/recommendations"
-            className="group rounded-lg border border-stone-200 bg-white p-5 shadow-float transition-transform hover:-translate-y-1"
-          >
-            <MapPinned className="mb-4 h-6 w-6 text-primary" />
-            <h2 className="font-semibold">Find the right material</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Use the project wizard when you know the job but not the product.
-            </p>
-            <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary">
-              Start wizard <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </span>
-          </Link>
+        <div className="mb-10 grid gap-4 md:grid-cols-2">
           <Link
             href="/calculators"
             className="group rounded-lg border border-stone-200 bg-white p-5 shadow-float transition-transform hover:-translate-y-1"
@@ -110,7 +93,7 @@ export default async function FAQPage() {
             <Calculator className="mb-4 h-6 w-6 text-primary" />
             <h2 className="font-semibold">Calculate tons and yards</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Estimate depth, coverage, tonnage, cubic yards, and rough cost.
+              Estimate depth, coverage, tonnage, and cubic yards.
             </p>
             <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary">
               Open calculators <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -118,9 +101,9 @@ export default async function FAQPage() {
           </Link>
           <div className="rounded-lg border border-stone-200 bg-stone-900 p-5 text-white shadow-float">
             <Phone className="mb-4 h-6 w-6 text-amber-400" />
-            <h2 className="font-semibold">Confirm the edge cases</h2>
+            <h2 className="font-semibold">Call for availability and estimates</h2>
             <p className="mt-2 text-sm text-white/70">
-              Soft ground, steep access, drainage, and multi-load orders deserve a quick call.
+              Material availability, pricing, and delivery are handled by phone.
             </p>
             <a
               href={`tel:${phone.replace(/\D/g, "")}`}

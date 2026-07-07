@@ -41,7 +41,6 @@ const LEGAL_LINKS = [
   { label: "Terms of Service", href: "/terms" },
   { label: "Privacy Policy", href: "/privacy" },
   { label: "Data Use & Protection", href: "/data-use-policy" },
-  { label: "Returns & Refunds", href: "/returns" },
   { label: "Delete My Data", href: "/data-deletion" },
 ];
 
@@ -90,14 +89,12 @@ export function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/products" className="hover:text-amber-500 transition-colors">Products & Pricing</Link></li>
-              <li><Link href="/order" className="hover:text-amber-500 transition-colors">Order Online</Link></li>
+              <li><Link href="/products" className="hover:text-amber-500 transition-colors">Products</Link></li>
               <li><Link href="/services" className="hover:text-amber-500 transition-colors">Services</Link></li>
               <li><Link href="/gallery" className="hover:text-amber-500 transition-colors">Gallery</Link></li>
               <li><Link href="/about" className="hover:text-amber-500 transition-colors">About Us</Link></li>
               <li><Link href="/contact" className="hover:text-amber-500 transition-colors">Contact</Link></li>
               <li><Link href="/faq" className="hover:text-amber-500 transition-colors">FAQ</Link></li>
-              <li><Link href="/reviews" className="hover:text-amber-500 transition-colors">Customer Reviews</Link></li>
             </ul>
           </div>
 
@@ -109,7 +106,6 @@ export function Footer() {
               <li><Link href="/calculators/gravel-calculator" className="hover:text-amber-500 transition-colors">Gravel Calculator</Link></li>
               <li><Link href="/calculators/tons-to-yards" className="hover:text-amber-500 transition-colors">Tons ↔ Yards Converter</Link></li>
               <li><Link href="/calculators/coverage-chart" className="hover:text-amber-500 transition-colors">Coverage Chart</Link></li>
-              <li><Link href="/planner" className="hover:text-amber-500 transition-colors">Gravel Planner</Link></li>
             </ul>
           </div>
 
@@ -124,10 +120,6 @@ export function Footer() {
               <li className="pl-6">7:30 AM - 4:00 PM</li>
               <li className="pl-6 text-stone-500 mt-1">Sat - Sun: Closed</li>
             </ul>
-            <div className="mt-4 text-xs text-stone-500">
-              <p>Accepted: Visa, Mastercard, Discover, Apple Pay</p>
-              <p className="mt-1">Tax: 7.25% | Credit Processing: 4.5%</p>
-            </div>
             <div className="mt-5 pt-4 border-t border-stone-800">
               <p className="text-xs font-medium text-stone-400 mb-2">Find Us Online</p>
               <div className="space-y-1.5">
@@ -225,7 +217,6 @@ export function Footer() {
               <Link href="/privacy" className="hover:text-stone-300 transition-colors">Privacy</Link>
               <Link href="/terms" className="hover:text-stone-300 transition-colors">Terms</Link>
               <Link href="/data-use-policy" className="hover:text-stone-300 transition-colors">Data Use</Link>
-              <Link href="/returns" className="hover:text-stone-300 transition-colors">Returns</Link>
               <Link href="/data-deletion" className="hover:text-stone-300 transition-colors">Delete My Data</Link>
               {SOCIAL_LINKS.map((social) => (
                 <a

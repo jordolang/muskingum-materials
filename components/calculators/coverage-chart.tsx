@@ -12,8 +12,6 @@ interface GravelProduct {
   name: string;
   densityLow: number;
   densityHigh: number;
-  priceLow: number;
-  priceHigh: number;
 }
 
 interface CoverageChartProps {
@@ -27,8 +25,6 @@ interface CoverageRow {
   cubicYards: number;
   tonsLow: number;
   tonsHigh: number;
-  costLow: number;
-  costHigh: number;
 }
 
 export function CoverageChart({ products }: CoverageChartProps) {
@@ -52,8 +48,6 @@ export function CoverageChart({ products }: CoverageChartProps) {
         cubicYards: Math.round(cubicYards * 100) / 100,
         tonsLow: Math.round(tonsLow * 10) / 10,
         tonsHigh: Math.round(tonsHigh * 10) / 10,
-        costLow: Math.round(tonsLow * product.priceLow),
-        costHigh: Math.round(tonsHigh * product.priceHigh),
       };
     });
 
@@ -133,9 +127,6 @@ export function CoverageChart({ products }: CoverageChartProps) {
                       Cubic Yards
                     </th>
                     <th className="px-4 py-3 text-right font-semibold">Tons</th>
-                    <th className="px-4 py-3 text-right font-semibold">
-                      Est. Cost
-                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -149,9 +140,6 @@ export function CoverageChart({ products }: CoverageChartProps) {
                       <td className="px-4 py-3 text-right">
                         {row.tonsLow}-{row.tonsHigh}
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold text-primary">
-                        ${row.costLow}-${row.costHigh}
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -159,8 +147,8 @@ export function CoverageChart({ products }: CoverageChartProps) {
             </div>
             <p className="text-xs text-muted-foreground mt-4">
               Formula: (area ft² x depth inches / 12) / 27 = cubic yards.
-              Costs are material-only estimates. Call (740) 319-0183 for exact
-              Muskingum Materials pricing.
+              Pricing is quoted by phone — call (740) 319-0183 for pricing and
+              availability.
             </p>
           </CardContent>
         </Card>

@@ -91,23 +91,22 @@ export function generateMetadata(options: MetadataOptions): Metadata {
  */
 export function generateHomeMetadata(): Metadata {
   return generateMetadata({
-    title: "Sand, Soil & Gravel - Zanesville, OH",
+    title: "State Approved Sand, Gravel & Aggregate Supplier - Zanesville, OH",
     description:
-      "Southeast Ohio's resource for sand, soil, and gravel. Family-owned in Zanesville, OH. Fair pricing, delivery available, state-approved scales. Call (740) 319-0183.",
+      "Muskingum Materials supplies state approved sand, gravel, and aggregate to contractors, municipalities, and commercial customers throughout Central and Southeastern Ohio. ODOT approved materials, state-approved scales, up to 20 tons per load. Call (740) 319-0183.",
     keywords: [
-      "gravel",
-      "sand",
-      "soil",
-      "aggregate",
-      "Zanesville",
-      "Ohio",
-      "delivery",
-      "landscaping",
-      "construction materials",
+      "sand supplier",
+      "gravel supplier",
+      "aggregate supplier",
+      "state approved aggregate",
+      "ODOT aggregate",
+      "ODOT materials",
+      "ODOT supplier",
       "Muskingum Materials",
-      "gravel delivery Zanesville Ohio",
-      "sand near me",
-      "topsoil Zanesville",
+      "Central Ohio aggregate",
+      "Southeastern Ohio aggregate",
+      "commercial aggregate supplier",
+      "Zanesville Ohio",
     ],
     canonical: "/",
   });
@@ -118,18 +117,19 @@ export function generateHomeMetadata(): Metadata {
  */
 export function generateProductsMetadata(): Metadata {
   return generateMetadata({
-    title: "Sand, Gravel & Soil Products",
+    title: "Sand, Gravel & Aggregate Products",
     description:
-      "Browse our selection of quality sand, gravel, soil, and stone products. Competitive pricing, volume discounts, delivery available. State-approved scales for accurate measurements.",
+      "Sand, gravel, state approved aggregate, oversized aggregate, and crushed concrete. Weighed on state-approved scales. Call for pricing and availability.",
     keywords: [
-      "gravel products",
-      "sand products",
-      "topsoil",
-      "fill dirt",
-      "crushed stone",
-      "limestone",
-      "construction materials",
-      "landscaping materials",
+      "sand supplier",
+      "gravel supplier",
+      "aggregate supplier",
+      "state approved aggregate",
+      "ODOT aggregate",
+      "oversized aggregate",
+      "crushed concrete",
+      "Central Ohio aggregate",
+      "Southeastern Ohio aggregate",
       "Zanesville Ohio",
     ],
     canonical: "/products",
@@ -141,17 +141,17 @@ export function generateProductsMetadata(): Metadata {
  */
 export function generateServicesMetadata(): Metadata {
   return generateMetadata({
-    title: "Material Delivery & Services",
+    title: "Material Supply & Delivery",
     description:
-      "Material sales, delivery services, large project pricing, and on-site loading. Serving Southeast Ohio with up to 20 tons per load. Call for delivery rates.",
+      "Material supply, delivery, and on-site loading for contractors, municipalities, and commercial projects. Serving Central and Southeastern Ohio with up to 20 tons per load.",
     keywords: [
+      "aggregate delivery",
       "gravel delivery",
       "sand delivery",
-      "material delivery Zanesville",
-      "bulk materials",
-      "contractor pricing",
-      "volume discounts",
-      "Southeast Ohio",
+      "commercial aggregate supplier",
+      "ODOT supplier",
+      "Central Ohio aggregate",
+      "Southeastern Ohio aggregate",
     ],
     canonical: "/services",
   });
@@ -164,13 +164,12 @@ export function generateFAQMetadata(): Metadata {
   return generateMetadata({
     title: "Frequently Asked Questions",
     description:
-      "Get answers to common questions about our products, pricing, delivery, payment methods, and more. Learn about gravel, sand, and soil for your project.",
+      "Answers to common questions about materials, delivery, and hours at Muskingum Materials, serving Central and Southeastern Ohio.",
     keywords: [
+      "aggregate FAQ",
       "gravel FAQ",
       "sand questions",
       "material delivery questions",
-      "pricing information",
-      "how to order gravel",
       "Zanesville materials",
     ],
     canonical: "/faq",
@@ -182,14 +181,14 @@ export function generateFAQMetadata(): Metadata {
  */
 export function generateContactMetadata(): Metadata {
   return generateMetadata({
-    title: "Contact Us - Get a Quote",
+    title: "Contact Us - Free Estimates",
     description:
-      "Contact Muskingum Materials for quotes, delivery rates, or questions. Located at 1133 Ellis Dam Rd, Zanesville, OH. Call (740) 319-0183 or email us.",
+      "Call for material availability and free estimates. Located at 1133 Ellis Dam Rd, Zanesville, OH. Call (740) 319-0183 or email sales@muskingummaterials.com.",
     keywords: [
       "contact Muskingum Materials",
-      "get quote Zanesville",
-      "gravel delivery quote",
-      "material pricing",
+      "aggregate supplier Zanesville",
+      "free estimate aggregate",
+      "material availability",
       "Zanesville materials contact",
     ],
     canonical: "/contact",
@@ -201,14 +200,14 @@ export function generateContactMetadata(): Metadata {
  */
 export function generateAboutMetadata(): Metadata {
   return generateMetadata({
-    title: "About Us - Family-Owned Since Day One",
+    title: "About Muskingum Materials",
     description:
-      "Learn about Muskingum Materials, a family-owned company serving Southeast Ohio with quality sand, gravel, and soil products. Fair pricing and honest service.",
+      "Muskingum Materials is an established aggregate supplier in Zanesville, Ohio, providing state approved sand, gravel, and aggregate throughout Central and Southeastern Ohio.",
     keywords: [
       "about Muskingum Materials",
-      "family-owned business Zanesville",
-      "local materials company",
-      "Southeast Ohio gravel",
+      "aggregate supplier Zanesville",
+      "Central Ohio aggregate",
+      "Southeastern Ohio aggregate",
     ],
     canonical: "/about",
   });
@@ -219,14 +218,13 @@ export function generateAboutMetadata(): Metadata {
  */
 export function generateGalleryMetadata(): Metadata {
   return generateMetadata({
-    title: "Project Gallery",
+    title: "Gallery",
     description:
-      "View photos of our products, equipment, and completed projects. See the quality of our sand, gravel, and soil materials in action.",
+      "Photos of the Muskingum Materials yard, aggregate stockpiles, and operations in Zanesville, Ohio.",
     keywords: [
-      "material photos",
-      "gravel images",
-      "sand samples",
-      "project gallery",
+      "aggregate stockpiles",
+      "material yard photos",
+      "quarry photos",
       "Zanesville materials",
     ],
     canonical: "/gallery",
@@ -238,15 +236,14 @@ export function generateGalleryMetadata(): Metadata {
  */
 export function generateCalculatorsMetadata(): Metadata {
   return generateMetadata({
-    title: "Material Calculators - Estimate Your Needs",
+    title: "Material Quantity Calculators",
     description:
-      "Calculate how much gravel, sand, or soil you need for your project. Free online calculators for accurate material estimates and pricing.",
+      "Calculate how many tons of sand, gravel, or aggregate your project needs. Call for pricing and availability.",
     keywords: [
       "gravel calculator",
       "sand calculator",
-      "material calculator",
+      "aggregate calculator",
       "how much gravel do I need",
-      "project estimator",
       "tonnage calculator",
     ],
     canonical: "/calculators",

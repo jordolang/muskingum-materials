@@ -116,7 +116,6 @@ export function generateLocalBusinessSchema(): LocalBusinessSchema {
       },
     ],
     paymentAccepted: [...BUSINESS_INFO.paymentMethods],
-    priceRange: "$$",
   };
 }
 

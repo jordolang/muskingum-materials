@@ -4,10 +4,9 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { Menu, X, Phone, User, ChevronDown } from "lucide-react";
+import { Menu, X, Phone, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BUSINESS_INFO } from "@/data/business";
-import { CartNavButton } from "@/components/layout/cart-nav-button";
 
 interface NavItem {
   href: string;
@@ -17,39 +16,10 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Home" },
-  {
-    href: "/catalog",
-    label: "Materials",
-    children: [
-      {
-        href: "/catalog",
-        label: "Material Guide",
-        description: "Browse all products with detailed specs",
-      },
-      {
-        href: "/products",
-        label: "Products & Pricing",
-        description: "Current Muskingum Materials pricing",
-      },
-      {
-        href: "/costs",
-        label: "Cost Guides",
-        description: "Understand pricing by project type",
-      },
-      {
-        href: "/costs/delivery-cost",
-        label: "Delivery Costs",
-        description: "Delivery pricing and truck capacities",
-      },
-      {
-        href: "/costs/driveway-cost",
-        label: "Driveway Costs",
-        description: "Full driveway cost breakdown",
-      },
-    ],
-  },
-  { href: "/order", label: "Order Online" },
+  { href: "/products", label: "Products" },
   { href: "/services", label: "Services" },
+  { href: "/gallery", label: "Gallery" },
+  { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -235,23 +205,12 @@ export function Navbar() {
 
           {/* Right actions */}
           <div className="hidden shrink-0 items-center gap-1.5 lg:flex">
-            <CartNavButton />
-            <Link href="/account" aria-label="Account">
-              <Button variant="ghost" size="icon" className="rounded-full text-stone-600">
-                <User className="h-[18px] w-[18px]" />
-              </Button>
-            </Link>
             <a href={`tel:${BUSINESS_INFO.phone.replace(/\D/g, "")}`}>
-              <Button variant="outline" size="sm" className="gap-2">
+              <Button size="sm" className="gap-2 shadow-glow">
                 <Phone className="h-4 w-4" />
-                <span className="hidden xl:inline">{BUSINESS_INFO.phone}</span>
+                Call {BUSINESS_INFO.phone}
               </Button>
             </a>
-            <Link href="/contact">
-              <Button size="sm" className="shadow-glow">
-                Get a Quote
-              </Button>
-            </Link>
           </div>
 
           {/* Mobile toggle */}
@@ -279,23 +238,12 @@ export function Navbar() {
               ))}
             </nav>
             <div className="mt-3 flex flex-col gap-2 border-t border-stone-900/10 pt-3">
-              <Link href="/account" onClick={() => setMobileOpen(false)}>
-                <Button variant="outline" size="sm" className="w-full gap-2">
-                  <User className="h-4 w-4" />
-                  My Account
-                </Button>
-              </Link>
               <a href={`tel:${BUSINESS_INFO.phone.replace(/\D/g, "")}`}>
-                <Button variant="outline" size="sm" className="w-full gap-2">
+                <Button size="sm" className="w-full gap-2 shadow-glow">
                   <Phone className="h-4 w-4" />
-                  {BUSINESS_INFO.phone}
+                  Call {BUSINESS_INFO.phone}
                 </Button>
               </a>
-              <Link href="/contact" onClick={() => setMobileOpen(false)}>
-                <Button size="sm" className="w-full shadow-glow">
-                  Get a Quote
-                </Button>
-              </Link>
             </div>
           </div>
         )}

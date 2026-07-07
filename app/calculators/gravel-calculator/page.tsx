@@ -6,7 +6,7 @@ import type { Product } from "@prisma/client";
 export const metadata: Metadata = {
   title: "Gravel Calculator",
   description:
-    "Calculate how much gravel you need. Enter dimensions to get cubic yards, tons, and estimated cost for your project.",
+    "Calculate how much gravel you need. Enter dimensions to get cubic yards and tons for your project.",
 };
 
 export default async function GravelCalculatorPage() {
@@ -22,10 +22,6 @@ export default async function GravelCalculatorPage() {
     name: p.name,
     densityLow: p.densityLow ?? 1.4,
     densityHigh: p.densityHigh ?? 1.5,
-    priceLow: p.marketPriceLowPerTon ?? p.price ?? 20,
-    priceHigh: p.marketPriceHighPerTon ?? p.price ?? 40,
-    price: p.price ?? undefined,
-    unit: p.unit,
   }));
 
   return (
@@ -37,7 +33,8 @@ export default async function GravelCalculatorPage() {
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Enter your project dimensions to calculate how much gravel you need
-            in cubic yards, tons, and estimated cost.
+            in cubic yards and tons. Call (740) 319-0183 for pricing and
+            availability.
           </p>
         </div>
         <GravelCalculator products={gravelProducts} />

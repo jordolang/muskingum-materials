@@ -21,17 +21,15 @@ export default function AboutPage() {
               {BUSINESS_INFO.tagline}
             </p>
             <p className="text-muted-foreground mb-6">
-              Muskingum Materials is a family-owned and operated business located
-              in Zanesville, Ohio. We take pride in providing Southeast Ohio with
-              high-quality sand, soil, and gravel products at fair, competitive
-              prices.
+              Muskingum Materials is an established aggregate supplier in
+              Zanesville, Ohio, providing state approved sand, gravel, and
+              aggregate to contractors, municipalities, and commercial customers
+              throughout Central and Southeastern Ohio.
             </p>
             <p className="text-muted-foreground mb-6">
-              Whether you&apos;re a homeowner working on a landscaping project or a
-              contractor managing a large construction site, we have the materials
-              and expertise to get the job done right. Our state-approved scales
-              ensure accurate measurements, and our modern equipment means fast,
-              efficient service.
+              Materials are weighed on state-approved scales. Loads up to 20
+              tons, with semi-truck quantities available. Call for material
+              availability and free estimates.
             </p>
             <div className="flex gap-3">
               <Link href="/contact">

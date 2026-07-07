@@ -15,7 +15,19 @@ import { TAX_RATE, CREDIT_PROCESSING_FEE } from "@/lib/constants/business-rules"
 
 export const BUSINESS_INFO = {
   name: "Muskingum Materials",
-  tagline: "Southeast Ohio's Resource for Sand, Soil, and Gravel",
+  tagline: "State Approved Sand, Gravel & Aggregate Supplier",
+  serviceArea: "Central and Southeastern Ohio",
+  /**
+   * ODOT qualification. `listingUrl` currently points at ODOT's certified
+   * producers list; swap in the direct URL of the entry where Muskingum
+   * Materials appears once available.
+   */
+  odot: {
+    approved: true,
+    label: "ODOT Approved Materials",
+    listingUrl:
+      "https://www.transportation.ohio.gov/working/construction/materials/approved/certified-producers",
+  },
   address: "1133 Ellis Dam Rd",
   city: "Zanesville",
   state: "OH",
@@ -35,14 +47,13 @@ export const BUSINESS_INFO = {
     sunday: "Closed",
   },
   description:
-    "Muskingum Materials is a family-owned company in Zanesville, Ohio providing fair pricing on sand, soil, and gravel products. We offer large-quantity pricing for large projects, on-site state-approved scales, state of the art equipment, and trucking up to 20 tons per load.",
+    "Muskingum Materials is an aggregate supplier in Zanesville, Ohio providing state approved sand, gravel, and aggregate to contractors, municipalities, and commercial customers throughout Central and Southeastern Ohio. On-site state-approved scales, ODOT approved materials, and trucking up to 20 tons per load.",
   features: [
-    "Family-owned company",
-    "Fair pricing",
-    "Large-quantity pricing for large projects",
+    "State approved materials",
+    "ODOT approved materials",
     "On-site scales (state approved)",
-    "State of the Art equipment",
     "Trucking, up to 20 tons per load",
+    "Semi-truck quantities",
     "Delivery available",
   ],
   paymentMethods: ["Visa", "Mastercard", "Discover", "Apple Pay", "Cash", "Check"],
@@ -194,51 +205,51 @@ export const PRODUCT_IMAGES: Partial<Record<(typeof PRODUCTS)[number]["name"], s
 
 export const SERVICES = [
   {
-    title: "Material Sales",
+    title: "Material Supply",
     description:
-      "Wide selection of sand, gravel, soil, and stone products at competitive prices. On-site state-approved scales ensure accurate measurements.",
+      "Sand, gravel, and state approved aggregate, weighed on state-approved scales.",
     icon: "mountain",
     features: [
-      "15+ product varieties",
-      "State-approved scales",
-      "Competitive pricing",
-      "Volume discounts available",
+      "State approved materials",
+      "ODOT approved",
+      "Certified scale weights",
+      "Semi-truck quantities",
     ],
   },
   {
-    title: "Delivery Services",
+    title: "Delivery",
     description:
-      "We deliver materials directly to your job site with our fleet of trucks, handling loads up to 20 tons per trip.",
+      "Delivery to your job site, up to 20 tons per load.",
     icon: "truck",
     features: [
       "Up to 20 tons per load",
-      "Serving Southeast Ohio",
-      "Timely delivery",
-      "Call for delivery rates",
+      "Serving Central and Southeastern Ohio",
+      "Semi-truck quantities",
+      "Call to schedule",
     ],
   },
   {
-    title: "Large Project Pricing",
+    title: "Commercial & Municipal Supply",
     description:
-      "Special pricing for large-quantity orders. Whether you're a contractor or homeowner with a big project, we offer volume discounts.",
+      "Supplying contractors, municipalities, and commercial projects across Central and Southeastern Ohio. Call to discuss your project.",
     icon: "calculator",
     features: [
-      "Volume discounts",
-      "Contractor pricing",
-      "Project consultation",
-      "Custom orders",
+      "Contractors",
+      "Municipalities",
+      "Commercial projects",
+      "Free estimates",
     ],
   },
   {
     title: "On-Site Loading",
     description:
-      "State of the art equipment for fast, efficient loading. Drive in, get loaded, and get back to your project quickly.",
+      "Drive in, get loaded, and get back to the job.",
     icon: "loader",
     features: [
-      "Fast loading times",
-      "Modern equipment",
-      "Accurate weights",
-      "Easy access",
+      "Fast loading",
+      "Certified scale weights",
+      "Easy truck access",
+      "Mon–Fri 7:30–4:00",
     ],
   },
 ] as const;

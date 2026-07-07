@@ -10,7 +10,7 @@ const CALCULATORS = [
     slug: "gravel-calculator",
     title: "Gravel Calculator",
     description:
-      "Calculate how much gravel you need based on your project dimensions. Get volume in cubic yards, weight in tons, and estimated cost.",
+      "Calculate how much gravel you need based on your project dimensions. Get volume in cubic yards and weight in tons.",
     icon: Calculator,
   },
   {
@@ -39,8 +39,8 @@ export default function CalculatorsPage() {
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Use our free calculators to estimate exactly how much material you
-            need for your project. Get accurate tonnage, cubic yardage, and cost
-            estimates.
+            need for your project. Get accurate tonnage and cubic yardage, then
+            call (740) 319-0183 for pricing and availability.
           </p>
         </div>
 

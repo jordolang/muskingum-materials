@@ -266,14 +266,14 @@ ${greeting},
 
 ${daysText}
 
-At ${BUSINESS_INFO.name}, we're committed to providing Southeast Ohio with quality sand, soil, and gravel products at fair prices.
+At ${BUSINESS_INFO.name}, we supply state approved sand, gravel, and aggregate throughout Central and Southeastern Ohio.
 
 Whether you're planning a landscaping project, construction job, or need materials for maintenance, we're here to help.
 
 What we offer:
-- Family-owned service you can trust
-- Large-quantity pricing for big projects
+- State approved and ODOT approved materials
 - On-site state-approved scales
+- Semi-truck quantities
 - Delivery available (up to 20 tons per load)
 
 Have a project in mind? Give us a call at ${BUSINESS_INFO.phone} or visit our website at ${BUSINESS_INFO.website}
@@ -317,7 +317,7 @@ To unsubscribe, reply to this email with "unsubscribe" in the subject line.
                 ${daysText}
               </p>
               <p style="margin: 0 0 15px 0; line-height: 1.6; color: #333333;">
-                At ${BUSINESS_INFO.name}, we're committed to providing Southeast Ohio with quality sand, soil, and gravel products at fair prices.
+                At ${BUSINESS_INFO.name}, we supply state approved sand, gravel, and aggregate throughout Central and Southeastern Ohio.
               </p>
               <p style="margin: 0 0 15px 0; line-height: 1.6; color: #333333;">
                 Whether you're planning a landscaping project, construction job, or need materials for maintenance, we're here to help.
@@ -325,9 +325,9 @@ To unsubscribe, reply to this email with "unsubscribe" in the subject line.
               <div style="margin: 20px 0; padding: 20px; background-color: #f8fafc; border-left: 4px solid #1e3a8a;">
                 <p style="margin: 0 0 10px 0; font-weight: bold; color: #1e3a8a;">What we offer:</p>
                 <ul style="margin: 0; padding-left: 20px; line-height: 1.8; color: #333333;">
-                  <li>Family-owned service you can trust</li>
-                  <li>Large-quantity pricing for big projects</li>
+                  <li>State approved and ODOT approved materials</li>
                   <li>On-site state-approved scales</li>
+                  <li>Semi-truck quantities</li>
                   <li>Delivery available (up to 20 tons per load)</li>
                 </ul>
               </div>

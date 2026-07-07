@@ -6,17 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calculator } from "lucide-react";
-import { AddToCartButton } from "@/components/order/add-to-cart-button";
 
 interface GravelProduct {
   slug: string;
   name: string;
   densityLow: number;
   densityHigh: number;
-  priceLow: number;
-  priceHigh: number;
-  price?: number;
-  unit?: string;
 }
 
 interface GravelCalculatorProps {
@@ -27,8 +22,6 @@ interface CalculationResult {
   cubicYards: number;
   tonsLow: number;
   tonsHigh: number;
-  costLow: number;
-  costHigh: number;
 }
 
 const SHAPES = ["rectangle", "circle", "triangle"] as const;
@@ -73,15 +66,11 @@ export function GravelCalculator({ products }: GravelCalculatorProps) {
 
     const tonsLow = cubicYardsWithOverage * product.densityLow;
     const tonsHigh = cubicYardsWithOverage * product.densityHigh;
-    const costLow = tonsLow * product.priceLow;
-    const costHigh = tonsHigh * product.priceHigh;
 
     setResult({
       cubicYards: Math.round(cubicYardsWithOverage * 100) / 100,
       tonsLow: Math.round(tonsLow * 10) / 10,
       tonsHigh: Math.round(tonsHigh * 10) / 10,
-      costLow: Math.round(costLow),
-      costHigh: Math.round(costHigh),
     });
   }
 
@@ -255,7 +244,7 @@ export function GravelCalculator({ products }: GravelCalculatorProps) {
             <CardTitle>Estimated Material Needed</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="text-center">
                 <div className="text-3xl font-bold text-primary">
                   {result.cubicYards}
@@ -270,32 +259,12 @@ export function GravelCalculator({ products }: GravelCalculatorProps) {
                 </div>
                 <div className="text-sm text-muted-foreground mt-1">Tons</div>
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-primary">
-                  ${result.costLow}-${result.costHigh}
-                </div>
-                <div className="text-sm text-muted-foreground mt-1">
-                  Estimated Cost (material only)
-                </div>
-              </div>
             </div>
             <p className="text-xs text-muted-foreground mt-4 text-center">
-              Includes {overage}% overage. Actual costs vary by location and
-              supplier. Call Muskingum Materials at (740) 319-0183 for exact
-              pricing.
+              Includes {overage}% overage. Pricing is quoted by phone — call
+              Muskingum Materials at (740) 319-0183 for pricing and
+              availability.
             </p>
-            {(() => {
-              const product = products.find((p) => p.slug === selectedProduct);
-              return product?.price != null && product.price > 0 ? (
-                <div className="mt-4 flex justify-center">
-                  <AddToCartButton
-                    name={product.name}
-                    price={product.price}
-                    unit={product.unit ?? "ton"}
-                  />
-                </div>
-              ) : null;
-            })()}
           </CardContent>
         </Card>
       )}
