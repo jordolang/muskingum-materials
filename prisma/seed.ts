@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// Catalog of products sold at the Zanesville yard. The 14 entries below match
+// Catalog of products sold at the Zanesville yard. The 13 entries below match
 // the printed price list distributed at the office (effective 07/01/2026).
 // This array is the single source of truth seeded into Postgres — every page,
 // API route, calculator, and chat prompt resolves products from the database
@@ -67,7 +67,7 @@ const PRODUCTS_DATA = [
       "Washed fill sand for construction backfill, paver bedding, and bedding for utility trenches. Drains well and compacts uniformly.",
     shortDescription:
       "Washed sand for backfill, paver bedding, and trenches.",
-    imageUrl: "/images/products/fill-sand.jpg",
+    imageUrl: "/images/products/fill-sand-washed.jpg",
     imageAlt: "Washed fill sand pile",
     price: 5.0,
     unit: "ton",
@@ -117,7 +117,7 @@ const PRODUCTS_DATA = [
       "Natural unprocessed topsoil straight from the field. Rich in organic matter for landscaping, gardening, and lawn establishment. May contain rocks, roots, or clumps — call ahead if you need screened topsoil for finish work.",
     shortDescription:
       "Natural topsoil for landscaping, gardens, and lawn establishment.",
-    imageUrl: "/images/products/topsoil.jpg",
+    imageUrl: "/images/products/topsoil-unprocessed.jpg",
     imageAlt: "Pile of unprocessed topsoil",
     price: 11.0,
     unit: "ton",
@@ -142,7 +142,7 @@ const PRODUCTS_DATA = [
       "Fine washed gravel, roughly 1/8 to 3/8 inch. Ideal for pipe bedding, drainage layers, and as a leveling course under pavers.",
     shortDescription:
       "Fine 1/8\"–3/8\" washed gravel. Pipe bedding and drainage layers.",
-    imageUrl: "/images/products/fine-gravel.jpg",
+    imageUrl: "/images/products/9-gravel-washed.jpg",
     imageAlt: "Fine washed #9 gravel",
     price: 10.0,
     unit: "ton",
@@ -167,7 +167,7 @@ const PRODUCTS_DATA = [
       "Washed 3/8 inch crushed stone. A favorite for concrete mix, drainage chips, and decorative applications where a clean uniform stone is needed.",
     shortDescription:
       "Washed 3/8\" crushed stone for concrete, drainage, and decoration.",
-    imageUrl: "/images/photos/stone-close-up.jpg",
+    imageUrl: "/images/products/8-gravel-washed.jpg",
     imageAlt: "Washed #8 gravel close up",
     price: 16.0,
     unit: "ton",
@@ -192,7 +192,7 @@ const PRODUCTS_DATA = [
       "Washed 3/4 to 1 inch crushed stone — the most versatile aggregate we sell. Excellent for driveways, drainage trenches, foundation backfill, and concrete production.",
     shortDescription:
       "Washed 3/4\"–1\" crushed stone. Driveways, drainage, and concrete.",
-    imageUrl: "/images/photos/piles-close-up.jpg",
+    imageUrl: "/images/products/57-gravel-washed.jpg",
     imageAlt: "Pile of washed #57 gravel",
     price: 21.0,
     unit: "ton",
@@ -217,7 +217,7 @@ const PRODUCTS_DATA = [
       "Dense-graded crushed gravel blending stone and fines. Compacts into a hard, smooth driving surface — the standard choice for finished gravel driveways and parking areas.",
     shortDescription:
       "Dense-graded gravel that compacts into a hard driveway surface.",
-    imageUrl: "/images/photos/piles-7.jpg",
+    imageUrl: "/images/products/304-crushed-gravel.jpg",
     imageAlt: "Pile of 304s crushed gravel",
     price: 21.0,
     unit: "ton",
@@ -242,7 +242,7 @@ const PRODUCTS_DATA = [
       "Crushed #4 gravel — angular crushed stone approximately 1.5 to 2.5 inches. Ideal for heavy drainage, base under driveways, and any application that needs both bulk and locking edges.",
     shortDescription:
       "Crushed 1.5\"–2.5\" angular stone for heavy drainage and base.",
-    imageUrl: "/images/products/fractured-gravel.jpg",
+    imageUrl: "/images/products/4-crushed-gravel.jpg",
     imageAlt: "Crushed #4 gravel",
     price: 21.0,
     unit: "ton",
@@ -267,7 +267,7 @@ const PRODUCTS_DATA = [
       "Large washed stone, generally 2 inches and up. Used for erosion control, decorative water features, and drainage in high-flow areas.",
     shortDescription:
       "Large 2\"+ washed stone for erosion control and decorative drainage.",
-    imageUrl: "/images/photos/stone-hand.jpg",
+    imageUrl: "/images/products/oversized-gravel-washed.jpg",
     imageAlt: "Hand holding oversized washed gravel",
     price: 29.0,
     unit: "ton",
@@ -292,7 +292,7 @@ const PRODUCTS_DATA = [
       "Dense-graded crushed limestone blending stone and fines. Compacts into a firm, stable surface — excellent for driveways, parking areas, and road base where a clean limestone finish is desired.",
     shortDescription:
       "Dense-graded crushed limestone for driveways and road base.",
-    imageUrl: "/images/photos/boulders.jpg",
+    imageUrl: "/images/products/304-limestone.jpg",
     imageAlt: "Pile of #304 crushed limestone",
     price: 29.0,
     unit: "ton",
@@ -317,7 +317,7 @@ const PRODUCTS_DATA = [
       "Premium washed limestone aggregate, 3/4 to 1 inch. Bright color and clean appearance make it a favorite for high-end driveways, landscape borders, and exposed aggregate finishes.",
     shortDescription:
       "Washed limestone aggregate for premium driveways and landscaping.",
-    imageUrl: "/images/photos/boulders.jpg",
+    imageUrl: "/images/products/57-limestone.jpg",
     imageAlt: "Pile of #57 limestone",
     price: 40.0,
     unit: "ton",
@@ -333,31 +333,6 @@ const PRODUCTS_DATA = [
     altNames: ["57 lime", "Washed limestone"],
     featured: true,
     sortOrder: 13,
-  },
-  {
-    slug: "crushed-concrete",
-    name: "Crushed Concrete",
-    category: "limestone",
-    description:
-      "Recycled crushed concrete aggregate. A sustainable and economical option for base material, driveway fill, and road base. Available later this year — contact us to be notified when in stock.",
-    shortDescription:
-      "Recycled crushed concrete for base material and road fill. Coming soon.",
-    imageUrl: "/images/products/crushed-concrete.jpg",
-    imageAlt: "Pile of crushed recycled concrete aggregate",
-    price: 40.0,
-    unit: "ton",
-    sizeDescription: "Variable — recycled crushed concrete",
-    colorDescription: "Gray to off-white",
-    densityLow: 1.4,
-    densityHigh: 1.6,
-    bestFor: ["Base material", "Road fill", "Driveway base"],
-    notFor: ["Decorative use", "Drainage applications"],
-    commonUses: ["Road base", "Driveway base", "Fill material"],
-    pros: ["Economical recycled material", "Good compaction", "Sustainable"],
-    cons: ["Coming soon — not yet available", "Variable size"],
-    altNames: ["Recycled concrete aggregate", "RCA"],
-    featured: false,
-    sortOrder: 14,
   },
 ];
 

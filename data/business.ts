@@ -177,30 +177,25 @@ export const PRODUCTS = [
     category: "limestone",
     description: "Premium washed 3/4\" to 1\" limestone aggregate. Bright color for driveways and landscaping.",
   },
-  {
-    name: "Crushed Concrete",
-    price: 40.0,
-    unit: "ton",
-    category: "limestone",
-    description: "Recycled crushed concrete for base material and road fill. Coming later this year — contact us for availability.",
-  },
 ] as const satisfies readonly Product[];
 
+// Each image is specific to the material's gradation, angularity, and color —
+// see docs/material-image-research.md for the producer/spec references each
+// photo was matched against.
 export const PRODUCT_IMAGES: Partial<Record<(typeof PRODUCTS)[number]["name"], string>> = {
   "Bank Run": "/images/products/bank-run.jpg",
   "Fill Dirt": "/images/products/fill-dirt.jpg",
-  "Washed Fill Sand": "/images/products/fill-sand.jpg",
+  "Washed Fill Sand": "/images/products/fill-sand-washed.jpg",
   "Asphalt Millings Unprocessed": "/images/products/asphalt-millings.jpg",
-  "Topsoil Unprocessed": "/images/products/topsoil.jpg",
-  "Washed #9 Gravel": "/images/products/fine-gravel.jpg",
-  "Washed #8 Gravel": "/images/photos/stone-close-up.jpg",
-  "Washed #57 Gravel": "/images/photos/piles-close-up.jpg",
-  "Crushed 304s Gravel": "/images/photos/piles-7.jpg",
-  "Crushed #4 Gravel": "/images/products/fractured-gravel.jpg",
-  "Washed Oversized Gravel": "/images/photos/stone-hand.jpg",
-  "#304 Limestone": "/images/photos/boulders.jpg",
-  "#57 Limestone": "/images/photos/boulders.jpg",
-  "Crushed Concrete": "/images/products/crushed-concrete.jpg",
+  "Topsoil Unprocessed": "/images/products/topsoil-unprocessed.jpg",
+  "Washed #9 Gravel": "/images/products/9-gravel-washed.jpg",
+  "Washed #8 Gravel": "/images/products/8-gravel-washed.jpg",
+  "Washed #57 Gravel": "/images/products/57-gravel-washed.jpg",
+  "Crushed 304s Gravel": "/images/products/304-crushed-gravel.jpg",
+  "Crushed #4 Gravel": "/images/products/4-crushed-gravel.jpg",
+  "Washed Oversized Gravel": "/images/products/oversized-gravel-washed.jpg",
+  "#304 Limestone": "/images/products/304-limestone.jpg",
+  "#57 Limestone": "/images/products/57-limestone.jpg",
 };
 
 export const SERVICES = [

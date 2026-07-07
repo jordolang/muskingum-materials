@@ -119,7 +119,7 @@ export function generateProductsMetadata(): Metadata {
   return generateMetadata({
     title: "Sand, Gravel & Aggregate Products",
     description:
-      "Sand, gravel, state approved aggregate, oversized aggregate, and crushed concrete. Weighed on state-approved scales. Call for pricing and availability.",
+      "Sand, gravel, limestone, and state approved aggregate. Weighed on state-approved scales. Call for pricing and availability.",
     keywords: [
       "sand supplier",
       "gravel supplier",
@@ -127,7 +127,7 @@ export function generateProductsMetadata(): Metadata {
       "state approved aggregate",
       "ODOT aggregate",
       "oversized aggregate",
-      "crushed concrete",
+      "crushed limestone",
       "Central Ohio aggregate",
       "Southeastern Ohio aggregate",
       "Zanesville Ohio",
