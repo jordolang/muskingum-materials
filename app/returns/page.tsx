@@ -4,7 +4,7 @@ import { BUSINESS_INFO } from "@/data/business";
 import { POLICY_LAST_UPDATED } from "@/lib/constants/legal";
 
 export const metadata = {
-  title: "Returns & Refund Policy | Muskingum Materials",
+  title: "Returns & Refund Policy",
   description:
     "Returns, refund, cancellation, and order-change policies for Muskingum Materials bulk material orders.",
 };

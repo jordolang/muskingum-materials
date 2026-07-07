@@ -4,7 +4,7 @@ import { BUSINESS_INFO } from "@/data/business";
 import { POLICY_LAST_UPDATED } from "@/lib/constants/legal";
 
 export const metadata = {
-  title: "Data Use & Protection Policy | Muskingum Materials",
+  title: "Data Use & Protection Policy",
   description:
     "How Muskingum Materials handles, secures, and protects the data you share when you use our website, place an order, or contact us.",
 };
