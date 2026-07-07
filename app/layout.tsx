@@ -73,7 +73,7 @@ export const metadata: Metadata = {
     "Muskingum Materials",
   ],
   openGraph: {
-    title: "Muskingum Materials | State Approved Sand, Gravel & Aggregate",
+    title: "Muskingum Materials | ODOT Approved Sand, Gravel & Aggregate",
     description: "State approved sand, gravel, and aggregate supplier serving Central and Southeastern Ohio.",
     url: "https://muskingummaterials.com",
     siteName: "Muskingum Materials",

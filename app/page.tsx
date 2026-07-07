@@ -67,8 +67,8 @@ export default function HomePage() {
               <h1 className="mb-4 font-heading text-5xl font-bold leading-tight md:text-7xl">
                 Muskingum Materials
               </h1>
-              <p className="mb-8 text-xl text-white/90 md:text-2xl">
-                State Approved Sand, Gravel &amp; Aggregate Supplier
+              <p className="mb-8 font-display text-2xl uppercase tracking-wide text-white/95 md:text-3xl">
+                ODOT Approved Sand, Gravel &amp; Aggregate Supplier
               </p>
               <div className="mb-9 space-y-2 text-lg">
                 <a
@@ -85,11 +85,16 @@ export default function HomePage() {
                   <Mail className="h-5 w-5 text-amber-400" />
                   {BUSINESS_INFO.email}
                 </a>
-                <div className="flex items-center justify-center gap-3">
-                  <MapPin className="h-5 w-5 text-amber-400" />
+                {/* Icon flows inline with the text so it stays beside the
+                    street address even when it wraps on narrow screens. */}
+                <p>
+                  <MapPin
+                    aria-hidden
+                    className="mr-2.5 inline h-5 w-5 align-[-0.2em] text-amber-400"
+                  />
                   {BUSINESS_INFO.address}, {BUSINESS_INFO.city},{" "}
                   {BUSINESS_INFO.state} {BUSINESS_INFO.zip}
-                </div>
+                </p>
               </div>
               <a href={phoneHref}>
                 <Button

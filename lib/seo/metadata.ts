@@ -91,7 +91,7 @@ export function generateMetadata(options: MetadataOptions): Metadata {
  */
 export function generateHomeMetadata(): Metadata {
   return generateMetadata({
-    title: "State Approved Sand, Gravel & Aggregate Supplier - Zanesville, OH",
+    title: "ODOT Approved Sand, Gravel & Aggregate Supplier - Zanesville, OH",
     description:
       "Muskingum Materials supplies state approved sand, gravel, and aggregate to contractors, municipalities, and commercial customers throughout Central and Southeastern Ohio. ODOT approved materials, state-approved scales, up to 20 tons per load. Call (740) 319-0183.",
     keywords: [
