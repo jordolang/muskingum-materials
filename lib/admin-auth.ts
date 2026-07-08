@@ -10,30 +10,26 @@ import { redirect } from "next/navigation";
  * @throws Error if user is authenticated but not admin
  */
 export async function requireAdmin(): Promise<string> {
-  let session;
-  let user;
+  // Call auth()/currentUser()/redirect() at the TOP LEVEL — no try/catch.
+  // Each throws a Next.js control-flow error (DYNAMIC_SERVER_USAGE for auth(),
+  // NEXT_REDIRECT for redirect()) that MUST propagate. Wrapping them in a
+  // try/catch swallowed the dynamic-rendering signal (freezing admin routes as
+  // a static 403) and the sign-in redirect.
+  const { userId } = await auth();
 
-  try {
-    session = await auth();
-    user = await currentUser();
-  } catch {
-    // Clerk not configured
+  if (!userId) {
     redirect("/sign-in?redirect_url=/admin");
   }
 
-  if (!session?.userId) {
-    redirect("/sign-in?redirect_url=/admin");
-  }
+  const user = await currentUser();
 
   // Check if user has admin role in publicMetadata
-  const isAdmin = user?.publicMetadata?.role === "admin";
-
-  if (!isAdmin) {
+  if (user?.publicMetadata?.role !== "admin") {
     // User is authenticated but not an admin
     throw new Error("Unauthorized: Admin access required");
   }
 
-  return session.userId;
+  return userId;
 }
 
 /**

@@ -1,8 +1,12 @@
 import Link from "next/link";
-import { unstable_rethrow } from "next/navigation";
-import { requireAdmin } from "@/lib/admin-auth";
+import { redirect } from "next/navigation";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { ClerkGuardedProvider } from "@/components/auth/clerk-guarded-provider";
+
+// /admin must render per-request so the auth check runs on every visit — never
+// statically prerendered into a frozen (unauthenticated) 403 page.
+export const dynamic = "force-dynamic";
 
 function UnauthorizedPage() {
   return (
@@ -36,15 +40,18 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  try {
-    await requireAdmin();
-  } catch (error) {
-    // requireAdmin() calls redirect("/sign-in") for unauthenticated visitors.
-    // redirect() throws a NEXT_REDIRECT control-flow error that MUST propagate
-    // so the navigation actually happens — unstable_rethrow re-throws those
-    // (and notFound) while letting the genuine "not an admin" error fall
-    // through to the 403 page below.
-    unstable_rethrow(error);
+  // No try/catch around auth()/currentUser()/redirect(): each throws Next.js
+  // control-flow errors (DYNAMIC_SERVER_USAGE, NEXT_REDIRECT) that MUST
+  // propagate. Catching them broke dynamic rendering and swallowed the sign-in
+  // redirect, freezing /admin as a static 403 page.
+  const { userId } = await auth();
+  if (!userId) {
+    // Logged out → send to the hidden Clerk login, then back to /admin.
+    redirect("/sign-in?redirect_url=/admin");
+  }
+
+  const user = await currentUser();
+  if (user?.publicMetadata?.role !== "admin") {
     return <UnauthorizedPage />;
   }
 
