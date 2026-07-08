@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { isAdminUser } from "@/lib/admin-auth";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { ClerkGuardedProvider } from "@/components/auth/clerk-guarded-provider";
 
@@ -51,7 +52,7 @@ export default async function AdminLayout({
   }
 
   const user = await currentUser();
-  if (user?.publicMetadata?.role !== "admin") {
+  if (!isAdminUser(user)) {
     return <UnauthorizedPage />;
   }
 
