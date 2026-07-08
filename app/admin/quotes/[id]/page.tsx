@@ -1,10 +1,10 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, FileText, Mail, Phone, Building2, Package, MapPin, StickyNote } from "lucide-react";
+import { ArrowLeft, Package } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
-import { StatusUpdater } from "@/components/admin/status-updater";
+import { QuoteForm } from "@/components/admin/quote-form";
 import { requireAdmin } from "@/lib/admin-auth";
 
 interface QuoteDetailPageProps {
@@ -34,10 +34,7 @@ function StatusBadge({ status }: { status: string }) {
 
 export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) {
   // Check admin authentication
-  const user = await requireAdmin();
-  if (!user) {
-    redirect("/admin");
-  }
+  await requireAdmin();
 
   const { id } = await params;
 
@@ -53,14 +50,6 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
   if (!quote) notFound();
 
   const products = quote.products as Array<{ name: string; category?: string }> | null;
-
-  const STATUS_OPTIONS = [
-    { value: "pending", label: "Pending" },
-    { value: "contacted", label: "Contacted" },
-    { value: "quoted", label: "Quoted" },
-    { value: "accepted", label: "Accepted" },
-    { value: "rejected", label: "Rejected" },
-  ];
 
   return (
     <div className="space-y-6">
@@ -91,127 +80,48 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
         <StatusBadge status={quote.status} />
       </div>
 
-      {/* Status Updater */}
+      {/* Products Requested (read-only context — not editable here) */}
       <Card className="border-0 shadow-lg">
         <CardHeader>
-          <CardTitle className="text-lg">Update Status</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            Products Requested
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <StatusUpdater
-            currentStatus={quote.status}
-            statusOptions={STATUS_OPTIONS}
-            resourceId={quote.id}
-            resourceType="quotes"
-          />
+          {products && products.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {products.map((product, idx) => (
+                <Badge key={idx} variant="secondary" className="text-sm">
+                  {product.name}
+                  {product.category && (
+                    <span className="ml-1 text-muted-foreground">
+                      ({product.category})
+                    </span>
+                  )}
+                </Badge>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground italic">No products specified</p>
+          )}
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Contact Information */}
-        <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              Contact Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Name</p>
-              <p className="font-medium mt-1">{quote.name}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Email</p>
-              <p className="font-medium mt-1">{quote.email}</p>
-            </div>
-            {quote.phone && (
-              <div>
-                <p className="text-sm text-muted-foreground">Phone</p>
-                <p className="font-medium mt-1">{quote.phone}</p>
-              </div>
-            )}
-            {quote.company && (
-              <div>
-                <p className="text-sm text-muted-foreground">Company</p>
-                <p className="font-medium mt-1">{quote.company}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Products Requested */}
-        <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              Products Requested
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {products && products.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {products.map((product, idx) => (
-                  <Badge key={idx} variant="secondary" className="text-sm">
-                    {product.name}
-                    {product.category && (
-                      <span className="ml-1 text-muted-foreground">
-                        ({product.category})
-                      </span>
-                    )}
-                  </Badge>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground italic">No products specified</p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Quantity */}
-        {quote.quantity && (
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Quantity
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="font-medium">{quote.quantity}</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Delivery Address */}
-        {quote.deliveryAddr && (
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Delivery Address
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="font-medium whitespace-pre-line">{quote.deliveryAddr}</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Notes */}
-        {quote.notes && (
-          <Card className="border-0 shadow-lg lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <StickyNote className="h-5 w-5" />
-                Additional Notes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm whitespace-pre-line">{quote.notes}</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      {/* Editable Form */}
+      <QuoteForm
+        quote={{
+          id: quote.id,
+          name: quote.name,
+          email: quote.email,
+          phone: quote.phone,
+          company: quote.company,
+          quantity: quote.quantity,
+          deliveryAddr: quote.deliveryAddr,
+          notes: quote.notes,
+          status: quote.status,
+        }}
+      />
     </div>
   );
 }

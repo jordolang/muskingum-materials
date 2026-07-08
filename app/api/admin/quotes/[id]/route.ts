@@ -3,9 +3,19 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 
-// Schema for quote request status update
+// Schema for quote request update — all fields optional so partial updates work.
+// products and project* fields are not editable here.
 const quoteUpdateSchema = z.object({
-  status: z.enum(["pending", "reviewed", "quoted", "accepted", "declined"]),
+  name: z.string().min(1).max(200).optional(),
+  email: z.string().email().optional(),
+  phone: z.string().max(50).optional(),
+  company: z.string().max(200).optional(),
+  quantity: z.string().optional(),
+  deliveryAddr: z.string().optional(),
+  notes: z.string().optional(),
+  status: z
+    .enum(["pending", "contacted", "quoted", "accepted", "rejected"])
+    .optional(),
 });
 
 /**
@@ -47,7 +57,7 @@ export async function PATCH(
       );
     }
 
-    const { status } = validation.data;
+    const fields = validation.data;
 
     // Check if quote request exists
     const existingQuote = await prisma.quoteRequest.findUnique({
@@ -61,10 +71,30 @@ export async function PATCH(
       );
     }
 
-    // Update quote request status
+    // Build update payload from provided fields only (partial update)
+    const data: {
+      name?: string;
+      email?: string;
+      phone?: string | null;
+      company?: string | null;
+      quantity?: string | null;
+      deliveryAddr?: string | null;
+      notes?: string | null;
+      status?: string;
+    } = {};
+    if (fields.name !== undefined) data.name = fields.name;
+    if (fields.email !== undefined) data.email = fields.email;
+    if (fields.phone !== undefined) data.phone = fields.phone || null;
+    if (fields.company !== undefined) data.company = fields.company || null;
+    if (fields.quantity !== undefined) data.quantity = fields.quantity || null;
+    if (fields.deliveryAddr !== undefined) data.deliveryAddr = fields.deliveryAddr || null;
+    if (fields.notes !== undefined) data.notes = fields.notes || null;
+    if (fields.status !== undefined) data.status = fields.status;
+
+    // Update quote request
     const updatedQuote = await prisma.quoteRequest.update({
       where: { id },
-      data: { status },
+      data,
       select: {
         id: true,
         name: true,

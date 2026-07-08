@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { isAdminUser } from "@/lib/admin-auth";
 
 /**
  * Admin endpoint for retrieving paginated chat conversations with message counts.
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
     }
 
     // Check if user has admin role
-    const isAdmin = user?.publicMetadata?.role === "admin";
+    const isAdmin = isAdminUser(user);
     if (!isAdmin) {
       return NextResponse.json(
         { error: "Forbidden: Admin access required" },

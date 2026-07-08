@@ -1,7 +1,24 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin, isAdminUser } from "@/lib/admin-auth";
 import { logger } from "@/lib/logger";
+
+// Schema for creating a quote request (name + email required; rest optional).
+// products and project* fields are not editable here; create sets products: [].
+const quoteCreateSchema = z.object({
+  name: z.string().min(1, "Name is required").max(200),
+  email: z.string().email("Valid email is required"),
+  phone: z.string().max(50).optional(),
+  company: z.string().max(200).optional(),
+  quantity: z.string().optional(),
+  deliveryAddr: z.string().optional(),
+  notes: z.string().optional(),
+  status: z
+    .enum(["pending", "contacted", "quoted", "accepted", "rejected"])
+    .optional(),
+});
 
 /**
  * Admin endpoint for retrieving paginated quote requests with optional filtering.
@@ -46,7 +63,7 @@ export async function GET(request: Request) {
     }
 
     // Check if user has admin role
-    const isAdmin = user?.publicMetadata?.role === "admin";
+    const isAdmin = isAdminUser(user);
     if (!isAdmin) {
       return NextResponse.json(
         { error: "Forbidden: Admin access required" },
@@ -107,5 +124,88 @@ export async function GET(request: Request) {
       operation: "admin.quotes.GET",
     });
     return NextResponse.json({ error: "Failed to fetch quote requests" }, { status: 500 });
+  }
+}
+
+/**
+ * Admin-only endpoint for creating a new quote request.
+ *
+ * @access admin
+ * @param request - Incoming request with body validated against `quoteCreateSchema`
+ *   (name + email required; phone, company, quantity, deliveryAddr, notes, status optional).
+ *   `products` is set to an empty array; project* fields are not editable here.
+ * @returns 201 `{ quote: QuoteRequest }` with the created quote request on success
+ * @returns 400 `{ error: string, details?: ZodError[] }` when validation or JSON parsing fails
+ * @returns 403 `{ error: string }` when admin authentication fails
+ * @returns 500 `{ error: string }` on database or server errors
+ * @see requireAdmin in lib/admin-auth.ts for authentication implementation
+ */
+export async function POST(request: Request) {
+  try {
+    // Verify admin authentication
+    await requireAdmin();
+
+    // Parse and validate request body
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+
+    const validation = quoteCreateSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: "Invalid request", details: validation.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const data = validation.data;
+
+    const quote = await prisma.quoteRequest.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        phone: data.phone || null,
+        company: data.company || null,
+        products: [],
+        quantity: data.quantity || null,
+        deliveryAddr: data.deliveryAddr || null,
+        notes: data.notes || null,
+        status: data.status || "pending",
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        company: true,
+        products: true,
+        quantity: true,
+        deliveryAddr: true,
+        notes: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return NextResponse.json({ quote }, { status: 201 });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("Unauthorized")) {
+      return NextResponse.json(
+        { error: "Unauthorized: Admin access required" },
+        { status: 403 }
+      );
+    }
+
+    logger.error("Admin quote create error", error, {
+      operation: "admin.quotes.POST",
+    });
+    return NextResponse.json(
+      { error: "Failed to create quote request" },
+      { status: 500 }
+    );
   }
 }

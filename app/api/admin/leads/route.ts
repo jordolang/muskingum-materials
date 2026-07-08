@@ -1,7 +1,22 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin, isAdminUser } from "@/lib/admin-auth";
 import { logger } from "@/lib/logger";
+
+// Schema for creating a lead (name + email required; rest optional)
+const leadCreateSchema = z.object({
+  name: z.string().min(1, "Name is required").max(200),
+  email: z.string().email("Valid email is required"),
+  phone: z.string().max(50).optional(),
+  company: z.string().max(200).optional(),
+  message: z.string().optional(),
+  source: z.string().max(100).optional(),
+  status: z
+    .enum(["new", "contacted", "qualified", "converted", "closed"])
+    .optional(),
+});
 
 /**
  * Admin endpoint for retrieving paginated lead submissions with optional filtering.
@@ -48,7 +63,7 @@ export async function GET(request: Request) {
     }
 
     // Check if user has admin role
-    const isAdmin = user?.publicMetadata?.role === "admin";
+    const isAdmin = isAdminUser(user);
     if (!isAdmin) {
       return NextResponse.json(
         { error: "Forbidden: Admin access required" },
@@ -133,5 +148,83 @@ export async function GET(request: Request) {
       operation: "admin.leads.GET",
     });
     return NextResponse.json({ error: "Failed to fetch leads" }, { status: 500 });
+  }
+}
+
+/**
+ * Admin-only endpoint for creating a new lead.
+ *
+ * @access admin
+ * @param request - Incoming request with body validated against `leadCreateSchema`
+ *   (name + email required; phone, company, message, source, status optional)
+ * @returns 201 `{ lead: Lead }` with the created lead record on success
+ * @returns 400 `{ error: string, details?: ZodError[] }` when validation or JSON parsing fails
+ * @returns 403 `{ error: string }` when admin authentication fails
+ * @returns 500 `{ error: string }` on database or server errors
+ * @see requireAdmin in lib/admin-auth.ts for authentication implementation
+ */
+export async function POST(request: Request) {
+  try {
+    // Verify admin authentication
+    await requireAdmin();
+
+    // Parse and validate request body
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+
+    const validation = leadCreateSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: "Invalid request", details: validation.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const data = validation.data;
+
+    const lead = await prisma.lead.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        phone: data.phone || null,
+        company: data.company || null,
+        message: data.message || null,
+        source: data.source || "website",
+        status: data.status || "new",
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        company: true,
+        message: true,
+        source: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return NextResponse.json({ lead }, { status: 201 });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("Unauthorized")) {
+      return NextResponse.json(
+        { error: "Unauthorized: Admin access required" },
+        { status: 403 }
+      );
+    }
+
+    logger.error("Admin lead create error", error, {
+      operation: "admin.leads.POST",
+    });
+    return NextResponse.json(
+      { error: "Failed to create lead" },
+      { status: 500 }
+    );
   }
 }

@@ -1,4 +1,4 @@
-import { FileText, ChevronLeft, ChevronRight } from "lucide-react";
+import { FileText, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -119,6 +119,12 @@ export default async function AdminQuotesPage({ searchParams }: AdminQuotesPageP
             View and manage all quote requests
           </p>
         </div>
+        <Link href="/admin/quotes/new">
+          <Button className="gap-1.5">
+            <Plus className="h-4 w-4" />
+            New Quote
+          </Button>
+        </Link>
       </div>
 
       {/* Search and Filter Controls */}

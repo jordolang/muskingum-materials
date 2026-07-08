@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
@@ -107,6 +107,12 @@ export default async function AdminLeadsPage({ searchParams }: AdminLeadsPagePro
             View and manage all customer leads
           </p>
         </div>
+        <Link href="/admin/leads/new">
+          <Button className="gap-1.5">
+            <Plus className="h-4 w-4" />
+            New Lead
+          </Button>
+        </Link>
       </div>
 
       {/* Search and Filter Controls */}
