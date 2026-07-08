@@ -3,7 +3,7 @@ import { FileText } from "lucide-react";
 import { BUSINESS_INFO } from "@/data/business";
 
 export const metadata = {
-  title: "Terms of Service & Delivery Agreement | Muskingum Materials",
+  title: "Terms of Service & Delivery Agreement",
   description:
     "Terms of service, delivery agreement, and policies for Muskingum Materials orders.",
 };

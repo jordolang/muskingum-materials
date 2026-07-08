@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 export const metadata = {
-  title: "Sanity Studio | Muskingum Materials",
+  title: "Sanity Studio",
   description: "Content management for Muskingum Materials website",
 };
 

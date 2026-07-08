@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BUSINESS_INFO, PRODUCTS } from "@/data/business";
+import { BUSINESS_INFO, PRODUCTS, PRODUCT_IMAGES } from "@/data/business";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { generateProductsMetadata } from "@/lib/seo/metadata";
@@ -97,11 +98,28 @@ export default async function ProductsPage() {
               </h2>
               <ul className="divide-y rounded-2xl border bg-background shadow-sm">
                 {group.map((product) => (
-                  <li key={product._id} className="px-6 py-4">
-                    <div className="font-semibold">{product.name}</div>
-                    <p className="mt-0.5 text-sm text-muted-foreground">
-                      {product.description}
-                    </p>
+                  <li
+                    key={product._id}
+                    className="flex items-center gap-4 px-6 py-4"
+                  >
+                    <Image
+                      src={
+                        PRODUCT_IMAGES[
+                          product.name as keyof typeof PRODUCT_IMAGES
+                        ] ?? "/images/photos/piles.jpg"
+                      }
+                      alt={product.name}
+                      width={56}
+                      height={56}
+                      quality={60}
+                      className="h-14 w-14 shrink-0 rounded-xl object-cover ring-1 ring-stone-900/10"
+                    />
+                    <div>
+                      <div className="font-semibold">{product.name}</div>
+                      <p className="mt-0.5 text-sm text-muted-foreground">
+                        {product.description}
+                      </p>
+                    </div>
                   </li>
                 ))}
               </ul>

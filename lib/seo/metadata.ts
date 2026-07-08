@@ -12,18 +12,28 @@ import { BUSINESS_INFO } from "@/data/business";
 const BASE_URL = BUSINESS_INFO.website;
 
 /**
- * Default OG image for pages without custom images
- */
-const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
-
-/**
  * Options for generating page metadata
  */
 export interface MetadataOptions {
+  /**
+   * Page title WITHOUT the brand — the root layout's title template appends
+   * " | Muskingum Materials". Keep the full result under ~60 characters,
+   * so the page part should stay under ~38.
+   */
   title: string;
+  /**
+   * Use the title exactly as given, bypassing the layout's brand template.
+   * For pages (like the homepage) that lead with the brand themselves.
+   */
+  absoluteTitle?: boolean;
+  /** Keep under ~160 characters or Google truncates it in results. */
   description: string;
   keywords?: string[];
   canonical?: string;
+  /**
+   * Explicit OG image override. When omitted, the route's
+   * `opengraph-image.tsx` (file-based metadata) supplies the image.
+   */
   ogImage?: string;
   ogType?: "website" | "article";
   noIndex?: boolean;
@@ -35,19 +45,28 @@ export interface MetadataOptions {
 export function generateMetadata(options: MetadataOptions): Metadata {
   const {
     title,
+    absoluteTitle = false,
     description,
     keywords = [],
     canonical,
-    ogImage = DEFAULT_OG_IMAGE,
+    ogImage,
     ogType = "website",
     noIndex = false,
   } = options;
 
-  const fullTitle = `${title} | Muskingum Materials`;
+  // Branded variant for OG/Twitter cards, where the layout template doesn't
+  // apply. The <title> itself gets branding from the layout's "%s | ..."
+  // template instead — appending here too would double the brand.
+  const brandedTitle = absoluteTitle
+    ? title
+    : `${title} | ${BUSINESS_INFO.name}`;
   const canonicalUrl = canonical ? `${BASE_URL}${canonical}` : undefined;
+  const ogImages = ogImage
+    ? [{ url: ogImage, width: 1200, height: 630, alt: title }]
+    : undefined;
 
   return {
-    title: fullTitle,
+    title: absoluteTitle ? { absolute: title } : title,
     description,
     keywords: keywords.length > 0 ? keywords : undefined,
     robots: noIndex
@@ -62,26 +81,19 @@ export function generateMetadata(options: MetadataOptions): Metadata {
         }
       : undefined,
     openGraph: {
-      title: fullTitle,
+      title: brandedTitle,
       description,
       url: canonicalUrl,
       siteName: BUSINESS_INFO.name,
       locale: "en_US",
       type: ogType,
-      images: [
-        {
-          url: ogImage,
-          width: 1200,
-          height: 630,
-          alt: title,
-        },
-      ],
+      ...(ogImages ? { images: ogImages } : {}),
     },
     twitter: {
       card: "summary_large_image",
-      title: fullTitle,
+      title: brandedTitle,
       description,
-      images: [ogImage],
+      ...(ogImage ? { images: [ogImage] } : {}),
     },
   };
 }
@@ -91,9 +103,10 @@ export function generateMetadata(options: MetadataOptions): Metadata {
  */
 export function generateHomeMetadata(): Metadata {
   return generateMetadata({
-    title: "State Approved Sand, Gravel & Aggregate Supplier - Zanesville, OH",
+    title: "Muskingum Materials | ODOT Sand & Gravel, Zanesville OH",
+    absoluteTitle: true,
     description:
-      "Muskingum Materials supplies state approved sand, gravel, and aggregate to contractors, municipalities, and commercial customers throughout Central and Southeastern Ohio. ODOT approved materials, state-approved scales, up to 20 tons per load. Call (740) 319-0183.",
+      "ODOT approved sand, gravel, and aggregate for contractors, municipalities, and commercial projects across Central & Southeastern Ohio. Call (740) 319-0183.",
     keywords: [
       "sand supplier",
       "gravel supplier",
@@ -143,7 +156,7 @@ export function generateServicesMetadata(): Metadata {
   return generateMetadata({
     title: "Material Supply & Delivery",
     description:
-      "Material supply, delivery, and on-site loading for contractors, municipalities, and commercial projects. Serving Central and Southeastern Ohio with up to 20 tons per load.",
+      "Material supply, delivery, and on-site loading for contractors and municipalities. Serving Central & Southeastern Ohio with up to 20 tons per load.",
     keywords: [
       "aggregate delivery",
       "gravel delivery",
@@ -200,9 +213,9 @@ export function generateContactMetadata(): Metadata {
  */
 export function generateAboutMetadata(): Metadata {
   return generateMetadata({
-    title: "About Muskingum Materials",
+    title: "About Us",
     description:
-      "Muskingum Materials is an established aggregate supplier in Zanesville, Ohio, providing state approved sand, gravel, and aggregate throughout Central and Southeastern Ohio.",
+      "Muskingum Materials is an ODOT qualified aggregate supplier in Zanesville, Ohio, providing state approved sand and gravel across Central & Southeastern Ohio.",
     keywords: [
       "about Muskingum Materials",
       "aggregate supplier Zanesville",

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 export const metadata = {
-  title: "Built by JLang Development | Muskingum Materials",
+  title: "Built by JLang Development",
   description:
     "This website was designed and developed by JLang Development — Jordan Lang, Web Developer & IT Specialist based in Zanesville, OH.",
   robots: { index: false },

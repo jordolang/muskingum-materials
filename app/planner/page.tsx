@@ -6,7 +6,7 @@ import type { Product } from "@prisma/client";
 export const metadata: Metadata = {
   title: "Gravel Planner",
   description:
-    "Draw your project on a satellite map to get exact tonnage and cost estimates. Trace your driveway, patio, or walkway and instantly see how much material you need.",
+    "Draw your project on a satellite map for exact tonnage and cost estimates. Trace your driveway, patio, or walkway to see how much material you need.",
 };
 
 export default async function PlannerPage() {

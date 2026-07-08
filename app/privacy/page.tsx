@@ -3,7 +3,7 @@ import { Shield } from "lucide-react";
 import { BUSINESS_INFO } from "@/data/business";
 
 export const metadata = {
-  title: "Privacy Policy | Muskingum Materials",
+  title: "Privacy Policy",
   description:
     "How Muskingum Materials collects, uses, and protects your personal information.",
 };

@@ -15,7 +15,7 @@ import { TAX_RATE, CREDIT_PROCESSING_FEE } from "@/lib/constants/business-rules"
 
 export const BUSINESS_INFO = {
   name: "Muskingum Materials",
-  tagline: "State Approved Sand, Gravel & Aggregate Supplier",
+  tagline: "ODOT Approved Sand, Gravel & Aggregate Supplier",
   serviceArea: "Central and Southeastern Ohio",
   /**
    * ODOT qualification. `listingUrl` currently points at ODOT's certified

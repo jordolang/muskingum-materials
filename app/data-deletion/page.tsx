@@ -4,7 +4,7 @@ import { BUSINESS_INFO } from "@/data/business";
 import { POLICY_LAST_UPDATED } from "@/lib/constants/legal";
 
 export const metadata = {
-  title: "Delete My Data Request | Muskingum Materials",
+  title: "Delete My Data Request",
   description:
     "How to request deletion of the personal data Muskingum Materials holds about you, what gets deleted, and what we are legally required to retain.",
 };

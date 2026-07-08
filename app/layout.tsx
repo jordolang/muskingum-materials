@@ -54,12 +54,13 @@ const fontTech = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://muskingummaterials.com"),
   title: {
-    default: "Muskingum Materials | Sand, Gravel & Aggregate Supplier - Zanesville, OH",
+    default: "Muskingum Materials | Sand & Gravel, Zanesville OH",
     template: "%s | Muskingum Materials",
   },
   description:
-    "State approved sand, gravel, and aggregate supplier serving Central and Southeastern Ohio. ODOT approved materials, state-approved scales, up to 20 tons per load. Call (740) 319-0183.",
+    "ODOT approved sand, gravel, and aggregate for contractors, municipalities, and commercial projects across Central & Southeastern Ohio. Call (740) 319-0183.",
   keywords: [
     "sand supplier",
     "gravel supplier",
@@ -73,8 +74,9 @@ export const metadata: Metadata = {
     "Muskingum Materials",
   ],
   openGraph: {
-    title: "Muskingum Materials | State Approved Sand, Gravel & Aggregate",
-    description: "State approved sand, gravel, and aggregate supplier serving Central and Southeastern Ohio.",
+    title: "Muskingum Materials | ODOT Sand & Gravel, Zanesville OH",
+    description:
+      "ODOT approved sand, gravel, and aggregate serving Central & Southeastern Ohio.",
     url: "https://muskingummaterials.com",
     siteName: "Muskingum Materials",
     locale: "en_US",

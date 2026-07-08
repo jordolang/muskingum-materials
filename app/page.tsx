@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Fira_Sans } from "next/font/google";
 import {
   Phone,
   Mail,
@@ -17,6 +18,17 @@ import { generateHomeMetadata } from "@/lib/seo/metadata";
 
 // Generate SEO metadata with canonical URL, OG images, and Twitter cards
 export const metadata = generateHomeMetadata();
+
+// Hero contact info uses Fira Sans — a bolder humanist face (Ubuntu-like
+// character) that sets it apart from the Inter body copy. Homepage-only,
+// so it's loaded here rather than in the root layout; not preloaded to
+// keep the LCP hero image first in line.
+const fontContact = Fira_Sans({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  display: "swap",
+  preload: false,
+});
 
 // The simplified homepage is fully static — materials render from the
 // canonical PRODUCTS list, no database or CMS content. No pricing shown.
@@ -67,29 +79,34 @@ export default function HomePage() {
               <h1 className="mb-4 font-heading text-5xl font-bold leading-tight md:text-7xl">
                 Muskingum Materials
               </h1>
-              <p className="mb-8 text-xl text-white/90 md:text-2xl">
-                State Approved Sand, Gravel &amp; Aggregate Supplier
+              <p className="mb-8 font-display text-2xl uppercase tracking-wide text-white/95 md:text-3xl">
+                ODOT Approved Sand, Gravel &amp; Aggregate Supplier
               </p>
-              <div className="mb-9 space-y-2 text-lg">
+              <div className={`mb-9 space-y-2 text-lg ${fontContact.className}`}>
                 <a
                   href={phoneHref}
-                  className="flex items-center justify-center gap-3 font-semibold hover:text-amber-400 transition-colors"
+                  className="flex items-center justify-center gap-3 font-bold hover:text-amber-400 transition-colors"
                 >
                   <Phone className="h-5 w-5 text-amber-400" />
                   {BUSINESS_INFO.phone}
                 </a>
                 <a
                   href={`mailto:${BUSINESS_INFO.email}`}
-                  className="flex items-center justify-center gap-3 hover:text-amber-400 transition-colors"
+                  className="flex items-center justify-center gap-3 font-semibold hover:text-amber-400 transition-colors"
                 >
                   <Mail className="h-5 w-5 text-amber-400" />
                   {BUSINESS_INFO.email}
                 </a>
-                <div className="flex items-center justify-center gap-3">
-                  <MapPin className="h-5 w-5 text-amber-400" />
+                {/* Icon flows inline with the text so it stays beside the
+                    street address even when it wraps on narrow screens. */}
+                <p className="font-semibold">
+                  <MapPin
+                    aria-hidden
+                    className="mr-2.5 inline h-5 w-5 align-[-0.2em] text-amber-400"
+                  />
                   {BUSINESS_INFO.address}, {BUSINESS_INFO.city},{" "}
                   {BUSINESS_INFO.state} {BUSINESS_INFO.zip}
-                </div>
+                </p>
               </div>
               <a href={phoneHref}>
                 <Button
