@@ -120,6 +120,10 @@ export function generateHomeMetadata(): Metadata {
       "ODOT approved sand, gravel, and aggregate for contractors, municipalities, and commercial projects across Central & Southeastern Ohio. Call (740) 319-0183.",
     ogDescription:
       "ODOT approved sand, gravel & aggregate for contractors and municipalities across Central & Southeastern Ohio.",
+    // The homepage sets its own openGraph, which replaces the layout's — and it
+    // has no route-level opengraph-image.tsx — so the social image must be named
+    // here explicitly or the homepage ships no og:image at all.
+    ogImage: "/images/og-image.png",
     keywords: [
       "sand supplier",
       "gravel supplier",
