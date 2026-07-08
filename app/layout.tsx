@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { CookieConsent } from "@/components/analytics/cookie-consent";
 import { SmoothScroll } from "@/components/smooth-scroll";
+import { SITE_URL } from "@/lib/site-url";
 import "./globals.css";
 
 // Inter is the body font — the only one used for above-the-fold body copy on
@@ -43,7 +44,7 @@ const fontTech = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://muskingummaterials.com"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Muskingum Materials | Sand & Gravel, Zanesville OH",
     template: "%s | Muskingum Materials",
@@ -66,19 +67,26 @@ export const metadata: Metadata = {
     title: "Muskingum Materials | ODOT Sand & Gravel, Zanesville OH",
     description:
       "ODOT approved sand, gravel, and aggregate serving Central & Southeastern Ohio.",
-    url: "https://muskingummaterials.com",
+    url: SITE_URL,
     siteName: "Muskingum Materials",
     locale: "en_US",
     type: "website",
-    // og:image is supplied by the `app/opengraph-image.png` file convention
-    // (a static asset — no runtime render, so it can't fail for scrapers).
+    // Static OG image served from `public/images/og-image.png`. It's a plain
+    // asset (no runtime render), so it can't fail for scrapers; `metadataBase`
+    // resolves this relative path to an absolute URL for us.
+    images: [
+      {
+        url: "/images/og-image.png",
+        alt: "Muskingum Materials — ODOT approved sand, gravel & aggregate supplier in Zanesville, Ohio, serving Central & Southeastern Ohio.",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Muskingum Materials | ODOT Sand & Gravel, Zanesville OH",
     description:
       "ODOT approved sand, gravel, and aggregate serving Central & Southeastern Ohio.",
-    // twitter:image is also taken from the opengraph-image file convention.
+    images: ["/images/og-image.png"],
   },
   ...(process.env.NEXT_PUBLIC_GSC_VERIFICATION && {
     verification: {

@@ -5,11 +5,14 @@
 
 import type { Metadata } from "next";
 import { BUSINESS_INFO } from "@/data/business";
+import { SITE_URL } from "@/lib/site-url";
 
 /**
- * Base URL for the site (production)
+ * Base URL for the site — the live origin (see `lib/site-url.ts`). Used to
+ * build canonical URLs and og:url so scrapers resolve them against the host
+ * that actually serves the app.
  */
-const BASE_URL = BUSINESS_INFO.website;
+const BASE_URL = SITE_URL;
 
 /**
  * Options for generating page metadata
@@ -28,6 +31,13 @@ export interface MetadataOptions {
   absoluteTitle?: boolean;
   /** Keep under ~160 characters or Google truncates it in results. */
   description: string;
+  /**
+   * Shorter description for social cards (og:description / twitter:description).
+   * Social previews truncate around 110–125 characters — well below the ~160
+   * Google allows. When omitted, `description` is reused. Provide this whenever
+   * `description` runs longer than ~125 characters.
+   */
+  ogDescription?: string;
   keywords?: string[];
   canonical?: string;
   /**
@@ -47,6 +57,7 @@ export function generateMetadata(options: MetadataOptions): Metadata {
     title,
     absoluteTitle = false,
     description,
+    ogDescription = description,
     keywords = [],
     canonical,
     ogImage,
@@ -82,7 +93,7 @@ export function generateMetadata(options: MetadataOptions): Metadata {
       : undefined,
     openGraph: {
       title: brandedTitle,
-      description,
+      description: ogDescription,
       url: canonicalUrl,
       siteName: BUSINESS_INFO.name,
       locale: "en_US",
@@ -92,7 +103,7 @@ export function generateMetadata(options: MetadataOptions): Metadata {
     twitter: {
       card: "summary_large_image",
       title: brandedTitle,
-      description,
+      description: ogDescription,
       ...(ogImage ? { images: [ogImage] } : {}),
     },
   };
@@ -107,6 +118,8 @@ export function generateHomeMetadata(): Metadata {
     absoluteTitle: true,
     description:
       "ODOT approved sand, gravel, and aggregate for contractors, municipalities, and commercial projects across Central & Southeastern Ohio. Call (740) 319-0183.",
+    ogDescription:
+      "ODOT approved sand, gravel & aggregate for contractors and municipalities across Central & Southeastern Ohio.",
     keywords: [
       "sand supplier",
       "gravel supplier",
@@ -157,6 +170,8 @@ export function generateServicesMetadata(): Metadata {
     title: "Material Supply & Delivery",
     description:
       "Material supply, delivery, and on-site loading for contractors and municipalities. Serving Central & Southeastern Ohio with up to 20 tons per load.",
+    ogDescription:
+      "Material supply, delivery & on-site loading for contractors and municipalities across Central & Southeastern Ohio.",
     keywords: [
       "aggregate delivery",
       "gravel delivery",
@@ -178,6 +193,8 @@ export function generateFAQMetadata(): Metadata {
     title: "Frequently Asked Questions",
     description:
       "Answers to common questions about materials, delivery, and hours at Muskingum Materials, serving Central and Southeastern Ohio.",
+    ogDescription:
+      "Common questions about materials, delivery & hours at Muskingum Materials, serving Central & Southeastern Ohio.",
     keywords: [
       "aggregate FAQ",
       "gravel FAQ",
@@ -197,6 +214,8 @@ export function generateContactMetadata(): Metadata {
     title: "Contact Us - Free Estimates",
     description:
       "Call for material availability and free estimates. Located at 1133 Ellis Dam Rd, Zanesville, OH. Call (740) 319-0183 or email sales@muskingummaterials.com.",
+    ogDescription:
+      "Call (740) 319-0183 for material availability and free estimates. 1133 Ellis Dam Rd, Zanesville, OH.",
     keywords: [
       "contact Muskingum Materials",
       "aggregate supplier Zanesville",
@@ -216,6 +235,8 @@ export function generateAboutMetadata(): Metadata {
     title: "About Us",
     description:
       "Muskingum Materials is an ODOT qualified aggregate supplier in Zanesville, Ohio, providing state approved sand and gravel across Central & Southeastern Ohio.",
+    ogDescription:
+      "ODOT-qualified aggregate supplier in Zanesville, OH — state approved sand & gravel for Central & Southeastern Ohio.",
     keywords: [
       "about Muskingum Materials",
       "aggregate supplier Zanesville",
