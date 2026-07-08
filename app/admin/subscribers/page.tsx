@@ -1,4 +1,4 @@
-import { Mail, ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { Mail, ChevronLeft, ChevronRight, Users, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -59,9 +59,17 @@ export default async function SubscribersPage({ searchParams }: SubscribersPageP
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold font-heading">Newsletter Subscribers</h1>
-        <p className="text-sm text-muted-foreground">View and manage your email subscribers</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold font-heading">Newsletter Subscribers</h1>
+          <p className="text-sm text-muted-foreground">View and manage your email subscribers</p>
+        </div>
+        <Link href="/admin/subscribers/new">
+          <Button className="gap-1.5">
+            <Plus className="h-4 w-4" />
+            New Subscriber
+          </Button>
+        </Link>
       </div>
 
       <div className="flex gap-2 border-b">
@@ -110,8 +118,9 @@ export default async function SubscribersPage({ searchParams }: SubscribersPageP
         <>
           <div className="space-y-3">
             {subscribers.map((subscriber) => (
-              <Card key={subscriber.id} className="border-0 shadow-md">
-                <CardContent className="p-5">
+              <Link key={subscriber.id} href={`/admin/subscribers/${subscriber.id}`}>
+                <Card className="border-0 shadow-md hover:shadow-lg transition-all cursor-pointer">
+                  <CardContent className="p-5">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
@@ -135,9 +144,10 @@ export default async function SubscribersPage({ searchParams }: SubscribersPageP
                         })}
                       </p>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
 

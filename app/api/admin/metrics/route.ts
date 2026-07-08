@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { isAdminUser } from "@/lib/admin-auth";
 
 /**
  * Admin dashboard metrics and KPI aggregation endpoint.
@@ -47,7 +48,7 @@ export async function GET() {
     }
 
     // Check if user has admin role
-    const isAdmin = user?.publicMetadata?.role === "admin";
+    const isAdmin = isAdminUser(user);
     if (!isAdmin) {
       return NextResponse.json(
         { error: "Forbidden: Admin access required" },

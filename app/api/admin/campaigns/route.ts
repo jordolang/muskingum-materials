@@ -3,6 +3,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { campaignSchema } from "@/lib/schemas";
+import { isAdminUser } from "@/lib/admin-auth";
 
 async function checkAdminAuth() {
   const user = await currentUser();
@@ -10,7 +11,7 @@ async function checkAdminAuth() {
     return { authorized: false, response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
   }
 
-  const isAdmin = user.publicMetadata?.role === "admin";
+  const isAdmin = isAdminUser(user);
   if (!isAdmin) {
     return { authorized: false, response: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
   }

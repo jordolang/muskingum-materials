@@ -3,9 +3,17 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 
-// Schema for lead status update
+// Schema for lead update — all fields optional so partial updates work
 const leadUpdateSchema = z.object({
-  status: z.enum(["new", "contacted", "qualified", "converted", "closed"]),
+  name: z.string().min(1).max(200).optional(),
+  email: z.string().email().optional(),
+  phone: z.string().max(50).optional(),
+  company: z.string().max(200).optional(),
+  message: z.string().optional(),
+  source: z.string().max(100).optional(),
+  status: z
+    .enum(["new", "contacted", "qualified", "converted", "closed"])
+    .optional(),
 });
 
 /**
@@ -46,7 +54,7 @@ export async function PATCH(
       );
     }
 
-    const { status } = validation.data;
+    const fields = validation.data;
 
     // Check if lead exists
     const existingLead = await prisma.lead.findUnique({
@@ -60,10 +68,28 @@ export async function PATCH(
       );
     }
 
-    // Update lead status
+    // Build update payload from provided fields only (partial update)
+    const data: {
+      name?: string;
+      email?: string;
+      phone?: string | null;
+      company?: string | null;
+      message?: string | null;
+      source?: string;
+      status?: string;
+    } = {};
+    if (fields.name !== undefined) data.name = fields.name;
+    if (fields.email !== undefined) data.email = fields.email;
+    if (fields.phone !== undefined) data.phone = fields.phone || null;
+    if (fields.company !== undefined) data.company = fields.company || null;
+    if (fields.message !== undefined) data.message = fields.message || null;
+    if (fields.source !== undefined) data.source = fields.source;
+    if (fields.status !== undefined) data.status = fields.status;
+
+    // Update lead
     const updatedLead = await prisma.lead.update({
       where: { id },
-      data: { status },
+      data,
       select: {
         id: true,
         name: true,

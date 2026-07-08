@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
+import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { isAdminUser } from "@/lib/admin-auth";
+
+// Schema for creating a subscriber (email required + unique; name optional; active default true)
+const subscriberCreateSchema = z.object({
+  email: z.string().email("Valid email is required"),
+  name: z.string().max(200).optional(),
+  active: z.boolean().optional(),
+});
 
 async function checkAdminAuth() {
   const user = await currentUser();
@@ -8,8 +18,8 @@ async function checkAdminAuth() {
     return { authorized: false, response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
   }
 
-  const isAdmin = user.publicMetadata?.role === "admin";
-  if (!isAdmin) {
+  // Match the rest of admin: role metadata OR the email allowlist (isAdminUser).
+  if (!isAdminUser(user)) {
     return { authorized: false, response: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
   }
 
@@ -82,5 +92,77 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch subscribers" }, { status: 500 });
+  }
+}
+
+/**
+ * Admin-only endpoint for creating a newsletter subscriber.
+ *
+ * @access admin (requires Clerk publicMetadata.role === "admin")
+ * @param request - Incoming request with body validated against `subscriberCreateSchema`
+ *   (email required + unique; name optional; active optional, defaults to true)
+ * @returns 201 `{ subscriber: NewsletterSubscriber }` on success
+ * @returns 400 `{ error: string, details?: ZodError[] }` when validation or JSON parsing fails
+ * @returns 401 `{ error: "Unauthorized" }` when not authenticated
+ * @returns 403 `{ error: "Forbidden" }` when authenticated user lacks admin role
+ * @returns 409 `{ error: string }` when a subscriber with the email already exists
+ * @returns 500 `{ error: string }` on database errors
+ * @see checkAdminAuth — shared admin authentication helper for this endpoint
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const authCheck = await checkAdminAuth();
+    if (!authCheck.authorized) {
+      return authCheck.response;
+    }
+
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+
+    const validation = subscriberCreateSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: "Invalid request", details: validation.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const data = validation.data;
+
+    try {
+      const subscriber = await prisma.newsletterSubscriber.create({
+        data: {
+          email: data.email,
+          name: data.name || null,
+          active: data.active ?? true,
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          active: true,
+          createdAt: true,
+        },
+      });
+
+      return NextResponse.json({ subscriber }, { status: 201 });
+    } catch (dbError) {
+      if (
+        dbError instanceof Prisma.PrismaClientKnownRequestError &&
+        dbError.code === "P2002"
+      ) {
+        return NextResponse.json(
+          { error: "A subscriber with this email already exists." },
+          { status: 409 }
+        );
+      }
+      throw dbError;
+    }
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to create subscriber" }, { status: 500 });
   }
 }
