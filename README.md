@@ -12,7 +12,6 @@
   [![Prisma](https://img.shields.io/badge/Prisma-6.x-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
   [![Neon](https://img.shields.io/badge/Neon-PostgreSQL-00E599?logo=postgresql&logoColor=white)](https://neon.tech/)
   [![Clerk](https://img.shields.io/badge/Clerk-Auth-6C47FF?logo=clerk&logoColor=white)](https://clerk.com/)
-  [![Stripe](https://img.shields.io/badge/Stripe-Payments-635BFF?logo=stripe&logoColor=white)](https://stripe.com/)
   [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.x-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
   [![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel&logoColor=white)](https://vercel.com/)
   [![License](https://img.shields.io/badge/license-Private-ef4444)]()
@@ -30,9 +29,9 @@
 
 ## Overview
 
-**Muskingum Materials** is a full-stack e-commerce and operations platform for a family-owned sand, soil, and gravel business in Zanesville, Ohio. It is substantially more than a marketing site: it includes live Stripe Checkout, a complete admin back office, AI-powered chat with conversation persistence, customer accounts with a loyalty program, Postmark transactional email, Twilio SMS notifications, Upstash-backed rate limiting, Sentry error tracking, and a Sanity Studio CMS embedded at `/studio`.
+**Muskingum Materials** is the marketing and lead-generation site for a family-owned sand, soil, and gravel business in Zanesville, Ohio. Customers browse the material catalog, estimate how much material a job needs (including a satellite-map area estimator on `/calculators`), and order by phone. The site includes a staff-only admin back office (leads, quotes, chats, subscribers), AI-powered chat with conversation persistence, Postmark transactional email, Upstash-backed rate limiting, Sentry error tracking, and a Sanity Studio CMS embedded at `/studio`. There is no online checkout or customer account system.
 
-Built on **Next.js 15** (App Router + Turbopack) with **23 Prisma models** backed by Neon Postgres.
+Built on **Next.js 15** (App Router + Turbopack) with Prisma models backed by Neon Postgres.
 
 > **Location:** 1133 Ellis Dam Rd, Zanesville, OH 43701  
 > **Phone:** (740) 319-0183 · (740) 453-3063  
@@ -42,31 +41,18 @@ Built on **Next.js 15** (App Router + Turbopack) with **23 Prisma models** backe
 
 ## Features
 
-### E-Commerce & Ordering
-- **Online ordering** — Shopping cart with material calculator, volume-discount badges, and per-product pricing tiers
-- **Stripe Checkout** — Full session creation with server-side price validation (`lib/validate-checkout-prices.ts` — never trust client prices)
-- **Stripe webhook fulfillment** — `checkout.session.completed` marks orders paid, awards loyalty points, sends SMS confirmation
-- **Google Maps satellite estimator** — Step 1 of the order form lets customers outline their project site; polygon, area, depth, and tonnage estimate are persisted on the `Order` row
-- **Terms acceptance** — Required checkbox at checkout writes `Order.termsAcceptedAt`
-- **Recurring orders** — Full schema, API, and UI (`/account/recurring-orders`)
-- **Saved orders / reorder** — Full schema, API, and UI (`/account/saved-orders`)
-- **Guest and authenticated checkout** both supported
+### Material Calculators (`/calculators`)
+- **Map Area Estimator** — Outline your project on a Google Maps satellite view; polygon area feeds a tonnage/cost estimate with confidence ranges
+- **Gravel Calculator** — Length × width × depth (rectangle, circle, triangle) to cubic yards and tons
+- **Tons ↔ Yards Converter** — Material-density-aware unit conversion
+- **Coverage Chart** — One area compared across 2" / 3" / 4" / 6" depths
 
-### Customer Accounts
-- Clerk authentication (Google, GitHub, Apple, Facebook SSO)
-- Account dashboard at `/account`: orders, saved orders, recurring orders, rewards, profile, addresses
-- **Loyalty program** — Bronze/silver/gold tiers, points per dollar, $5/100-point redemption, tier benefits
-- Contractor pricing flag and per-customer discount rate
-- Multiple shipping addresses per user
-
-### Admin Back Office
-- **`/admin`** — Orders (status, history, detail), leads, quotes, chat conversations, dashboard KPIs, email campaigns, subscriber management
+### Admin Back Office (staff-only, Clerk email-allowlist auth)
+- **`/admin`** — Leads, quotes, chat conversations, subscriber management, dashboard KPIs; Clerk client JS loads only on `/admin` and `/sign-in`, never on the public site
 
 ### Communication
 - **AI chat agent** — Vercel AI SDK + Anthropic Claude Haiku; full business context from `data/business.ts`; Postgres-backed conversation history; keyword-match fallback when API key absent
-- **Postmark transactional email** — Order confirmations, quote notifications, contact form, newsletter
-- **Twilio SMS** — Order confirmations and status updates; opt-in tracked on `Order.smsOptIn`; STOP webhook at `/api/sms/webhook`
-- **Restock notifications** — Email customers when an out-of-stock product returns
+- **Postmark transactional email** — Quote notifications, contact form, chat escalation, newsletter
 
 ### Content Management (Sanity Studio at `/studio`)
 - **7 schemas** — Service, Testimonial, FAQ, Gallery Image, Site Settings (singleton), Page, Post
@@ -74,7 +60,7 @@ Built on **Next.js 15** (App Router + Turbopack) with **23 Prisma models** backe
 - GROQ queries in `lib/sanity/queries.ts`; Sanity CDN with hotspot cropping; stega-enabled visual editing
 
 ### Infrastructure
-- **Rate limiting** — Upstash Redis (in-memory fallback); tiers: chat 5/min, checkout 10/hr, leads/newsletter 20/hr
+- **Rate limiting** — Upstash Redis (in-memory fallback); tiers: chat 5/min, contact/quote 10/hr, leads/newsletter 20/hr
 - **Strict CSP** — `next.config.ts` allowlists Clerk, Stripe, Sanity, Google, GTM, Unsplash. **Any new third-party host requires a CSP update.**
 - **Error tracking** — Sentry integration via `lib/monitoring.ts`
 - **Structured logging** — `lib/logger.ts` (JSON output + Sentry breadcrumbs)
@@ -93,7 +79,7 @@ Built on **Next.js 15** (App Router + Turbopack) with **23 Prisma models** backe
 | **CMS** | Sanity Studio v3 (embedded at `/studio`) |
 | **Database** | PostgreSQL (Neon) via Prisma ORM — 23 models |
 | **Auth** | Clerk (Google, GitHub, Apple, Facebook SSO) |
-| **Payments** | Stripe Checkout + webhooks |
+| **Payments** | By phone / in person (Stripe retained for admin refunds of past online orders) |
 | **AI Chat** | Vercel AI SDK + Anthropic Claude Haiku |
 | **Email** | Postmark |
 | **SMS** | Twilio (email fallback) |
@@ -159,9 +145,7 @@ Open [http://localhost:3000](http://localhost:3000). Sanity Studio is at [http:/
 | `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Yes | `/sign-in` |
 | `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Yes | `/sign-up` |
 | `NEXT_PUBLIC_SITE_URL` | Yes | Full origin, e.g. `https://muskingummaterials.com` |
-| `STRIPE_SECRET_KEY` | No | Enables Stripe Checkout |
-| `STRIPE_WEBHOOK_SECRET` | No | Required for webhook signature verification |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | No | Stripe public key |
+| `STRIPE_SECRET_KEY` | No | Enables admin refunds against historical online orders |
 | `POSTMARK_API_TOKEN` | No | Enables transactional email |
 | `POSTMARK_FROM_EMAIL` | No | Sender address, e.g. `orders@muskingummaterials.com` |
 | `ANTHROPIC_API_KEY` | No | Enables AI chat (falls back to keyword responses) |
@@ -241,27 +225,18 @@ Products and services exist in **both** stores with **field-level ownership** de
 
 **Important**: Orphaned Sanity records require manual cleanup to preserve marketing work. See [`docs/sync-field-ownership.md`](docs/sync-field-ownership.md) for complete field-by-field ownership map, edge cases, and verification checklist.
 
-### Order flow
+### Ordering
 
-```
-Order Form (client)
-  └─► POST /api/orders/checkout
-        ├─► Zod validation (lib/schemas.ts checkoutSchema)
-        ├─► lib/validate-checkout-prices.ts  ← trust boundary, never use client prices
-        ├─► prisma.order.create()
-        └─► stripeClient.checkout.sessions.create()
-              └─► /order/success (redirect)
-                    └─► Stripe webhook → /api/orders/webhook
-                          ├─► Mark order paid
-                          ├─► Award loyalty points
-                          └─► Send SMS confirmation
-```
+Orders happen by phone — there is no online checkout. The website's job is to
+get the caller ready: the `/calculators` tools (including the satellite map
+estimator) produce tonnage estimates, and the contact/quote forms capture
+lead details for follow-up.
 
 ### Middleware
 
 `middleware.ts` runs on every non-static request in this order:
 1. **Rate limiting** — Upstash Redis (or in-memory fallback). Tiers: `chat` 5/min, `contact-quote` 10/hr, `leads-newsletter` 20/hr.
-2. **Clerk auth** — Only if `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` is set and not a placeholder.
+2. **Clerk auth** — scoped to `/admin`, `/api/admin`, and `/sign-in` only; the public site never loads Clerk.
 
 When adding a new public API route that accepts user input, register it in `rateLimitedEndpoints` in `middleware.ts`.
 
@@ -300,7 +275,7 @@ Deployed on **Vercel** with automatic deployments on push to `main`.
 vercel --prod
 ```
 
-Set all environment variables in the Vercel dashboard. The `STRIPE_WEBHOOK_SECRET` must be set to the signing secret from the Stripe Dashboard → Webhooks → your endpoint.
+Set all environment variables in the Vercel dashboard.
 
 ---
 
@@ -320,6 +295,6 @@ Private — All rights reserved. &copy; 2026 Muskingum Materials.
     <a href="tel:7403190183">(740) 319-0183</a> · <a href="mailto:sales@muskingummaterials.com">sales@muskingummaterials.com</a>
   </p>
 
-  <sub>Built with Next.js 15, TypeScript, Prisma, Sanity, Stripe, Clerk, and Tailwind CSS</sub>
+  <sub>Built with Next.js 15, TypeScript, Prisma, Sanity, and Tailwind CSS</sub>
 
 </div>

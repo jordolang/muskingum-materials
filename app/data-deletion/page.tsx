@@ -129,10 +129,9 @@ export default function DataDeletionPage() {
             <p className="text-muted-foreground">
               When you submit a verified deletion request, we also forward
               deletion instructions to the third-party processors that act on our
-              behalf where applicable — for example Clerk (authentication),
-              Postmark (email), and our database host. Analytics data collected
-              by Google Analytics is aggregated and governed by Google&apos;s own
-              retention controls.
+              behalf where applicable — for example Postmark (email) and our
+              database host. Analytics data collected by Google Analytics is
+              aggregated and governed by Google&apos;s own retention controls.
             </p>
           </section>
 

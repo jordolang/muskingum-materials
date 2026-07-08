@@ -42,35 +42,33 @@ export default function PrivacyPage() {
                 </h3>
                 <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
                   <li>
-                    Name, email address, and phone number (collected at checkout
-                    and via contact forms)
+                    Name, email address, and phone number (collected via
+                    contact and quote request forms)
                   </li>
-                  <li>Delivery address when you choose delivery</li>
-                  <li>
-                    Account credentials managed by Clerk, our authentication
-                    provider
-                  </li>
+                  <li>Delivery address when you request delivery pricing</li>
                 </ul>
               </div>
               <div>
                 <h3 className="font-semibold mb-1">Payment Information</h3>
                 <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
                   <li>
-                    Payment card details are processed directly by Stripe and
-                    are never stored on our servers
+                    Our website does not accept online payments and does not
+                    collect payment card details. Payments are made in person
+                    at the yard or by phone.
                   </li>
                   <li>
-                    We receive only confirmation of payment status and a Stripe
-                    session ID
+                    Payment records from our former online store remain with
+                    Stripe, our previous payment processor, per its retention
+                    policies
                   </li>
                 </ul>
               </div>
               <div>
                 <h3 className="font-semibold mb-1">
-                  Order &amp; Transaction Data
+                  Quote &amp; Lead Information
                 </h3>
                 <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                  <li>Order history, items purchased, quantities, and pricing</li>
+                  <li>Materials requested, quantities, and project details</li>
                   <li>Pickup or delivery preference and delivery notes</li>
                 </ul>
               </div>
@@ -140,8 +138,8 @@ export default function PrivacyPage() {
                 </thead>
                 <tbody className="divide-y">
                   {[
-                    ["Clerk", "User authentication & account management"],
-                    ["Stripe", "Payment processing"],
+                    ["Clerk", "Staff authentication for our internal admin tools"],
+                    ["Stripe", "Historical payment records from our former online store"],
                     ["Postmark", "Transactional email delivery"],
                     ["Anthropic (Claude)", "AI chat assistant"],
                     ["Google Analytics", "Website usage analytics"],
@@ -166,13 +164,14 @@ export default function PrivacyPage() {
             </h2>
             <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
               <li>
-                <strong className="text-foreground">Order data:</strong>{" "}
+                <strong className="text-foreground">Sales records:</strong>{" "}
                 Retained for 7 years for tax and legal compliance
               </li>
               <li>
-                <strong className="text-foreground">Account data:</strong>{" "}
-                Retained while your account is active; deleted within 90 days
-                of a verified deletion request
+                <strong className="text-foreground">
+                  Contact, quote, and lead submissions:
+                </strong>{" "}
+                Deleted within 90 days of a verified deletion request
               </li>
               <li>
                 <strong className="text-foreground">Chat conversations:</strong>{" "}
@@ -226,10 +225,10 @@ export default function PrivacyPage() {
           <section className="space-y-3">
             <h2 className="text-xl font-bold font-heading">6. Cookies</h2>
             <p className="text-muted-foreground">
-              Our website uses cookies for authentication (Clerk session
-              management), analytics (Google Analytics), and payment session
-              management (Stripe). You can control cookies through your browser
-              settings. Disabling cookies may affect site functionality.
+              Our website uses cookies for analytics (Google Analytics) and
+              essential site functionality. You can control cookies through
+              your browser settings. Disabling cookies may affect site
+              functionality.
             </p>
           </section>
 

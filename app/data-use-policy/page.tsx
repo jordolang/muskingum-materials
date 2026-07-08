@@ -6,16 +6,16 @@ import { POLICY_LAST_UPDATED } from "@/lib/constants/legal";
 export const metadata = {
   title: "Data Use & Protection Policy",
   description:
-    "How Muskingum Materials handles, secures, and protects the data you share when you use our website, place an order, or contact us.",
+    "How Muskingum Materials handles, secures, and protects the data you share when you use our website, request a quote, or contact us.",
 };
 
 // Third-party processors and the safeguard each one provides. Kept as a
 // file-level constant so the table is easy to audit and maintain.
 const DATA_PROVIDERS: ReadonlyArray<readonly [string, string]> = [
-  ["Stripe", "Payments — PCI-DSS Level 1, card data never touches our servers"],
-  ["Clerk", "Authentication — manages credentials and sessions securely"],
+  ["Stripe", "Historical payment records from our former online store only"],
+  ["Clerk", "Staff authentication for our internal admin tools"],
   ["Neon", "Database — encrypted, access-controlled Postgres hosting"],
-  ["Postmark", "Transactional email — order receipts and updates only"],
+  ["Postmark", "Transactional email — inquiry confirmations and updates only"],
   ["Anthropic (Claude)", "AI chat — processes chat messages to answer questions"],
   ["Google Analytics", "Usage analytics — IP anonymization enabled"],
   ["Upstash", "Rate limiting — protects endpoints from abuse"],
@@ -100,21 +100,16 @@ export default function DataUsePolicyPage() {
             </h2>
             <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
               <li>
-                Order, account, and contact records are stored in a managed,
-                access-controlled PostgreSQL database (Neon) with encryption at
-                rest.
+                Contact, quote, chat, and newsletter records are stored in a
+                managed, access-controlled PostgreSQL database (Neon) with
+                encryption at rest.
               </li>
               <li>
                 <strong className="text-foreground">
-                  We never store full payment card numbers.
+                  We never collect payment card numbers online.
                 </strong>{" "}
-                Card data is captured and processed directly by Stripe, a
-                PCI-DSS Level 1 certified payment provider. We only retain a
-                payment status and a reference token.
-              </li>
-              <li>
-                Account credentials and sessions are managed by Clerk; we do not
-                store your raw password.
+                Our website does not accept payments — orders are placed and
+                paid for in person at the yard or by phone.
               </li>
             </ul>
           </section>
@@ -156,13 +151,12 @@ export default function DataUsePolicyPage() {
 
           <section className="space-y-3">
             <h2 className="text-xl font-bold font-heading">
-              5. Payment &amp; Pricing Integrity
+              5. Payments
             </h2>
             <p className="text-muted-foreground">
-              Order totals are always re-validated on our server against
-              authoritative pricing before any charge is created — prices
-              submitted by the browser are never trusted. This protects both you
-              and us from tampering and billing errors.
+              Our website does not accept or process payments. Pricing shown by
+              our calculators is an estimate only — final pricing is confirmed
+              by phone, and payment happens in person at the yard or by phone.
             </p>
           </section>
 
@@ -184,11 +178,10 @@ export default function DataUsePolicyPage() {
               7. Cookies &amp; Tracking
             </h2>
             <p className="text-muted-foreground">
-              We use cookies that are necessary for the site to function
-              (authentication and secure checkout) and, with your consent,
-              analytics cookies to understand how the site is used. You can manage
-              analytics consent through the cookie banner and your browser
-              settings.
+              We use cookies that are necessary for the site to function and,
+              with your consent, analytics cookies to understand how the site
+              is used. You can manage analytics consent through the cookie
+              banner and your browser settings.
             </p>
           </section>
 

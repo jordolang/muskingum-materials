@@ -15,7 +15,6 @@ const rateLimitedEndpoints: Record<string, RateLimitTier> = {
   "/api/chat": "chat",
   "/api/contact": "contact-quote",
   "/api/quote": "contact-quote",
-  "/api/orders/checkout": "contact-quote",
   "/api/leads": "leads-newsletter",
   "/api/newsletter": "leads-newsletter",
 };

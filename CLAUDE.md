@@ -95,7 +95,7 @@ The webhook payload includes `_type` (sent as `tag`) and an optional `slug`, whi
 
 1. **Rate limiting** for public API endpoints. Tiers in `lib/rate-limit.ts`:
    - `chat`: 5 / minute (`/api/chat`)
-   - `contact-quote`: 10 / hour (`/api/contact`, `/api/quote`, `/api/orders/checkout`)
+   - `contact-quote`: 10 / hour (`/api/contact`, `/api/quote`)
    - `leads-newsletter`: 20 / hour (`/api/leads`, `/api/newsletter`)
    Uses Upstash Redis when `UPSTASH_REDIS_REST_URL`/`_TOKEN` are set, otherwise an in-memory `Map` fallback (per-instance, not shared across serverless invocations). Rate-limited responses return 429 with `Retry-After` and `X-RateLimit-*` headers.
    > **Source of truth**: See `rateLimitedEndpoints` in `middleware.ts` for the canonical endpoint→tier mapping.
@@ -118,7 +118,7 @@ Several integrations are optional and fall back to no-op or static behavior when
 
 ### Orders / Stripe
 
-`app/api/orders/checkout/route.ts` and `app/api/orders/webhook/route.ts` handle Stripe Checkout creation and webhook fulfillment, writing to the `Order` model. `lib/validate-checkout-prices.ts` is the trust boundary — never trust client-supplied prices, always re-validate against Prisma.
+Online checkout was removed — orders happen by phone. Stripe remains only for the admin refund path (`app/api/admin/orders/[id]/refund`) against historical orders; there is no customer-facing payment flow or Stripe webhook.
 
 ### CSP
 
