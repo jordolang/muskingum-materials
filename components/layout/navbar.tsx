@@ -1,26 +1,37 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Fragment } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { Phone, ChevronDown } from "lucide-react";
+import {
+  Phone,
+  ChevronDown,
+  Home,
+  Mountain,
+  Truck,
+  Images,
+  Users,
+  Mail,
+  type LucideIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BUSINESS_INFO } from "@/data/business";
 
 interface NavItem {
   href: string;
   label: string;
+  icon: LucideIcon;
   children?: { href: string; label: string; description?: string }[];
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/", label: "Home" },
-  { href: "/products", label: "Products" },
-  { href: "/services", label: "Services" },
-  { href: "/gallery", label: "Gallery" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
+  { href: "/", label: "Home", icon: Home },
+  { href: "/products", label: "Products", icon: Mountain },
+  { href: "/services", label: "Services", icon: Truck },
+  { href: "/gallery", label: "Gallery", icon: Images },
+  { href: "/about", label: "About", icon: Users },
+  { href: "/contact", label: "Contact", icon: Mail },
 ];
 
 const pillBase =
@@ -55,13 +66,17 @@ function DesktopDropdown({ item }: { item: NavItem }) {
     };
   }, []);
 
+  // Active page gets an amber aura so the current page is obvious at a glance.
+  const activePill =
+    "bg-primary/10 text-primary ring-1 ring-primary/30 shadow-[0_0_14px_rgba(245,158,11,0.35)]";
+
   if (!item.children) {
     return (
       <Link
         href={item.href}
         className={`${pillBase} ${
           active
-            ? "bg-primary/10 text-primary"
+            ? activePill
             : "text-stone-600 hover:bg-stone-900/5 hover:text-foreground"
         }`}
       >
@@ -76,7 +91,7 @@ function DesktopDropdown({ item }: { item: NavItem }) {
         type="button"
         className={`${pillBase} flex items-center gap-1 ${
           active
-            ? "bg-primary/10 text-primary"
+            ? activePill
             : "text-stone-600 hover:bg-stone-900/5 hover:text-foreground"
         }`}
         onClick={() => setOpen((p) => !p)}
@@ -119,20 +134,50 @@ function DesktopDropdown({ item }: { item: NavItem }) {
   );
 }
 
+/**
+ * A single entry in the pull-down menu: label dead-center, the page's icon
+ * as an insignia on the left edge, and a mirrored ghost of it on the right
+ * edge for symmetry. The current page glows with an amber aura and a
+ * pulsing "you are here" dot.
+ */
 function MobileNavItem({ item, onClose }: { item: NavItem; onClose: () => void }) {
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
   const active = isItemActive(item, pathname);
+  const Icon = item.icon;
+
+  const rowClass = `relative flex w-full items-center justify-center rounded-2xl px-12 py-3.5 text-sm font-semibold tracking-wide transition-all duration-200 ${
+    active
+      ? "bg-gradient-to-r from-amber-500/10 via-amber-500/20 to-amber-500/10 text-primary ring-1 ring-amber-500/30 shadow-[0_0_18px_rgba(245,158,11,0.3)]"
+      : "text-stone-600 hover:bg-stone-900/5 active:scale-[0.98]"
+  }`;
+
+  const insignias = (
+    <>
+      <Icon
+        aria-hidden
+        className={`absolute left-4 h-5 w-5 ${
+          active ? "text-primary drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]" : "text-stone-400"
+        }`}
+      />
+      {active ? (
+        <span
+          aria-hidden
+          className="absolute right-5 h-2 w-2 animate-pulse rounded-full bg-primary shadow-[0_0_8px_rgba(245,158,11,0.9)]"
+        />
+      ) : (
+        <Icon
+          aria-hidden
+          className="absolute right-4 h-5 w-5 -scale-x-100 text-stone-300/70"
+        />
+      )}
+    </>
+  );
 
   if (!item.children) {
     return (
-      <Link
-        href={item.href}
-        className={`rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${
-          active ? "bg-primary/10 text-primary" : "text-stone-600 hover:bg-stone-900/5"
-        }`}
-        onClick={onClose}
-      >
+      <Link href={item.href} className={rowClass} onClick={onClose}>
+        {insignias}
         {item.label}
       </Link>
     );
@@ -142,25 +187,26 @@ function MobileNavItem({ item, onClose }: { item: NavItem; onClose: () => void }
     <div>
       <button
         type="button"
-        className={`flex w-full items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${
-          active ? "bg-primary/10 text-primary" : "text-stone-600 hover:bg-stone-900/5"
-        }`}
+        className={rowClass}
         onClick={() => setExpanded((p) => !p)}
       >
-        {item.label}
-        <ChevronDown
-          className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`}
-        />
+        {insignias}
+        <span className="flex items-center gap-1.5">
+          {item.label}
+          <ChevronDown
+            className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`}
+          />
+        </span>
       </button>
       {expanded && (
-        <div className="mt-1 space-y-1 pl-3">
+        <div className="mt-1 space-y-1">
           {item.children.map((child) => {
             const childActive = pathname === child.href;
             return (
               <Link
                 key={child.href}
                 href={child.href}
-                className={`block rounded-xl px-4 py-2 text-sm transition-colors ${
+                className={`block rounded-xl px-4 py-2 text-center text-sm transition-colors ${
                   childActive
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-stone-900/5"
@@ -226,7 +272,7 @@ function MenuPullHandle({ open, onToggle }: { open: boolean; onToggle: () => voi
       type="button"
       aria-expanded={open}
       aria-label={open ? "Close menu — slide up or tap" : "Open menu — slide down or tap"}
-      className="flex w-full touch-none select-none flex-col items-center pb-2.5 pt-1 outline-none lg:hidden"
+      className="flex w-full touch-none select-none flex-col items-center pb-3.5 pt-1 outline-none lg:hidden"
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -252,19 +298,20 @@ function MenuPullHandle({ open, onToggle }: { open: boolean; onToggle: () => voi
         style={{ transform: `translateY(${drag}px)` }}
       >
         <ChevronDown
-          className={`h-4 w-4 text-stone-500 transition-transform duration-300 ${
+          className={`h-4 w-4 text-stone-400/80 transition-transform duration-300 ${
             open ? "rotate-180" : ""
-          } ${pulling ? "scale-125 text-primary" : ""}`}
+          } ${pulling ? "scale-125 text-amber-600/70" : ""}`}
         />
+        {/* Translucent amber so the handle reads as a hint, not a button. */}
         <span
           className={`h-1.5 w-24 rounded-full transition-colors duration-200 ${
-            pulling ? "bg-primary" : "bg-stone-400/80"
+            pulling ? "bg-amber-500/60" : "bg-amber-500/30"
           }`}
         />
         <ChevronDown
-          className={`h-4 w-4 text-stone-500 transition-transform duration-300 ${
+          className={`h-4 w-4 text-stone-400/80 transition-transform duration-300 ${
             open ? "rotate-180" : ""
-          } ${pulling ? "scale-125 text-primary" : ""}`}
+          } ${pulling ? "scale-125 text-amber-600/70" : ""}`}
         />
       </span>
     </button>
@@ -310,35 +357,56 @@ export function Navbar() {
             </a>
           </div>
 
+          {/* Mobile menu — lives INSIDE the same glass pill, between the logo
+              and the pull handle. The grid-rows trick animates its height
+              open/closed without knowing the content height. */}
+          <div
+            className={`grid transition-all duration-300 ease-out lg:hidden ${
+              mobileOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+            }`}
+          >
+            <div className="overflow-hidden">
+              {/* Separator between the wordmark and the menu entries */}
+              <div className="flex items-center gap-3 px-6 pb-2 pt-1" aria-hidden>
+                <span className="h-px flex-1 bg-gradient-to-r from-transparent to-stone-900/15" />
+                <span className="h-1.5 w-1.5 rotate-45 bg-amber-500/50" />
+                <span className="h-px flex-1 bg-gradient-to-l from-transparent to-stone-900/15" />
+              </div>
+
+              <nav className="flex flex-col px-1.5">
+                {NAV_ITEMS.map((item, i) => (
+                  <Fragment key={item.label}>
+                    {i > 0 && (
+                      <span
+                        aria-hidden
+                        className="mx-12 h-px bg-gradient-to-r from-transparent via-stone-900/10 to-transparent"
+                      />
+                    )}
+                    <MobileNavItem
+                      item={item}
+                      onClose={() => setMobileOpen(false)}
+                    />
+                  </Fragment>
+                ))}
+              </nav>
+
+              <div className="px-1.5 pb-1 pt-3">
+                <a href={`tel:${BUSINESS_INFO.phone.replace(/\D/g, "")}`}>
+                  <Button size="sm" className="w-full gap-2 shadow-glow">
+                    <Phone className="h-4 w-4" />
+                    Call {BUSINESS_INFO.phone}
+                  </Button>
+                </a>
+              </div>
+            </div>
+          </div>
+
           {/* Mobile pull-down handle */}
           <MenuPullHandle
             open={mobileOpen}
             onToggle={() => setMobileOpen((p) => !p)}
           />
         </div>
-
-        {/* Mobile floating menu panel */}
-        {mobileOpen && (
-          <div className="glass shadow-float mt-2 rounded-3xl p-3 duration-200 animate-in fade-in slide-in-from-top-3 lg:hidden">
-            <nav className="flex flex-col gap-1">
-              {NAV_ITEMS.map((item) => (
-                <MobileNavItem
-                  key={item.label}
-                  item={item}
-                  onClose={() => setMobileOpen(false)}
-                />
-              ))}
-            </nav>
-            <div className="mt-3 flex flex-col gap-2 border-t border-stone-900/10 pt-3">
-              <a href={`tel:${BUSINESS_INFO.phone.replace(/\D/g, "")}`}>
-                <Button size="sm" className="w-full gap-2 shadow-glow">
-                  <Phone className="h-4 w-4" />
-                  Call {BUSINESS_INFO.phone}
-                </Button>
-              </a>
-            </div>
-          </div>
-        )}
       </div>
     </header>
   );
