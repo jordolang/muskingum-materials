@@ -381,7 +381,7 @@ export function AreaMap({ onAreaChange }: AreaMapProps) {
 
         {/* Toolbar */}
         {addressEntered && (
-          <div className="absolute top-16 left-3 z-10 flex flex-col gap-1.5">
+          <div className="absolute top-24 left-3 z-10 flex flex-col gap-1.5">
             <div className="flex gap-1.5">
               {!isDrawing ? (
                 <Button
@@ -400,7 +400,11 @@ export function AreaMap({ onAreaChange }: AreaMapProps) {
                     variant="default"
                     onClick={finishDraw}
                     disabled={vertexCount < 3}
-                    className="gap-1.5 shadow-md"
+                    className={`gap-1.5 shadow-md ${
+                      vertexCount >= 3
+                        ? "animate-blink ring-2 ring-amber-400 ring-offset-1"
+                        : ""
+                    }`}
                   >
                     <Check className="h-3.5 w-3.5" />
                     Finish
