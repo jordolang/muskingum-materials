@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_rethrow } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { ClerkGuardedProvider } from "@/components/auth/clerk-guarded-provider";
@@ -38,7 +39,12 @@ export default async function AdminLayout({
   try {
     await requireAdmin();
   } catch (error) {
-    // User is authenticated but not an admin
+    // requireAdmin() calls redirect("/sign-in") for unauthenticated visitors.
+    // redirect() throws a NEXT_REDIRECT control-flow error that MUST propagate
+    // so the navigation actually happens — unstable_rethrow re-throws those
+    // (and notFound) while letting the genuine "not an admin" error fall
+    // through to the 403 page below.
+    unstable_rethrow(error);
     return <UnauthorizedPage />;
   }
 
