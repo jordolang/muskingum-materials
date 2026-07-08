@@ -70,6 +70,15 @@ export const metadata: Metadata = {
     siteName: "Muskingum Materials",
     locale: "en_US",
     type: "website",
+    // og:image is supplied by the `app/opengraph-image.png` file convention
+    // (a static asset — no runtime render, so it can't fail for scrapers).
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Muskingum Materials | ODOT Sand & Gravel, Zanesville OH",
+    description:
+      "ODOT approved sand, gravel, and aggregate serving Central & Southeastern Ohio.",
+    // twitter:image is also taken from the opengraph-image file convention.
   },
   ...(process.env.NEXT_PUBLIC_GSC_VERIFICATION && {
     verification: {
