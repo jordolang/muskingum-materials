@@ -30,6 +30,14 @@ interface GalleryImage {
 // Static fallback images when Sanity has no gallery content
 const STATIC_GALLERY_IMAGES = [
   { _id: "aerial", title: "Aerial view of Muskingum Materials", category: "Facility", src: "/images/photos/aerial.jpg" },
+  { _id: "aggregate-processing", title: "Aggregate processing plant and stockpiles", category: "Equipment", src: "/images/photos/aggregate-processing.jpg" },
+  { _id: "excavator-loading", title: "Excavator loading washed sand", category: "Equipment", src: "/images/photos/excavator-loading.jpg" },
+  { _id: "wash-pond", title: "Wash pond and processing area", category: "Facility", src: "/images/photos/wash-pond.jpg" },
+  { _id: "loader-screening", title: "Loader feeding the screening plant", category: "Equipment", src: "/images/photos/loader-screening.jpg" },
+  { _id: "loading-dump-truck", title: "Loading a dump truck for delivery", category: "Equipment", src: "/images/photos/loading-dump-truck.jpg" },
+  { _id: "gravel-pit", title: "Gravel pit and wash pond", category: "Facility", src: "/images/photos/gravel-pit.jpg" },
+  { _id: "bulldozer-stockpile", title: "Dozer working a material stockpile", category: "Equipment", src: "/images/photos/bulldozer-stockpile.jpg" },
+  { _id: "graded-site", title: "Graded and prepared site", category: "Facility", src: "/images/photos/graded-site.jpg" },
   { _id: "equipment", title: "Heavy equipment at work", category: "Equipment", src: "/images/photos/equipment.jpg" },
   { _id: "piles", title: "Material piles", category: "Products", src: "/images/photos/piles.jpg" },
   { _id: "stone-hand", title: "Gravel close-up", category: "Products", src: "/images/photos/stone-hand.jpg" },
