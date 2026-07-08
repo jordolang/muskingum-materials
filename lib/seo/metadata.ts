@@ -41,10 +41,20 @@ export interface MetadataOptions {
   keywords?: string[];
   canonical?: string;
   /**
-   * Explicit OG image override. When omitted, the route's
-   * `opengraph-image.tsx` (file-based metadata) supplies the image.
+   * Explicit OG image override for a page with NO `opengraph-image.tsx` route
+   * file (currently only the homepage). Required because Next.js merges
+   * metadata *shallowly*: a page's own `openGraph`/`twitter` object REPLACES
+   * the layout's, dropping the layout's `openGraph.images`. File-convention
+   * pages are unaffected; a config-only page must name its image here.
    */
   ogImage?: string;
+  /**
+   * Actual pixel dimensions of `ogImage`. Declare the real values so scrapers
+   * report the true size instead of mis-cropping to a wrong declared ratio.
+   * Defaults to the OG-recommended 1200×630.
+   */
+  ogImageWidth?: number;
+  ogImageHeight?: number;
   ogType?: "website" | "article";
   noIndex?: boolean;
 }
@@ -61,6 +71,8 @@ export function generateMetadata(options: MetadataOptions): Metadata {
     keywords = [],
     canonical,
     ogImage,
+    ogImageWidth = 1200,
+    ogImageHeight = 630,
     ogType = "website",
     noIndex = false,
   } = options;
@@ -73,7 +85,7 @@ export function generateMetadata(options: MetadataOptions): Metadata {
     : `${title} | ${BUSINESS_INFO.name}`;
   const canonicalUrl = canonical ? `${BASE_URL}${canonical}` : undefined;
   const ogImages = ogImage
-    ? [{ url: ogImage, width: 1200, height: 630, alt: title }]
+    ? [{ url: ogImage, width: ogImageWidth, height: ogImageHeight, alt: title }]
     : undefined;
 
   return {
@@ -124,6 +136,9 @@ export function generateHomeMetadata(): Metadata {
     // has no route-level opengraph-image.tsx — so the social image must be named
     // here explicitly or the homepage ships no og:image at all.
     ogImage: "/images/og-image.png",
+    // Declared dims match the actual public/images/og-image.png asset (1536×1024).
+    ogImageWidth: 1536,
+    ogImageHeight: 1024,
     keywords: [
       "sand supplier",
       "gravel supplier",
