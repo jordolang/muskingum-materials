@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
 import { AdminSidebar } from "@/components/admin/sidebar";
+import { ClerkGuardedProvider } from "@/components/auth/clerk-guarded-provider";
 
 function UnauthorizedPage() {
   return (
@@ -42,8 +43,9 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="py-8">
-      <div className="container">
+    <ClerkGuardedProvider>
+      <div className="py-8">
+        <div className="container">
         <div className="grid gap-8 md:grid-cols-[240px_1fr] lg:grid-cols-[280px_1fr]">
           {/* Sidebar - hidden on mobile, shown on md+ */}
           <aside className="hidden md:block">
@@ -60,7 +62,8 @@ export default async function AdminLayout({
           {/* Main content */}
           <main>{children}</main>
         </div>
+        </div>
       </div>
-    </div>
+    </ClerkGuardedProvider>
   );
 }

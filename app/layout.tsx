@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter, Outfit, Anton, JetBrains_Mono } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ChatWidgetLoader } from "@/components/chat/chat-widget-loader";
@@ -10,16 +9,6 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { CookieConsent } from "@/components/analytics/cookie-consent";
 import { SmoothScroll } from "@/components/smooth-scroll";
 import "./globals.css";
-
-// Preview Vercel builds don't have NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY set,
-// and ClerkProvider throws "Missing publishableKey" during _not-found
-// prerender. Match the middleware's existing pattern of only engaging
-// Clerk when a real publishable key is present.
-const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-const hasClerk = Boolean(
-  clerkPublishableKey &&
-    clerkPublishableKey !== "your_clerk_publishable_key",
-);
 
 // Inter is the body font — the only one used for above-the-fold body copy on
 // every route — so it stays preloaded (the default) to avoid a text flash.
@@ -117,5 +106,8 @@ export default function RootLayout({
     </html>
   );
 
-  return hasClerk ? <ClerkProvider>{tree}</ClerkProvider> : tree;
+  // Clerk is intentionally NOT provided at the root — the public site ships no
+  // Clerk client JS. Authenticated surfaces (/admin, /sign-in) wrap themselves
+  // in ClerkProvider via ClerkGuardedProvider.
+  return tree;
 }

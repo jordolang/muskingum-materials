@@ -21,7 +21,6 @@ import { BUSINESS_INFO } from "@/data/business";
 import { StockBadge, type StockStatus } from "@/components/catalog/StockBadge";
 import { RestockNotifyButton } from "@/components/catalog/RestockNotifyButton";
 import { ProductViewTracker } from "@/components/analytics/product-view-tracker";
-import { AddToCartButton } from "@/components/order/add-to-cart-button";
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -366,14 +365,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
             in Southeast Ohio.
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
-            {product.price != null && product.price > 0 && (
-              <AddToCartButton
-                name={product.name}
-                price={product.price}
-                unit={product.unit}
-                size="default"
-              />
-            )}
             <a href={`tel:${BUSINESS_INFO.phone.replace(/\D/g, "")}`}>
               <Button size="lg" variant="outline" className="gap-2">
                 <Phone className="h-4 w-4" />
