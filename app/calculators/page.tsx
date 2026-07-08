@@ -1,63 +1,69 @@
-import Link from "next/link";
-import { Calculator, ArrowRightLeft, BarChart3 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { CalculatorHub } from "@/components/calculators/calculator-hub";
+import { getProducts } from "@/lib/products";
+import type { Product } from "@prisma/client";
 import { generateCalculatorsMetadata } from "@/lib/seo/metadata";
 
 export const metadata = generateCalculatorsMetadata();
 
-const CALCULATORS = [
-  {
-    slug: "gravel-calculator",
-    title: "Gravel Calculator",
-    description:
-      "Calculate how much gravel you need based on your project dimensions. Get volume in cubic yards and weight in tons.",
-    icon: Calculator,
-  },
-  {
-    slug: "tons-to-yards",
-    title: "Tons to Cubic Yards Converter",
-    description:
-      "Convert between tons and cubic yards using material-specific density. Select your gravel type for an accurate conversion.",
-    icon: ArrowRightLeft,
-  },
-  {
-    slug: "coverage-chart",
-    title: "Gravel Coverage Chart",
-    description:
-      "Reference chart showing how much area different quantities of gravel will cover at various depths.",
-    icon: BarChart3,
-  },
-];
+export default async function CalculatorsPage() {
+  let products: Product[] = [];
+  try {
+    products = await getProducts();
+  } catch (error) {
+    console.warn("Unable to fetch products for calculators:", error);
+  }
 
-export default function CalculatorsPage() {
+  const materials = products.map((p) => ({
+    slug: p.slug,
+    name: p.name,
+    densityLow: p.densityLow ?? 1.4,
+    densityHigh: p.densityHigh ?? 1.5,
+    priceLow: p.marketPriceLowPerTon ?? p.price ?? 20,
+    priceHigh: p.marketPriceHighPerTon ?? p.price ?? 40,
+  }));
+
   return (
     <div className="py-12">
       <div className="container">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold font-heading mb-3">
-            Gravel Calculators
+            Material Calculators
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Use our free calculators to estimate exactly how much material you
-            need for your project. Get accurate tonnage and cubic yardage, then
-            call (740) 319-0183 for pricing and availability.
+            Pick the tool that fits how you work — trace your project on a
+            satellite map, punch in dimensions, convert units, or compare
+            depths. Then call (740) 319-0183 for pricing and availability.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {CALCULATORS.map((calc) => (
-            <Link key={calc.slug} href={`/calculators/${calc.slug}`}>
-              <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer group">
-                <CardHeader>
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
-                    <calc.icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <CardTitle className="text-xl">{calc.title}</CardTitle>
-                  <CardDescription>{calc.description}</CardDescription>
-                </CardHeader>
-              </Card>
-            </Link>
-          ))}
+        <CalculatorHub materials={materials} />
+
+        <div className="mt-12 bg-muted/50 rounded-lg p-8 max-w-4xl mx-auto">
+          <h2 className="text-xl font-semibold mb-4">
+            Recommended Depths by Project
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Driveways</span>
+                <span className="font-medium">4-6 inches</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Patios</span>
+                <span className="font-medium">3-4 inches</span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Walkways</span>
+                <span className="font-medium">2-3 inches</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Drainage</span>
+                <span className="font-medium">6-12 inches</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

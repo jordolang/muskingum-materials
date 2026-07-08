@@ -102,10 +102,7 @@ export function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4">Calculators</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/calculators" className="hover:text-amber-500 transition-colors">All Calculators</Link></li>
-              <li><Link href="/calculators/gravel-calculator" className="hover:text-amber-500 transition-colors">Gravel Calculator</Link></li>
-              <li><Link href="/calculators/tons-to-yards" className="hover:text-amber-500 transition-colors">Tons ↔ Yards Converter</Link></li>
-              <li><Link href="/calculators/coverage-chart" className="hover:text-amber-500 transition-colors">Coverage Chart</Link></li>
+              <li><Link href="/calculators" className="hover:text-amber-500 transition-colors">Material Calculators</Link></li>
             </ul>
           </div>
 
