@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
+import { ContractorsFilters } from "./contractors-filters";
 
 const CONTRACTORS_PER_PAGE = 10;
 
@@ -127,31 +128,7 @@ export default async function AdminContractorsPage({ searchParams }: AdminContra
       {/* Search and Filter Controls */}
       <Card className="border-0 shadow-md">
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="text"
-              placeholder="Search by name, email, or company..."
-              defaultValue={searchQuery}
-              className="flex-1 px-3 py-2 border rounded-md text-sm"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  const target = e.target as HTMLInputElement;
-                  window.location.href = `/admin/contractors${buildQueryString({ search: target.value, page: "1" })}`;
-                }
-              }}
-            />
-            <select
-              defaultValue={statusFilter}
-              className="px-3 py-2 border rounded-md text-sm"
-              onChange={(e) => {
-                window.location.href = `/admin/contractors${buildQueryString({ status: e.target.value, page: "1" })}`;
-              }}
-            >
-              <option value="all">All Contractors</option>
-              <option value="approved">Approved</option>
-              <option value="pending">Pending</option>
-            </select>
-          </div>
+          <ContractorsFilters />
         </CardContent>
       </Card>
 
