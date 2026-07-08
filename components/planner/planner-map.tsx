@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Pencil, Undo2, Trash2, Loader2 } from "lucide-react";
+import { MapPin, Pencil, Undo2, Trash2, Loader2, Check, X } from "lucide-react";
+import { usePolygonDraw, type PolygonStyle } from "@/lib/maps/use-polygon-draw";
 
 interface PlannerMapProps {
   onAreaChange: (areaSqFt: number) => void;
@@ -20,6 +21,14 @@ declare global {
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 const US_CENTER = { lat: 39.8283, lng: -98.5795 };
 
+// Shared appearance for the in-progress sketch and finished project areas.
+const POLYGON_STYLE: PolygonStyle = {
+  fillColor: "#15803d",
+  fillOpacity: 0.3,
+  strokeColor: "#14532d",
+  strokeWeight: 2,
+};
+
 interface PolygonData {
   polygon: google.maps.Polygon;
   label: google.maps.Marker;
@@ -29,7 +38,6 @@ interface PolygonData {
 export function PlannerMap({ onAreaChange }: PlannerMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
-  const drawingManagerRef = useRef<google.maps.drawing.DrawingManager | null>(null);
   const polygonsRef = useRef<PolygonData[]>([]);
   const selectedRef = useRef<number>(-1);
   const autocompleteInputRef = useRef<HTMLInputElement>(null);
@@ -37,7 +45,6 @@ export function PlannerMap({ onAreaChange }: PlannerMapProps) {
   const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [addressEntered, setAddressEntered] = useState(false);
-  const [isDrawing, setIsDrawing] = useState(false);
   const [polygonCount, setPolygonCount] = useState(0);
 
   // Calculate total area from all polygons
@@ -120,12 +127,47 @@ export function PlannerMap({ onAreaChange }: PlannerMapProps) {
     onAreaChange(0);
   }, [onAreaChange]);
 
-  // Start drawing mode
-  function startDrawing() {
-    if (!drawingManagerRef.current) return;
-    drawingManagerRef.current.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
-    setIsDrawing(true);
+  // Finalize a completed polygon: measure it, label it, and wire up editing.
+  function finalizePolygon(polygon: google.maps.Polygon) {
+    if (!mapRef.current) return;
+
+    const label = new google.maps.Marker({
+      map: mapRef.current,
+      icon: { path: google.maps.SymbolPath.CIRCLE, scale: 0 },
+      clickable: false,
+    });
+
+    const data: PolygonData = { polygon, label, areaSqFt: 0 };
+    updatePolygonLabel(data);
+
+    const idx = polygonsRef.current.length;
+    polygonsRef.current.push(data);
+    setPolygonCount(polygonsRef.current.length);
+    updateTotalArea();
+
+    // Click to select
+    polygon.addListener("click", () => selectPolygon(idx));
+
+    // Recalculate when the shape is edited or dragged
+    const path = polygon.getPath();
+    const recalc = () => {
+      updatePolygonLabel(data);
+      updateTotalArea();
+    };
+    google.maps.event.addListener(path, "set_at", recalc);
+    google.maps.event.addListener(path, "insert_at", recalc);
+    google.maps.event.addListener(path, "remove_at", recalc);
   }
+
+  // Custom click-to-draw polygon tool (replaces the removed DrawingManager).
+  const {
+    isDrawing,
+    vertexCount,
+    bindMap: bindDrawMap,
+    begin: beginDraw,
+    finish: finishDraw,
+    cancel: cancelDraw,
+  } = usePolygonDraw({ style: POLYGON_STYLE, onComplete: finalizePolygon });
 
   // Load Google Maps script
   useEffect(() => {
@@ -143,7 +185,7 @@ export function PlannerMap({ onAreaChange }: PlannerMapProps) {
     };
 
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=drawing,geometry,places&callback=initPlannerMap`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=geometry,places&callback=initPlannerMap`;
     script.async = true;
     script.defer = true;
     document.head.appendChild(script);
@@ -167,68 +209,16 @@ export function PlannerMap({ onAreaChange }: PlannerMapProps) {
       fullscreenControl: true,
       mapTypeControl: false,
       streetViewControl: false,
+      // Let the draw tool own double-clicks (and avoid zooming while sketching).
+      disableDoubleClickZoom: true,
+      clickableIcons: false,
     });
 
     mapRef.current = map;
 
-    // Drawing Manager
-    const drawingManager = new google.maps.drawing.DrawingManager({
-      drawingMode: null,
-      drawingControl: false,
-      polygonOptions: {
-        fillColor: "#15803d",
-        fillOpacity: 0.3,
-        strokeColor: "#14532d",
-        strokeWeight: 2,
-        editable: true,
-        draggable: true,
-      },
-    });
-
-    drawingManager.setMap(map);
-    drawingManagerRef.current = drawingManager;
-
-    // Handle new polygon drawn
-    google.maps.event.addListener(
-      drawingManager,
-      "polygoncomplete",
-      (polygon: google.maps.Polygon) => {
-        drawingManager.setDrawingMode(null);
-        setIsDrawing(false);
-
-        const label = new google.maps.Marker({
-          map,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 0,
-          },
-          clickable: false,
-        });
-
-        const data: PolygonData = { polygon, label, areaSqFt: 0 };
-        updatePolygonLabel(data);
-
-        const idx = polygonsRef.current.length;
-        polygonsRef.current.push(data);
-        setPolygonCount(polygonsRef.current.length);
-        updateTotalArea();
-
-        // Click to select
-        polygon.addListener("click", () => {
-          selectPolygon(idx);
-        });
-
-        // Update on edit
-        const path = polygon.getPath();
-        const recalc = () => {
-          updatePolygonLabel(data);
-          updateTotalArea();
-        };
-        google.maps.event.addListener(path, "set_at", recalc);
-        google.maps.event.addListener(path, "insert_at", recalc);
-        google.maps.event.addListener(path, "remove_at", recalc);
-      },
-    );
+    // Wire the custom polygon draw tool to this map. It appends a vertex on
+    // each click while drawing and calls finalizePolygon when the shape closes.
+    bindDrawMap(map);
 
     // Keyboard shortcuts
     function handleKeyDown(e: KeyboardEvent) {
@@ -271,7 +261,7 @@ export function PlannerMap({ onAreaChange }: PlannerMapProps) {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [loaded, onAreaChange, updateTotalArea]);
+  }, [loaded, onAreaChange, updateTotalArea, bindDrawMap]);
 
   // Initialize Places autocomplete
   useEffect(() => {
@@ -329,36 +319,69 @@ export function PlannerMap({ onAreaChange }: PlannerMapProps) {
 
         {/* Toolbar */}
         {addressEntered && (
-          <div className="absolute top-16 left-3 z-10 flex gap-1.5">
-            <Button
-              size="sm"
-              variant={isDrawing ? "default" : "secondary"}
-              onClick={startDrawing}
-              className="gap-1.5 shadow-md"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-              Draw Area
-            </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={undoLast}
-              disabled={polygonCount === 0}
-              className="gap-1.5 shadow-md"
-            >
-              <Undo2 className="h-3.5 w-3.5" />
-              Undo
-            </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={clearAll}
-              disabled={polygonCount === 0}
-              className="gap-1.5 shadow-md"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              Clear
-            </Button>
+          <div className="absolute top-16 left-3 z-10 flex flex-col gap-1.5">
+            <div className="flex gap-1.5">
+              {!isDrawing ? (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={beginDraw}
+                  className="gap-1.5 shadow-md"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  Draw Area
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={finishDraw}
+                    disabled={vertexCount < 3}
+                    className="gap-1.5 shadow-md"
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                    Finish
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={cancelDraw}
+                    className="gap-1.5 shadow-md"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    Cancel
+                  </Button>
+                </>
+              )}
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={undoLast}
+                disabled={polygonCount === 0}
+                className="gap-1.5 shadow-md"
+              >
+                <Undo2 className="h-3.5 w-3.5" />
+                Undo
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={clearAll}
+                disabled={polygonCount === 0}
+                className="gap-1.5 shadow-md"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Clear
+              </Button>
+            </div>
+            {isDrawing && (
+              <p className="max-w-[260px] rounded-md bg-background/90 px-2.5 py-1.5 text-xs text-muted-foreground shadow-md">
+                Click to drop points around your area, then click the first point
+                or <span className="font-medium text-foreground">Finish</span> to
+                close it.
+              </p>
+            )}
           </div>
         )}
 
