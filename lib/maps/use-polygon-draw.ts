@@ -86,8 +86,12 @@ export function usePolygonDraw({
     const polygon = new google.maps.Polygon({
       map: mapRef.current,
       paths: path,
+      // editable → draggable corner handles (plus midpoint handles to add
+      // corners). Whole-shape dragging is intentionally OFF: on a zoomed-in
+      // satellite map the polygon body fills the view, so leaving it draggable
+      // made grabbing a corner move the entire shape instead. Corners only.
       editable: true,
-      draggable: true,
+      draggable: false,
       ...styleRef.current,
     });
     onCompleteRef.current(polygon);
