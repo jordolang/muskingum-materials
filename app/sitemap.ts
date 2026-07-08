@@ -1,7 +1,8 @@
 import { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/site-url";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://muskingummaterials.com";
+  const baseUrl = SITE_URL;
   const currentDate = new Date();
 
   // Static pages

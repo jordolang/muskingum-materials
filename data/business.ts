@@ -12,6 +12,7 @@ interface Product {
 }
 
 import { TAX_RATE, CREDIT_PROCESSING_FEE } from "@/lib/constants/business-rules";
+import { SITE_URL } from "@/lib/site-url";
 
 export const BUSINESS_INFO = {
   name: "Muskingum Materials",
@@ -35,7 +36,7 @@ export const BUSINESS_INFO = {
   phone: "(740) 319-0183",
   altPhone: "(740) 453-3063",
   email: "sales@muskingummaterials.com",
-  website: "https://muskingummaterials.com",
+  website: SITE_URL,
   hours: "Monday through Friday 7:30 AM – 4:00 PM",
   hoursParsed: {
     monday: "7:30 AM – 4:00 PM",
