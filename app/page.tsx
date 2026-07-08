@@ -66,8 +66,11 @@ export default function HomePage() {
             src="/images/photos/aerial.jpg"
             alt="Aerial view of the Muskingum Materials yard in Zanesville, Ohio"
             fill
-            className="object-cover"
+            sizes="100vw"
+            quality={62}
             priority
+            fetchPriority="high"
+            className="object-cover"
           />
           <div className="absolute inset-0 hero-gradient" />
           <div className="relative z-10 w-full px-7 py-20 text-center sm:px-12">

@@ -34,7 +34,6 @@ import {
   type AreaSize,
 } from "@/data/recommendation-mapping";
 import type { ProjectRecommendationResult } from "@/lib/recommendations";
-import { AddToCartButton } from "@/components/order/add-to-cart-button";
 import { useToast } from "@/lib/use-toast";
 
 const PROJECT_TYPE_ICONS: Record<string, typeof Car> = {
@@ -473,17 +472,6 @@ export function MaterialWizard({ onComplete }: MaterialWizardProps) {
                           </div>
                         )}
                       </div>
-                      {rec.product?.price != null && rec.product.price > 0 && (
-                        <div className="pt-2">
-                          <AddToCartButton
-                            name={rec.product.name}
-                            price={rec.product.price}
-                            unit={rec.product.unit}
-                            size="sm"
-                            className="w-full"
-                          />
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>

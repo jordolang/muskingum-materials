@@ -4,7 +4,6 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
-import { AddToCartButton } from "@/components/order/add-to-cart-button";
 
 interface HomeProductCardProps {
   id: string;
@@ -89,17 +88,6 @@ export function HomeProductCard({
           </h3>
         </Link>
         <p className="flex-1 text-sm leading-relaxed text-muted-foreground">{description}</p>
-        {orderable && (
-          <div className="mt-4">
-            <AddToCartButton
-              name={name}
-              price={pricePerTon!}
-              unit={unit}
-              size="sm"
-              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md shadow-amber-900/20 transition-all duration-200 hover:from-amber-600 hover:to-amber-700 hover:shadow-lg hover:shadow-amber-900/30 hover:scale-[1.02] active:scale-95 motion-reduce:transition-none motion-reduce:hover:scale-100"
-            />
-          </div>
-        )}
       </CardContent>
     </Card>
   );

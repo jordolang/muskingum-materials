@@ -9,7 +9,6 @@ import { getProductsWithFilters } from "@/lib/products";
 import type { Product } from "@prisma/client";
 import { BUSINESS_INFO } from "@/data/business";
 import { CatalogControls } from "@/components/catalog/catalog-controls";
-import { AddToCartButton } from "@/components/order/add-to-cart-button";
 
 export const metadata: Metadata = {
   title: "Material Catalog",
@@ -151,14 +150,6 @@ export default async function CatalogPage({
                         View Details
                         <ArrowRight className="h-3 w-3" />
                       </Link>
-                      {product.price != null && product.price > 0 && (
-                        <AddToCartButton
-                          name={product.name}
-                          price={product.price}
-                          unit={product.unit}
-                          size="sm"
-                        />
-                      )}
                     </div>
                   </CardContent>
                 </Card>

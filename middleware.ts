@@ -99,7 +99,15 @@ export default async function middleware(request: NextRequest) {
     }
   }
 
-  if (hasClerk) {
+  // Clerk is scoped to the authenticated surfaces only (/admin, admin APIs,
+  // and the hidden /sign-in login). Public marketing routes skip Clerk so we
+  // don't pay its middleware latency on every page — this trims TTFB.
+  const needsClerk =
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/api/admin") ||
+    pathname.startsWith("/sign-in");
+
+  if (hasClerk && needsClerk) {
     const { clerkMiddleware } = await import("@clerk/nextjs/server");
     const handler = clerkMiddleware();
     const handlerResponse = await handler(request, {} as never);

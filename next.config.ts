@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Inline the critical CSS for each route and defer the rest, so the
+    // render-blocking stylesheet no longer stalls first paint on throttled
+    // mobile. Uses the `beasties` package. Directly targets the Lighthouse
+    // "render-blocking requests" insight (the largest one on mobile).
+    optimizeCss: true,
+  },
   webpack: (config, { isServer }) => {
     if (process.env.ANALYZE === "true") {
       try {
@@ -22,6 +29,13 @@ const nextConfig: NextConfig = {
     return config;
   },
   images: {
+    // AVIF first (typically 20-50% smaller than WebP for photos), WebP
+    // fallback. Directly targets the Lighthouse "improve image delivery"
+    // insight for the hero and gallery photos on throttled mobile.
+    formats: ["image/avif", "image/webp"],
+    // Cache optimized variants at the edge for a year so repeat views and
+    // crawlers don't re-pay the transform cost.
+    minimumCacheTTL: 31536000,
     remotePatterns: [
       { protocol: "https", hostname: "cdn.sanity.io" },
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
@@ -43,9 +57,7 @@ const nextConfig: NextConfig = {
       { source: "/rewards", destination: "/", permanent: true },
       { source: "/account", destination: "/", permanent: true },
       { source: "/account/:path*", destination: "/", permanent: true },
-      { source: "/sign-in/:path*", destination: "/", permanent: true },
       { source: "/sign-up/:path*", destination: "/", permanent: true },
-      { source: "/sign-in", destination: "/", permanent: true },
       { source: "/sign-up", destination: "/", permanent: true },
       { source: "/reviews", destination: "/", permanent: true },
       { source: "/reviews/:path*", destination: "/", permanent: true },
