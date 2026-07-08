@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { Menu, X, Phone, ChevronDown } from "lucide-react";
+import { Phone, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BUSINESS_INFO } from "@/data/business";
 
@@ -177,24 +177,121 @@ function MobileNavItem({ item, onClose }: { item: NavItem; onClose: () => void }
   );
 }
 
+/**
+ * iOS-home-indicator-style pull handle shown at the bottom of the mobile
+ * navbar. Dragging it downward opens the menu (dragging up closes it); a
+ * "Slide down for menu" hint animates in as soon as the drag starts. Tap
+ * and keyboard activation still toggle for accessibility.
+ */
+function MenuPullHandle({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+  const [drag, setDrag] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const startY = useRef(0);
+
+  const MAX_PULL = 44;
+  const OPEN_THRESHOLD = 24;
+  const TAP_TOLERANCE = 4;
+
+  function handlePointerDown(e: React.PointerEvent<HTMLButtonElement>) {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    startY.current = e.clientY;
+    setDragging(true);
+  }
+
+  function handlePointerMove(e: React.PointerEvent<HTMLButtonElement>) {
+    if (!dragging) return;
+    const delta = e.clientY - startY.current;
+    // Closed: only pulling down counts. Open: only pushing up counts.
+    setDrag(
+      open
+        ? Math.max(Math.min(delta, 0), -MAX_PULL)
+        : Math.min(Math.max(delta, 0), MAX_PULL)
+    );
+  }
+
+  function handlePointerUp() {
+    if (!dragging) return;
+    setDragging(false);
+    // A committed slide past the threshold — or a plain tap — toggles.
+    if (Math.abs(drag) >= OPEN_THRESHOLD || Math.abs(drag) <= TAP_TOLERANCE) {
+      onToggle();
+    }
+    setDrag(0);
+  }
+
+  const pulling = dragging && Math.abs(drag) > TAP_TOLERANCE;
+
+  return (
+    <button
+      type="button"
+      aria-expanded={open}
+      aria-label={open ? "Close menu — slide up or tap" : "Open menu — slide down or tap"}
+      className="flex w-full touch-none select-none flex-col items-center pb-2.5 pt-1 outline-none lg:hidden"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      // Pointer handlers own tap/drag; only keyboard activation (detail 0)
+      // should toggle via click, or it would double-fire after pointerup.
+      onClick={(e) => {
+        if (e.detail === 0) onToggle();
+      }}
+    >
+      {/* Hint sits above the bar so pulling the bar downward reveals it
+          instead of dragging the bar over the top of it. */}
+      <span
+        aria-hidden
+        className={`overflow-hidden text-[11px] font-semibold uppercase tracking-[0.2em] text-stone-500 transition-all duration-200 ${
+          pulling ? "mb-1.5 max-h-5 opacity-100" : "mb-0 max-h-0 opacity-0"
+        }`}
+      >
+        {open ? "Slide up to close" : "Slide down for menu"}
+      </span>
+      <span
+        className={`flex items-center gap-2.5 ${dragging ? "" : "transition-transform duration-300 ease-out"}`}
+        style={{ transform: `translateY(${drag}px)` }}
+      >
+        <ChevronDown
+          className={`h-4 w-4 text-stone-500 transition-transform duration-300 ${
+            open ? "rotate-180" : ""
+          } ${pulling ? "scale-125 text-primary" : ""}`}
+        />
+        <span
+          className={`h-1.5 w-24 rounded-full transition-colors duration-200 ${
+            pulling ? "bg-primary" : "bg-stone-400/80"
+          }`}
+        />
+        <ChevronDown
+          className={`h-4 w-4 text-stone-500 transition-transform duration-300 ${
+            open ? "rotate-180" : ""
+          } ${pulling ? "scale-125 text-primary" : ""}`}
+        />
+      </span>
+    </button>
+  );
+}
+
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 print:hidden">
       <div className="mx-auto max-w-6xl px-3 pt-3 sm:px-5 sm:pt-4">
-        {/* Floating glass pill */}
-        <div className="glass shadow-float relative flex h-16 items-center justify-between gap-3 rounded-full pl-5 pr-2.5">
-          <Link href="/" className="shrink-0">
-            <Image
-              src="/muskingum-materials-logo-red.png"
-              alt="Muskingum Materials"
-              width={515}
-              height={123}
-              className="h-11 w-auto"
-              priority
-            />
-          </Link>
+        {/* Floating glass pill — on mobile it stacks a centered logo over the
+            pull-down handle; on desktop it's the original single-row pill. */}
+        <div className="glass shadow-float relative flex flex-col rounded-[2rem] px-2.5 lg:h-16 lg:flex-row lg:items-center lg:justify-between lg:gap-3 lg:rounded-full lg:pl-5">
+          <div className="flex h-14 shrink-0 items-center justify-center lg:h-auto lg:justify-start">
+            <Link href="/">
+              <Image
+                src="/muskingum-materials-logo-red.png"
+                alt="Muskingum Materials"
+                width={515}
+                height={123}
+                className="h-11 w-auto"
+                priority
+              />
+            </Link>
+          </div>
 
           {/* Centered nav pill cluster */}
           <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex">
@@ -213,21 +310,16 @@ export function Navbar() {
             </a>
           </div>
 
-          {/* Mobile toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full lg:hidden"
-            onClick={() => setMobileOpen((p) => !p)}
-            aria-label="Toggle menu"
-          >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
+          {/* Mobile pull-down handle */}
+          <MenuPullHandle
+            open={mobileOpen}
+            onToggle={() => setMobileOpen((p) => !p)}
+          />
         </div>
 
         {/* Mobile floating menu panel */}
         {mobileOpen && (
-          <div className="glass shadow-float mt-2 rounded-3xl p-3 lg:hidden">
+          <div className="glass shadow-float mt-2 rounded-3xl p-3 duration-200 animate-in fade-in slide-in-from-top-3 lg:hidden">
             <nav className="flex flex-col gap-1">
               {NAV_ITEMS.map((item) => (
                 <MobileNavItem

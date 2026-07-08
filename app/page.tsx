@@ -7,8 +7,6 @@ import {
   MapPin,
   ArrowRight,
   Shield,
-  Scale,
-  Truck,
   Map,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,8 +38,6 @@ const MATERIAL_CATEGORIES = [
 
 const TRUST_BADGES = [
   { icon: Shield, label: "ODOT Approved Materials" },
-  { icon: Scale, label: "State-Approved Scales" },
-  { icon: Truck, label: "Up to 20 Tons Per Load" },
   { icon: Map, label: "Central & Southeastern Ohio" },
 ];
 
@@ -108,12 +104,15 @@ export default function HomePage() {
                   {BUSINESS_INFO.state} {BUSINESS_INFO.zip}
                 </p>
               </div>
-              <a href={phoneHref}>
+              <a href={phoneHref} className="inline-block max-w-full">
+                {/* The Button base sets whitespace-nowrap, which pushed this
+                    long label off the edge on phones — allow wrapping and let
+                    the height grow so it always fits the viewport. */}
                 <Button
                   size="lg"
-                  className="gap-2 bg-amber-600 font-semibold text-white shadow-glow hover:bg-amber-700"
+                  className="h-auto max-w-full gap-2 whitespace-normal bg-amber-600 px-6 py-3 font-semibold text-white shadow-glow hover:bg-amber-700 sm:px-8"
                 >
-                  <Phone className="h-5 w-5" />
+                  <Phone className="h-5 w-5 shrink-0" />
                   Call for Material Availability &amp; Free Estimates
                 </Button>
               </a>
@@ -124,7 +123,7 @@ export default function HomePage() {
 
       {/* Trust strip */}
       <section className="relative z-20 -mt-7 px-3 sm:px-5">
-        <div className="glass-dark mx-auto grid max-w-5xl grid-cols-2 gap-2 rounded-3xl bg-stone-900/85 p-3 text-white shadow-float md:grid-cols-4">
+        <div className="glass-dark mx-auto grid max-w-3xl grid-cols-1 gap-2 rounded-3xl bg-stone-900/85 p-3 text-white shadow-float sm:grid-cols-2">
           {TRUST_BADGES.map(({ icon: Icon, label }) => (
             <div
               key={label}
