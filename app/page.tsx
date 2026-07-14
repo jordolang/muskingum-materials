@@ -10,6 +10,7 @@ import {
   Map,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { HeroCarousel } from "@/components/home/hero-carousel";
 import { BUSINESS_INFO, PRODUCTS, PRODUCT_IMAGES } from "@/data/business";
 import { generateLocalBusinessSchema, toJsonLd } from "@/lib/seo/structured-data";
 import { generateHomeMetadata } from "@/lib/seo/metadata";
@@ -59,19 +60,10 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: toJsonLd(localBusinessSchema) }}
       />
 
-      {/* Hero — large aerial photo of the yard */}
+      {/* Hero — cross-fading carousel of yard photography (30s full loop) */}
       <section className="ambient-glow px-3 pt-3 sm:px-5 sm:pt-4">
         <div className="relative mx-auto flex min-h-[600px] max-w-7xl items-center overflow-hidden rounded-[2rem] shadow-float">
-          <Image
-            src="/images/photos/aerial.jpg"
-            alt="Aerial view of the Muskingum Materials yard in Zanesville, Ohio"
-            fill
-            sizes="100vw"
-            quality={62}
-            priority
-            fetchPriority="high"
-            className="object-cover"
-          />
+          <HeroCarousel />
           <div className="absolute inset-0 hero-gradient" />
           <div className="relative z-10 w-full px-7 py-20 text-center sm:px-12">
             <div className="mx-auto max-w-3xl text-white">

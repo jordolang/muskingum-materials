@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BUSINESS_INFO, PRODUCTS, PRODUCT_IMAGES } from "@/data/business";
+import { BUSINESS_INFO, PRODUCTS } from "@/data/business";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { generateProductsMetadata } from "@/lib/seo/metadata";
@@ -18,11 +17,23 @@ interface Product {
   name: string;
   description: string;
   category: string;
+  size: string;
+  uses: string[];
+  availability: string;
 }
+
+const STOCK_LABELS: Record<string, string> = {
+  IN_STOCK: "In stock",
+  LOW_STOCK: "Limited",
+  OUT_OF_STOCK: "Out of stock",
+  SEASONAL: "Seasonal",
+};
 
 // Static fallback from the canonical product list so the page still renders
 // if the database is unreachable (missing DATABASE_URL in a preview deploy,
-// transient Neon outage, etc.) instead of crashing the whole page.
+// transient Neon outage, etc.) instead of crashing the whole page. The spec
+// columns the DB carries (size, uses, stock) aren't in the static list, so
+// they read as "—" rather than being guessed at.
 function getFallbackProducts(): Product[] {
   return PRODUCTS.map((product) => ({
     // Synthetic key, prefixed to stay clearly distinct from DB primary keys.
@@ -30,6 +41,9 @@ function getFallbackProducts(): Product[] {
     name: product.name,
     description: product.description,
     category: product.category,
+    size: "",
+    uses: [],
+    availability: "",
   }));
 }
 
@@ -44,6 +58,10 @@ async function getProducts(): Promise<Product[]> {
         shortDescription: true,
         description: true,
         category: true,
+        sizeDescription: true,
+        commonUses: true,
+        stockStatus: true,
+        seasonalMessage: true,
       },
     });
 
@@ -52,6 +70,10 @@ async function getProducts(): Promise<Product[]> {
       name: row.name,
       description: row.shortDescription ?? row.description,
       category: row.category,
+      size: row.sizeDescription ?? "",
+      uses: row.commonUses,
+      availability:
+        row.seasonalMessage ?? STOCK_LABELS[row.stockStatus] ?? "",
     }));
 
     return products.length > 0 ? products : getFallbackProducts();
@@ -79,12 +101,14 @@ export default async function ProductsPage() {
 
   return (
     <div className="py-12">
-      <div className="container max-w-3xl">
-        <div className="mb-10 text-center">
-          <h1 className="mb-3 font-heading text-4xl font-bold">Products</h1>
-          <p className="text-muted-foreground">
-            State approved sand, gravel, and aggregate. Call for pricing and
-            availability.
+      <div className="container max-w-5xl">
+        <div className="mb-8">
+          <h1 className="mb-2 font-heading text-3xl font-bold">
+            Material Data Sheet
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            State approved sand, gravel, and aggregate. Sold by the ton, weighed
+            on state-approved scales. Call for pricing and availability.
           </p>
         </div>
 
@@ -92,46 +116,63 @@ export default async function ProductsPage() {
           const group = products.filter((p) => p.category === category);
           if (group.length === 0) return null;
           return (
-            <div key={category} className="mb-10">
-              <h2 className="mb-4 font-heading text-2xl font-bold">
+            <section key={category} className="mb-10">
+              <h2 className="mb-2 font-heading text-lg font-bold uppercase tracking-wide">
                 {CATEGORY_LABELS[category] ?? category}
               </h2>
-              <ul className="divide-y rounded-2xl border bg-background shadow-sm">
-                {group.map((product) => (
-                  <li
-                    key={product._id}
-                    className="flex items-center gap-4 px-6 py-4"
-                  >
-                    <Image
-                      src={
-                        PRODUCT_IMAGES[
-                          product.name as keyof typeof PRODUCT_IMAGES
-                        ] ?? "/images/photos/piles.jpg"
-                      }
-                      alt={product.name}
-                      width={56}
-                      height={56}
-                      quality={60}
-                      className="h-14 w-14 shrink-0 rounded-xl object-cover ring-1 ring-stone-900/10"
-                    />
-                    <div>
-                      <div className="font-semibold">{product.name}</div>
-                      <p className="mt-0.5 text-sm text-muted-foreground">
-                        {product.description}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
+              {/* Plain spec table. Scrolls sideways on a phone rather than
+                  reflowing into cards — the columns stay lined up. */}
+              <div className="overflow-x-auto border border-stone-300">
+                <table className="w-full min-w-[46rem] border-collapse text-sm">
+                  <thead>
+                    <tr className="border-b border-stone-300 bg-stone-100 text-left">
+                      <th className="px-3 py-2 font-semibold">Material</th>
+                      <th className="px-3 py-2 font-semibold">
+                        Size / Gradation
+                      </th>
+                      <th className="px-3 py-2 font-semibold">Description</th>
+                      <th className="px-3 py-2 font-semibold">Typical Uses</th>
+                      <th className="px-3 py-2 font-semibold">Availability</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {group.map((product) => (
+                      <tr
+                        key={product._id}
+                        className="border-b border-stone-200 align-top last:border-b-0"
+                      >
+                        <td className="px-3 py-2 font-semibold whitespace-nowrap">
+                          {product.name}
+                        </td>
+                        <td className="px-3 py-2 text-muted-foreground">
+                          {product.size || "—"}
+                        </td>
+                        <td className="px-3 py-2 text-muted-foreground">
+                          {product.description}
+                        </td>
+                        <td className="px-3 py-2 text-muted-foreground">
+                          {product.uses.length > 0
+                            ? product.uses.join(", ")
+                            : "—"}
+                        </td>
+                        <td className="px-3 py-2 text-muted-foreground">
+                          {product.availability || "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
           );
         })}
 
-        <div className="mt-8 rounded-2xl bg-muted/50 p-8 text-center">
-          <h2 className="mb-3 font-heading text-2xl font-bold">
-            Call for Material Availability and Free Estimates
+        <div className="border border-stone-300 bg-stone-50 p-5">
+          <h2 className="mb-1 font-heading text-lg font-bold">
+            Pricing &amp; Availability
           </h2>
-          <p className="mb-5 text-sm text-muted-foreground">
+          <p className="mb-4 text-sm text-muted-foreground">
+            Loads up to 20 tons. Delivery quoted by destination.{" "}
             {BUSINESS_INFO.hours}
           </p>
           <a href={phoneHref}>
