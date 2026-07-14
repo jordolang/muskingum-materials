@@ -82,12 +82,15 @@ html.lenis body {
   pointer-events: none;
 }
 
-.hero-gradient {
+/* Scrim over the hero carousel. Neutral and weighted toward the bottom, where
+   the headline, contact block and CTA sit — it buys contrast for the white type
+   without tinting the photography. */
+.hero-scrim {
   background: linear-gradient(
-    135deg,
-    rgba(180, 83, 9, 0.9) 0%,
-    rgba(146, 64, 14, 0.85) 50%,
-    rgba(120, 53, 15, 0.9) 100%
+    to bottom,
+    rgba(12, 10, 9, 0.35) 0%,
+    rgba(12, 10, 9, 0.5) 45%,
+    rgba(12, 10, 9, 0.72) 100%
   );
 }
 
