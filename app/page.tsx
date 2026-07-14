@@ -60,11 +60,13 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: toJsonLd(localBusinessSchema) }}
       />
 
-      {/* Hero — cross-fading carousel of yard photography (30s full loop) */}
-      <section className="ambient-glow px-3 pt-3 sm:px-5 sm:pt-4">
-        <div className="relative mx-auto flex min-h-[600px] max-w-7xl items-center overflow-hidden rounded-[2rem] shadow-float">
+      {/* Hero — full-bleed, cross-fading carousel of yard photography (30s loop).
+          Runs edge to edge with square corners; the photos carry the section, so
+          the only overlay is a neutral scrim for type contrast. */}
+      <section>
+        <div className="relative flex min-h-[600px] w-full items-center overflow-hidden">
           <HeroCarousel />
-          <div className="absolute inset-0 hero-gradient" />
+          <div className="absolute inset-0 hero-scrim" />
           <div className="relative z-10 w-full px-7 py-20 text-center sm:px-12">
             <div className="mx-auto max-w-3xl text-white">
               <h1 className="mb-4 font-heading text-5xl font-bold leading-tight md:text-7xl">
