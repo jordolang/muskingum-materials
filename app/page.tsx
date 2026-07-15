@@ -8,10 +8,13 @@ import {
   ArrowRight,
   Shield,
   Map,
+  Clock,
+  CreditCard,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeroCarousel } from "@/components/home/hero-carousel";
-import { BUSINESS_INFO, PRODUCTS } from "@/data/business";
+import { BUSINESS_INFO } from "@/data/business";
 import { generateLocalBusinessSchema, toJsonLd } from "@/lib/seo/structured-data";
 import { generateHomeMetadata } from "@/lib/seo/metadata";
 
@@ -29,15 +32,8 @@ const fontContact = Fira_Sans({
   preload: false,
 });
 
-// The simplified homepage is fully static — materials render from the
-// canonical PRODUCTS list, no database or CMS content. No pricing shown.
-// Gravel leads — it's what contractors come here for most.
-const MATERIAL_CATEGORIES = [
-  { key: "gravel", label: "Gravel" },
-  { key: "fill", label: "Sand & Fill" },
-  { key: "limestone", label: "Limestone" },
-] as const;
-
+// The simplified homepage is fully static — all copy renders from the
+// canonical BUSINESS_INFO record, no database or CMS content. No pricing shown.
 const TRUST_BADGES = [
   { icon: Shield, label: "ODOT Approved Materials" },
   { icon: Map, label: "Central & Southeastern Ohio" },
@@ -136,36 +132,94 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Materials — every product with a material-accurate photo, no pricing */}
+      {/* Business Information — hours, offerings, location, and payment */}
       <section className="py-16 sm:py-20">
-        <div className="container">
-          <h2 className="mb-8 text-center font-heading text-3xl font-bold">
-            Materials
+        <div className="container max-w-5xl">
+          <h2 className="mb-3 text-center font-heading text-3xl font-bold">
+            Business Information
           </h2>
-          {MATERIAL_CATEGORIES.map((category) => {
-            const group = PRODUCTS.filter((p) => p.category === category.key);
-            if (group.length === 0) return null;
-            return (
-              <div key={category.key} className="mb-12 last:mb-0">
-                <h3 className="mb-5 font-heading text-xl font-bold text-muted-foreground">
-                  {category.label}
-                </h3>
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                  {group.map((product) => (
-                    <div
-                      key={product.name}
-                      className="flex h-full flex-col overflow-hidden rounded-3xl border border-stone-300/70 bg-background p-5 shadow-sm"
-                    >
-                      <h4 className="mb-1 text-lg font-bold">{product.name}</h4>
-                      <p className="flex-1 text-sm leading-relaxed text-muted-foreground">
-                        {product.description}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+          <p className="mx-auto mb-10 max-w-2xl text-center leading-relaxed text-muted-foreground">
+            {BUSINESS_INFO.description}
+          </p>
+
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            {/* What we offer */}
+            <div className="rounded-3xl border border-stone-300/70 bg-background p-6 shadow-sm">
+              <div className="mb-4 flex items-center gap-2.5">
+                <CheckCircle2 className="h-5 w-5 shrink-0 text-amber-600" />
+                <h3 className="font-heading text-lg font-bold">What We Offer</h3>
               </div>
-            );
-          })}
+              <ul className="space-y-2.5">
+                {BUSINESS_INFO.features.map((feature) => (
+                  <li
+                    key={feature}
+                    className="flex items-start gap-2.5 text-sm text-muted-foreground"
+                  >
+                    <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Hours */}
+            <div className="rounded-3xl border border-stone-300/70 bg-background p-6 shadow-sm">
+              <div className="mb-4 flex items-center gap-2.5">
+                <Clock className="h-5 w-5 shrink-0 text-amber-600" />
+                <h3 className="font-heading text-lg font-bold">Hours</h3>
+              </div>
+              <ul className="space-y-2 text-sm">
+                {Object.entries(BUSINESS_INFO.hoursParsed).map(([day, hours]) => (
+                  <li
+                    key={day}
+                    className="flex justify-between border-b border-stone-200 pb-2 last:border-0 last:pb-0"
+                  >
+                    <span className="font-medium capitalize">{day}</span>
+                    <span className="text-muted-foreground">{hours}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Location & service area */}
+            <div className="rounded-3xl border border-stone-300/70 bg-background p-6 shadow-sm">
+              <div className="mb-4 flex items-center gap-2.5">
+                <MapPin className="h-5 w-5 shrink-0 text-amber-600" />
+                <h3 className="font-heading text-lg font-bold">
+                  Location &amp; Service Area
+                </h3>
+              </div>
+              <p className="mb-2 text-sm font-medium">
+                {BUSINESS_INFO.address}, {BUSINESS_INFO.city},{" "}
+                {BUSINESS_INFO.state} {BUSINESS_INFO.zip}
+              </p>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Serving contractors, municipalities, and commercial customers
+                throughout {BUSINESS_INFO.serviceArea}.
+              </p>
+            </div>
+
+            {/* Payment methods */}
+            <div className="rounded-3xl border border-stone-300/70 bg-background p-6 shadow-sm">
+              <div className="mb-4 flex items-center gap-2.5">
+                <CreditCard className="h-5 w-5 shrink-0 text-amber-600" />
+                <h3 className="font-heading text-lg font-bold">
+                  Payment Methods
+                </h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {BUSINESS_INFO.paymentMethods.map((method) => (
+                  <span
+                    key={method}
+                    className="rounded-full border border-stone-300 bg-stone-100 px-3 py-1 text-xs font-semibold"
+                  >
+                    {method}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
           <div className="mt-10 flex flex-col items-center gap-3">
             <p className="text-sm text-muted-foreground">
               Call for pricing and availability.
