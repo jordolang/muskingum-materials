@@ -97,7 +97,8 @@ export default async function ProductsPage() {
   const phone = BUSINESS_INFO.phone;
   const phoneHref = `tel:${phone.replace(/\D/g, "")}`;
 
-  const categories = ["fill", "gravel", "limestone"] as const;
+  // Gravel leads — it's what contractors come here for most.
+  const categories = ["gravel", "fill", "limestone"] as const;
 
   return (
     <div className="py-12">
