@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeroCarousel } from "@/components/home/hero-carousel";
-import { BUSINESS_INFO, PRODUCTS, PRODUCT_IMAGES } from "@/data/business";
+import { BUSINESS_INFO, PRODUCTS } from "@/data/business";
 import { generateLocalBusinessSchema, toJsonLd } from "@/lib/seo/structured-data";
 import { generateHomeMetadata } from "@/lib/seo/metadata";
 
@@ -31,9 +31,10 @@ const fontContact = Fira_Sans({
 
 // The simplified homepage is fully static — materials render from the
 // canonical PRODUCTS list, no database or CMS content. No pricing shown.
+// Gravel leads — it's what contractors come here for most.
 const MATERIAL_CATEGORIES = [
-  { key: "fill", label: "Sand & Fill" },
   { key: "gravel", label: "Gravel" },
+  { key: "fill", label: "Sand & Fill" },
   { key: "limestone", label: "Limestone" },
 ] as const;
 
@@ -153,29 +154,12 @@ export default function HomePage() {
                   {group.map((product) => (
                     <div
                       key={product.name}
-                      className="flex h-full flex-col overflow-hidden rounded-3xl border border-stone-300/70 bg-background shadow-sm"
+                      className="flex h-full flex-col overflow-hidden rounded-3xl border border-stone-300/70 bg-background p-5 shadow-sm"
                     >
-                      <div className="relative m-2 h-44 overflow-hidden rounded-[1.35rem] ring-1 ring-stone-900/5">
-                        <Image
-                          src={
-                            PRODUCT_IMAGES[product.name] ??
-                            "/images/photos/piles.jpg"
-                          }
-                          alt={product.name}
-                          fill
-                          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                          quality={60}
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="flex flex-1 flex-col px-5 pb-5 pt-2">
-                        <h4 className="mb-1 text-lg font-bold">
-                          {product.name}
-                        </h4>
-                        <p className="flex-1 text-sm leading-relaxed text-muted-foreground">
-                          {product.description}
-                        </p>
-                      </div>
+                      <h4 className="mb-1 text-lg font-bold">{product.name}</h4>
+                      <p className="flex-1 text-sm leading-relaxed text-muted-foreground">
+                        {product.description}
+                      </p>
                     </div>
                   ))}
                 </div>
