@@ -19,15 +19,16 @@ export const BUSINESS_INFO = {
   tagline: "ODOT Approved Sand, Gravel & Aggregate Supplier",
   serviceArea: "Central and Southeastern Ohio",
   /**
-   * ODOT qualification. `listingUrl` currently points at ODOT's certified
-   * producers list; swap in the direct URL of the entry where Muskingum
-   * Materials appears once available.
+   * ODOT qualification. `listingUrl` points at ODOT's Office of Materials
+   * Management aggregate page (the certified-producers index this used to
+   * link to was removed from ODOT's site and now 404s); swap in the direct
+   * URL of the entry where Muskingum Materials appears once available.
    */
   odot: {
     approved: true,
     label: "ODOT Approved Materials",
     listingUrl:
-      "https://www.transportation.ohio.gov/working/construction/materials/approved/certified-producers",
+      "https://www.transportation.ohio.gov/working/construction/materials/overview/aggregate",
   },
   address: "1133 Ellis Dam Rd",
   city: "Zanesville",

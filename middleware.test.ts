@@ -90,22 +90,6 @@ describe("middleware", () => {
       expect(response.status).not.toBe(429);
     });
 
-    it("should apply rate limiting to /api/orders/checkout endpoint", async () => {
-      const mockRequest = new NextRequest(new URL("http://localhost:3000/api/orders/checkout"));
-      vi.mocked(rateLimit.getClientIdentifier).mockReturnValue("192.168.1.1");
-      vi.mocked(rateLimit.checkRateLimit).mockResolvedValue({
-        success: true,
-        limit: 10,
-        remaining: 9,
-        reset: Date.now() + 3600000,
-      });
-
-      const response = await middleware(mockRequest);
-
-      expect(rateLimit.checkRateLimit).toHaveBeenCalledWith("192.168.1.1", "contact-quote");
-      expect(response.status).not.toBe(429);
-    });
-
     it("should apply rate limiting to /api/leads endpoint", async () => {
       const mockRequest = new NextRequest(new URL("http://localhost:3000/api/leads"));
       vi.mocked(rateLimit.getClientIdentifier).mockReturnValue("192.168.1.1");

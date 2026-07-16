@@ -252,7 +252,7 @@ export default function HomePage() {
             rel="noopener noreferrer"
             className="text-sm font-semibold text-amber-700 underline underline-offset-4 hover:text-amber-800"
           >
-            View ODOT certified supplier listing
+            Learn about ODOT aggregate certification
           </a>
         </div>
       </section>
